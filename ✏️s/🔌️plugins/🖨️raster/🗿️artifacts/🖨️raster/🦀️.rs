@@ -632,7 +632,7 @@ pub struct RasterImageAsset {
 /// `🚪️io`'s SVG export/DWG import bridge) was checked and found to be ALREADY a pure, non-persisted IO
 /// conversion — raster never owns/duplicates a `drawing` field, it only ever calls stdio's real
 /// `SemioDrawingSnapshot`/`DrawNode` types directly at conversion time (`drawing_snapshot_from_raster`/
-/// `drawing_snapshot_from_dwg`, `🚪️io/🦀️.rs`). That already satisfies "consumes/reads drawing
+/// `page_drawing_from_world`, `🚪️io/🦀️.rs`). That already satisfies "consumes/reads drawing
 /// content but doesn't own it" — no `ArtifactLink` was needed because there was no persisted/duplicated
 /// drawing field to convert.
 use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
@@ -806,11 +806,9 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.raster.raster.composer.native", "composer", "s.raster.raster@1/*", &[("dialect", "s.raster.raster@1/*")], None),
         ("s.raster.raster.composer.format-1", "composer", "s.stdio.gif@87a/*", &[("dialect", "s.stdio.gif@87a/*")], None),
         ("s.raster.raster.composer.format-2", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
-        ("s.raster.raster.composer.format-3", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
         ("s.raster.raster.composer.format-4", "composer", "s.stdio.jpg@jfif-1.01/*", &[("dialect", "s.stdio.jpg@jfif-1.01/*")], None),
         ("s.raster.raster.composer.format-5", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
         ("s.raster.raster.composer.format-6", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
-        ("s.raster.raster.composer.format-7", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
         ("s.raster.raster.composer.format-8", "composer", "s.stdio.bmp@v3/*", &[("dialect", "s.stdio.bmp@v3/*")], None),
         ("s.raster.raster.composer.format-9", "composer", "s.stdio.tiff@6.0/*", &[("dialect", "s.stdio.tiff@6.0/*")], None),
         ("s.raster.raster.grammar.1", "grammar", "raster.document", &[("grammar", "raster.document")], None),
@@ -1145,6 +1143,18 @@ pub mod standards {
                             #[path = "."]
                             pub mod artifacts {
                                 #[path = "."]
+                                pub mod dwg {
+                                    #[path = "."]
+                                    pub mod v_ac1018 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
                                 pub mod gif {
                                     #[path = "."]
                                     pub mod v87a {
@@ -1163,18 +1173,6 @@ pub mod standards {
                                         #[path = "."]
                                         pub mod any {
                                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod pdf {
-                                    #[path = "."]
-                                    pub mod v1_4 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }
@@ -1211,18 +1209,6 @@ pub mod standards {
                                         #[path = "."]
                                         pub mod any {
                                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod dwg {
-                                    #[path = "."]
-                                    pub mod v_ac1018 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }
@@ -1286,18 +1272,6 @@ pub mod standards {
                                     }
                                 }
                                 #[path = "."]
-                                pub mod pdf {
-                                    #[path = "."]
-                                    pub mod v1_4 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
                                 pub mod jpg {
                                     #[path = "."]
                                     pub mod v_jfif_1_01 {
@@ -1328,18 +1302,6 @@ pub mod standards {
                                         #[path = "."]
                                         pub mod any {
                                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod dwg {
-                                    #[path = "."]
-                                    pub mod v_ac1018 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }

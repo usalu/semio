@@ -32,14 +32,6 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                 vec![
                     serializer_entry::<DagSnapshot, export::json::v_rfc8259::any::DagIntoJson>(DAG_DIALECT),
                     deserializer_entry::<DagSnapshot, import::json::v_rfc8259::any::JsonIntoDag>(DAG_DIALECT),
-                    serializer_entry::<DagSnapshot, export::md::v_commonmark::any::DagIntoMd>(DAG_DIALECT),
-                    deserializer_entry::<DagSnapshot, import::md::v_commonmark::any::MdIntoDag>(DAG_DIALECT),
-                    serializer_entry::<DagSnapshot, export::csv::v_rfc4180::any::DagIntoCsv>(DAG_DIALECT),
-                    deserializer_entry::<DagSnapshot, import::csv::v_rfc4180::any::CsvIntoDag>(DAG_DIALECT),
-                    serializer_entry::<DagSnapshot, export::png::v1_2::any::DagIntoPng>(DAG_DIALECT),
-                    deserializer_entry::<DagSnapshot, import::png::v1_2::any::PngIntoDag>(DAG_DIALECT),
-                    serializer_entry::<DagSnapshot, export::svg::v1_1::any::DagIntoSvg>(DAG_DIALECT),
-                    deserializer_entry::<DagSnapshot, import::svg::v1_1::any::SvgIntoDag>(DAG_DIALECT),
                     serializer_entry::<DagSnapshot, export::txt::v_utf_8::any::DagIntoTxt>(DAG_DIALECT),
                     deserializer_entry::<DagSnapshot, import::txt::v_utf_8::any::TxtIntoDag>(DAG_DIALECT),
                 ]

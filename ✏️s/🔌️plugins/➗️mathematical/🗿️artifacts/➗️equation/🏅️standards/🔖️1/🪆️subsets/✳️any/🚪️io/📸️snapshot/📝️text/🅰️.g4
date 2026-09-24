@@ -3,14 +3,18 @@
 grammar Mathematical_equation_snapshot;
 
 artifactMark: 'semio mathematical.equation.dsl v1' ;
-document: artifactMark notationLine resultsLine computedLine equationLine graphLine geometryLine ;
-notationLine: 'notation' '=' childHandle ;
-resultsLine: 'results' '=' childHandle ;
-computedLine: 'computed' '=' childHandle ;
-equationLine: 'equation' '=' HEX ;
-graphLine: 'graph' '=' HEX ;
-geometryLine: 'geometry' '=' HEX ;
-childHandle: '[' HEX ',' HEX ']' ;
+document: artifactMark field* ;
+field: 'notation' '=' childHandle
+     | 'results' '=' childHandle
+     | 'computed' '=' childHandle
+     | 'equation' '=' VALUE
+     | 'graph' '=' VALUE
+     | 'geometry' '=' VALUE ;
+childHandle: 'child_id' '=' TEXT 'target' '=' TEXT ;
 
-// 📐 Framework dialect-primitive terminal (not defined in the .semio itself).
-HEX: [0-9a-f]* ;
+// 📐 Framework dialect-primitive terminals.
+VALUE: TEXT ;
+TEXT: BARE | QUOTED ;
+fragment BARE: ~[ \t\r\n="{}[\],]+ ;
+fragment QUOTED: '"' ( '\\' . | ~["\\] )* '"' ;
+WS: [ \t\r\n]+ -> skip ;

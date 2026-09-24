@@ -10,7 +10,7 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RemoveTag {
-    pub(crate) index: usize,
+    pub index: usize,
 }
 
 impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for RemoveTag {

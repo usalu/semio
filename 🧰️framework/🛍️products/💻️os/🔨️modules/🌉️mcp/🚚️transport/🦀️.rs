@@ -59,7 +59,8 @@ fn io_error(error: std::io::Error) -> GatewayError {
 /// timeout of any kind, so an elicitation waiting directly on the descriptor could never give up on
 /// a client that goes silent (`📓️m4-mcp-bridge-approval-binding.md` §5.3). Every read still yields
 /// lines in exact arrival order, and the thread ends on EOF, on an io error, or when the last
-/// `StdioLines` is dropped.
+/// `StdioLines` is dropped. The one exception is `notifications/cancelled`, which this thread applies
+/// immediately ([`crate::protocol::intercept_cancellation`]) so it interrupts the call still running.
 pub struct StdioLines {
     output: Mutex<Box<dyn Write + Send>>,
     inbound: Mutex<std::sync::mpsc::Receiver<Result<String, String>>>,
@@ -84,6 +85,9 @@ impl StdioLines {
                 match input.read_line(&mut line) {
                     Ok(0) => return,
                     Ok(_) => {
+                        if crate::protocol::intercept_cancellation(&line) {
+                            continue;
+                        }
                         if sender.send(Ok(line)).is_err() {
                             return;
                         }
@@ -283,6 +287,11 @@ impl ElicitationClock for SystemElicitationClock {
     }
 }
 
+/// ⏲️ One tick of an [`ElicitationClock`]. A floored millisecond reading can sit up to one tick
+/// behind the instant it was taken, so the difference of two readings can overstate the real wait by
+/// up to one tick. The deadline is set one tick past the budget so the wait never ends before it.
+const ELICITATION_CLOCK_TICK_MS: u64 = 1;
+
 /// ⏳️ The longest a single bounded read blocks before the deadline is re-checked, so a fake clock
 /// that jumps forward is noticed promptly instead of at the end of one enormous `recv_timeout`.
 const ELICITATION_READ_SLICE_MS: u64 = 25;
@@ -348,13 +357,13 @@ impl ElicitationChannel {
         });
         let line = serde_json::to_string(&request).map_err(|error| ElicitationUnavailable::Malformed(error.to_string()))?;
         self.lines.write_line(&line).map_err(|error| ElicitationUnavailable::Malformed(error.message))?;
-        let started_ms = self.clock.now_ms();
+        let deadline_ms = self.clock.now_ms().saturating_add(self.timeout_ms).saturating_add(ELICITATION_CLOCK_TICK_MS);
         loop {
-            let elapsed_ms = self.clock.now_ms().saturating_sub(started_ms);
-            if elapsed_ms >= self.timeout_ms {
+            let now_ms = self.clock.now_ms();
+            if now_ms >= deadline_ms {
                 return Err(ElicitationUnavailable::TimedOut);
             }
-            let budget = std::time::Duration::from_millis((self.timeout_ms - elapsed_ms).min(ELICITATION_READ_SLICE_MS));
+            let budget = std::time::Duration::from_millis((deadline_ms - now_ms).min(ELICITATION_READ_SLICE_MS));
             let inbound = match self.lines.read_line_direct_within(budget).map_err(|error| ElicitationUnavailable::Malformed(error.message))? {
                 StdioRead::Line(line) => line,
                 StdioRead::Eof => return Err(ElicitationUnavailable::ClientClosed),

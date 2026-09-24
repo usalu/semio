@@ -114,7 +114,7 @@
         }
       ],
       "provenance": {
-        "source": "handcrafted",
+        "source": "authored",
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
@@ -123,7 +123,7 @@
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
       "reproducible": true,
@@ -163,7 +163,7 @@
         }
       ],
       "provenance": {
-        "source": "handcrafted",
+        "source": "authored",
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
@@ -172,7 +172,7 @@
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
       "reproducible": true,

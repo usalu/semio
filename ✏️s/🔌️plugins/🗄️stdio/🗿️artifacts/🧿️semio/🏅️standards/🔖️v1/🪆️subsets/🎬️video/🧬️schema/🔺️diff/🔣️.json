@@ -83,8 +83,12 @@
                                   "type": "boolean"
                                 },
                                 "data": {
-                                  "type": "string",
-                                  "contentEncoding": "hex"
+                                  "type": "array",
+                                  "items": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 255
+                                  }
                                 }
                               }
                             }

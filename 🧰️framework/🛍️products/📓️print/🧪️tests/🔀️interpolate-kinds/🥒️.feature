@@ -25,7 +25,7 @@ Feature: The public interpolator dispatches onto the interpolator each kind name
   @level-quick
   @mode-differential
   Scenario: The number interpolator agrees with d3-interpolate's interpolateNumber
-    Given the committed probe document local://interpolate-kinds.tex and the number pairs
+    Given the committed probe document shared://🔀️interpolate-kinds/interpolate-kinds.tex and the number pairs
       | a  | b | t    |
       | 10 | 20 | 0    |
       | 10 | 20 | 0.25 |
@@ -39,7 +39,7 @@ Feature: The public interpolator dispatches onto the interpolator each kind name
   @level-quick
   @mode-differential
   Scenario: The rounding interpolator agrees with d3-interpolate's interpolateRound
-    Given the committed probe document local://interpolate-kinds.tex and the number pairs
+    Given the committed probe document shared://🔀️interpolate-kinds/interpolate-kinds.tex and the number pairs
       | a  | b  | t    |
       | 10 | 21 | 0    |
       | 10 | 21 | 0.25 |
@@ -52,7 +52,7 @@ Feature: The public interpolator dispatches onto the interpolator each kind name
   @level-quick
   @mode-differential
   Scenario: Each colour kind dispatches onto d3-interpolate's interpolator of the same name
-    Given the committed probe document local://interpolate-kinds.tex and the colour pairs
+    Given the committed probe document shared://🔀️interpolate-kinds/interpolate-kinds.tex and the colour pairs
       | space | a      | b      | t         |
       | rgb   | ff344f | 34d1bf | 0.25;0.75 |
       | lab   | ff344f | 34d1bf | 0.25;0.75 |
@@ -63,7 +63,7 @@ Feature: The public interpolator dispatches onto the interpolator each kind name
   @level-quick
   @mode-differential
   Scenario: The array interpolator walks two lists element by element, as d3-interpolate does
-    Given the committed probe document local://interpolate-kinds.tex and the array pairs
+    Given the committed probe document shared://🔀️interpolate-kinds/interpolate-kinds.tex and the array pairs
       | a        | b          | t    |
       | 0;10;100 | 10;20;200  | 0    |
       | 0;10;100 | 10;20;200  | 0.5  |

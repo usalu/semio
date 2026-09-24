@@ -7,7 +7,7 @@
   "aggregateVariant": "RenameGlazingMaterial",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-glazing-material",
-  "binaryTag": null,
+  "binaryTag": 282,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

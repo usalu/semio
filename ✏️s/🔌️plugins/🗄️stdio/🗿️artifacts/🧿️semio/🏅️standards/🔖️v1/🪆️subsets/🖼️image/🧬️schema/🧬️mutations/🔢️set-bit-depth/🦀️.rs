@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetBitDepth {
-    pub(crate) bit_depth: u8,
+    pub bit_depth: u8,
 }
 
 impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetBitDepth {

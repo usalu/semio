@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceResilienceRequirement",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": null,
+  "binaryTag": 91,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -5,19 +5,25 @@ schema stdio.semio.video
 start body
 framing record
 
-# Video wave: REAL binary op frame, replacing the old `print_op().into_bytes()` text-as-binary
-# shortcut (`🧬️mutations/🦀️.rs`'s old `OpBinary::encode_op`). `SemioVideoMutation` is a
-# genuine data-carrying enum whose variants embed nested `SemioVideoStream`/`SemioVideoSample`/
-# `SemioVideoSnapshot` payloads — no `dsl::DslField` impl exists for any of them (hand-rolled per
-# this subset's own `🔺️diff`/`🧬️mutations` convention), so the generic derive-based
-# `format u8 | ordinal varint | record body` layout doesn't apply. Handcrafted instead: `format u8`
-# (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioVideoMutation` variant ordinal,
-# `🧬️mutations/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`, same 0-8 ordering as
-# `parse_semio_video_mutation`'s keyword match) as two REAL fixed fields, then the variant's own
-# `key=value ...` argument payload as one opaque trailing `bytes` chain — the same honest boundary
-# the sibling `../../🔺️diff/💾️binary/📡️.protocol.semio` uses.
+# Real `SemioVideoMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record set-snapshot tag=0
+field payload bytes
+record insert-stream tag=1
+field payload bytes
+record remove-stream tag=2
+field payload bytes
+record set-stream-meta tag=3
+field payload bytes
+record insert-sample tag=4
+field payload bytes
+record remove-sample tag=5
+field payload bytes
+record set-sample-data tag=6
+field payload bytes
+record set-sample-flags tag=7
+field payload bytes

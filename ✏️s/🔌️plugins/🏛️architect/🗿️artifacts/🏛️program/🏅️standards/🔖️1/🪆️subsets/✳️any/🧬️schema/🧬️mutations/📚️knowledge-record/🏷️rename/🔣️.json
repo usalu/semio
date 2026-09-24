@@ -7,7 +7,7 @@
   "aggregateVariant": "RenameKnowledgeRecord",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": null,
+  "binaryTag": 142,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

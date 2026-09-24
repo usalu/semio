@@ -10,7 +10,7 @@ async fn artifact_kind_declares_the_expected_media_surface() {
     assert!(kind.export_formats.is_empty());
     assert!(kind.import_formats.is_empty());
     assert_eq!(kind.export_stdio_kinds, kind.import_stdio_kinds);
-    assert_eq!(kind.export_stdio_kinds.len(), 8);
+    assert_eq!(kind.export_stdio_kinds, vec!["stdio.json".to_string()], "the machined solid is a child artifact the kernel host resolves; no serializer can write it");
 }
 
 //#region 🔖️WorkshopTests

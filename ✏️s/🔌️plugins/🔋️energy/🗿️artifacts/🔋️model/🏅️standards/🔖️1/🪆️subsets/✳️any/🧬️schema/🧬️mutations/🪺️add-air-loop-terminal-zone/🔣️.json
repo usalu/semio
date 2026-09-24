@@ -7,7 +7,7 @@
   "aggregateVariant": "AddAirLoopTerminalZone",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-air-loop-terminal-zone",
-  "binaryTag": null,
+  "binaryTag": 176,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

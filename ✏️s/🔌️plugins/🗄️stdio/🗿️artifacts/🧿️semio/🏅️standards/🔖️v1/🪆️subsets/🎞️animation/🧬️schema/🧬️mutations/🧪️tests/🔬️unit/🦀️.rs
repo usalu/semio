@@ -1,16 +1,16 @@
 use super::*;
 
 /// 🧪️ `kinds_match_the_enum_and_the_catalog`: `KINDS` names every declared variant, at the
-/// position `variant_ordinal` assigns it, and every one of those names also appears in the
+/// position `wire_tag` assigns it, and every one of those names also appears in the
 /// committed oracle manifest's catalog. The bijection against `demo_mutation_cases` is what
 /// makes a newly added variant fail here instead of silently shrinking the vocabulary
 /// `🎞️mutate-semio-animation` claims to cover.
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
-    assert_eq!(KINDS.len(), OP_KEYWORDS.len(), "KINDS must name exactly one kind per declared variant, same length as the op tag table");
+    assert_eq!(KINDS, dsl::protocol_record::records(WIRE_PROTOCOL).map(|(kind, _)| kind).collect::<Vec<_>>(), "KINDS must be exactly the 📡️.protocol.semio records, in tag order");
     let mut seen = vec![false; KINDS.len()];
     for mutation in demo_mutation_cases() {
-        let ordinal = variant_ordinal(&mutation) as usize;
+        let ordinal = wire_tag(&mutation) as usize;
         assert!(!seen[ordinal], "ordinal {ordinal} is represented twice — demo_mutation_cases must carry exactly one case per declared variant");
         seen[ordinal] = true;
     }

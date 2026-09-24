@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateResource",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": null,
+  "binaryTag": 156,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceInfrastructureRequirement",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": null,
+  "binaryTag": 67,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

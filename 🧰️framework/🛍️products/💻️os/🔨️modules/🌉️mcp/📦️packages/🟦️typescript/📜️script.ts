@@ -11,7 +11,7 @@ import { proveMcpInferenceBridgeFixture } from "../../💡️inference-bridge/�
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
+    const { rest } = resolveTestLevel(segments, "quick");
     console.log(`[test] ${requireMcpBinary(this.repoRoot)}`);
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }

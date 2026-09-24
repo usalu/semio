@@ -7,7 +7,7 @@
   "aggregateVariant": "DisconnectAdjacency",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": null,
+  "binaryTag": 257,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

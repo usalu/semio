@@ -15,7 +15,7 @@ import (
 
 // 📥️ The committed conversation every scenario reads.
 func conversation(ctx *host.Context) (map[string]interface{}, error) {
-	raw, err := ctx.FixtureBytes("local://🤝️handshake.json")
+	raw, err := ctx.FixtureBytes("shared://🔌️mcp-verb-handshake/🤝️handshake.json")
 	if err != nil {
 		return nil, err
 	}

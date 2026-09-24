@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeMechanicalVentilationDesignFlow",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-mechanical-ventilation-design-flow",
-  "binaryTag": null,
+  "binaryTag": 113,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

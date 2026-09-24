@@ -70,7 +70,7 @@ async fn reorganize_leaves_no_two_widgets_sharing_one_position() {
 fn reorganize_is_reachable_by_menu_and_by_keyboard_in_both_languages() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let definition = crate::editor::generation3d::create_generation3d_app();
-    let action = definition.window_kinds.iter().flat_map(|kind| kind.actions.iter()).find(|action| action.id == "reorganize").expect("reorganize action");
+    let action = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|kind| kind.actions.iter())).find(|action| action.id == "reorganize").expect("reorganize action");
     let label = serde_json::to_string(&action.label).expect("reorganize label json");
     assert!(label.contains("Reorganize") && label.contains("Neu anordnen"), "reorganize needs both declared languages: {label}");
     let chords: Vec<&str> = definition.keybindings.iter().filter(|binding| binding.action.action == "reorganize").map(|binding| binding.keys.as_str()).collect();

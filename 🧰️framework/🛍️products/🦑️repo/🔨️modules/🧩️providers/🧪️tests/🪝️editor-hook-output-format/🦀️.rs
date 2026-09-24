@@ -9,7 +9,7 @@ mod subject {
     use semio_framework_repo_providers::{get_editor_provider, EditorProvider, HookEvent, HookResult, ToolKind};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
 
-    const VECTORS: &str = "local://🪝️hook-outputs.json";
+    const VECTORS: &str = "shared://🪝️editor-hook-output-format/🪝️hook-outputs.json";
 
     fn strings(value: &Json, key: &str) -> Vec<String> {
         value

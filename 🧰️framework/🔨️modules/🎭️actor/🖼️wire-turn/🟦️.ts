@@ -229,6 +229,8 @@ export const TYPED_OPERATION_RESULT_PAGE_BYTES = 4_096;
 /** 🛤️ Highest `TypedOperationResultLane` discriminant the guest emits (`🔌️plugin/🦀️.rs`: Artifact 0 …
  * Fault 11, Interaction 12, WindowTransient 13, WindowConfig 14). */
 export const TYPED_OPERATION_RESULT_LANE_MAX = 14;
+/** 🛤️ The lane a typed operation's document edit page rides (`{generationBefore, generationAfter}`). */
+export const TYPED_OPERATION_LANE_ARTIFACT = 0;
 /** 🛤️ The lane a terminal result page rides. */
 export const TYPED_OPERATION_LANE_TERMINAL = 10;
 /** 🛤️ The lane a fault result page rides. */

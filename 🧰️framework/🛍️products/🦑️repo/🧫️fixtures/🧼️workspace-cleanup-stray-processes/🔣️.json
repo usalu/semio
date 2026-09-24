@@ -63,6 +63,15 @@
         { "pid": 520, "ppid": 500, "stat": "Z", "name": "<defunct>", "command": "<defunct>" }
       ],
       "expected": []
+    },
+    {
+      "id": "manual-zsh-terminal-caffeinate-not-stray",
+      "rows": [
+        { "pid": 500, "ppid": 1, "stat": "S", "name": "bun", "command": "bun ./📜️script.ts clean" },
+        { "pid": 950, "ppid": 1, "stat": "S", "name": "zsh", "command": "-zsh" },
+        { "pid": 951, "ppid": 950, "stat": "S", "name": "caffeinate", "command": "caffeinate -dimsu" }
+      ],
+      "expected": []
     }
   ]
 }

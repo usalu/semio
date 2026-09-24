@@ -36,7 +36,7 @@ fn applied() -> Din18599Snapshot {
 async fn applies_to_committed_after() {
     let snapshot = applied();
     assert_eq!(snapshot.climate.child_id, before().climate.child_id, "update-climate/refuses-a-negative-january-irradiance: the composed climate child handle must not be re-minted by a refused payload");
-    assert_eq!(snapshot.climate.target.artifact_id, "din18599-climate", "update-climate/refuses-a-negative-january-irradiance: the child slot must still point at the same table artifact");
+    assert_eq!(snapshot.climate.target, before().climate.target, "update-climate/refuses-a-negative-january-irradiance: the child slot must still point at the same table artifact");
     assert_eq!(snapshot.solar_gains_kwh, before().solar_gains_kwh, "update-climate/refuses-a-negative-january-irradiance: no climate-derived scalar may be recomputed from a refused payload");
     assert_eq!(snapshot, expected_after(), "update-climate/refuses-a-negative-january-irradiance: applied state differs from committed after-snapshot");
     assert_eq!(expected_after(), before(), "update-climate/refuses-a-negative-january-irradiance: a rejected case's after-snapshot must be its before-snapshot verbatim");

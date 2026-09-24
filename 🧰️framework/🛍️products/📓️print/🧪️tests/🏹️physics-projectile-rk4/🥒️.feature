@@ -20,7 +20,7 @@ Feature: Trajectories are integrated and land where the closed form says they la
   @level-long
   @mode-conformance
   Scenario: The projected projectile path is the closed-form parabola in millimetres
-    Given the committed probe document local://physics-projectile-rk4.tex and the launch
+    Given the committed probe document shared://🏹️physics-projectile-rk4/physics-projectile-rk4.tex and the launch
       | speed | angle | gravity | step | steps |
       | 22    | 52    | 9.81    | 0.05 | 40    |
     Then the compiled probe and the reference implementation agree on every value
@@ -29,7 +29,7 @@ Feature: Trajectories are integrated and land where the closed form says they la
   @level-quick
   @mode-conformance
   Scenario: Runge–Kutta follows the analytic circle of the harmonic oscillator
-    Given the committed probe document local://physics-projectile-rk4.tex and the systems
+    Given the committed probe document shared://🏹️physics-projectile-rk4/physics-projectile-rk4.tex and the systems
       | key             | derivative-x | derivative-y | x0 | y0 | step | steps | analytic      |
       | rk4/orbit       | y            | -x           | 1  | 0  | 0.1  | 20    | cos t, -sin t |
       | rk4/orbit-fine  | y            | -x           | 1  | 0  | 0.05 | 40    | cos t, -sin t |
@@ -39,7 +39,7 @@ Feature: Trajectories are integrated and land where the closed form says they la
   @level-quick
   @mode-property
   Scenario: A damped oscillator never gains energy along its own trajectory
-    Given the committed probe document local://physics-projectile-rk4.tex and the damped system
+    Given the committed probe document shared://🏹️physics-projectile-rk4/physics-projectile-rk4.tex and the damped system
       | key         | derivative-x | derivative-y  | x0 | y0 | step | steps |
       | rk4/damped  | y            | -x - 0.4 y    | 1  | 0  | 0.1  | 30    |
     Then the compiled probe and the reference implementation agree on every value

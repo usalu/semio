@@ -30,7 +30,7 @@ Feature: The bar family lays its rectangles out where d3 would
   @level-long
   @mode-differential
   Scenario: Grouped bars sit in nested band scales
-    Given the committed probe document local://grouped.tex and the frame
+    Given the committed probe document shared://📊️charts-bar-layout/grouped.tex and the frame
       | width | height | padLeft | padRight | padTop | padBottom | padding |
       | 80    | 40     | 10      | 4        | 4      | 8         | 0.2     |
     Then the compiled probe and the reference implementation agree on every rectangle
@@ -39,7 +39,7 @@ Feature: The bar family lays its rectangles out where d3 would
   @level-long
   @mode-differential
   Scenario: A horizontal orientation swaps the band and the value axis
-    Given the committed probe document local://horizontal.tex and the frame
+    Given the committed probe document shared://📊️charts-bar-layout/horizontal.tex and the frame
       | width | height | padLeft | padRight | padTop | padBottom | padding |
       | 80    | 40     | 10      | 4        | 4      | 8         | 0.2     |
     Then the compiled probe and the reference implementation agree on every rectangle
@@ -48,7 +48,7 @@ Feature: The bar family lays its rectangles out where d3 would
   @level-long
   @mode-differential
   Scenario: Stacked bars reproduce d3-shape's stack layout
-    Given the committed probe document local://stacked.tex and the frame
+    Given the committed probe document shared://📊️charts-bar-layout/stacked.tex and the frame
       | width | height | padLeft | padRight | padTop | padBottom | padding |
       | 80    | 40     | 10      | 4        | 4      | 8         | 0.2     |
     Then the compiled probe and the reference implementation agree on every rectangle
@@ -57,7 +57,7 @@ Feature: The bar family lays its rectangles out where d3 would
   @level-long
   @mode-differential
   Scenario: A percent stack reproduces d3-shape's expand offset
-    Given the committed probe document local://percent.tex and the frame
+    Given the committed probe document shared://📊️charts-bar-layout/percent.tex and the frame
       | width | height | padLeft | padRight | padTop | padBottom | padding |
       | 80    | 40     | 10      | 4        | 4      | 8         | 0.2     |
     Then the compiled probe and the reference implementation agree on every rectangle
@@ -66,7 +66,7 @@ Feature: The bar family lays its rectangles out where d3 would
   @level-long
   @mode-conformance
   Scenario: A diverging stack opens around the baseline by series position
-    Given the committed probe document local://diverging.tex
+    Given the committed probe document shared://📊️charts-bar-layout/diverging.tex
     Then the compiled probe reports the specified rectangles
       | x     | y     | w     | h      |
       | 11.32 | 22    | 10.56 | -7     |

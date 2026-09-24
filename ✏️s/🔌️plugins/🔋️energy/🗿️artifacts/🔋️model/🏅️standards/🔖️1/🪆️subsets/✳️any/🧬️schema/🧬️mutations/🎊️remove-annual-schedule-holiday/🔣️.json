@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveAnnualScheduleHoliday",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-annual-schedule-holiday",
-  "binaryTag": null,
+  "binaryTag": 271,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

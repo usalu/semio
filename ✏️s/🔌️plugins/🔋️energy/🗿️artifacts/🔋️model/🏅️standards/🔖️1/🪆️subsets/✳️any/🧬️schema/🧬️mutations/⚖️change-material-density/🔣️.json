@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeMaterialDensity",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-material-density",
-  "binaryTag": null,
+  "binaryTag": 65,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

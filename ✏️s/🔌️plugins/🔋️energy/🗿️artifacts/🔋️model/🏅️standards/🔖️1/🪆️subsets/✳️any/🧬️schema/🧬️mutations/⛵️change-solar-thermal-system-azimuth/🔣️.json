@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeSolarThermalSystemAzimuth",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-solar-thermal-system-azimuth",
-  "binaryTag": null,
+  "binaryTag": 225,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

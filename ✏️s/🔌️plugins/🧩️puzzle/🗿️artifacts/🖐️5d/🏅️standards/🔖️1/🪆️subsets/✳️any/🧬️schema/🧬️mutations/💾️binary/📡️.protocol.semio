@@ -3,14 +3,81 @@ protocol 5d.mutations
 version 1
 schema puzzle.puzzle5d.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record create-part tag=0
+field payload bytes
+record delete-part tag=1
+field payload bytes
+record move-part2d tag=2
+field payload bytes
+record replace-part2d-geometry tag=3
+field payload bytes
+record edit-part2d-text tag=4
+field payload bytes
+record change-part2d-icon tag=5
+field payload bytes
+record change-part2d-hidden tag=6
+field payload bytes
+record change-part2d-locked tag=7
+field payload bytes
+record move-part3d tag=8
+field payload bytes
+record rotate-part3d tag=9
+field payload bytes
+record scale-part3d tag=10
+field payload bytes
+record change-part3d-mesh tag=11
+field payload bytes
+record edit-part3d-label tag=12
+field payload bytes
+record change-part-kind tag=13
+field payload bytes
+record change-part-anchor tag=14
+field payload bytes
+record add-part-grip tag=15
+field payload bytes
+record remove-part-grip tag=16
+field payload bytes
+record replace-part-grip tag=17
+field payload bytes
+record connect-grips tag=18
+field payload bytes
+record disconnect-grips tag=19
+field payload bytes
+record replace-fastener-geometry tag=20
+field payload bytes
+record change-fastener-kind tag=21
+field payload bytes
+record rename-puzzle5d tag=22
+field payload bytes
+record change-domain tag=23
+field payload bytes
+record change-description tag=24
+field payload bytes
+record connect-kind-compatibility tag=25
+field payload bytes
+record disconnect-kind-compatibility tag=26
+field payload bytes
+record replace-kind-catalogs tag=27
+field payload bytes
+record create-target-volume tag=28
+field payload bytes
+record delete-target-volume tag=29
+field payload bytes
+record move-target-volume tag=30
+field payload bytes
+record rotate-target-volume tag=31
+field payload bytes
+record scale-target-volume tag=32
+field payload bytes
+record change-target-volume-hidden tag=33
+field payload bytes
+record change-target-volume-locked tag=34
+field payload bytes

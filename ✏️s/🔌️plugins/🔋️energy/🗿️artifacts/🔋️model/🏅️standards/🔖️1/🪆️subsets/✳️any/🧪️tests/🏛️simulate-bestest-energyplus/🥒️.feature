@@ -1,5 +1,5 @@
 @capability-energy-model-1-simulate
-@oracle-energyplus-ashrae-140
+@oracle-energyplus-25-2-0-via-honeybee-openstudio
 @comparison-ordered-json-v1
 @simulate-energy-model-1-any
 Feature: Simulate the committed ANSI/ASHRAE 140 §5.2 case models and compare them with EnergyPlus

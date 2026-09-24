@@ -3036,17 +3036,18 @@ mod plugin_builder_contract_tests {
     #[test]
     fn retained_field_maximum_and_maximum_plus_one_are_language_neutral() {
         let mut exact = AppActionRegistry::test_with_controller_id("x".repeat(ARTIFACT_OUTPUT_CHUNK_BYTES));
-        assert!(matches!(exact.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Pending { released_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES }));
+        assert_eq!(exact.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }, "the row detaches whole");
+        assert_eq!(exact.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES }, "a grant-sized identifier retires in one page");
         assert_eq!(exact.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Complete);
         assert!(exact.terminal_is_empty());
 
-        let owner = "y".repeat(ARTIFACT_OUTPUT_CHUNK_BYTES + 1);
-        let owner_pointer = owner.as_ptr();
-        let mut plus_one = AppActionRegistry::test_with_controller_id(owner);
-        assert!(matches!(plus_one.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
-        assert_eq!(plus_one.controller_id.as_ptr(), owner_pointer, "rejection hands back the exact retained backing owner");
-        assert!(matches!(plus_one.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES + 1), PluginCloseStep::Pending { released_items: 1, released_bytes } if released_bytes == ARTIFACT_OUTPUT_CHUNK_BYTES + 1));
+        let mut plus_one = AppActionRegistry::test_with_controller_id("y".repeat(ARTIFACT_OUTPUT_CHUNK_BYTES + 1));
+        assert_eq!(plus_one.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        assert_eq!(plus_one.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES }, "maximum plus one pages instead of refusing");
+        assert!(!plus_one.terminal_is_empty(), "the unreleased byte stays retained until its own page");
+        assert_eq!(plus_one.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: 1 });
         assert_eq!(plus_one.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Complete, "repeated close is idempotent after interruption and resume");
+        assert!(plus_one.terminal_is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4012,6 +4013,7 @@ mod plugin_builder_contract_tests {
             ui: None,
             tool_run: None,
             principal_kind: None,
+            active_tool: None,
         }
     }
 
@@ -4609,6 +4611,102 @@ mod plugin_builder_contract_tests {
         assert_eq!(restored.count, 7, "the reloaded child lost its own edit history");
         drain_and_close_composed_fixture(&mut reloaded);
         drain_and_close_composed_fixture(&mut app);
+    }
+
+    /// 🧪️ Runs the reserved spawn-job the host would for `admitted` and answers the bytes its
+    /// `JobCompleted` carries.
+    async fn finish_reserved_spawn_job(admitted: &semio_framework::InvocationResult) -> (u64, Result<Vec<u8>, Fault>) {
+        crate::app::initialize_framework_reserved_jobs();
+        let (job, input) = admitted
+            .requested_effects
+            .iter()
+            .find_map(|effect| match effect {
+                Effect::SpawnJob { job, kind, input, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND => Some((*job, input.clone())),
+                _ => None,
+            })
+            .expect("a reserved route admits its spawn-job");
+        crate::reactor::jobs::start_job(job, crate::app::FRAMEWORK_RESERVED_JOB_KIND, &input).await;
+        for _ in 0..32 {
+            match crate::reactor::jobs::step_job(job, crate::reactor::jobs::JobBudget { fuel: 50_000_000, deadline_ms: 100 }).await {
+                crate::reactor::jobs::JobStep::Done(bytes) => return (job, Ok(bytes)),
+                crate::reactor::jobs::JobStep::Failed(bytes) => panic!("reserved spawn-job failed: {}", String::from_utf8_lossy(&bytes)),
+                crate::reactor::jobs::JobStep::Running(_) => {}
+            }
+        }
+        panic!("reserved spawn-job never reached a terminal step")
+    }
+
+    /// 🧪️ One reactor-turn continuation unit, polled exactly the way the guest bridges it: ONCE, with
+    /// a no-op waker. A unit that suspends is the `resolve_ready: future was not ready on first poll`
+    /// trap that killed the gis actor on its first auto check-in.
+    fn continuation_unit_is_ready_on_first_poll(app: &mut VcsArtifactApp<TestApp, TestMembers>) {
+        let waker = std::task::Waker::noop();
+        let mut cx = std::task::Context::from_waker(waker);
+        let mut unit = Box::pin(PluginApp::advance_typed_operation_publication(app));
+        match std::future::Future::poll(unit.as_mut(), &mut cx) {
+            std::task::Poll::Ready(result) => result.expect("continuation unit"),
+            std::task::Poll::Pending => panic!("a reserved commit unit suspended inside one turn"),
+        }
+    }
+
+    /// ⚖️ A composed `commitCheckpoint` is a job driven across turns: the host's `JobCompleted` only
+    /// queues the commit, every continuation unit completes on its first poll, the commit takes one
+    /// unit per composed child plus the parent's own, reports that progress while it runs, and
+    /// publishes its result — pins included — only after the last unit.
+    #[semio_framework_async_macros::async_test]
+    async fn a_composed_checkpoint_commit_is_driven_one_ready_unit_per_turn_with_progress() {
+        let mut app = contract_composed_app().await;
+        for child in ["child-1", "child-2"] {
+            app.register_child("slot", child, test_child_dialect().await, new_test_child(child).await.expect("construct child")).await.expect("register child");
+            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta()).await.expect("composite edit");
+        }
+        let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("admit checkpoint");
+        let (job, output) = finish_reserved_spawn_job(&admitted).await;
+        assert!(PluginApp::admit_reserved_spawned_job(&mut *app, job, output).expect("JobCompleted queues the commit"));
+        assert!(PluginApp::has_runnable_typed_operations(&*app), "a queued commit keeps the actor's turn armed");
+        let mut progress = Vec::new();
+        let mut units = 0;
+        let outcome = loop {
+            continuation_unit_is_ready_on_first_poll(&mut app);
+            units += 1;
+            if let Some(outcome) = PluginApp::take_reserved_commit_outcome(&mut *app) {
+                break outcome;
+            }
+            progress.push(PluginApp::reserved_commit_progress(&*app).expect("a running commit reports progress"));
+            assert!(units < 64, "the checkpoint commit never finished");
+        };
+        let result = outcome.expect("checkpoint commit");
+        assert_eq!(units, 3, "two composed children plus the parent commit are three units");
+        assert_eq!(progress.iter().map(|step| (step.applied, step.total)).collect::<Vec<_>>(), vec![(1, 3), (2, 3)]);
+        assert!(progress.iter().all(|step| step.operation == job));
+        assert!(result.events.iter().any(|event| event.kind == "history-changed"));
+        assert!(PluginApp::reserved_commit_progress(&*app).is_none());
+        let checkpoint = app.test_store().await.current_checkpoint_id().map(str::to_string).expect("parent checkpoint exists");
+        let pins = app.test_store().await.envelope().vcs.checkpoints.iter().find(|entry| entry.id == checkpoint).map(|entry| entry.composition_pins.clone()).expect("checkpoint found");
+        assert_eq!(pins.iter().map(|pin| pin.child_ref.artifact_id.as_str()).collect::<Vec<_>>(), ["child-1", "child-2"]);
+    }
+
+    /// ⚖️ Cancelling the operation between units stops a composed checkpoint before the parent
+    /// commits: the outcome is `interactive-job.cancelled`, no parent checkpoint exists, and the app
+    /// still closes to terminal emptiness.
+    #[semio_framework_async_macros::async_test]
+    async fn a_composed_checkpoint_commit_cancels_between_units() {
+        let mut app = contract_composed_app().await;
+        for child in ["child-1", "child-2"] {
+            app.register_child("slot", child, test_child_dialect().await, new_test_child(child).await.expect("construct child")).await.expect("register child");
+            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta()).await.expect("composite edit");
+        }
+        let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("admit checkpoint");
+        let (job, output) = finish_reserved_spawn_job(&admitted).await;
+        assert!(PluginApp::admit_reserved_spawned_job(&mut *app, job, output).expect("JobCompleted queues the commit"));
+        continuation_unit_is_ready_on_first_poll(&mut app);
+        assert_eq!(PluginApp::reserved_commit_progress(&*app).map(|step| step.applied), Some(1));
+        assert!(app.tool_cancellation_handle().cancel_document(crate::app::ArtifactDocumentAuthority(meta().instance_id)).expect("cancel the document's operations"));
+        continuation_unit_is_ready_on_first_poll(&mut app);
+        let fault = PluginApp::take_reserved_commit_outcome(&mut *app).expect("a cancelled commit answers").expect_err("cancelled");
+        assert_eq!(fault.code.0, "interactive-job.cancelled");
+        assert!(app.test_store().await.current_checkpoint_id().is_none(), "a cancelled checkpoint never commits the parent");
+        assert!(!PluginApp::has_runnable_typed_operations(&*app));
     }
 
     #[semio_framework_async_macros::async_test]

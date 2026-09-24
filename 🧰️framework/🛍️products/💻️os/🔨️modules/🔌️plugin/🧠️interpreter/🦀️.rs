@@ -899,6 +899,8 @@ pub struct SemioDescribeReply {
     pub descriptor: Option<Vec<u8>>,
 }
 
+/// 🧾️ The deterministic describe profile: clocks and randomness answer zero, so describing the
+/// same component always yields the same descriptor bytes.
 #[derive(Clone, Debug)]
 pub struct SemioDescribeHost {
     context: i32,
@@ -934,6 +936,7 @@ impl SemioDescribeHost {
                 self.write_zeroes(actor, argument_i32(call, 0)?, 16)?;
                 vec![]
             }
+            ("wasi:random/random@0.2.9", "get-random-u64") => vec![Value::I64(0)],
             ("wasi:cli/environment@0.2.0", "get-environment") => {
                 self.write_zeroes(actor, argument_i32(call, 0)?, 8)?;
                 vec![]

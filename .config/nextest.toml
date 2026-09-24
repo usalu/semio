@@ -1,27 +1,186 @@
-# ⏱️Per-level nextest profiles — `slow-timeout.period` matches [[TEST_LEVEL_BUDGET_MS]] in repo/lib/js/index.ts.
+# Per-level nextest profiles — `slow-timeout.period` matches fixtures/test-level-budgets levels.
 
 [profile.fundamental]
 slow-timeout = { period = "15s", terminate-after = 1 }
 
 [profile.quick]
-slow-timeout = { period = "30s", terminate-after = 1 }
-
-[profile.long]
 slow-timeout = { period = "300s", terminate-after = 1 }
 
-[profile.exhaustive]
+[profile.long]
 slow-timeout = { period = "900s", terminate-after = 1 }
 
-# 🐳️ The live database lanes are not ordinary unit tests: each one `docker run`s its own
-# `postgres:16-alpine` / `neo4j:5-community` and polls it for up to 30 s / 60 s
-# (`🌎️hub/📇️directory/{🐘️postgres,🌐️neo4j}/🧪️tests/🔬️unit/🦀️.rs`). Run in parallel they start a
-# server per test at once, and on a loaded machine none of them comes up inside the level budget:
-# measured 2026-09-22, seven `directory::neo4j::` laws each hit the `long` profile's 300 s
-# terminate-after while the SAME laws pass in 76–99 s when the lane runs by itself (DB2 §3, DB3 §4).
-# One at a time is the fix; it costs the suite nothing, because the whole set is minutes.
+[profile.exhaustive]
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+# Live database lanes: each docker-runs postgres/neo4j; serialize to avoid parallel cold starts.
 [test-groups]
 live-database-lanes = { max-threads = 1 }
 
 [[profile.default.overrides]]
 filter = 'test(/^directory::(neo4j|postgres)::/)'
 test-group = 'live-database-lanes'
+
+# Batch-A/B plugin floors (match PACKAGE_TEST_BUDGET_MS quick floors).
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-mathematical)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-wfc)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-fem)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-architect)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-procedural)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-flow)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-demonstrator)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-process)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-gis)'
+slow-timeout = { period = "900s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-animate)'
+slow-timeout = { period = "900s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-lowpoly)'
+slow-timeout = { period = "900s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-layout)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-cad)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-norm)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-playbook)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-imperative)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-remodel)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-energy)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-trinity)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-dag)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-draw)'
+slow-timeout = { period = "900s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-raster)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-stdio)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-note)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-puzzle)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-block)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-space)'
+slow-timeout = { period = "1200s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-sourcing)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-cad-aec-building)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-cad-aec-building-energy)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-cad-aec-building-structure)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-cad-spatial-shape)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-imperative-control)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-imperative-effect)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-imperative-logic)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-imperative-math)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-imperative-text)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-playbook-procedural)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-sourcing-beams)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-sourcing-slabs)'
+slow-timeout = { period = "600s", terminate-after = 1 }
+
+[[profile.quick.overrides]]
+filter = 'package(semio-s-plugin-sourcing-windows)'
+slow-timeout = { period = "600s", terminate-after = 1 }

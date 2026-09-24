@@ -42,9 +42,12 @@ pub mod guest {
     use crate::profile::{self, PlainEffect, TurnBudget, TurnOutcome};
     use std::cell::RefCell;
     use exports::semio::framework::checkpoint::Guest as CheckpointGuest;
+    use exports::semio::framework::codec::{DocumentPair, Guest as CodecGuest};
     use exports::semio::framework::describe::Guest as DescribeGuest;
     use exports::semio::framework::jobs::{Guest as JobsGuest, JobBudget, JobStep};
-    use exports::semio::framework::reactor::{Budget as WitBudget, Effect as WitEffect, Event as WitEvent, Guest as ReactorGuest, TurnResult as WitTurnResult, TurnStatus as WitTurnStatus};
+    use exports::semio::framework::reactor::{
+        Budget as WitBudget, ColdDocumentPairPage, ColdPairIngressStatus, CommandIngressStatus, CommandPageCursor, Effect as WitEffect, Event as WitEvent, Guest as ReactorGuest, TurnResult as WitTurnResult, TurnStatus as WitTurnStatus,
+    };
     use semio::framework::capabilities::CapabilityChange;
     use semio::framework::effects::{RequestCapabilityEffect, RequestCapabilityParams};
     use semio::framework::events::CompletionResult;
@@ -64,6 +67,12 @@ pub mod guest {
 
     thread_local! {
         static UI_AUTHORITY: RefCell<UiAuthority> = RefCell::new(UiAuthority::default());
+        static STAGED_COMMAND_PAGE: RefCell<Option<CommandPageCursor>> = const { RefCell::new(None) };
+    }
+
+    /// 🚫️ The fixture owns no artifact kind and no document, so every document-shaped call is refused.
+    fn owns_no_document() -> PluginError {
+        PluginError::Fault(b"scale fixture owns no artifact kind".to_vec())
     }
 
     fn capture_ui_authority(open: &semio::framework::events::InstanceOpenEvent) -> Receipt {
@@ -114,15 +123,16 @@ pub mod guest {
         })
     }
 
-    fn command_ingress_status(page: Option<exports::semio::framework::reactor::CommandIngressPage>) -> exports::semio::framework::reactor::CommandIngressStatus {
-        use exports::semio::framework::reactor::{CommandIngressStatus, CommandPageCursor};
-        page.map_or_else(
+    /// 🚦️ Idle, or backpressure on the one command page staged since the last poll: the fixture runs
+    /// no commands, so a staged page is answered once and never accepted.
+    fn command_ingress_status() -> CommandIngressStatus {
+        STAGED_COMMAND_PAGE.with(|slot| slot.borrow_mut().take()).map_or_else(
             || CommandIngressStatus {
                 kind: 0,
                 cursor: CommandPageCursor { owner: 0, generation: 0, command_index: 0, command_count: 0, instance: 0, seq: 0, kind: 0, page_index: 0, page_count: 0, item_count: 0, metadata: 0 },
                 fault: Vec::new(),
             },
-            |page| CommandIngressStatus { kind: 2, cursor: page.cursor, fault: Vec::new() },
+            |cursor| CommandIngressStatus { kind: 2, cursor, fault: Vec::new() },
         )
     }
 
@@ -133,12 +143,16 @@ pub mod guest {
     // calls no `host-async` import at all, which is deliberate — the bench measures the RUNTIME, so
     // the guest must not add work of its own.
     impl ReactorGuest for FixtureGuest {
-        async fn poll(
-            events: Vec<WitEvent>,
-            command_page: Option<exports::semio::framework::reactor::CommandIngressPage>,
-            _cold_pair_page: Option<exports::semio::framework::reactor::ColdDocumentPairPage>,
-            budget: WitBudget,
-        ) -> Result<WitTurnResult, PluginError> {
+        async fn stage_command_page(cursor: CommandPageCursor, _bytes: Vec<u8>) -> Result<(), PluginError> {
+            STAGED_COMMAND_PAGE.with(|slot| *slot.borrow_mut() = Some(cursor));
+            Ok(())
+        }
+
+        async fn stage_cold_pair_page(_page: ColdDocumentPairPage) -> Result<(), PluginError> {
+            Err(owns_no_document())
+        }
+
+        async fn poll(events: Vec<WitEvent>, budget: WitBudget) -> Result<WitTurnResult, PluginError> {
             let mut lifecycle_receipt = None;
             let mut lifecycle_turn = false;
             for event in events {
@@ -209,8 +223,8 @@ pub mod guest {
                 next_wake: outcome.next_wake_ms,
                 status: if outcome.status_more_work { WitTurnStatus::MoreWork } else { WitTurnStatus::Idle },
                 fuel_used: outcome.fuel_used,
-                command_ingress: command_ingress_status(command_page),
-                cold_pair_ingress: exports::semio::framework::reactor::ColdPairIngressStatus::Idle,
+                command_ingress: command_ingress_status(),
+                cold_pair_ingress: ColdPairIngressStatus::Idle,
                 lifecycle_receipt,
                 ui_patch_receipt,
             })
@@ -252,10 +266,28 @@ pub mod guest {
     impl DescribeGuest for FixtureGuest {
         async fn describe() -> Vec<u8> {
             // 🚧️ Placeholder — a real packed `PackageDescriptor` is packet E1-describe's job. F1
-            // only proves `reactor`/`jobs`/`checkpoint`/`describe` are wired and the crate builds
+            // only proves `reactor`/`jobs`/`checkpoint`/`describe`/`codec` are wired and the crate builds
             // for `wasm32-wasip2`; nothing in this ticket's V1 bench reads this actor's `describe()`
             // output (the generated `🔣️registry.json`/`🔣️catalog.json` are what the bench parses).
             Vec::new()
+        }
+    }
+
+    impl CodecGuest for FixtureGuest {
+        async fn pack_schema_hash(_artifact_kind: String) -> Result<Vec<u8>, PluginError> {
+            Err(owns_no_document())
+        }
+
+        async fn genesis(_artifact_kind: String, _document_id: String) -> Result<DocumentPair, PluginError> {
+            Err(owns_no_document())
+        }
+
+        async fn print_mirror(_artifact_kind: String, _pair: DocumentPair) -> Result<(String, String), PluginError> {
+            Err(owns_no_document())
+        }
+
+        async fn apply_ops(_artifact_kind: String, _pair: DocumentPair, _ops: Vec<u8>) -> Result<DocumentPair, PluginError> {
+            Err(owns_no_document())
         }
     }
 

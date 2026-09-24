@@ -26,20 +26,7 @@
   },
   "$defs": {
     "PortRef": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "node",
-        "port"
-      ],
-      "properties": {
-        "node": {
-          "type": "string"
-        },
-        "port": {
-          "type": "string"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/flow/snapshot.json#/definitions/PortRef"
     }
   }
 }

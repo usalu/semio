@@ -12,6 +12,6 @@ async fn generation2d_labels_translate_catalogue_and_inspector_in_german() {
     let catalogue_json = render_with_view(&mut app, catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE, &view_state).await;
     let inspector_json = render_with_view(&mut app, GENERATION2D_PLAY_BODY_INSPECTION, &view_state).await;
     close(app);
-    assert!(catalogue_json.contains("Quellen"), "{catalogue_json}");
+    assert!(catalogue_json.contains("\"Komponenten\""), "{catalogue_json}");
     assert!(inspector_json.contains("Elemente:"), "{inspector_json}");
 }

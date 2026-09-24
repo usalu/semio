@@ -43,14 +43,14 @@ function browserRequest(scopeCase: ScopedPresenceBrowserCaseV1, hubOrigin: strin
     schema: scopeCase.schema,
     actor: `browser-shell-${scopeCase.id}`,
     packSchemaHash: Array.from({ length: 32 }, () => 17),
-    bindings: [{ kind: "hub", baseUrl: hubOrigin, spaceId: scopeCase.scope.spaceId, installedTarget: scopeCase.installedTarget }],
+    bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: hubOrigin, spaceId: scopeCase.scope.spaceId, installedTarget: scopeCase.installedTarget }],
   };
 }
 
 function ScopedPresenceBrowserShell({ config }: { readonly config: ScopedPresenceBrowserConfigV1 }) {
   const workerRef = useRef<Worker | null>(null);
   const [rows, setRows] = useState<RuntimeRows>(initialRows);
-  const casesByKey = useRef(new Map(config.cases.map((row) => [documentRuntimeKeyV1({ kind: "hub", ...row.scope }), row])));
+  const casesByKey = useRef(new Map(config.cases.map((row) => [documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...row.scope }), row])));
 
   const post = useCallback((request: BackboneWorkerRequest): void => {
     workerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest(request) });
@@ -88,7 +88,7 @@ function ScopedPresenceBrowserShell({ config }: { readonly config: ScopedPresenc
       if (!event.data?.wire) return;
       const message = decodeBackboneWorkerResponse(new Uint8Array(event.data.wire));
       if ((message.kind !== "socket-actor" && message.kind !== "event") || message.scope === undefined) return;
-      const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...message.scope });
+      const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...message.scope });
       const scopeCase = casesByKey.current.get(runtimeKey);
       if (!scopeCase) return;
       if (message.kind === "socket-actor") {

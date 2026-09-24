@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/async/worker-parking/schema.json",
+  "title": "Async Worker-parking Schema Module",
+  "$defs": {
+    "ParkWake": { "enum": ["signalled", "woken", "timer-due", "closed"] },
+    "WorkerParkingFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "idle", "timer", "periodicTimer", "protocol", "cancellation"],
+      "properties": {
+        "schema": { "const": "https://json.schemas.assets.semio-tech.com/framework/async/worker-parking/schema.json#/$defs/WorkerParkingFixture" },
+        "idle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["workers", "settleMs", "quietWindowMs", "maximumSleepsInQuietWindow"],
+          "properties": {
+            "workers": { "type": "integer", "minimum": 1, "maximum": 64 },
+            "settleMs": { "type": "integer", "minimum": 1, "maximum": 10000 },
+            "quietWindowMs": { "type": "integer", "minimum": 1, "maximum": 10000 },
+            "maximumSleepsInQuietWindow": { "const": 0 }
+          }
+        },
+        "timer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["deadlineMs", "toleranceMs"],
+          "properties": {
+            "deadlineMs": { "type": "integer", "minimum": 1, "maximum": 10000 },
+            "toleranceMs": { "type": "integer", "minimum": 1, "maximum": 10000 }
+          }
+        },
+        "periodicTimer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["workers", "ticks", "intervalMs", "maximumSleepsPerTick", "startupSleeps"],
+          "properties": {
+            "workers": { "type": "integer", "minimum": 2, "maximum": 64 },
+            "ticks": { "type": "integer", "minimum": 1, "maximum": 10000 },
+            "intervalMs": { "type": "integer", "minimum": 1, "maximum": 1000 },
+            "maximumSleepsPerTick": { "const": 1 },
+            "startupSleeps": { "type": "integer", "minimum": 0, "maximum": 64 }
+          }
+        },
+        "protocol": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "timerDue", "expected"],
+            "properties": {
+              "case": { "enum": ["signal-before-park", "close-before-park", "keeper-deadline-elapses", "work-signal-wakes-sleeper", "work-signal-wakes-lone-keeper", "firing-earlier-deadline-rearms-stale-keeper"] },
+              "timerDue": { "type": "boolean" },
+              "expected": { "$ref": "#/$defs/ParkWake" }
+            }
+          }
+        },
+        "cancellation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["chainDepth", "cancelLevel", "expectedWakes", "retainedWaitersAfterDrop"],
+          "properties": {
+            "chainDepth": { "type": "integer", "minimum": 1, "maximum": 16 },
+            "cancelLevel": { "type": "integer", "minimum": 0, "maximum": 15 },
+            "expectedWakes": { "const": 1 },
+            "retainedWaitersAfterDrop": { "const": 0 }
+          }
+        }
+      }
+    }
+  }
+}

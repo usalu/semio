@@ -43,6 +43,8 @@ export interface Puzzle3dSuggestionMenu {
   y: number;
   windowId: string;
   vortexFullId: string;
+  /** Listed as the context menu's "suggest" submenu rather than as its own floating popup. */
+  submenu: boolean;
 }
 
 export interface Puzzle3dWindowConfig {

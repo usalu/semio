@@ -165,10 +165,8 @@
       "mutation": "insert-array-element",
       "outcome": "applied",
       "units": {
-        "length": "none",
-        "angle": "none",
-        "handedness": "none",
-        "up": "none"
+        "length": "unitless",
+        "angle": "unitless"
       },
       "files": [
         {
@@ -189,7 +187,7 @@
       "generator": {
         "oracle": "json-rust-rfc8259-mutate",
         "packageVersion": "1",
-        "engineFamily": "serde_json",
+        "engineFamily": "json-rs",
         "engineVersion": "1",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
@@ -218,10 +216,8 @@
       "mutation": "remove-array-element",
       "outcome": "applied",
       "units": {
-        "length": "none",
-        "angle": "none",
-        "handedness": "none",
-        "up": "none"
+        "length": "unitless",
+        "angle": "unitless"
       },
       "files": [
         {
@@ -242,7 +238,7 @@
       "generator": {
         "oracle": "json-rust-rfc8259-mutate",
         "packageVersion": "1",
-        "engineFamily": "serde_json",
+        "engineFamily": "json-rs",
         "engineVersion": "1",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
@@ -271,10 +267,8 @@
       "mutation": "remove-member",
       "outcome": "applied",
       "units": {
-        "length": "none",
-        "angle": "none",
-        "handedness": "none",
-        "up": "none"
+        "length": "unitless",
+        "angle": "unitless"
       },
       "files": [
         {
@@ -295,7 +289,7 @@
       "generator": {
         "oracle": "json-rust-rfc8259-mutate",
         "packageVersion": "1",
-        "engineFamily": "serde_json",
+        "engineFamily": "json-rs",
         "engineVersion": "1",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
@@ -324,10 +318,8 @@
       "mutation": "set-member",
       "outcome": "applied",
       "units": {
-        "length": "none",
-        "angle": "none",
-        "handedness": "none",
-        "up": "none"
+        "length": "unitless",
+        "angle": "unitless"
       },
       "files": [
         {
@@ -348,7 +340,7 @@
       "generator": {
         "oracle": "json-rust-rfc8259-mutate",
         "packageVersion": "1",
-        "engineFamily": "serde_json",
+        "engineFamily": "json-rs",
         "engineVersion": "1",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"
@@ -377,10 +369,8 @@
       "mutation": "set-scalar",
       "outcome": "applied",
       "units": {
-        "length": "none",
-        "angle": "none",
-        "handedness": "none",
-        "up": "none"
+        "length": "unitless",
+        "angle": "unitless"
       },
       "files": [
         {
@@ -401,7 +391,7 @@
       "generator": {
         "oracle": "json-rust-rfc8259-mutate",
         "packageVersion": "1",
-        "engineFamily": "serde_json",
+        "engineFamily": "json-rs",
         "engineVersion": "1",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate",
         "platform": "darwin-arm64"

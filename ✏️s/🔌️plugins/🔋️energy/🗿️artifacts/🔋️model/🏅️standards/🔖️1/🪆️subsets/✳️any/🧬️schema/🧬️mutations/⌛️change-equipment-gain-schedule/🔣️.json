@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeEquipmentGainSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-equipment-gain-schedule",
-  "binaryTag": null,
+  "binaryTag": 96,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

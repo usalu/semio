@@ -4,4 +4,14 @@ version 1
 schema stdio.dwg.op
 start op
 framing record
-chain body bytes
+
+# Real `DwgMutation` op frame (`dsl::tagged_value_binary`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`, then
+# the variant's `ToValue` tree without its variant name, as one framework wire value (`pack_rt::encode_wire_value`).
+# Each record is one mutation kind at its wire tag; this file is the only source of those tags.
+header fixed 2
+field format u8
+field tag varint
+record set-snapshot tag=0
+field payload bytes
+record set-version-info tag=1
+field payload bytes

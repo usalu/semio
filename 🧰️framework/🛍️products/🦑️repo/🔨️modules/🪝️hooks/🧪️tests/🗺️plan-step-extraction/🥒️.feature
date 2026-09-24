@@ -18,7 +18,7 @@ Feature: A plan update event becomes a set of steps, and folding it into the rec
   @level-fundamental
   @mode-differential
   Scenario: Every payload shape yields the same ordered list of steps
-    Given the plan vectors local://🗺️plans.json
+    Given the plan vectors shared://🗺️plan-step-extraction/🗺️plans.json
     When the steps are extracted from every payload and tool argument string
     Then every implementation projects the same ordered steps for every payload
 
@@ -26,7 +26,7 @@ Feature: A plan update event becomes a set of steps, and folding it into the rec
   @level-fundamental
   @mode-differential
   Scenario: Folding an incoming plan into a recorded one keeps every lifecycle timestamp
-    Given the plan vectors local://🗺️plans.json
+    Given the plan vectors shared://🗺️plan-step-extraction/🗺️plans.json
     When each merge vector is folded at its own second
     Then every implementation projects the same merged steps, in the same order
 
@@ -34,6 +34,6 @@ Feature: A plan update event becomes a set of steps, and folding it into the rec
   @level-fundamental
   @mode-round-trip
   Scenario: Folding the same plan a second time at a later second changes no timestamp
-    Given the plan vectors local://🗺️plans.json
+    Given the plan vectors shared://🗺️plan-step-extraction/🗺️plans.json
     When each merge vector is folded and then folded again with the same incoming plan at a later second
     Then every implementation projects a second fold identical to the first

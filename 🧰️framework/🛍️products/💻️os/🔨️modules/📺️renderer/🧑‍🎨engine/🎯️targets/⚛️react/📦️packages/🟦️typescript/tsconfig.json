@@ -3,7 +3,12 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "DOM.AsyncIterable",
+      "DOM.Iterable",
+      "ESNext"
+    ],
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
@@ -16,8 +21,27 @@
     "incremental": true,
     "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
     "noEmit": true,
-    "types": ["react", "react-dom", "vite/client"]
+    "types": [
+      "react",
+      "react-dom",
+      "vite/client",
+      "bun"
+    ]
   },
-  "include": ["../../**/*.ts", "../../**/*.tsx", "../../../../🧪️tests/**/*.ts", "../../../../🧪️tests/**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "../../**/*.ts",
+    "../../**/*.tsx",
+    "../../../../🧱️elements/**/*.ts",
+    "../../../../🧱️elements/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules/**",
+    "./📜️script.ts",
+    "**/📜️script.ts",
+    "../../**/📜️script.ts",
+    "**/*.mjs",
+    "../../../../../../**/✏️s/**",
+    "../../../../../../**/♻️mit-bestand/**"
+  ]
 }

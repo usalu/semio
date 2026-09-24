@@ -218,7 +218,12 @@ export function cleanProjectRemovals(root: string, removals: readonly CleanRemov
   return cleanDedupePreferShallowest(
     removals.filter((row) => {
       const absolute = resolve(root, row.path);
-      const allowedOpenTicket = row.kind === "ticket-generated" ? cleanTicketGeneratedOutputTicketRoot(root, absolute) : row.kind === "windows-illegal" ? cleanTicketFolderForPath(root, absolute) : undefined;
+      const allowedOpenTicket =
+        row.kind === "ticket-generated"
+          ? cleanTicketGeneratedOutputTicketRoot(root, absolute) ?? cleanTicketFolderForPath(root, absolute)
+          : row.kind === "windows-illegal"
+            ? cleanTicketFolderForPath(root, absolute)
+            : undefined;
       const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
       const protectedPaths = cleanIntersectsProtected(absolute, applicablePrefixes) ? [absolute] : allowedOpenTicket ? [] : cleanRemovalProtection(root, row.path, view, allowedOpenTicket);
       for (const path of protectedPaths) onProtected?.(path);

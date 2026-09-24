@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateThermalEnclosure",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-thermal-enclosure",
-  "binaryTag": null,
+  "binaryTag": 247,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

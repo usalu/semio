@@ -13,7 +13,7 @@ Feature: Argument values resolve against variables and declared defaults identic
   @level-fundamental
   @mode-differential
   Scenario: Every root selection's arguments coerce to the same values
-    Given the coercion corpus local://🔣️coercions.json
+    Given the coercion corpus shared://🔀️variable-coercion/🔣️coercions.json
     When each implementation parses the request and coerces each root selection's arguments
     Then every implementation produces the same argument map for every case
 
@@ -21,6 +21,6 @@ Feature: Argument values resolve against variables and declared defaults identic
   @level-quick
   @mode-conformance
   Scenario: A declared default fills an absent argument name and nothing else
-    Given the coercion corpus local://🔣️coercions.json
+    Given the coercion corpus shared://🔀️variable-coercion/🔣️coercions.json
     When each implementation coerces the cases that declare defaults
     Then an absent argument takes its default and a null-valued variable does not

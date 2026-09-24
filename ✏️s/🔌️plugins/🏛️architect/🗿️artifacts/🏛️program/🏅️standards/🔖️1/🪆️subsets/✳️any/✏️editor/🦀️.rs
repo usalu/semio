@@ -691,10 +691,10 @@ pub mod behavior {
             "elements" => upsert_element(program, row),
             "stakeholders" => upsert_stakeholder(program, row),
             "requirements" => upsert_requirement(program, row),
-            "relationships" => upsert_relationship_stub(program, row),
-            "adjacencies" => upsert_adjacency_stub(program, row),
-            "knowledge" => upsert_knowledge_stub(program, row),
-            "benchmarks" => upsert_benchmark_stub(program, row),
+            "relationships" => upsert_relationship(program, row),
+            "adjacencies" => upsert_adjacency(program, row),
+            "knowledge" => upsert_knowledge(program, row),
+            "benchmarks" => upsert_benchmark(program, row),
             other => {
                 return Err(PluginError::Csv(format!("unsupported register import: {other}")));
             }
@@ -804,15 +804,39 @@ pub mod behavior {
         });
     }
 
-    fn upsert_relationship_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
-        if program.relationships.iter().any(|r| r.header.id == row.id) {
-            return;
+    /// 🧬️ Applies one register mutation through the event-sourced diff/apply path.
+    fn absorb_register_mutation(program: &mut ProgramSnapshot, mutation: ProgramMutation) {
+        use protocol::{Mutation, MutationDiff};
+        if let Ok(next) = mutation.diff(program).diff().apply(program) {
+            *program = next;
+        }
+    }
+
+    /// 🔗 Parses `source_id>target_id` from the CSV `source` column (export fidelity encoding).
+    fn parse_endpoint_pair(encoded: &str, program: &ProgramSnapshot) -> (EntityId, EntityId) {
+        if let Some((left, right)) = encoded.split_once('>') {
+            let source = EntityId(left.trim().to_string());
+            let target = EntityId(right.trim().to_string());
+            if !source.0.is_empty() && !target.0.is_empty() {
+                return (source, target);
+            }
         }
         let fallback = program.elements.first().map_or_else(|| EntityId::new_serial("element", "element"), |e| e.header.id.clone());
-        program.relationships.push(Relationship {
+        (fallback.clone(), program.elements.get(1).map_or_else(|| fallback.clone(), |e| e.header.id.clone()))
+    }
+
+    fn upsert_relationship(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
+        if let Some(existing) = program.relationships.iter().find(|r| r.header.id == row.id) {
+            if existing.header.name != row.name {
+                absorb_register_mutation(program, ProgramMutation::RenameRelationship(leaves::rename_relationship::RenameRelationship { id: row.id, new_name: row.name }));
+            }
+            return;
+        }
+        let (source_id, target_id) = parse_endpoint_pair(&row.source, program);
+        let relationship = Relationship {
             header: EntityHeader::new(row.id, row.name),
-            source_id: fallback.clone(),
-            target_id: fallback,
+            source_id,
+            target_id,
             kind: RelationshipKind::AdjacentTo,
             strength: None,
             directional: true,
@@ -835,17 +859,22 @@ pub mod behavior {
             compatibility_requirement: None,
             incompatibility_requirement: None,
             separation_requirements: Vec::new(),
-        });
+        };
+        absorb_register_mutation(program, ProgramMutation::CreateRelationship(leaves::create_relationship::CreateRelationship { relationship }));
     }
 
-    fn upsert_adjacency_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
-        if program.adjacencies.iter().any(|a| a.header.id == row.id) {
+    fn upsert_adjacency(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
+        if let Some(existing) = program.adjacencies.iter().find(|a| a.header.id == row.id) {
+            if existing.header.name != row.name {
+                let mut adjacency = existing.clone();
+                adjacency.header.name = row.name;
+                absorb_register_mutation(program, ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency }));
+            }
             return;
         }
-        let a = program.elements.first().map_or_else(|| EntityId::new_serial("element", "element"), |e| e.header.id.clone());
-        let b = program.elements.get(1).map_or_else(|| a.clone(), |e| e.header.id.clone());
+        let (a, b) = parse_endpoint_pair(&row.source, program);
         let (left, right) = normalize_pair(&a, &b);
-        program.adjacencies.push(Adjacency {
+        let adjacency = Adjacency {
             header: EntityHeader::new(row.id, row.name),
             element_a_id: left,
             element_b_id: right,
@@ -867,20 +896,19 @@ pub mod behavior {
             verification_status: ValidationStatus::Pending,
             source_relationship_id: None,
             internal_external_access: None,
-        });
+        };
+        absorb_register_mutation(program, ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency }));
     }
-    /// 📚️ Header-only upsert for the COMPOSED `knowledge` register — `collect_rows` exports it like
-    /// every other register, so the importer must be able to read its own export back (it could not:
-    /// every `exportRegistersCsv`/`importRegistersCsv` round trip of a document with knowledge rows
-    /// failed with `unsupported register import: knowledge`). Same honest stub shape as
-    /// `upsert_adjacency_stub`: a `RegisterCsvRow` carries only the entity header, so the domain fields
-    /// start empty rather than being invented, and the parent's composed child handle is re-minted from
-    /// the new row set.
-    fn upsert_knowledge_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
-        if program.knowledge_payload.iter().any(|record| record.header.id == row.id) {
+
+    /// 📚️ Upserts a COMPOSED `knowledge` register row through create/rename mutations.
+    fn upsert_knowledge(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
+        if let Some(existing) = program.knowledge_payload.iter().find(|record| record.header.id == row.id) {
+            if existing.header.name != row.name {
+                absorb_register_mutation(program, ProgramMutation::RenameKnowledgeRecord(leaves::rename_knowledge_record::RenameKnowledgeRecord { id: row.id, new_name: row.name }));
+            }
             return;
         }
-        program.knowledge_payload.push(crate::registers::KnowledgeRecord {
+        let knowledge_record = crate::registers::KnowledgeRecord {
             header: EntityHeader::new(row.id, row.name),
             topic: String::new(),
             category: String::new(),
@@ -900,16 +928,19 @@ pub mod behavior {
             attachments: Vec::new(),
             citations: Vec::new(),
             usage_count: 0,
-        });
-        program.knowledge = crate::knowledge_child_from_records(&program.knowledge_payload);
+        };
+        absorb_register_mutation(program, ProgramMutation::CreateKnowledgeRecord(leaves::create_knowledge_record::CreateKnowledgeRecord { knowledge_record }));
     }
 
-    /// 🏁️ Header-only upsert for the COMPOSED `benchmarks` register — see [`upsert_knowledge_stub`].
-    fn upsert_benchmark_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
-        if program.benchmarks_payload.iter().any(|record| record.header.id == row.id) {
+    /// 🏁️ Upserts a COMPOSED `benchmarks` register row through create/rename mutations.
+    fn upsert_benchmark(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
+        if let Some(existing) = program.benchmarks_payload.iter().find(|record| record.header.id == row.id) {
+            if existing.header.name != row.name {
+                absorb_register_mutation(program, ProgramMutation::RenameBenchmarkRecord(leaves::rename_benchmark_record::RenameBenchmarkRecord { id: row.id, new_name: row.name }));
+            }
             return;
         }
-        program.benchmarks_payload.push(crate::registers::BenchmarkRecord {
+        let benchmark_record = crate::registers::BenchmarkRecord {
             header: EntityHeader::new(row.id, row.name),
             benchmark_name: String::new(),
             sector: String::new(),
@@ -930,8 +961,8 @@ pub mod behavior {
             license: None,
             knowledge_id: None,
             last_verified: None,
-        });
-        program.benchmarks = crate::benchmarks_child_from_records(&program.benchmarks_payload);
+        };
+        absorb_register_mutation(program, ProgramMutation::CreateBenchmarkRecord(leaves::create_benchmark_record::CreateBenchmarkRecord { benchmark_record }));
     }
     //#endregion 📤️ExchangeImport
 

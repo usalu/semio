@@ -16,7 +16,7 @@ Feature: One GraphQL request string parses to one canonical AST in every impleme
   @level-fundamental
   @mode-differential
   Scenario: Every document of the corpus projects to the same AST
-    Given the request corpus local://🔣️documents.json
+    Given the request corpus shared://📃️document-parsing/🔣️documents.json
     When each implementation parses every document
     Then every implementation projects the same operation kind, selections, aliases and arguments
 
@@ -24,6 +24,6 @@ Feature: One GraphQL request string parses to one canonical AST in every impleme
   @level-quick
   @mode-conformance
   Scenario: The operation kind is recovered from the header, defaulting to query
-    Given the request corpus local://🔣️documents.json
+    Given the request corpus shared://📃️document-parsing/🔣️documents.json
     When each implementation reads only the operation kind of every document
     Then a bare selection set reads as a query and a `mutation` header reads as a mutation

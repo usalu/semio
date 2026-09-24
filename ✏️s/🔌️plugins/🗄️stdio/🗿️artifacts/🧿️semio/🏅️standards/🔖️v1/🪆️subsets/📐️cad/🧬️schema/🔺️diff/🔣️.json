@@ -25,7 +25,7 @@
           "type": "string"
         },
         "entity": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/entity"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/CadEntity"
         }
       }
     },
@@ -33,7 +33,7 @@
       "type": "object",
       "properties": {
         "basePoint": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/point2"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/SemioPoint2"
         },
         "entities": {
           "$ref": "#/definitions/entitiesDiff"
@@ -66,7 +66,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/layer"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/CadLayer"
           }
         }
       }
@@ -97,7 +97,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/block"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/CadBlock"
           }
         }
       }
@@ -128,7 +128,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/entityRecord"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/CadEntityRecord"
           }
         }
       }

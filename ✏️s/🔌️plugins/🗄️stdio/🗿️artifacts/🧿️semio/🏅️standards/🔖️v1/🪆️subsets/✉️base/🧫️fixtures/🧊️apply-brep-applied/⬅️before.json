@@ -1,12 +1,8 @@
 {
   "schema": "stdio.semio",
   "subset": {
-    "edges": [],
-    "faces": [],
-    "loops": [],
+    "subset": "brep",
     "schema": "stdio.semio.brep",
-    "shells": [],
-    "solids": [],
     "vertices": [
       {
         "id": "v1",
@@ -14,9 +10,16 @@
           "x": 0.0,
           "y": 0.0,
           "z": 0.0
-        }
+        },
+        "tol": 1e-07
       }
     ],
-    "subset": "brep"
+    "edges": [],
+    "loops": [],
+    "faces": [],
+    "shells": [],
+    "solids": [],
+    "coedges": [],
+    "nextLabel": 0
   }
 }

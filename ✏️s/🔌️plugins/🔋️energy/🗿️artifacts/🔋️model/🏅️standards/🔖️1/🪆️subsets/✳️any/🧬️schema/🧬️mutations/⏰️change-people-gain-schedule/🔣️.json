@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePeopleGainSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-people-gain-schedule",
-  "binaryTag": null,
+  "binaryTag": 79,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -540,8 +540,7 @@ async fn shooting_io_mirrors_the_declared_artifact_kind() {
     assert_eq!(io.import_formats.len(), 0);
     let kind = crate::artifact_kind();
     assert_eq!(kind.export_stdio_kinds, kind.import_stdio_kinds);
-    assert!(kind.export_stdio_kinds.iter().any(|kind| kind == "stdio.svg"));
-    assert!(kind.export_stdio_kinds.iter().any(|kind| kind == "stdio.png"));
+    assert_eq!(kind.export_stdio_kinds, vec!["stdio.json".to_string()], "rendered shots leave through `photos:out`; a scene document is not an image file");
 }
 
 /// 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe:

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeHandleHandleKind",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-handle-handle-kind",
-  "binaryTag": null,
+  "binaryTag": 16,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

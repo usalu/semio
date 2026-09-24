@@ -167,20 +167,27 @@ impl MeasureRecipe {
 
 /// 🌉️ Hand `dsl::DslField` impl — `MeasureRecipe` is a `DslEnum` (`DslVariants` only), and
 /// `Capability::recipe` is a REQUIRED, never-optional field that must stay a bare `MeasureRecipe`.
-impl dsl::DslField for MeasureRecipe {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Statements(<MeasureRecipe as dsl::DslVariants>::variants())
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Statements(vec![<MeasureRecipe as dsl::DslVariants>::to_named_record(self)])
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        match value {
-            dsl::FieldValue::Statements(items) if items.len() == 1 => <MeasureRecipe as dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|e| e.message),
-            other => Err(format!("expected exactly 1 tagged recipe value, found {other:?}")),
+/// 🏷️ A tagged enum stored in one field is a one-statement `Shape::Statements` keyed by its variant.
+macro_rules! tagged_variant_field {
+    ($($name:ty),+) => {$(
+        impl dsl::DslField for $name {
+            fn shape() -> dsl::Shape {
+                dsl::Shape::Statements(<$name as dsl::DslVariants>::variants())
+            }
+            fn to_value(&self) -> dsl::FieldValue {
+                dsl::FieldValue::Statements(vec![<$name as dsl::DslVariants>::to_named_record(self)])
+            }
+            fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+                match value {
+                    dsl::FieldValue::Statements(items) if items.len() == 1 => <$name as dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|e| e.message),
+                    other => Err(format!("expected exactly 1 tagged {} value, found {other:?}", stringify!($name))),
+                }
+            }
         }
-    }
+    )+};
 }
+
+tagged_variant_field!(MeasureRecipe, WorkingSolid, ProcessMeasure);
 
 /// 🪚️ One thing a machine can do; every capability turns into a step: `recipe` fixes the geometric
 /// effect and how it's sized, `parameters` size the tool, `rules` gate legality against the stock.
@@ -424,19 +431,25 @@ pub struct StepOrigin {
 /// builds fresh input for) before it can call the kernel — see `brep_snapshot_for_working_solid`
 /// (WRITE, real) below for the analytic converter that turns a `WorkingSolid` into real,
 /// content-addressable `SemioBrepSnapshot` topology.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum WorkingSolid {
     Box {
+        #[dsl(unit = "m")]
         width: f64,
+        #[dsl(unit = "m")]
         depth: f64,
+        #[dsl(unit = "m")]
         height: f64,
     },
     Cylinder {
+        #[dsl(unit = "m")]
         radius: f64,
+        #[dsl(unit = "m")]
         height: f64,
     },
     Sphere {
+        #[dsl(unit = "m")]
         radius: f64,
     },
     /// 🖼️ Non-parametric GLB-imported reference mesh — tessellation-only, no real B-Rep topology.
@@ -465,7 +478,7 @@ impl Default for WorkingSolid {
 
 /// 🪵️ The raw workpiece the process starts from — ephemeral working-scene counterpart of the
 /// persisted `stock_id`/`stock_label`/`stock_pose`/`stock_solid` fields on `Process3dSnapshot`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Stock {
     pub id: String,
@@ -484,13 +497,19 @@ impl Default for Stock {
 /// Ephemeral working-scene counterpart of a `flow` node's `kind`/`params` — see
 /// `flow_node_from_process_step`/`process_step_from_flow_node` below for the real bidirectional
 /// converter.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
 #[value(tag = "measure", rename_all = "camelCase")]
 pub enum ProcessMeasure {
     /// ✂️ Subtractive: subtracts an arbitrary tool solid (e.g. a thin box as a saw blade).
     Cut { tool: WorkingSolid, pose: Pose },
     /// 🕳️ Subtractive: a cylinder of `radius`×`depth` subtracted at `pose` (axis = drill direction).
-    Drill { radius: f64, depth: f64, pose: Pose },
+    Drill {
+        #[dsl(unit = "m")]
+        radius: f64,
+        #[dsl(unit = "m")]
+        depth: f64,
+        pose: Pose,
+    },
     /// 🔩️ Additive: fuses another component solid at `pose`.
     Attach { component: WorkingSolid, pose: Pose },
 }
@@ -513,7 +532,7 @@ impl ProcessMeasure {
 
 /// 🎞️ One ordered step of the process timeline — ephemeral working-scene counterpart of one
 /// `SemioFlowSnapshot` `FlowNode` (see `flow_node_from_process_step`/`process_step_from_flow_node`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct ProcessStep {
     pub id: String,
@@ -1036,8 +1055,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: PROCESS_3D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.ifc".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.png".into(), "stdio.step".into(), "stdio.stl".into()],
-        import_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.ifc".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.png".into(), "stdio.step".into(), "stdio.stl".into()],
+        export_stdio_kinds: vec!["stdio.json".into()],
+        import_stdio_kinds: vec!["stdio.json".into()],
     }
 }
 //#endregion 🔖️ArtifactKind
@@ -1067,44 +1086,9 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.process.process3d@1/*")?)?,
         )?
         .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.ifc")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.ifc@4/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.ifc@4/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.step")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.step@ap214/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.step@ap214/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.png")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.png@1.2/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.png@1.2/*")?)?,
-        )?
-        .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.json")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.json@rfc8259/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.json@rfc8259/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.dwg")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.dwg@ac1018/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.dwg@ac1018/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.stl")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.stl@ascii/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.stl@ascii/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.gltf")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.gltf@2.0/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.gltf@2.0/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.composer.obj")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.obj@3.0/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.obj@3.0/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.process.process3d.codec.document")?, ArtifactCapabilityKind::codec())
@@ -1415,48 +1399,12 @@ pub mod standards {
                             #[path = "."]
                             pub mod artifacts {
                                 #[path = "."]
-                                pub mod ifc {
-                                    #[path = "."]
-                                    pub mod v4 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🏗️ifc/🔖️4/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
                                 pub mod txt {
                                     #[path = "."]
                                     pub mod v_utf_8 {
                                         #[path = "."]
                                         pub mod any {
                                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod step {
-                                    #[path = "."]
-                                    pub mod v_ap214 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📐️step/🔖️ap214/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod png {
-                                    #[path = "."]
-                                    pub mod v1_2 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }
@@ -1474,54 +1422,6 @@ pub mod standards {
                                         }
                                     }
                                 }
-                                #[path = "."]
-                                pub mod dwg {
-                                    #[path = "."]
-                                    pub mod v_ac1018 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod stl {
-                                    #[path = "."]
-                                    pub mod v_ascii {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔺️stl/🔖️ascii/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod gltf {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod obj {
-                                    #[path = "."]
-                                    pub mod v3_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🗿️obj/🔖️3.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
                             }
                         }
                     }
@@ -1531,18 +1431,6 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                #[path = "."]
-                                pub mod ifc {
-                                    #[path = "."]
-                                    pub mod v4 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🏗️ifc/🔖️4/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
                                 #[path = "."]
                                 pub mod txt {
                                     #[path = "."]
@@ -1556,84 +1444,12 @@ pub mod standards {
                                     }
                                 }
                                 #[path = "."]
-                                pub mod step {
-                                    #[path = "."]
-                                    pub mod v_ap214 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📐️step/🔖️ap214/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod png {
-                                    #[path = "."]
-                                    pub mod v1_2 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
                                 pub mod json {
                                     #[path = "."]
                                     pub mod v_rfc8259 {
                                         #[path = "."]
                                         pub mod any {
                                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod dwg {
-                                    #[path = "."]
-                                    pub mod v_ac1018 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod stl {
-                                    #[path = "."]
-                                    pub mod v_ascii {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔺️stl/🔖️ascii/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod gltf {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod obj {
-                                    #[path = "."]
-                                    pub mod v3_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🗿️obj/🔖️3.0/✳️any/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }

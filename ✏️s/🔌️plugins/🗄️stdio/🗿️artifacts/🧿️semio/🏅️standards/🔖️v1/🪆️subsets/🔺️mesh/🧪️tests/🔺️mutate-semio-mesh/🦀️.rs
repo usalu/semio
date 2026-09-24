@@ -67,9 +67,9 @@ const KINDS: &[&str] = &[
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
-    use crate::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use crate::standards::v1::subsets::mesh::schema::mutations::{apply_semio_mesh_mutation, decode_semio_mesh_mutation_json, inverse_semio_mesh_mutation, SemioMeshMutation};
-    use crate::standards::v1::subsets::mesh::schema::snapshot::{decode_mesh_pack, decode_semio_mesh_snapshot_json, encode_mesh_pack, encode_semio_mesh_snapshot_json, parse_mesh_dsl, print_mesh_dsl, SemioMeshSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::mutations::{apply_semio_mesh_mutation, decode_semio_mesh_mutation_json, inverse_semio_mesh_mutation, SemioMeshMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{decode_mesh_pack, decode_semio_mesh_snapshot_json, encode_mesh_pack, encode_semio_mesh_snapshot_json, parse_mesh_dsl, print_mesh_dsl, SemioMeshSnapshot};
 
     //#region 🔖️Input
     /// 🔺️ The real derived model — 271 meshes and 459 primitives read once out of the committed
@@ -107,7 +107,7 @@ mod subject {
 
     /// 🧫️ One committed specification-vector file, read as text and decoded as a snapshot.
     fn vector(ctx: &Context, position: usize, label: &str) -> Result<String, String> {
-        let uri = step_uris(ctx, "asset://").into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} asset", ctx.scenario.id))?;
+        let uri = step_uris(ctx, "shared://🧬️mutations/").into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} fixture", ctx.scenario.id))?;
         String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))
     }
 

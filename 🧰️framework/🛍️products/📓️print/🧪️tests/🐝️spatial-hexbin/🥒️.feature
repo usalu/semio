@@ -16,13 +16,13 @@ Feature: Hexagonal binning in semio-viz-spatial agrees with d3-hexbin
   Bins are compared as centre x, centre y and point count, sorted by centre: `d3-hexbin` returns
   them in first-touch order, which is an artefact of iteration, not of the binning.
 
-  Probe document: local://hexbin.tex, over `demo-points-dense` at two radii.
+  Probe document: shared://🐝️spatial-hexbin/hexbin.tex, over `demo-points-dense` at two radii.
 
   @id-hexagonal-binning
   @level-quick
   @mode-differential
   Scenario: Bin centres and counts agree with d3-hexbin
-    Given the committed probe document local://hexbin.tex and the radii
+    Given the committed probe document shared://🐝️spatial-hexbin/hexbin.tex and the radii
       | radius |
       | 6      |
       | 10     |

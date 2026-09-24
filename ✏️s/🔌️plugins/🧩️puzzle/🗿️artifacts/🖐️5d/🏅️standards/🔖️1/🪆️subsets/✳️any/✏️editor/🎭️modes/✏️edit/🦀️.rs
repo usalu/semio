@@ -1,4 +1,4 @@
-//! ✏️ Puzzle 5d play app — the `edit` mode: the 3D-first 60/40 split layout over the two window
+//! ✏️ Puzzle 5d play app — the `edit` mode: the 2D-first 40/60 split layout over the two window
 //! kinds, plus the engagement HUD builder both windows share (it only differs by which window id it
 //! binds its input/abort actions to). The Utility Options every window exposes for the shared
 //! brush/fill utilities live in `☑️options/*`; genuinely per-window chrome lives under that window's
@@ -20,11 +20,9 @@ pub fn definition() -> ModeDefinition {
     ModeDefinition { id: PUZZLE5D_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-/// 🪟️ 3D-first 60/40 split — mirrors semio_compose_rs's design app (scene 60% / diagram 40%,
-/// `semio_compose_rs/client/lib/sketchpad/js/index.ts:15367-15378`), the assembly-editing use case
-/// this app replaces.
+/// 🪟️ 2D-first 40/60 split — board pane on the left (diagram 40%), world pane on the right (scene 60%).
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[world3d::WINDOW_KIND_ID.into(), board2d::WINDOW_KIND_ID.into()], "row", Some(&[60.0, 40.0]), Some(&["Puzzle 3D".into(), "Puzzle 2D".into()]))
+    create_default_layout(&[board2d::WINDOW_KIND_ID.into(), world3d::WINDOW_KIND_ID.into()], "row", Some(&[40.0, 60.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()]))
 }
 //#endregion 🔖️Definition
 

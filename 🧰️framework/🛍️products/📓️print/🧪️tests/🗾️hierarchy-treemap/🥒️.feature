@@ -27,7 +27,7 @@ Feature: The treemap layout tiles rectangles exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: Every d3 tiling splits demo-hierarchy-deep into the same rectangles
-    Given the committed probe document local://hierarchy-treemap.tex and the tilings
+    Given the committed probe document shared://🗾️hierarchy-treemap/hierarchy-treemap.tex and the tilings
       | tile       | width | height |
       | squarify   | 100   | 60     |
       | resquarify | 100   | 60     |
@@ -41,7 +41,7 @@ Feature: The treemap layout tiles rectangles exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: Inner and outer padding shrink the rectangles as d3 treemap padding does
-    Given the committed probe document local://hierarchy-treemap.tex and the paddings
+    Given the committed probe document shared://🗾️hierarchy-treemap/hierarchy-treemap.tex and the paddings
       | key     | padding | paddingInner | paddingTop | paddingRight | paddingBottom | paddingLeft |
       | padding | 2       |              |            |              |               |             |
       | nested  |         | 1.5          | 6          | 1            | 1             | 1           |
@@ -51,7 +51,7 @@ Feature: The treemap layout tiles rectangles exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: A custom squarify ratio and rounded corners follow d3 treemap ratio and round
-    Given the committed probe document local://hierarchy-treemap.tex and the variants
+    Given the committed probe document shared://🗾️hierarchy-treemap/hierarchy-treemap.tex and the variants
       | key   | ratio | round |
       | ratio | 1     | false |
       | round |       | true  |
@@ -61,7 +61,7 @@ Feature: The treemap layout tiles rectangles exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: An unbalanced hierarchy tiles as d3 does at every depth
-    Given the committed probe document local://hierarchy-treemap.tex and the tilings
+    Given the committed probe document shared://🗾️hierarchy-treemap/hierarchy-treemap.tex and the tilings
       | tile     | width | height |
       | squarify | 80    | 50     |
       | binary   | 80    | 50     |

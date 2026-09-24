@@ -246,6 +246,10 @@ pub fn split_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, norma
 /// [`detached_copy_of_outer_faces`]). The former `clone_solid_shells` minted a second solid/shell
 /// wrapper over the operand's OWN faces, so one face belonged to two shells at once and the
 /// operand's lifetime became the result's — see this module's header.
+/// 🕳️ A tool strictly inside the target cuts a CAVITY: the tool's faces become an inner shell wound
+/// inward (every face flipped), so the void's signed volume opposes the outer shell's. Unflipped,
+/// every such cut (`sphere-cut-with-torus` at any radius past the torus) failed validation with
+/// `void-shell-not-inverted` and the preview had nothing to paint.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn trivial_topology_fast_path(body: &mut Body, a: SolidId, b: SolidId, (bb_a, bb_b): (&AxisAlignedBox, &AxisAlignedBox), op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
     let gap = aabb_gap(bb_a, bb_b);
@@ -278,6 +282,9 @@ fn trivial_topology_fast_path(body: &mut Body, a: SolidId, b: SolidId, (bb_a, bb
             BooleanOp::Cut if solid_strictly_inside(body, b, a, tol)? => {
                 let outer = detached_copy_of_outer_faces(body, a, rec)?;
                 let inner = detached_copy_of_outer_faces(body, b, rec)?;
+                for &face in &inner {
+                    flip_face(body, face);
+                }
                 Ok(Some(solid_from_outer_faces(body, outer, vec![inner], rec)?))
             }
             BooleanOp::Cut => Ok(None),

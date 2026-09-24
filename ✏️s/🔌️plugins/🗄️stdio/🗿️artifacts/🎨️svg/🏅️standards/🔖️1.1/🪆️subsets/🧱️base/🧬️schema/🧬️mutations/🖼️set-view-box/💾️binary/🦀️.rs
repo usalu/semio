@@ -1,6 +1,6 @@
 //! 💾️ Operation-specific binary payload codec for set-view-box/SetViewBox.
 use super::SetViewBoxPayload;
-pub const BINARY_TAG: u32 = 8;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "set-view-box");
 pub fn encode_payload(value: &SetViewBoxPayload) -> Result<Vec<u8>, String> {
     Ok(pack::to_json_string(value).into_bytes())
 }

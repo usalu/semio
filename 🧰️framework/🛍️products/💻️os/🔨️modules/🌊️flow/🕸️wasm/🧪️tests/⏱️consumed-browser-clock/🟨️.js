@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { flowWasmContract } from "../🧬️schema-oracle/🛂️admission/🟦️.ts";
+import { flowWasmContract } from "../../🔮️oracles/🛂️contract-admission/🟦️.ts";
 import { createFlowBrowserRuntime } from "../../🌐️browser/🏃️runtime/🟨️.js";
 
 //#region ⏱️ConsumedClock

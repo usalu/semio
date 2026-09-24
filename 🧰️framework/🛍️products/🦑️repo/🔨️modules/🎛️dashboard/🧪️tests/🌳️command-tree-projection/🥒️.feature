@@ -17,7 +17,7 @@ Feature: One workspace always projects the same dashboard command tree
   @level-fundamental
   @mode-conformance
   Scenario: A frozen workspace projects one command tree
-    Given the workspace vector local://🏗️workspace.json
+    Given the workspace vector shared://🌳️command-tree-projection/🏗️workspace.json
     When each implementation materialises the workspace and discovers its command tree
     Then every implementation projects the same tree document, with the nx targets first and the repo-domain branches carrying their action keys and their Go argv
 
@@ -25,6 +25,6 @@ Feature: One workspace always projects the same dashboard command tree
   @level-quick
   @mode-property
   Scenario: The projection does not depend on the order the workspace files were written in
-    Given the workspace vector local://🏗️workspace.json
+    Given the workspace vector shared://🌳️command-tree-projection/🏗️workspace.json
     When each implementation materialises the workspace twice, once in the given order and once in the reversed order, and discovers the command tree of both
     Then every implementation projects the same tree document for both orders, because the walk sorts by verb rank at the root and alphabetically below it

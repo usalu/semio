@@ -7,8 +7,8 @@ import { dirname, join } from "node:path";
 
 /** 🧊️ Qualifies native variant prerequisites and completed component publication through native Nx. */
 export async function testNativeRuntime(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8")));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️native-runtime/🔣️.json"), "utf8"));
+  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️native-runtime/📐️schema/🔣️.json"), "utf8")));
   assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   const root = mkdtempSync(join(output, "native-runtime-")), owner = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
   const put = (path: string, value: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), value); };

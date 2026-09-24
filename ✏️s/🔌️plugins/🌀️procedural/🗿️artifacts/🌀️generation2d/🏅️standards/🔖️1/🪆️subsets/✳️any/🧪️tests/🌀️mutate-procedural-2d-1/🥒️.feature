@@ -95,7 +95,7 @@ Feature: Apply every typed generation2d mutation twice — once in Rust, once in
       | disconnect-synapse      | ✂️disconnect-synapse/✂️severs-link-ab-leaving-both-notes                              |
       | move-widget             | 📍️move-widget/📍️repositions-note-a-on-the-canvas                                       |
       | clear-widget-layout     | 🧹clear-widget-layout/🧹️drops-the-note-a-layout-entry                                  |
-      | update-camera           | 🎛️set-camera/📷️pans-and-zooms-the-graph-camera                                         |
+      | update-camera           | 🎛️update-camera/📷️pans-and-zooms-the-graph-camera                                         |
       | change-schema           | 🔤️change-schema/🏷️restamps-the-fixture-schema                                          |
       | create-generation       | ➕create-generation/🌱️appends-generation-2-and-selects-it                              |
       | delete-generation       | ➖delete-generation/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1 |
@@ -129,7 +129,7 @@ Feature: Apply every typed generation2d mutation twice — once in Rust, once in
       | disconnect-synapse      | ✂️disconnect-synapse/✂️severs-link-ab-leaving-both-notes                              |
       | move-widget             | 📍️move-widget/📍️repositions-note-a-on-the-canvas                                       |
       | clear-widget-layout     | 🧹clear-widget-layout/🧹️drops-the-note-a-layout-entry                                  |
-      | update-camera           | 🎛️set-camera/📷️pans-and-zooms-the-graph-camera                                         |
+      | update-camera           | 🎛️update-camera/📷️pans-and-zooms-the-graph-camera                                         |
       | change-schema           | 🔤️change-schema/🏷️restamps-the-fixture-schema                                          |
       | create-generation       | ➕create-generation/🌱️appends-generation-2-and-selects-it                              |
       | delete-generation       | ➖delete-generation/🚫️removes-the-selected-generation-2-and-falls-back-to-generation-1 |

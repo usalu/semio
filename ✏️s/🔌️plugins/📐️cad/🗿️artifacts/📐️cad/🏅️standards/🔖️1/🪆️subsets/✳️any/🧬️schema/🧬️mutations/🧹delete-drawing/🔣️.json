@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteDrawing",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-drawing",
-  "binaryTag": null,
+  "binaryTag": 9,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

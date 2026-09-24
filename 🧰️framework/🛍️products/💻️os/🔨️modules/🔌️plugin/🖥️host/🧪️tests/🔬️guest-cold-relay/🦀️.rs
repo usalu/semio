@@ -74,7 +74,7 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
     let mock = Arc::new(MockGuestRuntime::new().await);
     let handle = mounted_handle(Arc::clone(&mock), RuntimeActorId(8_017)).await;
     let oversized = vec![0; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES + 1];
-    let error = handle.infer(&oversized).await.expect_err("oversized relay input");
+    let error = handle.infer(&oversized, &semio_framework_job::root_cancel_token()).await.expect_err("oversized relay input");
     assert!(error.to_string().contains("input exceeds the retained operation byte limit"));
     assert_eq!(mock.start_admissions(), 0);
     let mut maximum_rejected_job = GuestColdRelayJob::new(
@@ -445,7 +445,7 @@ fn spawn_mounted_infer(pool: WorkerPool, handle: Arc<PluginInstanceHandle>, requ
         pool,
         Lane::UserVisible,
         async move {
-            let _ = sender.send(handle.infer(request).await);
+            let _ = sender.send(handle.infer(request, &semio_framework_job::root_cancel_token()).await);
         },
         |_| {},
     );
@@ -623,6 +623,56 @@ async fn dropping_a_live_nonterminal_relay_cancels_the_guest_exactly_once() {
     pool.shutdown().expect("worker shutdown");
 }
 
+/// 🛑️ `inference_run`'s job cancel: the caller's token reaches a mounted `semio.infer` route whose
+/// guest step is still pending, the route answers a cancellation instead of the solve, and the guest
+/// sees exactly one cancel admission.
+#[semio_framework_async_macros::async_test]
+async fn a_callers_cancel_stops_a_mounted_infer_blocked_in_a_pending_guest_step() {
+    let mock = Arc::new(MockGuestRuntime::new().await);
+    let actor = RuntimeActorId(8_020);
+    let handle = Arc::new(mounted_handle(Arc::clone(&mock), actor).await);
+    let _gate = mock.script_pending_job_step(actor, JobStep::Done { output: b"never-delivered".to_vec() }).await;
+    let pool = plugin_host_worker_pool();
+    let caller = semio_framework_async::CancelToken::root_now();
+    let (sender, receiver) = semio_framework_async::oneshot::channel();
+    let (route_handle, route_cancel) = (Arc::clone(&handle), caller.clone());
+    GuestRelayPoolFuture::spawn_recoverable(
+        pool.clone(),
+        Lane::UserVisible,
+        async move {
+            let _ = sender.send(route_handle.infer(b"blocked", &route_cancel).await);
+        },
+        |_| {},
+    );
+    for _ in 0..256 {
+        if mock.step_admissions() == 1 {
+            break;
+        }
+        pool_timer_barrier(&pool).await;
+    }
+    assert_eq!(mock.step_admissions(), 1, "the guest step must be admitted and pending before the cancel");
+    caller.cancel_now();
+    let error = receiver.await.expect("the mounted route answers").expect_err("a cancelled route must not answer the solve");
+    assert!(error.to_string().contains("cancelled"), "{error}");
+    wait_for_cancel_admission(&pool, &mock).await;
+    assert_eq!(mock.cancel_admissions(), 1);
+}
+
+/// 🧬️ The relay runs under a CHILD of the caller's token, so closing a finished route never cancels
+/// the caller — a dependency chain reuses one token across several routes.
+#[semio_framework_async_macros::async_test]
+async fn a_finished_mounted_infer_leaves_the_callers_token_live() {
+    let mock = Arc::new(MockGuestRuntime::new().await);
+    let actor = RuntimeActorId(8_021);
+    let handle = mounted_handle(Arc::clone(&mock), actor).await;
+    mock.script_job_step(actor, JobStep::Done { output: b"first".to_vec() }).await;
+    let caller = semio_framework_async::CancelToken::root_now();
+    assert_eq!(handle.infer(b"one", &caller).await.expect("first route"), b"first");
+    assert!(!caller.is_cancelled_now(), "closing the relay must not cancel the caller's token");
+    mock.script_job_step(actor, JobStep::Done { output: b"second".to_vec() }).await;
+    assert_eq!(handle.infer(b"two", &caller).await.expect("second route under the same token"), b"second");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn mounted_start_panic_restores_the_instance_and_the_next_route_progresses() {
     let mock = Arc::new(MockGuestRuntime::new().await);
@@ -631,7 +681,7 @@ async fn mounted_start_panic_restores_the_instance_and_the_next_route_progresses
     mock.script_job_step(actor, JobStep::Done { output: b"mounted-after-start-panic".to_vec() }).await;
     mock.panic_next_start();
 
-    let error = handle.infer(b"first").await.expect_err("start panic must surface as a typed host fault");
+    let error = handle.infer(b"first", &semio_framework_job::root_cancel_token()).await.expect_err("start panic must surface as a typed host fault");
     assert!(error.to_string().contains("plugin guest relay panicked"));
     let pool = plugin_host_worker_pool();
     wait_for_cancel_admission(&pool, &mock).await;
@@ -646,7 +696,7 @@ async fn mounted_start_panic_restores_the_instance_and_the_next_route_progresses
         }),
     );
     receiver.await.expect("the process worker pool must survive the retained-future panic");
-    assert_eq!(handle.infer(b"second").await.expect("the next mounted route must acquire the restored instance"), b"mounted-after-start-panic");
+    assert_eq!(handle.infer(b"second", &semio_framework_job::root_cancel_token()).await.expect("the next mounted route must acquire the restored instance"), b"mounted-after-start-panic");
     assert_eq!(mock.cancel_admissions(), 1);
 }
 
@@ -658,13 +708,13 @@ async fn mounted_step_panic_restores_the_instance_and_terminalizes_once() {
     mock.script_job_step(actor, JobStep::Done { output: b"mounted-after-step-panic".to_vec() }).await;
     mock.panic_next_step();
 
-    let error = handle.infer(b"first").await.expect_err("step panic must surface as a typed host fault");
+    let error = handle.infer(b"first", &semio_framework_job::root_cancel_token()).await.expect_err("step panic must surface as a typed host fault");
     assert!(error.to_string().contains("plugin guest relay panicked"));
     let pool = plugin_host_worker_pool();
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_available_instance(&pool, &handle.instance).await;
     assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_available());
-    assert_eq!(handle.infer(b"second").await.expect("a mounted route after step panic must not deadlock"), b"mounted-after-step-panic");
+    assert_eq!(handle.infer(b"second", &semio_framework_job::root_cancel_token()).await.expect("a mounted route after step panic must not deadlock"), b"mounted-after-step-panic");
     assert_eq!(mock.cancel_admissions(), 1);
 }
 
@@ -701,7 +751,7 @@ async fn cancel_panic_quarantines_instance_releases_permit_and_faults_once_on_on
     );
     receiver.await.expect("the sole worker and semaphore permit must survive cancel panic");
     pool.shutdown().expect("worker shutdown");
-    let next = handle.infer(b"next-route").await.expect_err("a mounted route must reject rather than reuse a quarantined guest");
+    let next = handle.infer(b"next-route", &semio_framework_job::root_cancel_token()).await.expect_err("a mounted route must reject rather than reuse a quarantined guest");
     assert!(next.to_string().contains("quarantined after cancel-job panic"));
     assert_eq!(mock.cancel_admissions(), 1);
 }
@@ -713,12 +763,12 @@ async fn background_cleanup_cancel_panic_quarantines_before_the_next_mounted_rou
     mock.panic_next_start();
     mock.panic_next_cancel();
 
-    let first = handle.infer(b"first").await.expect_err("start panic must fault");
+    let first = handle.infer(b"first", &semio_framework_job::root_cancel_token()).await.expect_err("start panic must fault");
     assert!(first.to_string().contains("plugin guest relay panicked"));
     let pool = plugin_host_worker_pool();
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_quarantine(&pool, &handle.instance).await;
-    let next = handle.infer(b"next-route").await.expect_err("the mounted route must reject background-cancel quarantine without deadlock");
+    let next = handle.infer(b"next-route", &semio_framework_job::root_cancel_token()).await.expect_err("the mounted route must reject background-cancel quarantine without deadlock");
     assert!(next.to_string().contains("quarantined after cleanup cancel-job panic"));
     assert_eq!(mock.cancel_admissions(), 1);
 }
@@ -762,7 +812,7 @@ async fn context_cancellation_failure_faults_once_quarantines_and_releases_one_w
     pool.shutdown().expect("worker shutdown");
 
     let start_admissions = mock.start_admissions();
-    let next = handle.infer(b"next-route").await.expect_err("quarantined mounted route must reject without entering the guest");
+    let next = handle.infer(b"next-route", &semio_framework_job::root_cancel_token()).await.expect_err("quarantined mounted route must reject without entering the guest");
     assert!(next.to_string().contains("quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"));
     assert_eq!(mock.start_admissions(), start_admissions, "quarantine rejection must not enter start-job");
     assert_eq!(mock.cancel_admissions(), 1);
@@ -793,7 +843,7 @@ async fn drop_cleanup_cancel_failure_quarantines_before_the_next_mounted_route()
     pool.shutdown().expect("worker shutdown");
 
     let start_admissions = mock.start_admissions();
-    let next = handle.infer(b"next-route").await.expect_err("stored Drop cleanup quarantine must reject promptly");
+    let next = handle.infer(b"next-route", &semio_framework_job::root_cancel_token()).await.expect_err("stored Drop cleanup quarantine must reject promptly");
     assert!(next.to_string().contains("quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"));
     assert_eq!(mock.start_admissions(), start_admissions);
     assert_eq!(mock.cancel_admissions(), 1);
@@ -806,13 +856,13 @@ async fn start_failure_cleanup_cancel_failure_is_stored_for_the_next_route() {
     mock.fail_next_start();
     mock.fail_next_cancel();
 
-    let first = handle.infer(b"first").await.expect_err("ordinary start failure must fault");
+    let first = handle.infer(b"first", &semio_framework_job::root_cancel_token()).await.expect_err("ordinary start failure must fault");
     assert!(first.to_string().contains("guest trapped: scripted start-job failure"));
     let pool = plugin_host_worker_pool();
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_quarantine(&pool, &handle.instance).await;
     let start_admissions = mock.start_admissions();
-    let next = handle.infer(b"next-route").await.expect_err("start-failure cleanup quarantine must reject promptly");
+    let next = handle.infer(b"next-route", &semio_framework_job::root_cancel_token()).await.expect_err("start-failure cleanup quarantine must reject promptly");
     assert!(next.to_string().contains("quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"));
     assert_eq!(mock.start_admissions(), start_admissions);
     assert_eq!(mock.cancel_admissions(), 1);
@@ -826,13 +876,13 @@ async fn step_failure_cleanup_cancel_failure_is_stored_for_the_next_route() {
     mock.script_fault(actor, "scripted step-job failure").await;
     mock.fail_next_cancel();
 
-    let first = handle.infer(b"first").await.expect_err("ordinary step failure must fault");
+    let first = handle.infer(b"first", &semio_framework_job::root_cancel_token()).await.expect_err("ordinary step failure must fault");
     assert!(first.to_string().contains("guest trapped: scripted step-job failure"));
     let pool = plugin_host_worker_pool();
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_quarantine(&pool, &handle.instance).await;
     let start_admissions = mock.start_admissions();
-    let next = handle.infer(b"next-route").await.expect_err("step-failure cleanup quarantine must reject promptly");
+    let next = handle.infer(b"next-route", &semio_framework_job::root_cancel_token()).await.expect_err("step-failure cleanup quarantine must reject promptly");
     assert!(next.to_string().contains("quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"));
     assert_eq!(mock.start_admissions(), start_admissions);
     assert_eq!(mock.step_admissions(), 1);
@@ -863,7 +913,7 @@ async fn concurrent_route_rejects_start_failure_cleanup_pending_then_reuses_only
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_available_instance(&pool, &handle.instance).await;
     mock.script_job_step(actor, JobStep::Done { output: b"clean-reuse".to_vec() }).await;
-    assert_eq!(handle.infer(b"after-cleanup").await.expect("cleanup success restores mounted availability"), b"clean-reuse");
+    assert_eq!(handle.infer(b"after-cleanup", &semio_framework_job::root_cancel_token()).await.expect("cleanup success restores mounted availability"), b"clean-reuse");
     assert_eq!(mock.cancel_admissions(), 1);
 }
 
@@ -891,7 +941,7 @@ async fn concurrent_route_rejects_step_failure_cleanup_pending_then_quarantine_i
     assert!(first_error.to_string().contains("scripted concurrent step-job failure"));
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_quarantine(&pool, &handle.instance).await;
-    let third_error = handle.infer(b"after-failed-cleanup").await.expect_err("cancel failure must leave a stable quarantine");
+    let third_error = handle.infer(b"after-failed-cleanup", &semio_framework_job::root_cancel_token()).await.expect_err("cancel failure must leave a stable quarantine");
     assert!(third_error.to_string().contains("quarantined after cancel-job failure"));
     assert_eq!(mock.start_admissions(), 1);
     assert_eq!(mock.step_admissions(), 1);
@@ -921,7 +971,7 @@ async fn concurrent_route_rejects_retained_start_panic_cleanup_pending_before_re
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_available_instance(&pool, &handle.instance).await;
     mock.script_job_step(actor, JobStep::Done { output: b"panic-clean-reuse".to_vec() }).await;
-    assert_eq!(handle.infer(b"after-panic-cleanup").await.expect("panic cleanup success restores availability"), b"panic-clean-reuse");
+    assert_eq!(handle.infer(b"after-panic-cleanup", &semio_framework_job::root_cancel_token()).await.expect("panic cleanup success restores availability"), b"panic-clean-reuse");
     assert_eq!(mock.cancel_admissions(), 1);
 }
 
@@ -937,6 +987,6 @@ async fn poisoned_instance_slot_recovers_without_losing_the_mounted_route() {
         panic!("scripted instance-slot poison");
     }));
     assert!(handle.instance.is_poisoned());
-    assert_eq!(handle.infer(b"request").await.expect("poison recovery must preserve the resident instance"), b"poison-recovered");
+    assert_eq!(handle.infer(b"request", &semio_framework_job::root_cancel_token()).await.expect("poison recovery must preserve the resident instance"), b"poison-recovered");
     assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_available());
 }

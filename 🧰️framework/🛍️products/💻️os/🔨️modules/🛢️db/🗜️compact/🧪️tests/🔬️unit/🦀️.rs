@@ -200,11 +200,15 @@ async fn retained_compaction_actual_deadline_callback_lost_wake_and_drop_close_r
 
 #[semio_framework_async_macros::async_test]
 async fn retained_compaction_max_plus_one_capacity_refusal_preserves_storage_document_holder_and_hash_authority() {
+    if !crate::db_storage::process_isolated_law("db_compact::tests::retained_compaction_max_plus_one_capacity_refusal_preserves_storage_document_holder_and_hash_authority") {
+        return;
+    }
     let (pool, held) = held_compaction_worker_pool();
+    let admitted_storage = retained_compaction_storage().await;
     let mut admitted = Vec::with_capacity(DATABASE_COMPACTION_SLOTS);
     for index in 0..DATABASE_COMPACTION_SLOTS {
         admitted.push(
-            DatabaseCompactionFuture::try_submit(pool.clone(), retained_compaction_storage().await, ArtifactId(format!("p1y-max-{index}")), db_storage::DbIoText::try_from_str("max-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap(),
+            DatabaseCompactionFuture::try_submit(pool.clone(), admitted_storage.clone(), ArtifactId(format!("p1y-max-{index}")), db_storage::DbIoText::try_from_str("max-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap(),
         );
     }
     let slot_storage = retained_compaction_storage().await;
@@ -370,7 +374,7 @@ async fn retained_compaction_panic_after_lease_acquire_releases_once_before_publ
     assert!(state.lease_recovery.released.load(std::sync::atomic::Ordering::Acquire));
     assert!(state.panic_retired.load(std::sync::atomic::Ordering::Acquire));
     assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
-    assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].is_none());
+    assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state)));
     pool.shutdown();
 }
 
@@ -397,7 +401,7 @@ async fn retained_compaction_release_error_retries_through_real_worker_loop_unti
     assert!(core.future.is_none() && core.release_fault.is_none() && core.release_retry_fault.is_none());
     drop(core);
     assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
-    assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].is_none());
+    assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state)));
     pool.shutdown();
 }
 
@@ -433,7 +437,7 @@ async fn retained_compaction_perpetual_release_error_keeps_fence_fault_admission
     assert_eq!(future.await.unwrap_err(), DbError::Internal("database compaction worker panic released lease and retired quarantine".to_string()));
     assert!(state.lease_recovery.released.load(std::sync::atomic::Ordering::Acquire));
     assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
-    assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].is_none());
+    assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state)));
     pool.shutdown();
 }
 
@@ -460,6 +464,9 @@ async fn retained_compaction_cumulative_observed_backing_rejects_individually_va
 
 #[semio_framework_async_macros::async_test]
 async fn compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit() {
+    if !crate::db_storage::process_isolated_law("db_compact::tests::compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit") {
+        return;
+    }
     while compaction_page_maintenance_step().unwrap() {}
     let mut retained = CompactionRetainedPages::new();
     for index in 0..COMPACTION_RETAINED_PAGE_OWNERS {

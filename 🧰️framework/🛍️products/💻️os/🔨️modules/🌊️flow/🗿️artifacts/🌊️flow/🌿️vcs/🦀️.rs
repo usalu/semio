@@ -583,6 +583,10 @@ impl crate::os_store::ArtifactPack for FlowHostSnapshot {
         let dsl_fixture = <FlowHostSnapshotDsl as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
         flow_host_snapshot_dsl_to_host_snapshot(dsl_fixture).map_err(|message| crate::os_store::text_error_to_pack_error(crate::os_store::TextError::new(message, crate::os_store::TextSpan::at(1, 1))))
     }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        <FlowHostSnapshotDsl as crate::os_store::ArtifactPack>::record_spec()
+    }
 }
 //#endregion 🔖️Dsl
 

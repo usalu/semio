@@ -33,7 +33,7 @@ fn typescript_top_level_declarations(ctx: &Context) -> Result<Outcome, String> {
 }
 
 fn callable_const_is_a_function(ctx: &Context) -> Result<Outcome, String> {
-    Ok(Outcome::projection(declarations(ctx, "local://🔤️callables.ts")?))
+    Ok(Outcome::projection(declarations(ctx, "shared://📖️definition-parsing/🔤️callables.ts")?))
 }
 
 // #endregion 🔖️Scenarios

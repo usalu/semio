@@ -10,7 +10,7 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
         )
     }
 
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️preparation-owners/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️preparation-owners/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for row in corpus["fillCases"].as_array().unwrap() {
         let operation = mesh_operation();
@@ -94,7 +94,7 @@ fn mesh_preparation_owns_each_reservation_and_preserves_lookup_on_handoff() {
         )).unwrap_or(([0; 3], [0; 3], [0; 3]))
     }
 
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️preparation-owners/🔣️.json")).expect("neutral preparation cases");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️preparation-owners/🔣️.json")).expect("neutral preparation cases");
     let mut observations = Vec::new();
     for row in corpus["cases"].as_array().expect("cases") {
         let operation = mesh_operation();
@@ -220,7 +220,7 @@ fn mesh_preparation_cancellation_closes_each_partial_owner_under_exact_grants() 
 
 #[test]
 fn mesh_edge_authority_uses_completed_faces_and_closes_exact_backing() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🕸️edge-authority/🔣️.json")).expect("neutral edge authority cases");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🕸️edge-authority/🔣️.json")).expect("neutral edge authority cases");
     for row in corpus["cases"].as_array().expect("cases") {
         let operation = mesh_operation();
         let points = square(1.0);
@@ -296,20 +296,54 @@ fn take_payload_bytes(mut payload: RetainedJobPayload) -> Vec<u8> {
     bytes
 }
 
-fn drive_mesh_job(mut job: MeshJob) -> (Vec<u8>, usize, Duration) {
+/// ⏱️ The product's interactive-step law over one driven job, not one wall-clock sample: a step above
+/// the 8 ms ceiling is an overrun, and only `SUSTAINED_OVERRUN_QUARANTINE_STEPS` consecutive overruns
+/// attribute the latency to the step's own work — the job runtime's `StepOverrunLedger` quarantines on
+/// exactly that, while a lone overrun is the machine descheduling the thread (a peer build, a GC pause).
+#[derive(Default)]
+struct StepLatency {
+    consecutive: u32,
+    longest_run: u32,
+    overruns: u32,
+    worst: Duration,
+}
+
+impl StepLatency {
+    fn admit(&mut self, elapsed: Duration) {
+        self.worst = self.worst.max(elapsed);
+        if semio_framework_job::interactive_step_contract_violated(u64::try_from(elapsed.as_micros()).unwrap_or(u64::MAX)) {
+            self.consecutive += 1;
+            self.overruns += 1;
+            self.longest_run = self.longest_run.max(self.consecutive);
+        } else {
+            self.consecutive = 0;
+        }
+    }
+
+    fn assert_interactive(&self, what: &str) {
+        assert!(
+            self.longest_run < semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS,
+            "{what}: {} consecutive steps overran the 8 ms ceiling (worst {:?}, {} overruns in total)",
+            self.longest_run,
+            self.worst,
+            self.overruns
+        );
+    }
+}
+
+fn drive_mesh_job(mut job: MeshJob) -> (Vec<u8>, usize, StepLatency) {
     fn now() -> Option<u64> {
         Some(0)
     }
     let cancel = root_cancel_token();
     let mut sequence = 0;
     let mut previews = 0;
-    let mut worst = Duration::ZERO;
+    let mut latency = StepLatency::default();
     for _ in 0..10_000_000 {
         let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(64, 10), cancel.clone(), now, &mut sequence);
         let started = Instant::now();
         let outcome = job.step(&mut context);
-        let elapsed = started.elapsed();
-        worst = worst.max(elapsed);
+        latency.admit(started.elapsed());
         match outcome {
             StepOutcome::PreviewReady(preview) => {
                 previews += 1;
@@ -317,7 +351,7 @@ fn drive_mesh_job(mut job: MeshJob) -> (Vec<u8>, usize, Duration) {
             }
             StepOutcome::Complete(candidate) => {
                 take_payload_bytes(candidate.state);
-                return (take_payload_bytes(candidate.output), previews, worst);
+                return (take_payload_bytes(candidate.output), previews, latency);
             }
             StepOutcome::CheckpointReady(checkpoint) => {
                 take_payload_bytes(checkpoint.state);
@@ -670,7 +704,7 @@ fn mesh_job_is_previewing_deterministic_and_step_bounded() {
     let second = drive_mesh_job(MeshJob::new(domain, options, mesh_operation()));
     assert_eq!(first.0, second.0);
     assert!(first.1 > 0);
-    assert!(first.2 < Duration::from_millis(8), "worst mesh job step was {:?}", first.2);
+    first.2.assert_interactive("mesh job");
 }
 
 #[test]
@@ -697,9 +731,9 @@ fn mesh_job_large_boundary_never_runs_to_completion_in_one_step() {
             [angle.cos() * 100.0, angle.sin() * 100.0]
         })
         .collect();
-    let (_, previews, worst) = drive_mesh_job(MeshJob::new(PlanarDomain { outer: boundary, holes: vec![] }, MeshOpts { max_edge: 0.0, min_angle_deg: 0.0 }, mesh_operation()));
+    let (_, previews, latency) = drive_mesh_job(MeshJob::new(PlanarDomain { outer: boundary, holes: vec![] }, MeshOpts { max_edge: 0.0, min_angle_deg: 0.0 }, mesh_operation()));
     assert!(previews > 0);
-    assert!(worst < Duration::from_millis(8), "worst large-boundary mesh job step was {worst:?}");
+    latency.assert_interactive("large-boundary mesh job");
 }
 
 #[test]

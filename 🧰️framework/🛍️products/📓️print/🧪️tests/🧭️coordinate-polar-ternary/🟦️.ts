@@ -10,7 +10,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "coordinate-polar-ternary";
-const FIXTURE = "local://coordinate-polar-ternary.tex";
+const FIXTURE = "shared://🧭️coordinate-polar-ternary/coordinate-polar-ternary.tex";
 
 const DECIMALS = 6;
 

@@ -1,6 +1,6 @@
 //! 🏞️ Direct binary identity for `set-image`.
 
-pub const TAG: u8 = 26;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-image");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetImage;

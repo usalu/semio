@@ -55,18 +55,30 @@
             "minimum": 0
           },
           "rgba8": {
-            "type": "string",
-            "contentEncoding": "hex"
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
           }
         }
       }
     },
     "icc": {
-      "type": [
-        "string",
-        "null"
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        {
+          "type": "null"
+        }
       ],
-      "contentEncoding": "hex",
       "x-semio-state": "artifact"
     },
     "metadata": {

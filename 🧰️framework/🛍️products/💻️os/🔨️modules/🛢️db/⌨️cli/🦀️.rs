@@ -341,11 +341,12 @@ async fn cmd_doc(rest: &[String]) -> i32 {
             println!("== document {id} ==");
             print_engine_frontier(&frontier);
             match handle.history().await {
-                Ok(history) => {
+                Ok(mut history) => {
                     println!("  history entries: {}", history.entries().len());
                     for entry in history.entries().iter().rev().take(10) {
                         println!("    - operations={} head_seq={}", entry.operation_count, entry.head_seq);
                     }
+                    while history.close_step() {}
                 }
                 Err(err) => println!("  history: unavailable ({err})"),
             }

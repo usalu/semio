@@ -9,7 +9,7 @@ mod subject {
     use semio_framework_repo_providers::{GitHubManagementProvider, ManagementProvider, ProcessRunners, RecordedProcessRunner};
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    const TRANSCRIPTS: &str = "local://🎞️gh-transcripts.json";
+    const TRANSCRIPTS: &str = "shared://🐙️github-management-transcripts/🎞️gh-transcripts.json";
 
     fn provider(ctx: &Context) -> Result<GitHubManagementProvider, String> {
         let transcript = ctx.fixture_json(TRANSCRIPTS)?.get(&ctx.scenario.id).cloned().ok_or_else(|| format!("transcript fixture carries no entry for scenario {}", ctx.scenario.id))?;

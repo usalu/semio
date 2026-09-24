@@ -22,7 +22,7 @@ Feature: The triangulation and the Voronoi diagram of semio-viz-spatial agree wi
   its own starting vertex, its own winding and a repeated closing vertex, so both sides are compared
   as a lexicographically sorted vertex set.
 
-  Probe documents: local://delaunay.tex and local://voronoi.tex are both committed. The point set is
+  Probe documents: shared://🔺️spatial-delaunay-voronoi/delaunay.tex and shared://🔺️spatial-delaunay-voronoi/voronoi.tex are both committed. The point set is
   `demo-points`, declared in `semio-viz-spatial.sty` and repeated in the tables below so that the
   feature owns the vectors.
 
@@ -30,7 +30,7 @@ Feature: The triangulation and the Voronoi diagram of semio-viz-spatial agree wi
   @level-quick
   @mode-differential
   Scenario: The triangle set agrees with d3-delaunay
-    Given the committed probe document local://delaunay.tex and the point set demo-points
+    Given the committed probe document shared://🔺️spatial-delaunay-voronoi/delaunay.tex and the point set demo-points
       | x  | y  |
       | 12 | 14 |
       | 28 | 9  |
@@ -50,7 +50,7 @@ Feature: The triangulation and the Voronoi diagram of semio-viz-spatial agree wi
   @level-quick
   @mode-differential
   Scenario: The clipped Voronoi cells agree with d3-delaunay
-    Given the committed probe document local://voronoi.tex and the clip rectangle
+    Given the committed probe document shared://🔺️spatial-delaunay-voronoi/voronoi.tex and the clip rectangle
       | x0 | y0 | x1 | y1 |
       | 0  | 0  | 70 | 50 |
     And the point set demo-points

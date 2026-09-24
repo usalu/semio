@@ -57,11 +57,15 @@ fn text_arg(binding: &semio_framework_ui_contract::ActionBinding, key: &str) -> 
 }
 
 fn one_local_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { id: "sp-local".into(), name: "Fixture Studio".into(), kind: "atelier".into(), visibility: "private".into(), members: "1".into(), updated: "0".into(), origin: "local", role: None }
+    crate::HomeSpaceRow { id: "sp-local".into(), name: "Fixture Studio".into(), kind: "atelier".into(), visibility: "private".into(), members: "1".into(), updated: "0".into(), origin: "local", data_class: "persistedLocalOnly", role: None }
+}
+
+fn one_ephemeral_row() -> crate::HomeSpaceRow {
+    crate::HomeSpaceRow { id: "sp-draft".into(), name: "Temp Studio".into(), kind: "atelier".into(), visibility: "private".into(), members: "1".into(), updated: "0".into(), origin: "local", data_class: "ephemeralLocalOnly", role: None }
 }
 
 fn one_hub_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { id: "sp-hub".into(), name: "Fabrication".into(), kind: "studio".into(), visibility: "public".into(), members: "2".into(), updated: "1000".into(), origin: "hub", role: Some(crate::DirectorySpaceRole::Author) }
+    crate::HomeSpaceRow { id: "sp-hub".into(), name: "Fabrication".into(), kind: "studio".into(), visibility: "public".into(), members: "2".into(), updated: "1000".into(), origin: "hub", data_class: "persistedShared", role: Some(crate::DirectorySpaceRole::Author) }
 }
 
 fn spectator_hub_row() -> crate::HomeSpaceRow {
@@ -212,4 +216,22 @@ async fn the_signed_in_window_body_survives_the_component_tree_producer() {
 /// process-global singleton — mirrors `render_rows`'s own isolation rationale above.
 async fn render_rows_wrapped_for_test(rows: &[crate::HomeSpaceRow]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     render_rows_wrapped(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)
+}
+
+
+#[semio_framework_async_macros::async_test]
+async fn ephemeral_row_offers_promote_and_persist_not_share() {
+    observe(render_rows(&[one_ephemeral_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("ephemeral Home row"), |root| {
+        let buttons = buttons(row(root, "space:sp-draft"));
+        assert_eq!(buttons.len(), 3, "ephemeral rows offer open + promote + persist");
+        let names: Vec<&str> = buttons.iter().map(|binding| binding.action.name.as_str()).collect();
+        assert!(names.contains(&"openSpace") && names.contains(&"promoteToHubSpace") && names.contains(&"persistLocally"), "{names:?}");
+        assert!(!names.contains(&"shareSpace") && !names.contains(&"deleteSpace"), "{names:?}");
+    });
+}
+
+#[semio_framework_async_macros::async_test]
+async fn ephemeral_row_german_promote_label_resolves() {
+    let json = project(render_rows(&[one_ephemeral_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German ephemeral Home row"));
+    assert!(json.contains("Zum Hub hochstufen") && json.contains("Lokal speichern"), "German ephemeral actions must resolve: {json}");
 }

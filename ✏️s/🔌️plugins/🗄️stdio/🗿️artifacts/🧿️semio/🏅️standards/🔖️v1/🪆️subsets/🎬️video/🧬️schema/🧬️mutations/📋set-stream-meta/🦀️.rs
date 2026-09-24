@@ -10,12 +10,12 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetStreamMeta {
-    pub(crate) index: usize,
-    pub(crate) kind: SemioVideoStreamKind,
-    pub(crate) codec: String,
-    pub(crate) width: u32,
-    pub(crate) height: u32,
-    pub(crate) rate: SemioRational,
+    pub index: usize,
+    pub kind: SemioVideoStreamKind,
+    pub codec: String,
+    pub width: u32,
+    pub height: u32,
+    pub rate: SemioRational,
 }
 
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetStreamMeta {

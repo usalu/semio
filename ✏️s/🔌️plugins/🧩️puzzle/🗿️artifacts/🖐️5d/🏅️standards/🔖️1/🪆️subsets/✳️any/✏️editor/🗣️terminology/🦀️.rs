@@ -160,6 +160,7 @@ semio_framework_plugin::app_labels! {
         paste: native_en "Paste", native_de "Einfügen", reuse_en "Paste", reuse_de "Einfügen";
         select_all: native_en "Select all", native_de "Alles auswählen", reuse_en "Select all", reuse_de "Alles auswählen";
         suggest_parts: native_en "Suggest parts", native_de "Teile vorschlagen", reuse_en "Suggest building components", reuse_de "Baukomponenten vorschlagen";
+        placement_unavailable: native_en "No placement available here", native_de "Hier ist keine Platzierung möglich", reuse_en "No placement available here", reuse_de "Hier ist keine Platzierung möglich";
         fastener: native_en "Fastener", native_de "Verbinder", reuse_en "Component connection", reuse_de "Baukomponentenverbindung";
         orientation: native_en "Orientation", native_de "Ausrichtung", reuse_en "Orientation", reuse_de "Ausrichtung";
         scale: native_en "Scale", native_de "Maßstab", reuse_en "Scale", reuse_de "Maßstab";

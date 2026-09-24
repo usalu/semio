@@ -327,6 +327,23 @@ fn inherited_frame_reader_wipes_exactly_every_allocated_body_and_trailing_probe_
     assert_eq!(trailing_wipes.load(Ordering::SeqCst), 5);
 }
 
+async fn push_document_grant(transport: &FakeTransport) {
+    transport
+        .push_response(
+            FakeTransport::json_response(
+                200,
+                &serde_json::json!({
+                    "schema": "semio.hub.document-socket-grant/v1",
+                    "protocol": "semio.session.v1",
+                    "actorId": format!("hub.v1.{}", "3".repeat(64)),
+                    "expiresAtMs": wall_now_ms() + 30_000
+                }),
+            )
+            .await,
+        )
+        .await;
+}
+
 async fn push_grant(transport: &FakeTransport) {
     transport
         .push_response(
@@ -453,7 +470,7 @@ async fn native_document_admission_issues_validates_and_exchanges_exactly_once()
     let document_id = "document#ä";
     let surface_id = "surface /editor?#";
     let receipt = push_document_plan(&transport, space_id, document_id, "demo/v1", surface_id).await;
-    push_grant(&transport).await;
+    push_document_grant(&transport).await;
     let client = authenticated_client(transport.clone(), "protected-session");
     let mut expectation = document_expectation("demo/v1", Some(surface_id));
     expectation.lease = Some(document_lease_fields(space_id, document_id, "demo/v1", surface_id));
@@ -470,6 +487,7 @@ async fn native_document_admission_issues_validates_and_exchanges_exactly_once()
     assert_eq!(admission.authority.surface.app_id, "app.gis");
     assert_eq!(admission.authority.surface.window_kind_id, "window.document");
     assert_eq!(admission.authority.surface.renderer_target, DocumentOpenRendererTargetV1::React);
+    assert_eq!((admission.socket.schema.as_str(), admission.socket.protocol.as_str(), admission.socket.actor_id.len()), ("semio.hub.document-socket-grant/v1", "semio.session.v1", 71));
 
     let requests = transport.requests.lock().unwrap();
     assert_eq!(requests.len(), 2);
@@ -523,7 +541,7 @@ async fn hostile_or_cancelled_plan_never_reaches_receipt_exchange() {
 async fn cancellation_after_receipt_exchange_never_reaches_a_document_socket() {
     let transport = FakeTransport::default();
     push_document_plan(&transport, "space", "document", "expected/v1", "surface").await;
-    push_grant(&transport).await;
+    push_document_grant(&transport).await;
     transport.cancel_after_grant_number.store(2, Ordering::SeqCst);
     let client = authenticated_client(transport.clone(), "protected-session");
     let expectation = document_expectation("expected/v1", Some("surface"));

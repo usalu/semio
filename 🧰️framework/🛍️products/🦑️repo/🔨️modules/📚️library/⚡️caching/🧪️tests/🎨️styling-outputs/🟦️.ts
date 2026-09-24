@@ -5,8 +5,8 @@ import { dirname, join } from "node:path";
 
 /** 🎨️ Executes actual styling assemblies after native Nx restoration and compares them with direct MSBuild output. */
 export async function testStylingOutputs(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8")));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎨️styling-outputs/🔣️.json"), "utf8"));
+  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎨️styling-outputs/📐️schema/🔣️.json"), "utf8")));
   assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   const packagePath = join(fixture.owner, fixture.package), project = JSON.parse(readFileSync(join(workspace, packagePath, "📋️project.json"), "utf8"));
   assert.equal(project.targets.build.cache, true);

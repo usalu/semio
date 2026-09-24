@@ -5,14 +5,25 @@ schema s.stdio.semio.table
 start body
 framing record
 
-# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM table wave: real binary op frame. `format u8`
-# (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioTableMutation` variant ordinal,
-# `../💾️binary/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`, 0-7 matching
-# `parse_table_mutation`'s keyword match) as two REAL fixed fields, then the variant's own argument
-# payload as one opaque trailing `bytes` chain — the same honest boundary the sibling
-# `../../🔺️diff/💾️binary/📡️.protocol.semio` uses.
+# Real `SemioTableMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record create-column tag=0
+field payload bytes
+record delete-column tag=1
+field payload bytes
+record rename-column tag=2
+field payload bytes
+record reorder-columns tag=3
+field payload bytes
+record insert-row tag=4
+field payload bytes
+record remove-row tag=5
+field payload bytes
+record reorder-rows tag=6
+field payload bytes
+record edit-cell tag=7
+field payload bytes

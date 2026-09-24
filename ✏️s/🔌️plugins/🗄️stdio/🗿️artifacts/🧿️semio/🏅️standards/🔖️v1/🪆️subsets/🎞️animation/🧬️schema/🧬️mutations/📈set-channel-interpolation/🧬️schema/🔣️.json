@@ -28,12 +28,7 @@
   },
   "$defs": {
     "AnimInterpolation": {
-      "type": "string",
-      "enum": [
-        "linear",
-        "step",
-        "cubicSpline"
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/snapshot.json#/definitions/AnimInterpolation"
     }
   }
 }

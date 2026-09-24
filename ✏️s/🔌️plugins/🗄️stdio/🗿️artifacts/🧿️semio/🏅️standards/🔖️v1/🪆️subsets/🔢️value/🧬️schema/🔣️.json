@@ -3,21 +3,21 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/value/artifact.json",
   "title": "SemioValueArtifact",
   "description": "Full artifact state — mirrors SemioValueSnapshot field for field.",
-  "type": "value",
+  "type": "object",
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "artifact"
     },
     "root": {
-      "type": "value",
+      "type": "object",
       "x-semio-state": "artifact"
     },
     "nodes": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "type": "value"
+        "type": "object"
       }
     }
   },

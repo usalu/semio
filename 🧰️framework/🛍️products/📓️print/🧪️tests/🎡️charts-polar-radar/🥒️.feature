@@ -25,7 +25,7 @@ Feature: The polar coordinate places every radial mark where its angle and radiu
   @level-long
   @mode-differential
   Scenario: Polar points sit on their angle and radius
-    Given the committed probe document local://polar-scatter.tex and the frame
+    Given the committed probe document shared://🎡️charts-polar-radar/polar-scatter.tex and the frame
       | width | height | pad | inner |
       | 60    | 40     | 4   | 0.15  |
     Then the compiled probe and the reference implementation agree on every point
@@ -34,7 +34,7 @@ Feature: The polar coordinate places every radial mark where its angle and radiu
   @level-long
   @mode-differential
   Scenario: Radial bars span their angular slot out to the same radius
-    Given the committed probe document local://polar-bars.tex and the frame
+    Given the committed probe document shared://🎡️charts-polar-radar/polar-bars.tex and the frame
       | width | height | pad | inner |
       | 60    | 40     | 4   | 0.2   |
     Then the compiled probe and the reference implementation agree on every annular sector
@@ -43,7 +43,7 @@ Feature: The polar coordinate places every radial mark where its angle and radiu
   @level-long
   @mode-differential
   Scenario: A radar profile closes over evenly divided axes
-    Given the committed probe document local://radar.tex and the frame
+    Given the committed probe document shared://🎡️charts-polar-radar/radar.tex and the frame
       | width | height | pad |
       | 60    | 40     | 4   |
     Then the compiled probe and the reference implementation agree on every vertex
@@ -52,7 +52,7 @@ Feature: The polar coordinate places every radial mark where its angle and radiu
   @level-long
   @mode-differential
   Scenario: A coxcomb sector carries its value in the area, not the radius
-    Given the committed probe document local://coxcomb.tex and the frame
+    Given the committed probe document shared://🎡️charts-polar-radar/coxcomb.tex and the frame
       | width | height | pad |
       | 60    | 40     | 4   |
     Then the compiled probe and the reference implementation agree on every annular sector

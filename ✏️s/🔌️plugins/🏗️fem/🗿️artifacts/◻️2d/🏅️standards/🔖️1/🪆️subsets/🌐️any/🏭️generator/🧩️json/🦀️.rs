@@ -1,5 +1,5 @@
 //! 🏗️ The `fem2d@1/any` non-geometric mutation vocabulary, expressed over this subset's own JSON
-//! carrier and read back through the first-party JSON value tree.
+//! carrier and read back through `json` (json-rust) — a third-party JSON implementation and nothing of ours.
 //!
 //! Why this exists: the two mesh oracles already registered for this subset (`three-fem2d-mesh-reader`,
 //! `manifold-fem2d-mesh-measure`) read the STL/OBJ export, so they witness GEOMETRY. A material's
@@ -15,8 +15,7 @@
 //! This is the same shape as the accepted `quick-xml`/svg and `burntsushi-csv`/mathematical readers:
 //! the judge is a third-party implementation of the CARRIER, and nothing here predicts its answer.
 
-use pack::json::{Object, Value};
-use pack::json;
+use json::JsonValue;
 
 pub const KINDS: &[&str] = &[
     "create-node",
@@ -52,8 +51,8 @@ pub const KINDS: &[&str] = &[
 /// mutations are not observable is not evidence. Field spelling follows the snapshot's value-codec
 /// contract: `#[value(rename_all = "camelCase")]` on every record, `#[value(tag = "kind")]` on the
 /// `FemElement` and `FemLoad` enums, and `FemDof` unrenamed (so `"Tx"`, not `"tx"`).
-pub fn build_seed() -> Value {
-    json!({
+pub fn build_seed() -> JsonValue {
+    literal(r#"{
         "nodes": [
             {"id": "n1", "x": 0.0, "y": 0.0},
             {"id": "n2", "x": 4.0, "y": 0.0},
@@ -92,130 +91,143 @@ pub fn build_seed() -> Value {
             {"id": "c2", "name": "SLS", "terms": [{"caseId": "lc1", "factor": 1.0}, {"caseId": "lc2", "factor": 1.0}]}
         ],
         "analysis": {"modalCount": 6, "bucklingCount": 4, "deformationScale": 100.0}
-    })
+    }"#)
 }
 
-fn array<'a>(doc: &'a mut Value, key: &str) -> &'a mut Vec<Value> {
-    doc.get_mut(key).and_then(Value::as_array_mut).expect("the seed declares every collection")
+fn literal(text: &str) -> JsonValue {
+    json::parse(text).expect("a carrier literal is valid JSON")
+}
+
+fn array<'a>(value: &'a mut JsonValue, key: &str) -> Result<&'a mut Vec<JsonValue>, String> {
+    match &mut value[key] {
+        JsonValue::Array(items) => Ok(items),
+        _ => Err(format!("{key} is not an array")),
+    }
 }
 
 /// 🌾️ ARRANGEMENT — every kind's precondition already holds in the seed, which carries two of each
 /// collection and two loads in `lc1`. Kept as an explicit identity so the generator's shape matches
 /// the other subsets' and a future kind that DOES need a precondition has an obvious home.
-pub fn arrange(_kind: &str, doc: &Value) -> Value {
+pub fn arrange(_kind: &str, doc: &JsonValue) -> JsonValue {
     doc.clone()
 }
 
 /// ✍️ The forward mutation, as an edit to the JSON carrier.
-pub fn apply(kind: &str, doc: &Value) -> Result<Value, String> {
+pub fn apply(kind: &str, doc: &JsonValue) -> Result<JsonValue, String> {
     let mut doc = doc.clone();
     match kind {
-        "create-node" => array(&mut doc, "nodes").push(json!({"id": "n4", "x": 0.0, "y": 3.0})),
+        "create-node" => array(&mut doc, "nodes")?.push(literal(r#"{"id": "n4", "x": 0.0, "y": 3.0}"#)),
         "delete-node" => {
-            array(&mut doc, "nodes").retain(|n| n.get("id").and_then(Value::as_str) != Some("n3"));
+            array(&mut doc, "nodes")?.retain(|n| n["id"] != "n3");
         }
-        "create-element" => array(&mut doc, "elements").push(json!({"kind": "bar", "id": "e3", "start": "n1", "end": "n3", "materialId": "m1", "sectionId": "s1"})),
+        "create-element" => array(&mut doc, "elements")?.push(literal(r#"{"kind": "bar", "id": "e3", "start": "n1", "end": "n3", "materialId": "m1", "sectionId": "s1"}"#)),
         "delete-element" => {
-            array(&mut doc, "elements").retain(|e| e.get("id").and_then(Value::as_str) != Some("e2"));
+            array(&mut doc, "elements")?.retain(|e| e["id"] != "e2");
         }
         "replace-element" => {
-            let elements = array(&mut doc, "elements");
-            elements[1] = json!({"kind": "bar", "id": "e2", "start": "n2", "end": "n3", "materialId": "m1", "sectionId": "s1"});
+            let elements = array(&mut doc, "elements")?;
+            elements[1] = literal(r#"{"kind": "bar", "id": "e2", "start": "n2", "end": "n3", "materialId": "m1", "sectionId": "s1"}"#);
         }
-        "create-material" => array(&mut doc, "materials").push(json!({"id": "m3", "name": "GL24h", "e": 11500000000.0, "nu": 0.2, "rho": 420.0})),
+        "create-material" => array(&mut doc, "materials")?.push(literal(r#"{"id": "m3", "name": "GL24h", "e": 11500000000.0, "nu": 0.2, "rho": 420.0}"#)),
         "delete-material" => {
-            array(&mut doc, "materials").retain(|m| m.get("id").and_then(Value::as_str) != Some("m2"));
+            array(&mut doc, "materials")?.retain(|m| m["id"] != "m2");
         }
         "replace-material" => {
-            let materials = array(&mut doc, "materials");
-            materials[0] = json!({"id": "m1", "name": "S355", "e": 210000000000.0, "nu": 0.3, "rho": 7850.0});
+            let materials = array(&mut doc, "materials")?;
+            materials[0] = literal(r#"{"id": "m1", "name": "S355", "e": 210000000000.0, "nu": 0.3, "rho": 7850.0}"#);
         }
-        "create-section" => array(&mut doc, "sections").push(json!({"id": "s3", "name": "HEB200", "area": 0.00781, "iy": 0.0000570})),
+        "create-section" => array(&mut doc, "sections")?.push(literal(r#"{"id": "s3", "name": "HEB200", "area": 0.00781, "iy": 0.0000570}"#)),
         "delete-section" => {
-            array(&mut doc, "sections").retain(|s| s.get("id").and_then(Value::as_str) != Some("s2"));
+            array(&mut doc, "sections")?.retain(|s| s["id"] != "s2");
         }
         "replace-section" => {
-            let sections = array(&mut doc, "sections");
-            sections[0] = json!({"id": "s1", "name": "IPE220", "area": 0.00334, "iy": 0.0000272});
+            let sections = array(&mut doc, "sections")?;
+            sections[0] = literal(r#"{"id": "s1", "name": "IPE220", "area": 0.00334, "iy": 0.0000272}"#);
         }
-        "create-support" => array(&mut doc, "supports").push(json!({"id": "sup3", "nodeId": "n3", "fixed": ["Tx"]})),
+        "create-support" => array(&mut doc, "supports")?.push(literal(r#"{"id": "sup3", "nodeId": "n3", "fixed": ["Tx"]}"#)),
         "delete-support" => {
-            array(&mut doc, "supports").retain(|s| s.get("id").and_then(Value::as_str) != Some("sup2"));
+            array(&mut doc, "supports")?.retain(|s| s["id"] != "sup2");
         }
         "replace-support" => {
-            let supports = array(&mut doc, "supports");
-            supports[0] = json!({"id": "sup1", "nodeId": "n1", "fixed": ["Tx", "Ty"]});
+            let supports = array(&mut doc, "supports")?;
+            supports[0] = literal(r#"{"id": "sup1", "nodeId": "n1", "fixed": ["Tx", "Ty"]}"#);
         }
-        "create-load-case" => array(&mut doc, "loadCases").push(json!({"id": "lc3", "name": "wind", "loads": [], "selfWeight": false})),
+        "create-load-case" => array(&mut doc, "loadCases")?.push(literal(r#"{"id": "lc3", "name": "wind", "loads": [], "selfWeight": false}"#)),
         "delete-load-case" => {
-            array(&mut doc, "loadCases").retain(|c| c.get("id").and_then(Value::as_str) != Some("lc2"));
+            array(&mut doc, "loadCases")?.retain(|c| c["id"] != "lc2");
         }
         "add-load" => {
-            let cases = array(&mut doc, "loadCases");
-            cases[0].get_mut("loads").and_then(Value::as_array_mut).ok_or("lc1 has no loads array")?.push(json!({"kind": "nodal", "id": "l4", "nodeId": "n2", "dof": "Tx", "value": 5000.0}));
+            let cases = array(&mut doc, "loadCases")?;
+            array(&mut cases[0], "loads")?.push(literal(r#"{"kind": "nodal", "id": "l4", "nodeId": "n2", "dof": "Tx", "value": 5000.0}"#));
         }
         "remove-load" => {
-            let cases = array(&mut doc, "loadCases");
-            cases[0].get_mut("loads").and_then(Value::as_array_mut).ok_or("lc1 has no loads array")?.retain(|l| l.get("id").and_then(Value::as_str) != Some("l2"));
+            let cases = array(&mut doc, "loadCases")?;
+            array(&mut cases[0], "loads")?.retain(|l| l["id"] != "l2");
         }
         "change-load-case-self-weight" => {
-            let cases = array(&mut doc, "loadCases");
-            cases[0].as_object_mut().ok_or("lc1 is not an object")?.insert("selfWeight".to_string(), Value::Bool(false));
+            let cases = array(&mut doc, "loadCases")?;
+            cases[0]["selfWeight"] = false.into();
         }
-        "create-combination" => array(&mut doc, "combinations").push(json!({"id": "c3", "name": "ACC", "terms": [{"caseId": "lc1", "factor": 1.0}]})),
+        "create-combination" => array(&mut doc, "combinations")?.push(literal(r#"{"id": "c3", "name": "ACC", "terms": [{"caseId": "lc1", "factor": 1.0}]}"#)),
         "delete-combination" => {
-            array(&mut doc, "combinations").retain(|c| c.get("id").and_then(Value::as_str) != Some("c2"));
+            array(&mut doc, "combinations")?.retain(|c| c["id"] != "c2");
         }
         "update-analysis-settings" => {
-            doc.as_object_mut().ok_or("document is not an object")?.insert("analysis".to_string(), json!({"modalCount": 12, "bucklingCount": 8, "deformationScale": 250.0}));
+            doc["analysis"] = literal(r#"{"modalCount": 12, "bucklingCount": 8, "deformationScale": 250.0}"#);
         }
         "replace-node" => {
-            let nodes = array(&mut doc, "nodes");
-            nodes[0] = json!({"id": "n1", "x": 0.5, "y": 0.0});
+            let nodes = array(&mut doc, "nodes")?;
+            nodes[0] = literal(r#"{"id": "n1", "x": 0.5, "y": 0.0}"#);
         }
         "replace-load" => {
-            let cases = array(&mut doc, "loadCases");
-            let loads = cases[0].get_mut("loads").and_then(Value::as_array_mut).ok_or("lc1 has no loads array")?;
-            loads[0] = json!({"kind": "nodal", "id": "l1", "nodeId": "n3", "dof": "Ty", "value": -15000.0});
+            let cases = array(&mut doc, "loadCases")?;
+            let loads = array(&mut cases[0], "loads")?;
+            loads[0] = literal(r#"{"kind": "nodal", "id": "l1", "nodeId": "n3", "dof": "Ty", "value": -15000.0}"#);
         }
         "change-load-case-name" => {
-            let cases = array(&mut doc, "loadCases");
-            cases[0].as_object_mut().ok_or("lc1 is not an object")?.insert("name".to_string(), Value::String("permanent".to_string()));
+            let cases = array(&mut doc, "loadCases")?;
+            cases[0]["name"] = "permanent".into();
         }
         "replace-combination" => {
-            let combinations = array(&mut doc, "combinations");
-            combinations[0] = json!({"id": "c1", "name": "ULS 6.10b", "terms": [{"caseId": "lc1", "factor": 1.2}, {"caseId": "lc2", "factor": 1.5}]});
+            let combinations = array(&mut doc, "combinations")?;
+            combinations[0] = literal(r#"{"id": "c1", "name": "ULS 6.10b", "terms": [{"caseId": "lc1", "factor": 1.2}, {"caseId": "lc2", "factor": 1.5}]}"#);
         }
         other => return Err(format!("unknown kind {other}")),
     }
     Ok(doc)
 }
 
-/// 📄️ Canonicalises for comparison: object keys sorted, arrays left in ORDER (so a reordering is a
-/// difference, not a tie). Numbers are compared exactly as parsed — no rounding, because a
+/// 🔤️ Orders every object's keys, the committed carrier spelling; arrays keep their ORDER, so a
+/// reordering is a difference, not a tie. Numbers keep their lexeme — no rounding, because a
 /// tolerance here would silently accept a changed stiffness.
-fn canonical(value: &Value) -> Value {
+pub fn canonical(value: &JsonValue) -> JsonValue {
     match value {
-        Value::Object(map) => {
-            let mut sorted = Object::new();
-            let mut entries: Vec<_> = map.iter().collect();
-            entries.sort_by_key(|(key, _)| *key);
-            for (key, value) in entries {
-                sorted.insert(key.to_string(), canonical(value));
+        JsonValue::Object(object) => {
+            let mut entries: Vec<(&str, &JsonValue)> = object.iter().collect();
+            entries.sort_by(|left, right| left.0.cmp(right.0));
+            let mut sorted = json::object::Object::with_capacity(entries.len());
+            for (key, member) in entries {
+                sorted.insert(key, canonical(member));
             }
-            Value::Object(sorted)
+            JsonValue::Object(sorted)
         }
-        Value::Array(items) => Value::Array(items.iter().map(canonical).collect()),
+        JsonValue::Array(items) => JsonValue::Array(items.iter().map(canonical).collect()),
         other => other.clone(),
     }
 }
 
-/// 📄️ The projection: the nine collections the 22 kinds touch, canonicalised.
-pub fn project(bytes: &[u8]) -> Result<Value, String> {
-    let parsed: Value = pack::json::parse_bytes(bytes).map_err(|error| error.to_string())?;
-    let mut out = Object::new();
+/// 🖨️ The committed file bytes of one carrier.
+pub fn render(value: &JsonValue) -> String {
+    format!("{}\n", canonical(value).pretty(2))
+}
+
+/// 📄️ The projection: the nine collections the kinds touch, canonicalised.
+pub fn project(bytes: &[u8]) -> Result<JsonValue, String> {
+    let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
+    let parsed = json::parse(text).map_err(|error| error.to_string())?;
+    let mut out = json::object::Object::new();
     for key in ["nodes", "elements", "regions", "materials", "sections", "supports", "loadCases", "combinations", "analysis"] {
-        out.insert(key.to_string(), canonical(parsed.get(key).unwrap_or(&Value::Null)));
+        out.insert(key, canonical(&parsed[key]));
     }
-    Ok(Value::Object(out))
+    Ok(JsonValue::Object(out))
 }

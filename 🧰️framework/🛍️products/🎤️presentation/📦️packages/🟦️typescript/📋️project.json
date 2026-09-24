@@ -4,7 +4,9 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎚️config/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🧭️slide-glob-assembly/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/📽️presentation-core/🟦️.ts"
     ]
   },
   "targets": {

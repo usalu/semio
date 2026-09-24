@@ -5,20 +5,33 @@ schema stdio.semio.animation
 start body
 framing record
 
-# animation wave: REAL binary op frame, replacing the old whole-`OpText`-line `.into_bytes()` F6
-# text-as-binary shortcut (`🧬️mutations/🦀️.rs`'s old `OpBinary::encode_op`).
-# `SemioAnimationMutation` is a genuine data-carrying enum whose variants embed nested
-# `AnimTimeline`/`AnimChannel`/`AnimKeyframe`/`SemioAnimationSnapshot` payloads — no
-# `dsl::DslField` impl exists for the tagged `AnimTargetProperty`/`AnimValue` enums (hand-rolled per
-# this subset's own `📸️snapshot`/`🔺️diff` convention), so the generic derive-based
-# `format u8 | ordinal varint | record body` layout doesn't apply. Handcrafted instead: `format u8`
-# (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioAnimationMutation` variant ordinal,
-# `🧬️mutations/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`, 0-12, same order as `parse_op`'s
-# keyword match) as two REAL fixed fields, then the variant's own `key=value` argument payload as
-# one opaque trailing `bytes` chain — the same honest boundary the sibling
-# `../../🔺️diff/💾️binary/📡️.protocol.semio` uses.
+# Real `SemioAnimationMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value,...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record set-snapshot tag=0
+field payload bytes
+record insert-timeline tag=1
+field payload bytes
+record remove-timeline tag=2
+field payload bytes
+record set-timeline-name tag=3
+field payload bytes
+record insert-channel tag=4
+field payload bytes
+record remove-channel tag=5
+field payload bytes
+record set-channel-target tag=6
+field payload bytes
+record set-channel-interpolation tag=7
+field payload bytes
+record insert-keyframe tag=8
+field payload bytes
+record remove-keyframe tag=9
+field payload bytes
+record set-keyframe-time tag=10
+field payload bytes
+record set-keyframe-value tag=11
+field payload bytes

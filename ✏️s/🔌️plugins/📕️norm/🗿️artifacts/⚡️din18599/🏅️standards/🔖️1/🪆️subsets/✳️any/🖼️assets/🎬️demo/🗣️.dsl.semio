@@ -1,14 +1,2 @@
 semio norm.din18599.dsl v1
-useClass=residential
-heatedAreaM2=100
-occupants=4
-hT=92.12124613902822
-hV=40.800000000000004
-climate=[64696e31383539392d636c696d6174652d39643538303136343463666132653435,64696e31383539392d636c696d6174652d3964353830313634346366613265343521732e737464696f2e73656d696f4076312f7461626c65]
-internalGainsWM2=3.5
-solarGainsKwh=84
-systemLossesKwh=800
-renewableKwh=1500
-annualLimitKwh=7500
-energyCarrier=6e61747572616c5f676173
-referenceQPKwh=10000
+use-class=residential heated-area-m2=100 occupants=4 h-t=92.12124613902822 h-v=40.800000000000004 internal-gains-w-m2=3.5 solar-gains-kwh=84 system-losses-kwh=800 renewable-kwh=1500 annual-limit-kwh=7500 energy-carrier=natural_gas reference-q-p-kwh=10000 climate=child_id=din18599-climate-9d5801644cfa2e45 target="din18599-climate-9d5801644cfa2e45!s.stdio.semio@v1/table"

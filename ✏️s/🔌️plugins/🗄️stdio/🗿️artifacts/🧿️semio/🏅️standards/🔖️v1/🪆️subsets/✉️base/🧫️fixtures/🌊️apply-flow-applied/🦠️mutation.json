@@ -1,0 +1,31 @@
+{
+  "mutation": "applyFlow",
+  "payload": {
+    "mutation": {
+      "mutation": "insertNode",
+      "node": {
+        "id": "f1-inserted-node",
+        "kind": "IfcBuildingElementProxy",
+        "label": "b",
+        "params": [
+          {
+            "key": "ComposePieceAttributes.name",
+            "value": "b"
+          },
+          {
+            "key": "ComposePieceAttributes.composeGuid",
+            "value": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1"
+          },
+          {
+            "key": "ComposeConnectionParams.rotation",
+            "value": "90.0"
+          }
+        ],
+        "position": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    }
+  }
+}

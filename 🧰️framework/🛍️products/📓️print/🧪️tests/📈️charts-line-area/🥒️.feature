@@ -22,7 +22,7 @@ Feature: A line and an area draw the vertices d3-shape would draw
   @level-long
   @mode-differential
   Scenario: A linear curve emits exactly the mapped data points
-    Given the committed probe document local://linear.tex and the frame
+    Given the committed probe document shared://📈️charts-line-area/linear.tex and the frame
       | width | height | padLeft | padRight | padTop | padBottom |
       | 80    | 40     | 10      | 4        | 4      | 8         |
     Then the compiled probe and the reference implementation agree on every vertex
@@ -31,7 +31,7 @@ Feature: A line and an area draw the vertices d3-shape would draw
   @level-long
   @mode-differential
   Scenario: A step-after curve inserts the horizontal vertex d3 inserts
-    Given the committed probe document local://step-after.tex and the frame
+    Given the committed probe document shared://📈️charts-line-area/step-after.tex and the frame
       | width | height | padLeft | padRight | padTop | padBottom |
       | 80    | 40     | 10      | 4        | 4      | 8         |
     Then the compiled probe and the reference implementation agree on every vertex
@@ -40,7 +40,7 @@ Feature: A line and an area draw the vertices d3-shape would draw
   @level-long
   @mode-differential
   Scenario: A step-before curve inserts the vertical vertex d3 inserts
-    Given the committed probe document local://step-before.tex and the frame
+    Given the committed probe document shared://📈️charts-line-area/step-before.tex and the frame
       | width | height | padLeft | padRight | padTop | padBottom |
       | 80    | 40     | 10      | 4        | 4      | 8         |
     Then the compiled probe and the reference implementation agree on every vertex
@@ -49,7 +49,7 @@ Feature: A line and an area draw the vertices d3-shape would draw
   @level-long
   @mode-differential
   Scenario: A stacked area draws the boundaries of d3-shape's stack
-    Given the committed probe document local://area-stack.tex and the frame
+    Given the committed probe document shared://📈️charts-line-area/area-stack.tex and the frame
       | width | height | padLeft | padRight | padTop | padBottom |
       | 80    | 40     | 10      | 4        | 4      | 8         |
     Then the compiled probe and the reference implementation agree on every layer boundary

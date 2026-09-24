@@ -13,21 +13,21 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/definitions/layer"
+        "$ref": "#/$defs/CadLayer"
       }
     },
     "blocks": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/definitions/block"
+        "$ref": "#/$defs/CadBlock"
       }
     },
     "entities": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/definitions/entityRecord"
+        "$ref": "#/$defs/CadEntityRecord"
       }
     }
   },
@@ -45,12 +45,12 @@
           "type": "string"
         },
         "basePoint": {
-          "$ref": "#/definitions/point2"
+          "$ref": "#/$defs/SemioPoint2"
         },
         "entities": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/entityRecord"
+            "$ref": "#/$defs/CadEntityRecord"
           }
         }
       },
@@ -69,10 +69,10 @@
               "const": "line"
             },
             "a": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "b": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             }
           },
           "required": [
@@ -88,7 +88,7 @@
               "const": "arc"
             },
             "center": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "radius": {
               "type": "number"
@@ -115,7 +115,7 @@
               "const": "circle"
             },
             "center": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "radius": {
               "type": "number"
@@ -134,10 +134,10 @@
               "const": "ellipse"
             },
             "center": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "majorAxisEnd": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "ratio": {
               "type": "number"
@@ -167,7 +167,7 @@
             "vertices": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/point2"
+                "$ref": "#/$defs/SemioPoint2"
               }
             },
             "closed": {
@@ -187,7 +187,7 @@
               "const": "text"
             },
             "position": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "height": {
               "type": "number"
@@ -217,10 +217,10 @@
               "type": "string"
             },
             "insertionPoint": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "scale": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "rotation": {
               "type": "number"
@@ -241,16 +241,16 @@
               "const": "solid"
             },
             "p1": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "p2": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "p3": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "p4": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             }
           },
           "required": [
@@ -268,10 +268,10 @@
               "const": "dimension"
             },
             "defPoint": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "textPosition": {
-              "$ref": "#/definitions/point2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "measurement": {
               "type": "number"
@@ -301,7 +301,7 @@
           "type": "string"
         },
         "entity": {
-          "$ref": "#/definitions/entity"
+          "$ref": "#/$defs/CadEntity"
         }
       },
       "required": [

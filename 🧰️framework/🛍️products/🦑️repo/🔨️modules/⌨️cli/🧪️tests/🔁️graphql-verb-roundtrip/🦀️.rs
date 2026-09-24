@@ -9,12 +9,12 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The frozen repository every vector executes against.
     fn records(ctx: &Context) -> Result<String, String> {
-        Ok(String::from_utf8_lossy(&ctx.fixture_bytes("local://🗄️repo-records.json")?).to_string())
+        Ok(String::from_utf8_lossy(&ctx.fixture_bytes("shared://🔁️graphql-verb-roundtrip/🗄️repo-records.json")?).to_string())
     }
 
     /// 📥️ The committed vectors every scenario reads.
     fn vectors(ctx: &Context) -> Result<Vec<Json>, String> {
-        Ok(ctx.fixture_json("local://🔁️verb-queries.json")?.array("vectors"))
+        Ok(ctx.fixture_json("shared://🔁️graphql-verb-roundtrip/🔁️verb-queries.json")?.array("vectors"))
     }
 
     /// ▶️ Executes one vector and returns its three renderings and exit code.

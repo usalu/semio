@@ -27,7 +27,7 @@ function specified(ctx: AdapterContext): Record<string, number[]> {
 
 /** 🎯️ Compiles the committed fixture of this case and projects its records. */
 async function subject(ctx: AdapterContext, fixture: string): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbe(ctx.fixture(`local://${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const records = await compileVizProbe(ctx.fixture(`shared://🪟️facet-layout/${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
 }
 

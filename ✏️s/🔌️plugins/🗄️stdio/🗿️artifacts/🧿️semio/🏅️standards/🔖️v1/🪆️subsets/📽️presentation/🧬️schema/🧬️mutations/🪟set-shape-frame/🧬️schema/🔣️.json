@@ -28,40 +28,7 @@
   },
   "$defs": {
     "SlideFrame": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "origin",
-        "width",
-        "height"
-      ],
-      "properties": {
-        "origin": {
-          "$ref": "#/$defs/SemioPoint2"
-        },
-        "width": {
-          "type": "number"
-        },
-        "height": {
-          "type": "number"
-        }
-      }
-    },
-    "SemioPoint2": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y"
-      ],
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/presentation/snapshot.json#/definitions/SlideFrame"
     }
   }
 }

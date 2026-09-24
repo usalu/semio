@@ -202,23 +202,32 @@ impl OpText for SemioAudioMutation {
     }
 }
 
-/// 🧾️ Keyword table + variant ordinal, 0-indexed in enum declaration order — the binary frame's
-/// `tag` byte, `📖️grammar/component.grammar.semio`'s `op` alternatives, and this array must all
-/// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
-/// `🎹️composer/🦀️.rs`).
-const OP_KEYWORDS: [&str; 9] = ["set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"];
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioAudioMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_SET_SAMPLE_RATE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-sample-rate");
+const TAG_SET_FORMAT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-format");
+const TAG_INSERT_CHANNEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-channel");
+const TAG_REMOVE_CHANNEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-channel");
+const TAG_SET_CHANNEL_SAMPLES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-channel-samples");
+const TAG_INSERT_TAG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-tag");
+const TAG_REMOVE_TAG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-tag");
+const TAG_SET_TAG_VALUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-tag-value");
+//#endregion 🏷️WireTags
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioAudioMutation) -> u8 {
+fn wire_tag(m: &SemioAudioMutation) -> u8 {
     match m {
-        SemioAudioMutation::SetSnapshot(_) => 0,
-        SemioAudioMutation::SetSampleRate(_) => 1,
-        SemioAudioMutation::SetFormat(_) => 2,
-        SemioAudioMutation::InsertChannel(_) => 3,
-        SemioAudioMutation::RemoveChannel(_) => 4,
-        SemioAudioMutation::SetChannelSamples(_) => 5,
-        SemioAudioMutation::InsertTag(_) => 6,
-        SemioAudioMutation::RemoveTag(_) => 7,
-        SemioAudioMutation::SetTagValue(_) => 8,
+        SemioAudioMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioAudioMutation::SetSampleRate(_) => TAG_SET_SAMPLE_RATE,
+        SemioAudioMutation::SetFormat(_) => TAG_SET_FORMAT,
+        SemioAudioMutation::InsertChannel(_) => TAG_INSERT_CHANNEL,
+        SemioAudioMutation::RemoveChannel(_) => TAG_REMOVE_CHANNEL,
+        SemioAudioMutation::SetChannelSamples(_) => TAG_SET_CHANNEL_SAMPLES,
+        SemioAudioMutation::InsertTag(_) => TAG_INSERT_TAG,
+        SemioAudioMutation::RemoveTag(_) => TAG_REMOVE_TAG,
+        SemioAudioMutation::SetTagValue(_) => TAG_SET_TAG_VALUE,
     }
 }
 /// ✂️ Just the argument tail of `print_audio_mutation` — the binary frame's `tag` byte already
@@ -233,14 +242,13 @@ fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
 }
 
 /// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut.
-/// `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see
-/// [`OP_KEYWORDS`]) are two REAL fixed fields; the variant's own argument payload follows as one
+/// `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) are two REAL fixed fields; the variant's own argument payload follows as one
 /// opaque trailing `bytes` chain — reuses the already-real, already-tested `print_audio_mutation`/
 /// `parse_audio_mutation` text codec rather than re-deriving a second independent encoding.
 impl OpBinary for SemioAudioMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_audio_mutation_args(self).as_bytes());
         Ok(out)
     }
@@ -253,7 +261,7 @@ impl OpBinary for SemioAudioMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })

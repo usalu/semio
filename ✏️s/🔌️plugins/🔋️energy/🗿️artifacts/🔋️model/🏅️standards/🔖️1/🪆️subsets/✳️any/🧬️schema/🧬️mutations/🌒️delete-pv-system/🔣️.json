@@ -7,7 +7,7 @@
   "aggregateVariant": "DeletePvSystem",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-pv-system",
-  "binaryTag": null,
+  "binaryTag": 200,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

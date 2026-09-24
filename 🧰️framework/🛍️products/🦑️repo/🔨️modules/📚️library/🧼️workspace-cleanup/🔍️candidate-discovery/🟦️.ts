@@ -25,6 +25,8 @@ import {
 export const CLEAN_TICKET_FILE_MAX_BYTES = 5 * 1024 * 1024;
 export const CLEAN_TICKET_DIR_MAX_BYTES = 10 * 1024 * 1024;
 export const CLEAN_BUILD_ARTIFACT_MAX_BYTES = 10 * 1024 * 1024 * 1024;
+export const CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES = 100 * 1024 * 1024;
+export const CLEAN_OPEN_TICKET_OVERSIZED_FILE_MAX_BYTES = 100 * 1024 * 1024;
 export function cleanPathBytes(abs: string): number {
   try {
     const st = lstatSync(abs);
@@ -219,6 +221,40 @@ export function cleanTicketGeneratedOutputRemovals(root: string, ticketFolder: s
   return out;
 }
 
+export function cleanOpenTicketOversizedFileRemovals(root: string, ticketFolder: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
+  if (cleanTicketManifestIsClosed(ticketFolder, CLEAN_PROTECTION_VIEW)) return [];
+  const out: CleanRemoval[] = [];
+  const stack = [ticketFolder];
+  const applicablePrefixes = protectedPrefixes.filter((prefix) => resolve(prefix) !== resolve(ticketFolder));
+  while (stack.length > 0) {
+    const dir = stack.pop()!;
+    let names: string[];
+    try {
+      names = readdirSync(dir);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      const abs = join(dir, name);
+      if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanIsProtected(abs, applicablePrefixes)) continue;
+      let st;
+      try {
+        st = lstatSync(abs);
+      } catch {
+        continue;
+      }
+      if (st.isSymbolicLink()) continue;
+      if (st.isDirectory()) {
+        stack.push(abs);
+        continue;
+      }
+      if (!st.isFile() || st.size <= CLEAN_OPEN_TICKET_OVERSIZED_FILE_MAX_BYTES) continue;
+      out.push({ kind: "ticket-generated", path: relative(root, abs), bytes: st.size });
+    }
+  }
+  return out;
+}
+
 export function cleanGitignoredMapForTicketRoots(root: string, ticketRoots: readonly string[]): Map<string, string[]> {
   const map = new Map<string, string[]>();
   for (const ticketRoot of ticketRoots) {
@@ -245,6 +281,31 @@ export function cleanGitignoredMapForTicketRoots(root: string, ticketRoots: read
     }
   }
   return map;
+}
+
+export function cleanOversizedIgnoredRemovals(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
+  const probe = runProbe("git", ["ls-files", "--others", "-i", "--exclude-standard", "-z"], { cwd: root, budgetMs: 120_000 });
+  if ((probe.status ?? 1) !== 0) return [];
+  const out: CleanRemoval[] = [];
+  const seen = new Set<string>();
+  for (const raw of probe.stdout.split("\0")) {
+    const rel = raw.trim().replace(/\/$/, "");
+    if (!rel || seen.has(rel)) continue;
+    if ((rel.startsWith("node_modules/") || rel.includes("/node_modules/")) && !rel.startsWith("node_modules/.cache/")) continue;
+    const abs = join(root, rel);
+    const ticket = cleanTicketFolderForPath(root, abs);
+    if (cleanIntersectsProtected(abs, protectedPrefixes) && !ticket) continue;
+    let st;
+    try {
+      st = lstatSync(abs);
+    } catch {
+      continue;
+    }
+    if (st.isDirectory() || st.size <= CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES) continue;
+    seen.add(rel);
+    out.push({ kind: ticket ? "ticket-generated" : "gitignore", path: rel, bytes: st.size });
+  }
+  return out;
 }
 
 export function cleanCollectWindowsIllegal(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {

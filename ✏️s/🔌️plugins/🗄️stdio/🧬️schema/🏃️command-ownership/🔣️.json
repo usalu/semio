@@ -8,8 +8,8 @@
     "schemaVersion": { "const": 1 },
     "owners": {
       "type": "array",
-      "minItems": 7,
-      "maxItems": 7,
+      "minItems": 8,
+      "maxItems": 8,
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/owner" }
     },

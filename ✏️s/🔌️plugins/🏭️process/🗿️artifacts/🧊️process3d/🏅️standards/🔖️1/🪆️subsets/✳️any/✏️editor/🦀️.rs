@@ -486,18 +486,14 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Process3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, Fault> {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history: _history, interaction, hover: _hover, context: _context, operation: _operation } = *input;
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot: _snapshot, config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
         if self.complete {
             return Err(Fault::from("process3d-retained-work-repeated"));
         }
-        let extent = process3d_resumable_extent(command, snapshot, config, interaction).ok_or_else(|| Fault::from("process3d-retained-work-extent-overflow"))?;
-        if extent != self.extent {
-            return Err(Fault::from("process3d-retained-work-extent-drift"));
-        }
-        if self.cursor > extent {
+        if self.cursor > self.extent {
             return Err(Fault::from("process3d-retained-checkpoint-cursor-out-of-range"));
         }
-        if self.cursor < extent {
+        if self.cursor < self.extent {
             self.observe_input(command, config)?;
             self.cursor += 1;
             return Ok(ArtifactCommandWorkStep::Progress { stage: "process3d-config-prepare", preview: b"{\"en\":\"Preparing configuration\",\"de\":\"Konfiguration wird vorbereitet\"}" });

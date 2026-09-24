@@ -116,59 +116,7 @@
       ]
     },
     "RunStyle": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "bold": {
-          "type": "boolean"
-        },
-        "italic": {
-          "type": "boolean"
-        },
-        "underline": {
-          "type": "boolean"
-        },
-        "size": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "font": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "color": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "link": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/document/snapshot.json#/$defs/RunStyle"
     }
   }
 }

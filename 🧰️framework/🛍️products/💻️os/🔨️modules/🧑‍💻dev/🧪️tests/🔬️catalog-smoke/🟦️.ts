@@ -6,7 +6,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 
-import { ensureParityPlaywrightBrowsersPath } from "../⚖️parity/🏃️execution/🟦️.ts";
+import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 
 import { openStudioE2e, openStudioE2eCommandPalette, waitForStudioE2eCondition } from "../🎬️studio/🟦️.ts";
 

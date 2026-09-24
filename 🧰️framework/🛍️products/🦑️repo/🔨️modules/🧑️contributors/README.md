@@ -11,6 +11,6 @@ checkpoints and interactions recorded against them.
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
-`🧪️test` harness; the third-party references are registered in `🔮️oracle/🔣️.json`.
+`🧪️test` harness; the third-party references are registered in `🔮️oracles/🔣️.json`.
 
 `🪪️contributor-identity-parse`, `📡️session-kind-derivation`, `🏁️checkpoint-listing`.

@@ -791,6 +791,6 @@ pub fn build_run_job(request: ToolRunJobRequest<'_, semio_framework_plugin::Edit
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🎪️tests/🔬️unit/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🎪️Tests
+//#endregion 🧪️Tests

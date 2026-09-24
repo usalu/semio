@@ -1,49 +1,44 @@
-/** 🧬️ SemioMutation schema — real mirror of `🦀️.rs`. The envelope union's own mutation
- * vocabulary: `SetSnapshot` (the only way to change SUBSET KIND) and 18 wrapper variants each
- * carrying that subset's OWN mutation enum unchanged. `NoMutation` was dropped from the Rust side
- * (`#[derive(dsl::Mutations)]` requires every variant to wrap exactly one leaf payload, and `no` is
- * not an approved semantic verb) — a "do nothing" mutation is now expressed as `SetSnapshot` with
- * the current snapshot unchanged. Adjacently tagged (`#[serde(tag = "mutation", content =
- * "payload")]`, NOT internally tagged like every wrapped subset's own mutation enum — an
- * internally-tagged wrapper here would collide key-for-key with a wrapped variant's OWN `mutation`
- * discriminator field on flatten). */
-import type { SemioSnapshot } from "../📸️snapshot/🟦️";
-import type { SemioBrepMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioMeshMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioModelMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioValueMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioDocumentMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioCadMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioDrawingMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioImageMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioVideoMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioAudioMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioAnimationMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioPresentationMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioFlowMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioTextMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioTableMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioGraphMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioObjectMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
-import type { SemioKitMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️";
+/** 🧬️ SemioMutation — mirror of `🦀️.rs` and of the published JSON carrier `🔣️.json`. Adjacently
+ * tagged (`mutation` + `payload`) so a wrapped arm mutation's own `mutation` discriminator never collides
+ * with the envelope's: `setSnapshot` replaces the envelope, and each arm wrapper is tagged `apply<Arm>`
+ * and carries that arm's own mutation as `payload.mutation`. */
+import type { SemioSnapshot } from "../📸️snapshot/🟦️.ts";
+import type { SemioBrepMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioMeshMutation } from "../../../🔺️mesh/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioModelMutation } from "../../../🏛️model/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioValueMutation } from "../../../🔢️value/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioDocumentMutation } from "../../../📑️document/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioCadMutation } from "../../../📐️cad/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioDrawingMutation } from "../../../🖊️drawing/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioImageMutation } from "../../../🖼️image/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioVideoMutation } from "../../../🎬️video/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioAudioMutation } from "../../../🔊️audio/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioAnimationMutation } from "../../../🎞️animation/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioPresentationMutation } from "../../../📽️presentation/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioFlowMutation } from "../../../🌊️flow/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioTextMutation } from "../../../🔤️text/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioTableMutation } from "../../../📊️table/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioGraphMutation } from "../../../🕸️graph/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioObjectMutation } from "../../../📦️object/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SemioKitMutation } from "../../../🧰️kit/🧬️schema/🧬️mutations/🟦️.ts";
 
 export type SemioMutation =
   | { mutation: "setSnapshot"; payload: { snapshot: SemioSnapshot } }
-  | { mutation: "brep"; payload: SemioBrepMutation }
-  | { mutation: "mesh"; payload: SemioMeshMutation }
-  | { mutation: "model"; payload: SemioModelMutation }
-  | { mutation: "value"; payload: SemioValueMutation }
-  | { mutation: "document"; payload: SemioDocumentMutation }
-  | { mutation: "cad"; payload: SemioCadMutation }
-  | { mutation: "drawing"; payload: SemioDrawingMutation }
-  | { mutation: "image"; payload: SemioImageMutation }
-  | { mutation: "video"; payload: SemioVideoMutation }
-  | { mutation: "audio"; payload: SemioAudioMutation }
-  | { mutation: "animation"; payload: SemioAnimationMutation }
-  | { mutation: "presentation"; payload: SemioPresentationMutation }
-  | { mutation: "flow"; payload: SemioFlowMutation }
-  | { mutation: "text"; payload: SemioTextMutation }
-  | { mutation: "table"; payload: SemioTableMutation }
-  | { mutation: "graph"; payload: SemioGraphMutation }
-  | { mutation: "object"; payload: SemioObjectMutation }
-  | { mutation: "kit"; payload: SemioKitMutation };
+  | { mutation: "applyBrep"; payload: { mutation: SemioBrepMutation } }
+  | { mutation: "applyMesh"; payload: { mutation: SemioMeshMutation } }
+  | { mutation: "applyModel"; payload: { mutation: SemioModelMutation } }
+  | { mutation: "applyValue"; payload: { mutation: SemioValueMutation } }
+  | { mutation: "applyDocument"; payload: { mutation: SemioDocumentMutation } }
+  | { mutation: "applyCad"; payload: { mutation: SemioCadMutation } }
+  | { mutation: "applyDrawing"; payload: { mutation: SemioDrawingMutation } }
+  | { mutation: "applyImage"; payload: { mutation: SemioImageMutation } }
+  | { mutation: "applyVideo"; payload: { mutation: SemioVideoMutation } }
+  | { mutation: "applyAudio"; payload: { mutation: SemioAudioMutation } }
+  | { mutation: "applyAnimation"; payload: { mutation: SemioAnimationMutation } }
+  | { mutation: "applyPresentation"; payload: { mutation: SemioPresentationMutation } }
+  | { mutation: "applyFlow"; payload: { mutation: SemioFlowMutation } }
+  | { mutation: "applyText"; payload: { mutation: SemioTextMutation } }
+  | { mutation: "applyTable"; payload: { mutation: SemioTableMutation } }
+  | { mutation: "applyGraph"; payload: { mutation: SemioGraphMutation } }
+  | { mutation: "applyObject"; payload: { mutation: SemioObjectMutation } }
+  | { mutation: "applyKit"; payload: { mutation: SemioKitMutation } };

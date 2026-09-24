@@ -5,20 +5,35 @@ schema stdio.semio.brep
 start body
 framing record
 
-# brep wave: REAL binary op frame, replacing the old `serde_json::to_vec`-of-the-whole-enum
-# shortcut (`🧬️mutations/🦀️.rs`'s old `OpBinary::encode_op`). `SemioBrepMutation` is a
-# genuine data-carrying enum whose variants embed nested `BrepVertex`/`BrepEdge`/`BrepCurve`/
-# `BrepSurface`/`SemioBrepSnapshot` payloads — no `dsl::DslField` impl exists for the tagged
-# `BrepCurve`/`BrepSurface` enums (hand-rolled per this subset's own `🔺️diff`/`🧬️mutations`
-# convention), so the generic derive-based `format u8 | ordinal varint | record body` layout
-# doesn't apply. Handcrafted instead: `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the
-# `SemioBrepMutation` variant ordinal, `🧬️mutations/🦀️.rs`'s `OP_KEYWORDS`/
-# `variant_ordinal`, same 0-22 ordering as `parse_brep_mutation`'s keyword match) as two REAL fixed
-# fields, then the variant's own `key=value ...` argument payload as one opaque trailing `bytes`
-# chain — the same honest boundary the sibling `../../🔺️diff/💾️binary/📡️.protocol.semio`
-# uses (`protocol-array-of-records`/`protocol-prim-ref-recursion`, per the recipe's gap table).
+# Real `SemioBrepMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record create-vertex tag=0
+field payload bytes
+record delete-vertex tag=1
+field payload bytes
+record create-edge tag=2
+field payload bytes
+record delete-edge tag=3
+field payload bytes
+record create-face tag=4
+field payload bytes
+record delete-face tag=5
+field payload bytes
+record create-shell tag=6
+field payload bytes
+record delete-shell tag=7
+field payload bytes
+record create-solid tag=8
+field payload bytes
+record delete-solid tag=9
+field payload bytes
+record replace-curve tag=10
+field payload bytes
+record replace-surface tag=11
+field payload bytes
+record move-vertex tag=12
+field payload bytes

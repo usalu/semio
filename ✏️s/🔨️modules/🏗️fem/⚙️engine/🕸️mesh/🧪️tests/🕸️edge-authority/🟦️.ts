@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import Ajv from "ajv";
-import corpus from "../🧫️fixtures/🕸️edge-authority/🔣️.json" with { type: "json" };
-import schema from "../🧬️schema/🕸️edge-authority/🔣️.json" with { type: "json" };
+import corpus from "../../🧫️fixtures/🕸️edge-authority/🔣️.json" with { type: "json" };
+import schema from "../../🧫️fixtures/🕸️edge-authority/📐️schema/🔣️.json" with { type: "json" };
 
 export function testMeshEdgeAuthority(): void {
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);

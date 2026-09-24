@@ -1,0 +1,11 @@
+slice: g7
+crate: semio-s-plugin-wfc (✏️s/🔌️plugins/🀄️wfc) — wasm-dev guest through the product verbs (`bun nx run @semio-tech/wfc-plugin:describe` then `:materialize-dev`), same shape as g5/g6.
+reason: framework clock reads per wfc genesis solve. Measured natively 2026-09-24 ~09:40 with a counting clock over the relay-crossing replay: 2 697 330 reads/solve (= G6's 2.72 M wasm host calls), 11 per worker step (~245 k steps). Source changes that ride this rebuild (all guest-visible):
+  1. 🧰️framework/🔨️modules/🧵️job/🦀️.rs — the worker step driver reads the clock once on entry (budget, Watchdog::start_at, the step clock's first value) and once on exit (Watchdog::finish_at, outcome trace event, `last_step_end_us` for the caller); StepContext::now_us is strided by a ClockStride carried across steps; set_stage stamps trace events with the step's latest reading. Native result: 490 616 reads/solve (2 per step).
+  2. 🧰️framework/🔨️modules/⏱️trace/🦀️.rs — Watchdog::start_at/finish_at, record_trace_event_at.
+  3. 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🦀️.rs — Pump's per-transition deadline check uses the session's last step exit reading (no read of its own).
+  4. ✏️s/🔌️plugins/🀄️wfc/⚙️engine/💼️job/🦀️.rs — WfcJob/WfcRestore drop their own ClockStride and read `context.now_us()`.
+  Please confirm the wasm32 compile stays clean.
+need: rebuilt wfc wasm-dev staged at .🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2/wasm-dev/semio_s_plugin_wfc.wasm with sha == ✏️s/🔌️plugins/🀄️wfc/🔣️.json hashes.wasmSha256 (describe) + materialize-dev.
+consumer: g7 re-measures the over-MCP genesis solve (host clock-call count, CPU and wall vs headless native, three runs) and reruns client-e2e / stdio transcript / live-agent-loop.
+please append: result path + sha256 + time here.

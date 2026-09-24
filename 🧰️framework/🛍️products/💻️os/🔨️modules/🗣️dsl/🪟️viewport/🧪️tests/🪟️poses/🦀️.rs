@@ -21,7 +21,7 @@ fn check<T: DslField + FromValue + PartialEq + std::fmt::Debug>(value: &serde_js
 
 #[test]
 fn viewport_ownership_dsl_and_pack_preserve_shared_native_records() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🧫️fixtures/🪟️poses/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/🪟️poses/🔣️.json")).unwrap();
     let mut count = 0;
     for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["valid"] == true) {
         if row["dimension"] == "2d" { check::<Viewport2d>(&row["value"]); }

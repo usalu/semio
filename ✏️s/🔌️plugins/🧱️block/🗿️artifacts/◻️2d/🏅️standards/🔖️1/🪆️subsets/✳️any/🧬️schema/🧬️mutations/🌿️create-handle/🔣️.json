@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateHandle",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-handle",
-  "binaryTag": null,
+  "binaryTag": 13,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

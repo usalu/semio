@@ -10,7 +10,7 @@ mod subject {
     use semio_framework_repo_model as model;
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    const VECTORS: &str = "local://🔣️vectors.json";
+    const VECTORS: &str = "shared://🔤️slug-normalisation/🔣️vectors.json";
 
     fn strings(root: &Json, group: &str, list: &str) -> Vec<String> {
         let Some(section) = root.get(group) else { return Vec::new() };

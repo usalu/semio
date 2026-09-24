@@ -1,6 +1,6 @@
 //! 🧽️ Direct binary identity for `remove-trailer-entry`.
 
-pub const TAG: u8 = 12;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "remove-trailer-entry");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::RemoveTrailerEntry;

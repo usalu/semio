@@ -10,8 +10,8 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "mark-geometry";
-const FIXTURE = "local://mark-geometry.tex";
-const ROTATION_FIXTURE = "local://mark-rotation.tex";
+const FIXTURE = "shared://✒️mark-geometry/mark-geometry.tex";
+const ROTATION_FIXTURE = "shared://✒️mark-geometry/mark-rotation.tex";
 const DECIMALS = 6;
 
 /** 🌀 The four rotated draws of the rotation fixture, in emission order: kind and angle. */

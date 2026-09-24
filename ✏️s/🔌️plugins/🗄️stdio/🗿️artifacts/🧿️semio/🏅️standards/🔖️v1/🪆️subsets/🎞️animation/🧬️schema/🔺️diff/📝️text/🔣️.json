@@ -5,7 +5,7 @@
   "type": "object",
   "properties": {
     "timelines": {
-      "$ref": "#/$defs/indexedTripleDiff"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/diff.json#/properties/timelines"
     }
   }
 }

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import Ajv2020 from "ajv/dist/2020.js";
 import { applyPatch, type Operation } from "fast-json-patch";
-import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import fixture from "../../🧫️fixtures/📦️physical-owners/🔣️.json" with { type: "json" };
+import schema from "../../🧫️fixtures/📦️physical-owners/📐️schema/🔣️.json" with { type: "json" };
 
 export function testFemAssemblyPhysicalOwners(): void {
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeNodeVisible",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-node-visible",
-  "binaryTag": null,
+  "binaryTag": 8,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

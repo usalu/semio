@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateSpaceList",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-space-list",
-  "binaryTag": null,
+  "binaryTag": 242,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

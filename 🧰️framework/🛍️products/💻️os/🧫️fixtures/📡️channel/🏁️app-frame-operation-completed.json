@@ -1,4 +1,5 @@
 {
-  "_comment": "🏁️ Cross-language golden wire vector for the unsolicited typed-operation completion frame (tag 25). Rust encodes it in protocol_channel's app_frame_operation_completed_matches_shared_cross_language_json_vector; TypeScript encodes and decodes the same bytes in 🧪️backbone-envelope-io.",
-  "OperationCompleted": "19070501010102"
+  "_comment": "🏁️ Cross-language golden wire vector for the unsolicited typed-operation completion frame (tag 25). Rust encodes it in protocol_channel's app_frame_operation_completed_matches_shared_cross_language_json_vector; TypeScript encodes and decodes the same bytes in 🧪️backbone-envelope-io. OperationCompletedWideRevision pins an exact u64 revision above 2^53 (hash-derived revisions).",
+  "OperationCompleted": "19070501010102",
+  "OperationCompletedWideRevision": "190790e4d0b287d3aeeefe0101010102"
 }

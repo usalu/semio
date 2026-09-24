@@ -1,5 +1,5 @@
 semio procedural.generation2d.dsl v1
-schema=flow.fixture
+schema=flow.host_snapshot
 camera {
   x=0 y=0 zoom=1
 }

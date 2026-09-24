@@ -1,0 +1,19 @@
+# 🧭️ Own workspace root: the repository root manifest is a shared leased file, and a member crate would serialise
+# every concurrent session behind that lease.
+[workspace]
+
+[package]
+name = "semio-sourcing-mutation-bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🏭️ Production mutation bridge for 🪵️sourcing — answers listMutations from the production dispatch aggregates themselves."
+
+[[bin]]
+name = "semio-sourcing-mutation-bridge"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-s-artifact-sourcing-curation = { path = "../🗿️artifacts/🗂️curation/📦️packages/🦀️rust" }

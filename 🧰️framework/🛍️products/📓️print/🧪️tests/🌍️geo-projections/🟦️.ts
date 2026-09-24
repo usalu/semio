@@ -83,7 +83,7 @@ export default defineTestAdapter({
         },
       }),
       /** 🎯️ `\SemioVizGeoProject` on the same fourteen kinds, compiled with the repository tectonic. */
-      subject: async (ctx: AdapterContext) => (await subject(ctx, "local://forward.tex")),
+      subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🌍️geo-projections/forward.tex")),
     },
     "inverse-projection": {
       /** 🔮️ d3-geo's `invert` on the same plane point. */
@@ -93,7 +93,7 @@ export default defineTestAdapter({
         },
       }),
       /** 🎯️ `\SemioVizGeoInvert` on the same fourteen kinds. */
-      subject: async (ctx: AdapterContext) => (await subject(ctx, "local://inverse.tex")),
+      subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🌍️geo-projections/inverse.tex")),
     },
     "fit-extent": {
       /** 🔮️ d3-geo's `fitSize`, `fitExtent` and `fitWidth` over the same landmass. */
@@ -114,7 +114,7 @@ export default defineTestAdapter({
         return { projection: { "geo/fit-size": grid(size), "geo/fit-extent": grid(extent), "geo/fit-width": grid(width) } };
       },
       /** 🎯️ `\SemioVizGeoFitSize`, `\SemioVizGeoFit` and `\SemioVizGeoFitWidth` over `demo-geo-regions`. */
-      subject: async (ctx: AdapterContext) => (await subject(ctx, "local://fit.tex")),
+      subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🌍️geo-projections/fit.tex")),
     },
   },
 });

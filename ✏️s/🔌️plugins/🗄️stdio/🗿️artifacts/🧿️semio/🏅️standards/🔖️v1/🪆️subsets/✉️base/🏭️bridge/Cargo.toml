@@ -1,0 +1,22 @@
+# 🧭️ Own workspace root, like every other bridge and probe here: the repository root manifest is a
+# shared leased file, and a member crate would serialise every concurrent session behind that lease.
+[workspace]
+
+[package]
+name = "semio-semio-v1-base-bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🏭️ Production mutation bridge for s.stdio.semio@v1/✉️base — answers listMutations from the production dispatch enum itself."
+
+[[bin]]
+name = "semio-semio-v1-base-bridge"
+path = "🦀️.rs"
+
+# 🔒️ The envelope's dispatch enum wraps all eighteen arms' own mutation enums, so no subset of the
+# artifact's source compiles on its own: the bridge links the artifact crate itself, and nothing wider
+# — never `semio-s-plugin-stdio`, whose other artifacts would block this inventory for no reason.
+[dependencies]
+semio-s-artifact-stdio-semio = { path = "../../../../../📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+pack = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }

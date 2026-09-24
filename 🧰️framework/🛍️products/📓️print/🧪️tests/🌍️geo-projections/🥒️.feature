@@ -20,13 +20,13 @@ Feature: Every projection of semio-viz-geo agrees with d3-geo
   profile is not the binding constraint; it is the honest resolution of the arithmetic.
 
   The probe documents are committed because a projection probe is a program, not a vector list:
-  local://forward.tex, local://inverse.tex and local://fit.tex are all committed.
+  shared://🌍️geo-projections/forward.tex, shared://🌍️geo-projections/inverse.tex and shared://🌍️geo-projections/fit.tex are all committed.
 
   @id-forward-projection
   @level-quick
   @mode-differential
   Scenario: The forward mapping of every projection kind agrees with d3-geo
-    Given the committed probe document local://forward.tex and the sample point
+    Given the committed probe document shared://🌍️geo-projections/forward.tex and the sample point
       | kind                  | lon | lat |
       | equirectangular       | 12  | 47  |
       | mercator              | 12  | 47  |
@@ -48,7 +48,7 @@ Feature: Every projection of semio-viz-geo agrees with d3-geo
   @level-quick
   @mode-differential
   Scenario: The inverse mapping of every projection kind agrees with d3-geo
-    Given the committed probe document local://inverse.tex and the plane sample
+    Given the committed probe document shared://🌍️geo-projections/inverse.tex and the plane sample
       | kind                  | x   | y   |
       | equirectangular       | 500 | 130 |
       | mercator              | 500 | 130 |
@@ -70,7 +70,7 @@ Feature: Every projection of semio-viz-geo agrees with d3-geo
   @level-quick
   @mode-differential
   Scenario: fitExtent, fitSize and fitWidth agree with d3-geo
-    Given the committed probe document local://fit.tex and the fitting box
+    Given the committed probe document shared://🌍️geo-projections/fit.tex and the fitting box
       | kind             | width | height |
       | equirectangular  | 100   | 60     |
       | mercator         | 100   | 60     |

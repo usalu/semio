@@ -15,7 +15,7 @@ Feature: The LLM, reasoning-effort and client slug vocabularies mean the same th
   @level-fundamental
   @mode-differential
   Scenario: Every implementation normalises a slug the same way, and normalising twice changes nothing
-    Given the vocabulary vectors local://🔣️vectors.json
+    Given the vocabulary vectors shared://🔤️slug-normalisation/🔣️vectors.json
     When each implementation normalises every LLM, effort and client input, then normalises the result again
     Then every implementation projects the same canonical slug and the same second pass
 
@@ -23,7 +23,7 @@ Feature: The LLM, reasoning-effort and client slug vocabularies mean the same th
   @level-fundamental
   @mode-differential
   Scenario: Resolution returns the longest allowed vocabulary member the input contains
-    Given the vocabulary vectors local://🔣️vectors.json
+    Given the vocabulary vectors shared://🔤️slug-normalisation/🔣️vectors.json
     When each implementation resolves every LLM, effort and client input against the allowed table
     Then every implementation projects the same resolved member
 
@@ -31,7 +31,7 @@ Feature: The LLM, reasoning-effort and client slug vocabularies mean the same th
   @level-fundamental
   @mode-differential
   Scenario: An input outside the vocabulary is rejected, never silently defaulted
-    Given the vocabulary vectors local://🔣️vectors.json
+    Given the vocabulary vectors shared://🔤️slug-normalisation/🔣️vectors.json
     When each implementation resolves an input that no allowed member covers
     Then every implementation reports the not-allowed error class instead of a value
 

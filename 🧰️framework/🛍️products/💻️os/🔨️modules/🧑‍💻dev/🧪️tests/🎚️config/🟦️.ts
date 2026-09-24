@@ -43,7 +43,7 @@ export default defineConfig({
     /** 🎚️Every suite this project collects is Node-side build tooling: the staging, staging-root and
      * config files reach `node:sqlite` / `bun:sqlite` lease stores, Bun's transpiler (`registryStaticImports`),
      * `node:vm` bridge harnesses and `fileURLToPath`, and NONE of them touches a DOM. The Canvas PNG pixel
-     * parity module (`🧪️tests/⚖️parity/🖼️pixels/🟦️.ts`) that once justified jsdom at `long` declares no
+     * parity module (`⚖️parity/🖼️pixels/🟦️.ts`) that once justified jsdom at `long` declares no
      * `describe`/`it` at all — it runs inside a real browser page — and is in neither `include` nor
      * `includeSource`, so the level-gated jsdom only ever told Vite to resolve this graph as a CLIENT one,
      * where a runtime builtin is refused outright ("Cannot bundle built-in module") and the runner's own

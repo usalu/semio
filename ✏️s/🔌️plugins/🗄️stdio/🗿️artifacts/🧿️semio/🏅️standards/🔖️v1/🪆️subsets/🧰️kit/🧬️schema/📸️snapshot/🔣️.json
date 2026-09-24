@@ -3,7 +3,6 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json",
   "title": "SemioKitSnapshot",
   "type": "object",
-  "additionalProperties": false,
   "required": ["schema", "types", "designs", "objects", "models", "representations"],
   "properties": {
     "schema": { "const": "stdio.semio.kit", "x-semio-state": "artifact" },

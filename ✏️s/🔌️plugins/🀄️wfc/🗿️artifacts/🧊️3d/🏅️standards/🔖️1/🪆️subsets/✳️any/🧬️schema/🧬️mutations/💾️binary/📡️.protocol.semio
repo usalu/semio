@@ -3,14 +3,41 @@ protocol wfc3d.mutations
 version 1
 schema wfc.wfc3d.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record create-slot tag=0
+field body bytes
+record delete-slot tag=1
+field body bytes
+record move-slot tag=2
+field body bytes
+record resize-slot tag=3
+field body bytes
+record connect-slots tag=4
+field body bytes
+record disconnect-slots tag=5
+field body bytes
+record pin-slot tag=6
+field body bytes
+record unpin-slot tag=7
+field body bytes
+record create-tile tag=8
+field body bytes
+record delete-tile tag=9
+field body bytes
+record change-tile-weight tag=10
+field body bytes
+record change-tile-media tag=11
+field body bytes
+record create-rule tag=12
+field body bytes
+record delete-rule tag=13
+field body bytes
+record change-seed tag=14
+field body bytes

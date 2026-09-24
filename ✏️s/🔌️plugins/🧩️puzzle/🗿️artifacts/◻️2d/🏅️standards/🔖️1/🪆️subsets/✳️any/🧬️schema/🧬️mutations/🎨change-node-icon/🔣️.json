@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeNodeIcon",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-node-icon",
-  "binaryTag": null,
+  "binaryTag": 6,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -206,11 +206,11 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, json_spec, json_obj, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use crate::standards::v_ap214::engine::part21::{parse_part21, write_part21};
-    use crate::standards::v_ap214::subsets::base::schema::mutations::{
+    use semio_s_artifact_stdio_step::standards::v_ap214::engine::part21::{parse_part21, write_part21};
+    use semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::mutations::{
         apply_step_mutation, insert_entity, insert_entity_arg, remove_entity, remove_entity_arg, set_entity_arg, set_entity_name, set_file_description, set_file_name, set_file_schema, set_snapshot, StepMutation,
     };
-    use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepSnapshot, StepValue};
+    use semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepSnapshot, StepValue};
     use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::base::project_step_ap214_any;
 
     //#region 🔖️SpecReading
@@ -329,6 +329,9 @@ mod subject {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
         let document = parse_part21(text).map_err(|error| format!("parse_part21 failed: {error}"))?;
         let mut snapshot = StepSnapshot::from_part21_document(&document);
+        if spec.str("kind") == "no-mutation" {
+            return Ok(write_part21(&snapshot.to_part21_document()).into_bytes());
+        }
         let base = snapshot.clone();
         let mutation = mutation_from_spec(spec, &base)?;
         apply_step_mutation(&mut snapshot, &mutation);
@@ -378,10 +381,10 @@ mod subject {
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
+        built = built.oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), mutate_oracle).oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), inverse_oracle);
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
+            built = built.subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), subject::mutate).subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), subject::inverse);
         }
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);

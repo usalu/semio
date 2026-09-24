@@ -5,18 +5,43 @@ schema stdio.semio.drawing
 start body
 framing record
 
-# DKM drawing-vocabulary wave: REAL binary op frame. `SemioDrawingMutation` is a genuine
-# data-carrying enum whose variants embed nested `DrawLayer`/`DrawNode`/`PathSegment` payloads —
-# `DrawNode` is additionally RECURSIVE — no `dsl::DslField` impl exists for these hand-rolled
-# tagged enums (per this subset's own `📸️snapshot`/`🔺️diff` convention), so the generic derive-
-# based `format u8 | ordinal varint | record body` layout doesn't apply. Handcrafted instead:
-# `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioDrawingMutation` variant
-# ordinal, `../💾️binary/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`, 0-16 matching
-# `parse_drawing_mutation`'s keyword match) as two REAL fixed fields, then the variant's own
-# `tag:args` argument payload as one opaque trailing `bytes` chain — the same honest boundary the
-# sibling `../../🔺️diff/💾️binary/📡️.protocol.semio` uses.
+# Real `SemioDrawingMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record create-layer tag=0
+field payload bytes
+record delete-layer tag=1
+field payload bytes
+record create-node tag=2
+field payload bytes
+record delete-node tag=3
+field payload bytes
+record move-node tag=4
+field payload bytes
+record drag-nodes tag=5
+field payload bytes
+record rotate-node tag=6
+field payload bytes
+record scale-node tag=7
+field payload bytes
+record reorder-nodes tag=8
+field payload bytes
+record group-nodes tag=9
+field payload bytes
+record ungroup-node tag=10
+field payload bytes
+record flatten-node tag=11
+field payload bytes
+record unflatten-node tag=12
+field payload bytes
+record replace-path tag=13
+field payload bytes
+record replace-fill tag=14
+field payload bytes
+record change-stroke-color tag=15
+field payload bytes
+record change-stroke-width tag=16
+field payload bytes

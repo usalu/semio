@@ -1,6 +1,6 @@
 {
   "schema": "semio.repo.mcp.surface/1",
-  "descriptions": "asset://🧬️schema/🔣️descriptions.json",
+  "descriptions": "asset://🔣️descriptions.json",
   "tools": [
     {
       "name": "ticket_open",

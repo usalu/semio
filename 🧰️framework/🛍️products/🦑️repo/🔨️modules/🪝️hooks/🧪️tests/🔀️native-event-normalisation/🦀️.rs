@@ -10,7 +10,7 @@ mod subject {
     use semio_framework_repo_hooks::serde_json::{self, Value};
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    const VECTORS: &str = "local://🔀️native-events.json";
+    const VECTORS: &str = "shared://🔀️native-event-normalisation/🔀️native-events.json";
 
     /// 📥️ Reads the fixture with the crate's own JSON reader so the payloads reach the subject in
     /// exactly the shape an IDE would send.

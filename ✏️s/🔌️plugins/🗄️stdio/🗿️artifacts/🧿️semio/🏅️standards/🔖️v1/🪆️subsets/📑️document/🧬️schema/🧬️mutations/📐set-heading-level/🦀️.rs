@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetHeadingLevel {
-    pub(crate) path: DocBlockPath,
-    pub(crate) level: u8,
+    pub path: DocBlockPath,
+    pub level: u8,
 }
 
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for SetHeadingLevel {

@@ -9,7 +9,7 @@ mod subject {
     use semio_framework_repo_model as model;
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    const GOLDENS: &str = "local://🔣️goldens.json";
+    const GOLDENS: &str = "shared://🔣️json-encoding-conformance/🔣️goldens.json";
 
     /// 📦️ Decodes every golden into its own domain type and encodes it again.
     pub fn golden_documents_round_trip(ctx: &Context) -> Result<Outcome, String> {

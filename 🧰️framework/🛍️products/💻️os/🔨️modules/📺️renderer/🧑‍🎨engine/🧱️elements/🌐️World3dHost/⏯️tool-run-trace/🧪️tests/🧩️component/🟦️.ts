@@ -111,6 +111,32 @@ describe("tool run trace record store", () => {
     }
   });
 
+  it("resolves every resident key to the slot holding exactly its record, and a retired key to none", () => {
+    for (const row of fixture.residency) {
+      const ledger = new ToolRunTraceStore(toolRunIdentityFromJson(row.identity as never), row.capacity, row.compactFloor);
+      const store = new ToolRunTraceRecordStore();
+      const seen = new Set<bigint>();
+      for (const page of row.pages) {
+        const ops = page.map((op) => toolRunTraceOpFromJson(op as never));
+        for (const op of ops) if ("key" in op) seen.add(op.key);
+        ledger.applyOps(ops);
+        deliver(ledger, store, 1);
+      }
+      const resident = residentOfLedger(ledger);
+      for (const key of seen) {
+        const slot = store.slot(key);
+        const expected = resident.get(key);
+        if (!expected) {
+          expect(slot).toBeNull();
+          continue;
+        }
+        expect(slot?.batch.keys[slot.index]).toBe(key);
+        expect(slot?.batch.verdict).toBe(expected.verdict);
+        expect(slot?.batch.subjects[slot.index]).toEqual(expected.subject);
+      }
+    }
+  });
+
   it("keeps InstancedMesh counts per verdict equal to the ledger's resident records across clear, retire and eviction", () => {
     const identity = toolRunIdentityFromJson(fixture.residency[0]!.identity as never);
     const next = lcg(0xd2a3);

@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateTargetRegion",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-target-region",
-  "binaryTag": null,
+  "binaryTag": 26,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceSetpointManagerKind",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-setpoint-manager-kind",
-  "binaryTag": null,
+  "binaryTag": 168,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

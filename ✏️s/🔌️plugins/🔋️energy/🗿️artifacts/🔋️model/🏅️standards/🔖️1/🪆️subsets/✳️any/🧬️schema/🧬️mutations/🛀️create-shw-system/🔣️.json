@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateShwSystem",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-shw-system",
-  "binaryTag": null,
+  "binaryTag": 213,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

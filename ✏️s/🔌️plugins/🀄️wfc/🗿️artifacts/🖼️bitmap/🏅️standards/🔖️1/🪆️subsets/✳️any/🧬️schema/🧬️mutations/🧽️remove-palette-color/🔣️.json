@@ -7,7 +7,7 @@
   "aggregateVariant": "RemovePaletteColor",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-palette-color",
-  "binaryTag": null,
+  "binaryTag": 5,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

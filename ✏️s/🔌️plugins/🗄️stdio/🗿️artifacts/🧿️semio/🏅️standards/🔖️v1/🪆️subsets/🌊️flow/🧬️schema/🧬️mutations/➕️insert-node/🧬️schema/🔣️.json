@@ -18,66 +18,7 @@
   },
   "$defs": {
     "FlowNode": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "kind",
-        "label",
-        "position"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string"
-        },
-        "label": {
-          "type": "string"
-        },
-        "params": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/FlowParam"
-          }
-        },
-        "position": {
-          "$ref": "#/$defs/SemioPoint2"
-        }
-      }
-    },
-    "FlowParam": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "key",
-        "value"
-      ],
-      "properties": {
-        "key": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      }
-    },
-    "SemioPoint2": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y"
-      ],
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/flow/snapshot.json#/definitions/FlowNode"
     }
   }
 }

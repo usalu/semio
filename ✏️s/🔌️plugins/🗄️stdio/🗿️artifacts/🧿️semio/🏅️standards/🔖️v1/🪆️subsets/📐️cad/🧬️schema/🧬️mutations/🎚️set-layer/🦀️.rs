@@ -9,13 +9,13 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetLayer {
-    pub(crate) name: String,
+    pub name: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) color_index: Option<i32>,
+    pub color_index: Option<i32>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) line_type: Option<String>,
+    pub line_type: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) visible: Option<bool>,
+    pub visible: Option<bool>,
 }
 
 impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetLayer {

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭️ Routes OS development commands to their semantic owners. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { PlaygroundSessionGenerateScript, PlaygroundSessionPreviewScript } from "../../🎮️playground-session/🏃️execution/🟦️.ts";
 import { PreparationScript } from "../../♻️activation/🧰️preparation/🟦️.ts";
 import { ActivationScript } from "../../♻️activation/🏃️execution/🟦️.ts";
@@ -14,7 +14,7 @@ import { ScaleFixtureGenerateScript, ScaleFixturePreviewGeneratedScript, ScaleFi
 import { CapabilityLayeringLintScript } from "../../🧪️tests/🧹️layering-policy/🟦️.ts";
 import { PluginIndexExportPathLintScript } from "../../🧪️tests/🧹️export-path-policy/🟦️.ts";
 import { HostHandleReachLintScript } from "../../🧪️tests/🧹️host-handle-policy/🟦️.ts";
-import { ParitySmokeScript, ParityTriageScript, ParityProbeScript, ParityVerifyScript, ParitySweepScript } from "../../🧪️tests/⚖️parity/🏃️execution/🟦️.ts";
+import { ParitySmokeScript, ParityTriageScript, ParityProbeScript, ParityVerifyScript, ParitySweepScript } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { PluginWatchScript } from "../../../🔌️plugin/🏗️build/👁️watch/🟦️.ts";
 import { PluginCapabilityLintScript } from "../../🧪️tests/🧹️capability-policy/🟦️.ts";
 import { PluginSizeScript } from "../../../🔌️plugin/📊️size/🟦️.ts";

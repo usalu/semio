@@ -15,7 +15,6 @@ pub mod derived_composition {
     const DIALECT_STRICT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
-    const DEP_XML: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
 
     //#region 🔖️Composer
     pub struct XlsxStrictComposerComposition;
@@ -25,7 +24,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT_STRICT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT_ANY, DIALECT_STRICT, DEP_ZIP, DEP_XML]
+            &[DIALECT_ANY, DIALECT_STRICT, DEP_ZIP]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {

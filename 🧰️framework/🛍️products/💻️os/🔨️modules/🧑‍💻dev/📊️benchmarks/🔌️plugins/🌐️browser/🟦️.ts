@@ -12,7 +12,7 @@ import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../🔌️plugin/🏗️bu
 
 import { BenchBudgetDefinition, benchWebSkippedRow } from "../📋️plan/🟦️.ts";
 
-import { benchWebMeasuredRow } from "../🧪️stub/🟦️.ts";
+import { benchWebMeasuredRow } from "../📏️measured-row/🟦️.ts";
 
 import { ScaleFixtureRegistry } from "../../../../../🧫️fixtures/⚖️scale/📽️projection/🟦️.ts";
 

@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveMetadataEntry {
-    pub(crate) key: String,
+    pub key: String,
 }
 
 impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for RemoveMetadataEntry {

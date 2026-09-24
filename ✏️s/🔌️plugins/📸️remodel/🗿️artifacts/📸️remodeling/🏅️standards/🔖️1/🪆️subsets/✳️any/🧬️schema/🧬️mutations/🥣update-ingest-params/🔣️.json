@@ -7,7 +7,7 @@
   "aggregateVariant": "UpdateIngestParams",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-ingest-params",
-  "binaryTag": null,
+  "binaryTag": 18,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

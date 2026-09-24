@@ -58,7 +58,7 @@ Feature: Resolve conflicting utilities by last-winner
 
   @id-independent-inset-edges-survive
   @level-fundamental
-  @mode-regression
+  @mode-conformance
   Scenario: Independent inset edges survive while the last utility on one edge wins
     Given the composed class list and its specified result
       | input                                      | expected                                   |

@@ -1,0 +1,15 @@
+semio-s-artifact-dag-dag
+semio-s-artifact-flow-flow
+semio-s-artifact-trinity-jack
+semio-s-artifact-reasoning-wires
+semio-s-artifact-imperative-procedure
+semio-s-artifact-playbook-playbook
+semio-s-artifact-trinity-rewriting
+semio-s-artifact-animate-presentation
+semio-s-artifact-raster-raster
+semio-s-artifact-sourcing-curation
+semio-s-artifact-energy-model
+semio-s-artifact-space-home
+semio-s-artifact-architect-program
+semio-s-artifact-fem-2d
+semio-s-artifact-fem-3d

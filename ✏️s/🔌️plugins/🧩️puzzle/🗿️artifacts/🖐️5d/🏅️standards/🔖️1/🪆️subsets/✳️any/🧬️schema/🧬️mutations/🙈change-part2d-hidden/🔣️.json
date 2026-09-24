@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePart2dHidden",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-part2d-hidden",
-  "binaryTag": null,
+  "binaryTag": 6,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

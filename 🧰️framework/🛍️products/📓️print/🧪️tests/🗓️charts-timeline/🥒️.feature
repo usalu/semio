@@ -21,7 +21,7 @@ Feature: An interval timeline places every bar on its lane and its span
   @level-long
   @mode-conformance
   Scenario: Interval bars span their period and fill half their lane
-    Given the committed probe document local://interval.tex
+    Given the committed probe document shared://🗓️charts-timeline/interval.tex
     Then the compiled probe reports the specified bars
       | x       | y       | w       | h      |
       | 14      | 29      | 15.5    | 4.6667 |
@@ -35,7 +35,7 @@ Feature: An interval timeline places every bar on its lane and its span
   @level-long
   @mode-conformance
   Scenario: Swimlane bars keep their span and take two thirds of the interval height
-    Given the committed probe document local://swimlane.tex
+    Given the committed probe document shared://🗓️charts-timeline/swimlane.tex
     Then the compiled probe reports the specified bars
       | x       | y       | w       | h      |
       | 14      | 29.7778 | 15.5    | 3.1111 |

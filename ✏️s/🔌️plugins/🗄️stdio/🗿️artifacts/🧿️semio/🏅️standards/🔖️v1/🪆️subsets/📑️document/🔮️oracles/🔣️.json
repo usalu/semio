@@ -106,19 +106,19 @@
       "rationale": "📝️ THE COMMONMARK CARRIER, AND THE ONLY WITNESS THIS SUBSET HAS FOR `set-list-ordered`.\n\nThe md export is REAL: `🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs` maps every `DocBlock` onto a genuine `MdBlock`, preserving heading level, list `ordered`, code `info` and blockquote nesting.\n\nTWO DIFFERENT COMMONMARK IMPLEMENTATIONS, WHICH IS WHAT MAKES THIS LEG INDEPENDENT IN THE STRONGEST SENSE AVAILABLE HERE, AND THEY ARE REGISTERED SEPARATELY. This entry is the WRITER, `mdast-util-to-markdown` of the unified/mdast family, and it is what `generator.oracle` on every md fixture points at. The READER is the registered probe `semio-document-carrier-read`, which parses with `markdown-it` — an unrelated implementation with its own parser. That is the reader/judge separation the mesh pilot gets from `three` versus `manifold-3d`, and it means a serializer bug surfaces as a parse disagreement instead of being confirmed by its own author.\n\nTHIS ORACLE PREDICTS NOTHING. It parses a file and reports what CommonMark encodes: the block sequence, heading levels, list ordered-ness, code info strings, image alt and URL, and Strong/Emphasis/Link spans.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT PAPERED OVER. The serializer's own header says `styles`/`DocStyle` are dropped entirely because CommonMark has no named-style concept, so `set-paragraph-style`, `insert-style`, `remove-style`, `set-style-name` and `set-style-based-on` are NOT registered against this oracle and the probe answers `unsupported` for them. `underline` has no CommonMark construct and is dropped, so md sees only two thirds of a `RunStyle` change. Registering it against all fifteen witnessed kinds would have produced five green results that prove nothing, which is the exact failure mode Protocol v2's per-mutation requirement exists to prevent.\n\nMEASURED: 10 of this oracle's 10 committed fixtures are witnessed by the reader; the gate recipe's corrupted after separates at differingEntries 1 against 0; regeneration is byte-identical."
     },
     {
-      "id": "serde-json-semio-document-carrier-reader",
+      "id": "json-rust-semio-document-carrier-reader",
       "kind": "third-party-library",
       "ecosystem": "rust",
-      "package": "serde_json",
-      "version": "1",
+      "package": "json",
+      "version": "0.12",
       "source": {
-        "repository": "https://github.com/serde-rs/json",
+        "repository": "https://github.com/maciejhirsz/json-rust",
         "license": "MIT OR Apache-2.0"
       },
       "engine": {
-        "family": "serde-json",
-        "implementation": "serde_json 1 value tree",
-        "version": "1"
+        "family": "json-rust",
+        "implementation": "json-rust 0.12 value tree",
+        "version": "0.12"
       },
       "capabilities": [
         "semio-v1-document-mutate-carrier"
@@ -137,7 +137,7 @@
         "linux-arm64",
         "win32-x64"
       ],
-      "homepage": "https://docs.rs/serde_json",
+      "homepage": "https://docs.rs/json",
       "rationale": "📖️ A READER over a THIRD CARRIER, covering exactly what the other two cannot.\n\n`jszip-xmldom-docx-carrier` and `mdast-to-markdown-md-carrier` judge the docx and markdown exports. An embedded image's raw BYTES survive neither faithfully — docx stores them as separate zip media parts, markdown references them by path — so `insert-image`, `remove-image` and `set-image-bytes` were recorded `-uncarried` against both. Honest about those two carriers, and not a general claim.\n\n`SemioDocumentSnapshot::images` is an INLINE `Vec<DocImage>` carrying `{id, mime, bytes}` directly, so all three are carrier-level facts in this subset's own JSON export and a third-party JSON implementation witnesses each one, bytes included.\n\nWorth contrasting with `mathematical` and `sequence`, which look similar and are NOT addressable this way: their mutated state lives in composed CHILD artifacts behind `ArtifactChild` handles whose `local_owner` is `#[serde(skip)]`, so it never reaches their own JSON at all. Inline-versus-composed is the discriminator, and it was checked rather than assumed."
     }
   ],
@@ -324,12 +324,12 @@
       "id": "semio-document-carrier-project",
       "kind": "external-process",
       "ecosystem": "rust",
-      "package": "serde_json",
-      "version": "1",
+      "package": "json",
+      "version": "0.12",
       "engine": {
-        "family": "serde-json",
-        "implementation": "serde_json 1 value tree",
-        "version": "1"
+        "family": "json-rust",
+        "implementation": "json-rust 0.12 value tree",
+        "version": "0.12"
       },
       "capabilities": [
         "semio.document.carrier.project"
@@ -377,7 +377,7 @@
           {
             "id": "offline",
             "met": true,
-            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+            "detail": "json 0.12 is vendored in the cargo registry cache; builds and runs with --offline"
           }
         ]
       }
@@ -386,12 +386,12 @@
       "id": "semio-document-carrier-compare",
       "kind": "external-process",
       "ecosystem": "rust",
-      "package": "serde_json",
-      "version": "1",
+      "package": "json",
+      "version": "0.12",
       "engine": {
-        "family": "serde-json",
-        "implementation": "serde_json 1 value tree",
-        "version": "1"
+        "family": "json-rust",
+        "implementation": "json-rust 0.12 value tree",
+        "version": "0.12"
       },
       "capabilities": [
         "semio.document.carrier.compare"
@@ -439,7 +439,7 @@
           {
             "id": "offline",
             "met": true,
-            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+            "detail": "json 0.12 is vendored in the cargo registry cache; builds and runs with --offline"
           }
         ]
       }
@@ -1033,7 +1033,7 @@
             {
               "capability": "semio-v1-document-mutate-carrier",
               "qualifyingKind": "third-party-library",
-              "oracle": "serde-json-semio-document-carrier-reader"
+              "oracle": "json-rust-semio-document-carrier-reader"
             }
           ],
           "carriers": [],
@@ -1063,7 +1063,7 @@
             {
               "capability": "semio-v1-document-mutate-carrier",
               "qualifyingKind": "third-party-library",
-              "oracle": "serde-json-semio-document-carrier-reader"
+              "oracle": "json-rust-semio-document-carrier-reader"
             }
           ],
           "carriers": [],
@@ -1094,7 +1094,7 @@
             {
               "capability": "semio-v1-document-mutate-carrier",
               "qualifyingKind": "third-party-library",
-              "oracle": "serde-json-semio-document-carrier-reader"
+              "oracle": "json-rust-semio-document-carrier-reader"
             }
           ],
           "carriers": [],
@@ -2434,17 +2434,17 @@
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
-        "oracle": "serde-json-semio-document-carrier-reader",
-        "packageVersion": "1",
-        "engineFamily": "serde-json",
-        "engineVersion": "1",
+        "oracle": "json-rust-semio-document-carrier-reader",
+        "packageVersion": "0.12",
+        "engineFamily": "json-rust",
+        "engineVersion": "0.12",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-semio-document-carrier-v1",
       "reproducible": true,
       "family": "mechanical",
-      "notes": "A deterministic two-image document with the insert-image mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "notes": "A deterministic two-image document with the insert-image mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
       "comparisonPipeline": "semio-v1-document-carrier-compare-v1"
     },
     {
@@ -2483,17 +2483,17 @@
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
-        "oracle": "serde-json-semio-document-carrier-reader",
-        "packageVersion": "1",
-        "engineFamily": "serde-json",
-        "engineVersion": "1",
+        "oracle": "json-rust-semio-document-carrier-reader",
+        "packageVersion": "0.12",
+        "engineFamily": "json-rust",
+        "engineVersion": "0.12",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-semio-document-carrier-v1",
       "reproducible": true,
       "family": "mechanical",
-      "notes": "A deterministic two-image document with the remove-image mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "notes": "A deterministic two-image document with the remove-image mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
       "comparisonPipeline": "semio-v1-document-carrier-compare-v1"
     },
     {
@@ -2532,24 +2532,24 @@
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
-        "oracle": "serde-json-semio-document-carrier-reader",
-        "packageVersion": "1",
-        "engineFamily": "serde-json",
-        "engineVersion": "1",
+        "oracle": "json-rust-semio-document-carrier-reader",
+        "packageVersion": "0.12",
+        "engineFamily": "json-rust",
+        "engineVersion": "0.12",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-semio-document-carrier-v1",
       "reproducible": true,
       "family": "mechanical",
-      "notes": "A deterministic two-image document with the set-image-bytes mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "notes": "A deterministic two-image document with the set-image-bytes mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
       "comparisonPipeline": "semio-v1-document-carrier-compare-v1"
     }
   ],
   "comparisonPipelines": [
     {
       "id": "semio-v1-document-carrier-compare-v1",
-      "description": "Carrier-level equality over the ordered image list and block tree, read through serde_json. GATING for the three kinds neither docx nor markdown preserves.",
+      "description": "Carrier-level equality over the ordered image list and block tree, read through json-rust. GATING for the three kinds neither docx nor markdown preserves.",
       "stages": [
         {
           "probe": "semio-document-carrier-project",

@@ -36,6 +36,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -127,7 +128,7 @@ async function manifests(): Promise<void> {
         engineFamily: "lopdf",
         engineVersion: "0.44",
         command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📜️script.ts generate",
-        platform: process.platform,
+        platform: currentPlatform(),
       },
       comparisonPipeline: "pdf-1-7-a-lopdf-compare-v1",
       comparisonProfile: COMPARISON_PROFILE,
@@ -230,7 +231,7 @@ async function encryptionMode(emitManifests: boolean, root: string): Promise<num
       units: { length: "unitless", angle: "degree" },
       files,
       provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-      generator: { oracle: "pypdf-pdf-1-7-encryption-reader", packageVersion: "6.14.2", engineFamily: "pypdf", engineVersion: "6.14.2", command: "bun 📜️script.ts encryption", platform: process.platform },
+      generator: { oracle: "pypdf-pdf-1-7-encryption-reader", packageVersion: "6.14.2", engineFamily: "pypdf", engineVersion: "6.14.2", command: "bun 📜️script.ts encryption", platform: currentPlatform() },
       comparisonProfile: "semantic-pdf-encryption-v1",
       reproducible: true,
       family: "mechanical",

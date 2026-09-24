@@ -3,7 +3,6 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/snapshot.json",
   "title": "SemioObjectSnapshot",
   "type": "object",
-  "additionalProperties": false,
   "required": [
     "schema",
     "transform"

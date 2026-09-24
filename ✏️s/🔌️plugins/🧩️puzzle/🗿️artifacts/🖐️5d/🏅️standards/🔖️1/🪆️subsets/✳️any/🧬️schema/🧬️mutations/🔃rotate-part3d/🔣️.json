@@ -7,7 +7,7 @@
   "aggregateVariant": "RotatePart3d",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rotate-part3d",
-  "binaryTag": null,
+  "binaryTag": 9,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

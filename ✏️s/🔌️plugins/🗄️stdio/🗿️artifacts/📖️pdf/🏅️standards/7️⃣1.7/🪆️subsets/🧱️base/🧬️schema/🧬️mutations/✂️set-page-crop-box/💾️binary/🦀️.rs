@@ -1,6 +1,6 @@
 //! ✂️ Direct binary identity for `set-page-crop-box`.
 
-pub const TAG: u8 = 3;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-page-crop-box");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetPageCropBox;

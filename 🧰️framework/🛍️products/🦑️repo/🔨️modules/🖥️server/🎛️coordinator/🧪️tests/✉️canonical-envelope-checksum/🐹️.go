@@ -38,13 +38,25 @@ func goldenLineIsCanonical(ctx *host.Context) (host.Outcome, error) {
 	if err != nil {
 		return host.Outcome{}, err
 	}
-	schema, err := ctx.FixtureBytes("shared://🧬️g3-event-schema.json")
+	schema, err := ctx.FixtureBytes("schema://repo.server.coordinator/G3EventLogContract")
 	if err != nil {
 		return host.Outcome{}, err
 	}
-	var declared map[string]any
-	if err := json.Unmarshal(schema, &declared); err != nil {
+	var document struct {
+		Defs struct {
+			Contract struct {
+				Properties map[string]struct {
+					Const any `json:"const"`
+				} `json:"properties"`
+			} `json:"G3EventLogContract"`
+		} `json:"$defs"`
+	}
+	if err := json.Unmarshal(schema, &document); err != nil {
 		return host.Outcome{}, err
+	}
+	declared := map[string]any{}
+	for key, property := range document.Defs.Contract.Properties {
+		declared[key] = property.Const
 	}
 	return host.Outcome{Projection: map[string]any{
 		"line":       strings.TrimRight(string(encoded), "\n"),

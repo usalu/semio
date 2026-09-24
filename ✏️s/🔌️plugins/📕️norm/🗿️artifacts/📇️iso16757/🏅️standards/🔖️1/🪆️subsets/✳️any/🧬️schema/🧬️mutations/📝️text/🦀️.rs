@@ -250,30 +250,56 @@ fn read_opt_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<usize
     }
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `Iso16757Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("../💾️binary/📡️.protocol.semio");
+const TAG_CHANGE_EXCHANGE_PROCESS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-exchange-process");
+const TAG_UPDATE_SCRIPT_LIMITS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-script-limits");
+const TAG_REPLACE_PART_NUMBER_RULE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-part-number-rule");
+const TAG_CHANGE_PART_NUMBER_INPUT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-part-number-input");
+const TAG_REMOVE_PART_NUMBER_INPUT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-part-number-input");
+const TAG_CHANGE_SELECTION_CLASS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-selection-class");
+const TAG_CHANGE_SELECTION_SERIES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-selection-series");
+const TAG_ADD_SELECTION_CONSTRAINT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "add-selection-constraint");
+const TAG_REMOVE_SELECTION_CONSTRAINT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-selection-constraint");
+const TAG_RENAME_CATALOGUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rename-catalogue");
+const TAG_RENAME_MANUFACTURER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rename-manufacturer");
+const TAG_CREATE_PRODUCT_GROUP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-product-group");
+const TAG_DELETE_PRODUCT_GROUP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-product-group");
+const TAG_RENAME_PRODUCT_GROUP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rename-product-group");
+const TAG_CREATE_PRODUCT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-product");
+const TAG_DELETE_PRODUCT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-product");
+const TAG_RENAME_PRODUCT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rename-product");
+const TAG_CREATE_PROPERTY_DEFINITION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-property-definition");
+const TAG_DELETE_PROPERTY_DEFINITION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-property-definition");
+const TAG_CREATE_SUBJECT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-subject");
+const TAG_DELETE_SUBJECT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-subject");
+//#endregion 🏷️WireTags
+
 impl protocol::OpBinary for Iso16757Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            Iso16757Mutation::ChangeExchangeProcess(_) => 0,
-            Iso16757Mutation::UpdateScriptLimits(_) => 1,
-            Iso16757Mutation::ReplacePartNumberRule(_) => 2,
-            Iso16757Mutation::ChangePartNumberInput(_) => 3,
-            Iso16757Mutation::RemovePartNumberInput(_) => 4,
-            Iso16757Mutation::ChangeSelectionClass(_) => 5,
-            Iso16757Mutation::ChangeSelectionSeries(_) => 6,
-            Iso16757Mutation::AddSelectionConstraint(_) => 7,
-            Iso16757Mutation::RemoveSelectionConstraint(_) => 8,
-            Iso16757Mutation::RenameCatalogue(_) => 9,
-            Iso16757Mutation::RenameManufacturer(_) => 10,
-            Iso16757Mutation::CreateProductGroup(_) => 11,
-            Iso16757Mutation::DeleteProductGroup(_) => 12,
-            Iso16757Mutation::RenameProductGroup(_) => 13,
-            Iso16757Mutation::CreateProduct(_) => 14,
-            Iso16757Mutation::DeleteProduct(_) => 15,
-            Iso16757Mutation::RenameProduct(_) => 16,
-            Iso16757Mutation::CreatePropertyDefinition(_) => 17,
-            Iso16757Mutation::DeletePropertyDefinition(_) => 18,
-            Iso16757Mutation::CreateSubject(_) => 19,
-            Iso16757Mutation::DeleteSubject(_) => 20,
+            Iso16757Mutation::ChangeExchangeProcess(_) => TAG_CHANGE_EXCHANGE_PROCESS,
+            Iso16757Mutation::UpdateScriptLimits(_) => TAG_UPDATE_SCRIPT_LIMITS,
+            Iso16757Mutation::ReplacePartNumberRule(_) => TAG_REPLACE_PART_NUMBER_RULE,
+            Iso16757Mutation::ChangePartNumberInput(_) => TAG_CHANGE_PART_NUMBER_INPUT,
+            Iso16757Mutation::RemovePartNumberInput(_) => TAG_REMOVE_PART_NUMBER_INPUT,
+            Iso16757Mutation::ChangeSelectionClass(_) => TAG_CHANGE_SELECTION_CLASS,
+            Iso16757Mutation::ChangeSelectionSeries(_) => TAG_CHANGE_SELECTION_SERIES,
+            Iso16757Mutation::AddSelectionConstraint(_) => TAG_ADD_SELECTION_CONSTRAINT,
+            Iso16757Mutation::RemoveSelectionConstraint(_) => TAG_REMOVE_SELECTION_CONSTRAINT,
+            Iso16757Mutation::RenameCatalogue(_) => TAG_RENAME_CATALOGUE,
+            Iso16757Mutation::RenameManufacturer(_) => TAG_RENAME_MANUFACTURER,
+            Iso16757Mutation::CreateProductGroup(_) => TAG_CREATE_PRODUCT_GROUP,
+            Iso16757Mutation::DeleteProductGroup(_) => TAG_DELETE_PRODUCT_GROUP,
+            Iso16757Mutation::RenameProductGroup(_) => TAG_RENAME_PRODUCT_GROUP,
+            Iso16757Mutation::CreateProduct(_) => TAG_CREATE_PRODUCT,
+            Iso16757Mutation::DeleteProduct(_) => TAG_DELETE_PRODUCT,
+            Iso16757Mutation::RenameProduct(_) => TAG_RENAME_PRODUCT,
+            Iso16757Mutation::CreatePropertyDefinition(_) => TAG_CREATE_PROPERTY_DEFINITION,
+            Iso16757Mutation::DeletePropertyDefinition(_) => TAG_DELETE_PROPERTY_DEFINITION,
+            Iso16757Mutation::CreateSubject(_) => TAG_CREATE_SUBJECT,
+            Iso16757Mutation::DeleteSubject(_) => TAG_DELETE_SUBJECT,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -333,63 +359,63 @@ impl protocol::OpBinary for Iso16757Mutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            0 => Ok(Iso16757Mutation::ChangeExchangeProcess(ChangeExchangeProcess { new_exchange_process: read_json_bin(&mut reader).map_err(|e| malformed("new_exchange_process", reader.position(), e))? })),
-            1 => {
+            TAG_CHANGE_EXCHANGE_PROCESS => Ok(Iso16757Mutation::ChangeExchangeProcess(ChangeExchangeProcess { new_exchange_process: read_json_bin(&mut reader).map_err(|e| malformed("new_exchange_process", reader.position(), e))? })),
+            TAG_UPDATE_SCRIPT_LIMITS => {
                 let new_max_steps = reader.read_varint_u64().map_err(|e| malformed("new_max_steps", reader.position(), e.to_string()))? as u32;
                 let new_max_recursion = reader.read_varint_u64().map_err(|e| malformed("new_max_recursion", reader.position(), e.to_string()))? as u32;
                 let new_timeout_ms = reader.read_varint_u64().map_err(|e| malformed("new_timeout_ms", reader.position(), e.to_string()))?;
                 Ok(Iso16757Mutation::UpdateScriptLimits(UpdateScriptLimits { new_max_steps, new_max_recursion, new_timeout_ms }))
             }
-            2 => Ok(Iso16757Mutation::ReplacePartNumberRule(ReplacePartNumberRule { new_rule: read_json_bin(&mut reader).map_err(|e| malformed("new_rule", reader.position(), e))? })),
-            3 => {
+            TAG_REPLACE_PART_NUMBER_RULE => Ok(Iso16757Mutation::ReplacePartNumberRule(ReplacePartNumberRule { new_rule: read_json_bin(&mut reader).map_err(|e| malformed("new_rule", reader.position(), e))? })),
+            TAG_CHANGE_PART_NUMBER_INPUT => {
                 let key = read_str_bin(&mut reader).map_err(|e| malformed("key", reader.position(), e))?;
                 let new_value = read_json_bin(&mut reader).map_err(|e| malformed("new_value", reader.position(), e))?;
                 Ok(Iso16757Mutation::ChangePartNumberInput(ChangePartNumberInput { key, new_value }))
             }
-            4 => Ok(Iso16757Mutation::RemovePartNumberInput(RemovePartNumberInput { key: read_str_bin(&mut reader).map_err(|e| malformed("key", reader.position(), e))? })),
-            5 => Ok(Iso16757Mutation::ChangeSelectionClass(ChangeSelectionClass { new_class_id: read_str_bin(&mut reader).map_err(|e| malformed("new_class_id", reader.position(), e))? })),
-            6 => Ok(Iso16757Mutation::ChangeSelectionSeries(ChangeSelectionSeries { new_series_id: read_opt_str_bin(&mut reader).map_err(|e| malformed("new_series_id", reader.position(), e))? })),
-            7 => Ok(Iso16757Mutation::AddSelectionConstraint(AddSelectionConstraint { constraint: read_json_bin(&mut reader).map_err(|e| malformed("constraint", reader.position(), e))? })),
-            8 => {
+            TAG_REMOVE_PART_NUMBER_INPUT => Ok(Iso16757Mutation::RemovePartNumberInput(RemovePartNumberInput { key: read_str_bin(&mut reader).map_err(|e| malformed("key", reader.position(), e))? })),
+            TAG_CHANGE_SELECTION_CLASS => Ok(Iso16757Mutation::ChangeSelectionClass(ChangeSelectionClass { new_class_id: read_str_bin(&mut reader).map_err(|e| malformed("new_class_id", reader.position(), e))? })),
+            TAG_CHANGE_SELECTION_SERIES => Ok(Iso16757Mutation::ChangeSelectionSeries(ChangeSelectionSeries { new_series_id: read_opt_str_bin(&mut reader).map_err(|e| malformed("new_series_id", reader.position(), e))? })),
+            TAG_ADD_SELECTION_CONSTRAINT => Ok(Iso16757Mutation::AddSelectionConstraint(AddSelectionConstraint { constraint: read_json_bin(&mut reader).map_err(|e| malformed("constraint", reader.position(), e))? })),
+            TAG_REMOVE_SELECTION_CONSTRAINT => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("index", reader.position(), e.to_string()))? as usize;
                 Ok(Iso16757Mutation::RemoveSelectionConstraint(RemoveSelectionConstraint { index }))
             }
-            9 => Ok(Iso16757Mutation::RenameCatalogue(RenameCatalogue { new_name: read_str_bin(&mut reader).map_err(|e| malformed("new_name", reader.position(), e))? })),
-            10 => Ok(Iso16757Mutation::RenameManufacturer(RenameManufacturer { new_name: read_str_bin(&mut reader).map_err(|e| malformed("new_name", reader.position(), e))? })),
-            11 => {
+            TAG_RENAME_CATALOGUE => Ok(Iso16757Mutation::RenameCatalogue(RenameCatalogue { new_name: read_str_bin(&mut reader).map_err(|e| malformed("new_name", reader.position(), e))? })),
+            TAG_RENAME_MANUFACTURER => Ok(Iso16757Mutation::RenameManufacturer(RenameManufacturer { new_name: read_str_bin(&mut reader).map_err(|e| malformed("new_name", reader.position(), e))? })),
+            TAG_CREATE_PRODUCT_GROUP => {
                 let product_group = read_json_bin(&mut reader).map_err(|e| malformed("product_group", reader.position(), e))?;
                 let index = read_opt_usize_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 Ok(Iso16757Mutation::CreateProductGroup(CreateProductGroup { product_group, index }))
             }
-            12 => Ok(Iso16757Mutation::DeleteProductGroup(DeleteProductGroup { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
-            13 => {
+            TAG_DELETE_PRODUCT_GROUP => Ok(Iso16757Mutation::DeleteProductGroup(DeleteProductGroup { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
+            TAG_RENAME_PRODUCT_GROUP => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let new_name = read_str_bin(&mut reader).map_err(|e| malformed("new_name", reader.position(), e))?;
                 Ok(Iso16757Mutation::RenameProductGroup(RenameProductGroup { id, new_name }))
             }
-            14 => {
+            TAG_CREATE_PRODUCT => {
                 let product = read_json_bin(&mut reader).map_err(|e| malformed("product", reader.position(), e))?;
                 let index = read_opt_usize_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 Ok(Iso16757Mutation::CreateProduct(CreateProduct { product, index }))
             }
-            15 => Ok(Iso16757Mutation::DeleteProduct(DeleteProduct { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
-            16 => {
+            TAG_DELETE_PRODUCT => Ok(Iso16757Mutation::DeleteProduct(DeleteProduct { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
+            TAG_RENAME_PRODUCT => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let new_name = read_str_bin(&mut reader).map_err(|e| malformed("new_name", reader.position(), e))?;
                 Ok(Iso16757Mutation::RenameProduct(RenameProduct { id, new_name }))
             }
-            17 => {
+            TAG_CREATE_PROPERTY_DEFINITION => {
                 let property_definition = read_json_bin(&mut reader).map_err(|e| malformed("property_definition", reader.position(), e))?;
                 let index = read_opt_usize_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 Ok(Iso16757Mutation::CreatePropertyDefinition(CreatePropertyDefinition { property_definition, index }))
             }
-            18 => Ok(Iso16757Mutation::DeletePropertyDefinition(DeletePropertyDefinition { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
-            19 => {
+            TAG_DELETE_PROPERTY_DEFINITION => Ok(Iso16757Mutation::DeletePropertyDefinition(DeletePropertyDefinition { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
+            TAG_CREATE_SUBJECT => {
                 let subject = read_json_bin(&mut reader).map_err(|e| malformed("subject", reader.position(), e))?;
                 let index = read_opt_usize_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 Ok(Iso16757Mutation::CreateSubject(CreateSubject { subject, index }))
             }
-            20 => Ok(Iso16757Mutation::DeleteSubject(DeleteSubject { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
+            TAG_DELETE_SUBJECT => Ok(Iso16757Mutation::DeleteSubject(DeleteSubject { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }
     }

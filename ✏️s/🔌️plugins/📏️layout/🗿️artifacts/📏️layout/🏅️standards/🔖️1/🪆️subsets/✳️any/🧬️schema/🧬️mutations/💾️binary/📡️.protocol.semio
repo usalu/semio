@@ -3,111 +3,63 @@ protocol layout.layout.mutations
 version 1
 schema layout.layout
 start record
+framing record
 
-record RenameLayout tag 1
-  field new_name utf8
-
-record ChangePrintTarget tag 2
-  field new_print_target utf8
-
-record ChangeDataFields tag 3
-  field new_json utf8
-
-record CreatePage tag 4
-  field page bytes
-  field index varint
-
-record DeletePage tag 5
-  field id utf8
-
-record RenamePage tag 6
-  field id utf8
-  field new_name utf8
-
-record ChangePageWidth tag 7
-  field id utf8
-  field new_width f64
-
-record ChangePageHeight tag 8
-  field id utf8
-  field new_height f64
-
-record UpdatePageMargins tag 9
-  field id utf8
-  field top f64
-  field right f64
-  field bottom f64
-  field left f64
-
-record UpdatePageColumns tag 10
-  field id utf8
-  field count varint
-  field gutter f64
-
-record ReorderPages tag 11
-  field id utf8
-  field to_index varint
-
-record CreateStory tag 12
-  field story bytes
-  field index varint
-
-record DeleteStory tag 13
-  field id utf8
-
-record EditStory tag 14
-  field id utf8
-  field new_content utf8
-
-record CreateLink tag 15
-  field link bytes
-  field index varint
-
-record DeleteLink tag 16
-  field id utf8
-
-record ChangeLinkPath tag 17
-  field id utf8
-  field new_path utf8
-
-record CreateFrame tag 18
-  field page_id utf8
-  field frame bytes
-  field index varint
-  field layer_id utf8
-
-record DeleteFrame tag 19
-  field page_id utf8
-  field frame_id utf8
-
-record MoveFrame tag 20
-  field page_id utf8
-  field frame_id utf8
-  field new_x f64
-  field new_y f64
-
-record ResizeFrame tag 21
-  field page_id utf8
-  field frame_id utf8
-  field new_width f64
-  field new_height f64
-
-record ChangeFrameFill tag 22
-  field page_id utf8
-  field frame_id utf8
-  field new_fill bytes
-
-record ChangeFrameStroke tag 23
-  field page_id utf8
-  field frame_id utf8
-  field new_stroke bytes
-
-record ChangeFrameWrapMode tag 24
-  field page_id utf8
-  field frame_id utf8
-  field new_wrap_mode utf8
-
-record ChangeFrameColumns tag 25
-  field page_id utf8
-  field frame_id utf8
-  field new_columns varint
+# Real `LayoutMutation` op frame (`dsl::tagged_value_binary`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`, then
+# the variant's `ToValue` tree without its variant name, as one framework wire value (`pack_rt::encode_wire_value`).
+# Each record is one mutation kind at its wire tag; this file is the only source of those tags.
+header fixed 2
+field format u8
+field tag varint
+record rename-layout tag=0
+field payload bytes
+record change-print-target tag=1
+field payload bytes
+record change-data-fields tag=2
+field payload bytes
+record create-page tag=3
+field payload bytes
+record delete-page tag=4
+field payload bytes
+record rename-page tag=5
+field payload bytes
+record change-page-width tag=6
+field payload bytes
+record change-page-height tag=7
+field payload bytes
+record update-page-margins tag=8
+field payload bytes
+record update-page-columns tag=9
+field payload bytes
+record reorder-pages tag=10
+field payload bytes
+record create-story tag=11
+field payload bytes
+record delete-story tag=12
+field payload bytes
+record edit-story tag=13
+field payload bytes
+record create-link tag=14
+field payload bytes
+record delete-link tag=15
+field payload bytes
+record change-link-path tag=16
+field payload bytes
+record create-frame tag=17
+field payload bytes
+record delete-frame tag=18
+field payload bytes
+record move-frame tag=19
+field payload bytes
+record resize-frame tag=20
+field payload bytes
+record rotate-frame tag=21
+field payload bytes
+record change-frame-fill tag=22
+field payload bytes
+record change-frame-stroke tag=23
+field payload bytes
+record change-frame-wrap-mode tag=24
+field payload bytes
+record change-frame-columns tag=25
+field payload bytes

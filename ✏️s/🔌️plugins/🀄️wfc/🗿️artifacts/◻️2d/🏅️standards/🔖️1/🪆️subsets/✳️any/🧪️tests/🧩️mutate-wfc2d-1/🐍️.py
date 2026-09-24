@@ -33,6 +33,7 @@ from __future__ import annotations
 import copy
 import json
 import pathlib
+import re
 import sys
 
 # endregion 🔖️Imports
@@ -332,7 +333,7 @@ def replay():
     for kind_dir in sorted(FIXTURES.iterdir()):
         if not kind_dir.is_dir():
             continue
-        seen.add(kind_dir.name)
+        seen.add(re.search(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)+$", kind_dir.name).group(0))
         for case_dir in sorted(kind_dir.iterdir()):
             if not case_dir.is_dir():
                 continue

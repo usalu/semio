@@ -8,13 +8,13 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetRelation {
-    pub(crate) id: String,
+    pub id: String,
     #[value(default)]
-    pub(crate) kind: Option<RelationKind>,
+    pub kind: Option<RelationKind>,
     #[value(default)]
-    pub(crate) from: Option<String>,
+    pub from: Option<String>,
     #[value(default)]
-    pub(crate) to: Option<String>,
+    pub to: Option<String>,
 }
 
 impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for SetRelation {

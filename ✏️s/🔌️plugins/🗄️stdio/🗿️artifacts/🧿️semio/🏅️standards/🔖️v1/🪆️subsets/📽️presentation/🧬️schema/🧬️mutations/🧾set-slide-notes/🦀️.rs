@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSlideNotes {
-    pub(crate) index: usize,
-    pub(crate) notes: Vec<DocBlock>,
+    pub index: usize,
+    pub notes: Vec<DocBlock>,
 }
 
 impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for SetSlideNotes {

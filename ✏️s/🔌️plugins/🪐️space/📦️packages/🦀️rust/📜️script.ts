@@ -135,8 +135,8 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
   const validateRetained = compileRetainedCommandLimits(repoRoot, join(base, ".."), "HomeRetainedCommandLimits");
   assert(validateRetained(retainedFixture), JSON.stringify(validateRetained.errors));
   const directoryRoute = retainedFixture.routes.find((route: any) => route.id === "applyDirectoryEventPage");
-  assert.equal(directoryRoute?.disposition, "BatchOnlyPendingRewrite");
-  assert.deepEqual(directoryRoute?.lanes, []);
+  assert.equal(directoryRoute?.disposition, "Migrated");
+  assert.deepEqual(directoryRoute?.lanes, ["Config"]);
   const commandPath = join(base, "🎮️commands/📬️apply-directory-event-page/🦀️.rs");
   const command = existsSync(commandPath) ? readFileSync(commandPath, "utf8") : "";
   const receiptRoot = join(base, "🎮️commands/📬️apply-directory-event-page/🧬️receipt");
@@ -167,7 +167,7 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
     && configSource.includes("pub struct DirectoryProjectionReceiptV1")
     && configSource.includes("pub fn directory_projection_receipt")
     && editorSource.includes('"applyDirectoryEventPage"')
-    && editorSource.includes('.action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::BatchOnlyPendingRewrite)')
+    && editorSource.includes('.action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::Migrated)')
     && !editorSource.includes('str_field("pageJson").or_else(|| str_field("page_json"))')
     && crateSource.includes("pub mod apply_directory_event_page;");
   assert(exact(command, config, editor, crate), "Home directory event-page retained owner is incomplete");
@@ -308,7 +308,7 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     && editorTestSource.includes("spectator_and_unbound_hub_rows_only_carry_open")
     && editorTestSource.includes("role: Some(crate::DirectorySpaceRole::Spectator)")
     && editorTestSource.includes("role: None")
-    && viewerTestSource.includes('origin: "hub", role: None');
+    && viewerTestSource.includes('origin: "hub", data_class: "persistedShared", role: None');
   assert(controller.includes("fold_directory_events, manage_space, presence_heartbeat"), "Home controller does not import the manageSpace command module");
   assert(exact(editor, editorTests, viewerTests), "Home identity rows expose administration without current author authority");
   const catalogGenerationFixture = "🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/🧪️bumps-the-catalog-generation-to-7/🦀️.rs";
@@ -577,7 +577,48 @@ class DescribeScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("describe", DescribeScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript).register("interactive-job-catalog-check", InteractiveJobCatalogCheckScript).register("plugin-identity-check", PluginIdentityCheckScript);
+
+/** 🗃️ Proves PersistenceDataClass routing (WP-C6). */
+export function persistenceDataClassOracle(repoRoot: string): number {
+  const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/persistence-data-class-v1/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧬️schema/persistence-data-class/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: false, allErrors: true });
+  ajv.addSchema(schema);
+  const validateBinding = ajv.compile({ $ref: `${schema.$id}#/$defs/ClassifiedPersistenceBinding` });
+  const validateLane = ajv.compile({ $ref: `${schema.$id}#/$defs/ClassifiedWireLane` });
+  for (const c of fixture.cases) {
+    assert(validateBinding(c.binding), JSON.stringify(validateBinding.errors));
+    if (c.wireLane) assert(validateLane(c.wireLane), JSON.stringify(validateLane.errors));
+  }
+  const core = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🫀️core/🦀️.rs"), "utf8");
+  assert(core.includes('origin: "hub"'));
+  assert(core.includes('data_class: "persistedShared"'));
+  assert(core.includes('ephemeralLocalOnly'));
+  const main = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️.rs"), "utf8");
+  assert(main.includes('ephemeralLocalOnly'));
+  assert(main.includes("promoteToHubSpace"));
+  assert(main.includes("persistLocally"));
+  const share = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️share-space/🦀️.rs"), "utf8");
+  assert(share.includes("ephemeralShareBlocked"));
+  const sync = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
+  assert(sync.includes("enum PersistenceDataClass"));
+  assert(sync.includes("wire_lane_data_class"));
+  const osTs = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"), "utf8");
+  assert(osTs.includes("export type PersistenceDataClass"));
+  assert(osTs.includes("dataClass: \"persistedShared\""));
+  assert(fixture.homeUnion.hubSpace.origin === "hub");
+  assert(fixture.homeUnion.ephemeralStudio.dataClass === "ephemeralLocalOnly");
+  return fixture.cases.length + 6;
+}
+
+class PersistenceDataClassCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 0) throw new Error("persistence-data-class-check takes no args");
+    console.log(`persistence-data-class-check: checks=${persistenceDataClassOracle(this.repoRoot)} clean`);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("describe", DescribeScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript).register("interactive-job-catalog-check", InteractiveJobCatalogCheckScript).register("plugin-identity-check", PluginIdentityCheckScript).register("persistence-data-class-check", PersistenceDataClassCheckScript);
 
 registerPlaygroundSiteBuildCommands(router);
 

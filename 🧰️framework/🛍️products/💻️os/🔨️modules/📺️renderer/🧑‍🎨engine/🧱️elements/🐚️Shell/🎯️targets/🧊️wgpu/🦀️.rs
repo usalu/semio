@@ -5134,7 +5134,8 @@ impl PanelProjection<'_> {
 
     /// 🌿️ One `UiTreeItemNode` as its `Component::TreeItem` record. The row's own click is a
     /// `Trigger::Activate` binding (React's `TreeDataItem.onClick`), and nested rows are ordinary
-    /// children, which is exactly what [`ui_contract::TreeItemProps`] replaced `items` with.
+    /// children — except a homogeneous strip of action-only leaves, which is React's inline
+    /// resolution toolbar (`ContainerRole::Toolbar` of `Button`s), never more `TreeItem`s.
     fn tree_item(&mut self, item: &UiTreeItemNode) -> Result<ui_contract::UiNodeId, String> {
         let key = self.key(Some(item.id.as_str()));
         let id = self.reserve();
@@ -5146,9 +5147,16 @@ impl PanelProjection<'_> {
             let control = self.node(&control_ui_node(control))?;
             children.try_push(control).map_err(|_| format!("panel '{}' tree row '{}' admits its control", self.surface_id, item.id))?;
         }
-        for child in item.items.iter().flatten() {
-            let child = self.tree_item(child)?;
-            children.try_push(child).map_err(|_| format!("panel '{}' tree row '{}' packs more children than one record admits", self.surface_id, item.id))?;
+        let nested: Vec<&UiTreeItemNode> = item.items.iter().flatten().collect();
+        let inline_action_toolbar = !nested.is_empty() && nested.iter().copied().all(tree_item_is_inline_action_leaf);
+        if inline_action_toolbar {
+            let toolbar = self.tree_item_inline_action_toolbar(&item.id, &nested)?;
+            children.try_push(toolbar).map_err(|_| format!("panel '{}' tree row '{}' admits its inline toolbar", self.surface_id, item.id))?;
+        } else {
+            for child in nested {
+                let child = self.tree_item(child)?;
+                children.try_push(child).map_err(|_| format!("panel '{}' tree row '{}' packs more children than one record admits", self.surface_id, item.id))?;
+            }
         }
         let bindings = match item.action.as_ref() {
             Some(action) => measure_bindings(ui_contract::Trigger::Activate, action, None)?,
@@ -5183,6 +5191,42 @@ impl PanelProjection<'_> {
             PanelRecord { children, bindings, disabled: matches!(item.presence.state, ui_wgpu::wgpu::component::ui::UiState::Disabled), ..PanelRecord::default() },
         )
     }
+
+    /// 🎛️ Accept/Discard (and Marketplace Install/Reload/Uninstall) leaves authored as nested
+    /// `UiTreeItemNode`s with only an Activate action — React's inline control slot — become one
+    /// horizontal `Toolbar` of real `Button` records so schema `rowCount` stays the parent alone.
+    fn tree_item_inline_action_toolbar(&mut self, parent_id: &str, verbs: &[&UiTreeItemNode]) -> Result<ui_contract::UiNodeId, String> {
+        let key = self.key(Some(&format!("{parent_id}.toolbar")));
+        let id = self.reserve();
+        let mut children = ui_contract::UiNodeChildren::default();
+        for verb in verbs {
+            let action = verb.action.as_ref().ok_or_else(|| format!("panel '{}' inline verb '{}' lost its Activate action", self.surface_id, verb.id))?;
+            let button = UiNode::Button(UiButtonNode {
+                id: Some(verb.id.clone()),
+                icon_id: verb.icon_id.clone().unwrap_or(IconName::Check),
+                label: verb.label.clone(),
+                action: action.clone(),
+                style: None,
+                presence: verb.presence.clone(),
+                menu: None,
+            });
+            let button = self.node(&button)?;
+            children.try_push(button).map_err(|_| format!("panel '{}' inline toolbar under '{}' packs more verbs than one record admits", self.surface_id, parent_id))?;
+        }
+        self.place(
+            id,
+            key,
+            ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Toolbar, None, None)),
+            Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None),
+            PanelRecord { children, ..PanelRecord::default() },
+        )
+    }
+}
+
+/// 🎛️ A nested tree leaf that carries only an Activate verb (no control, no further children) is
+/// React's inline resolution/control slot, not another expandable row.
+fn tree_item_is_inline_action_leaf(item: &UiTreeItemNode) -> bool {
+    item.action.is_some() && item.control.is_none() && item.items.as_ref().map_or(true, |items| items.is_empty())
 }
 
 /// 👁️✏️ Byte-identical to React's `DEFAULT_APP_NONE_VALUE` (`📌️ChromePanels/🟦️.tsx`) — the
@@ -8284,11 +8328,11 @@ impl ShellState {
     /// React's own unavailable row only when there genuinely is no open conflict.
     ///
     /// ⚖️ React nests Accept/Discard as two inline buttons in the row's single control slot plus a
-    /// `ConflictDiffPreview` behind `🔺️DiffViewHost`. A row here carries ONE control, so each verb is
-    /// its own addressable child row under React's own `….accept`/`….discard` id, expanded for the
-    /// selected conflict exactly as React expands its diff for the selected one. No diff preview:
-    /// React's own `currentDocumentText` is `""` on this lease too ("no local snapshot"), so neither
-    /// renderer has a second side to diff against.
+    /// `ConflictDiffPreview` behind `🔺️DiffViewHost`. Authored here as action-only nested leaves under
+    /// React's own `….accept`/`….discard` ids; panel projection lifts that strip into one horizontal
+    /// `Toolbar` of `Button`s so schema `rowCount` stays one. No diff preview: React's own
+    /// `currentDocumentText` is `""` on this lease too ("no local snapshot"), so neither renderer has
+    /// a second side to diff against.
     pub(crate) fn build_settings_conflicts_ui(&self) -> UiNode {
         let is_de = self.locale_id == "de";
         if self.open_conflicts.is_empty() {
@@ -10950,6 +10994,10 @@ impl ShellState {
     ///
     /// 🏠️ Nothing here can ever stop local work: every failure lands in the session's `error` slot
     /// or in the spaces `Stale` phase, and the surface keeps rendering.
+    ///
+    /// 📋️ `COPY_INVITE_LINK` is deliberately unreachable on this renderer: the surface only paints
+    /// that control when `clipboard_available` is set, and the wgpu frame Worker owns no clipboard
+    /// door (see this file's own note in the retained editor lane).
     async fn handle_hub_workspace_action(&mut self, verb: &str, args: Option<DslValue>) {
         let value = args.as_ref().and_then(|args| args.get("value")).and_then(DslValue::as_str).unwrap_or_default().to_string();
         let space_id = args.as_ref().and_then(|args| args.get("spaceId")).and_then(DslValue::as_str).unwrap_or_default().to_string();
@@ -11024,9 +11072,6 @@ impl ShellState {
             }
             hub_action::CREATE_INVITE => self.run_hub_create_invite_turn(&space_id).await,
             hub_action::REDEEM_INVITE => self.run_hub_redeem_turn().await,
-            // 📋️ `COPY_INVITE_LINK` is deliberately unreachable on this renderer: the surface only
-            // paints that control when `clipboard_available` is set, and the wgpu frame Worker owns
-            // no clipboard door (see this file's own note in the retained editor lane).
             _ => {}
         }
         let _ = self.refresh_ui(UiDirtyScope::Full).await;
@@ -11055,6 +11100,9 @@ impl ShellState {
 
     /// 🔐️ One credential sign-in against the SELECTED hub's own origin, followed immediately by the
     /// `me` read that carries the deadline the mint answer deliberately omits (AU1 §1.1, AU3 §4.2).
+    ///
+    /// 🔑️ The password draft is cleared the moment the attempt ends, whatever the outcome: a
+    /// password that stays in shell state outlives the one request that needed it.
     async fn run_hub_sign_in_turn(&mut self) {
         let origin = self.hub_workspace.origin().to_string();
         let credential = HubSignInCredential {
@@ -11066,8 +11114,6 @@ impl ShellState {
         self.hub_workspace.session = reduce_hub_session(&self.hub_workspace.session, &HubSessionEvent::Submit);
         let ctx = self.directory_command_ctx();
         let outcome = crate::hub_connection::run_hub_sign_in(&self.directory_transport, &ctx, &origin, &credential).await;
-        // 🔑️ The draft is cleared the moment the attempt ends, whatever the outcome: a password that
-        // stays in shell state outlives the one request that needed it.
         self.hub_workspace.password_draft.clear();
         match outcome {
             crate::hub_connection::HubSignInOutcome::Failed { code, retry_after_seconds } => {
@@ -11373,6 +11419,37 @@ impl ShellState {
         }
     }
 
+
+    /// 📔️ Live directory WS events fold through `foldDirectoryEvents` (browser parity) so hub
+    /// membership stays projected without waiting for a full event-page rebootstrap.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn dispatch_fold_directory_events(&mut self, events: &[semio_framework_os_kernel::os_directory::DirectoryEvent]) {
+        let Some(session) = self.session.clone() else { return };
+        let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };
+        let events_json = dsl::os_pack::json::to_json_string(&events.to_vec());
+        let live_view_state = self.live_view_state(&session);
+        let window_kind_id = session.app.window_kinds.first().id.clone();
+        let window_instance_id = live_view_state.window_id.clone().unwrap_or_else(|| window_kind_id.clone());
+        let mode_id = live_view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone());
+        let invocation = semio_framework::manifest::ActionInvocation {
+            address: semio_framework::manifest::ActionAddress {
+                plugin_id: session.plugin_id.clone(),
+                app_id: session.app.id.clone(),
+                mode_id,
+                window_kind_id,
+                window_instance_id,
+                action_id: "foldDirectoryEvents".into(),
+            },
+            arguments: BTreeMap::from([("eventsJson".into(), DslValue::String(events_json))]),
+        };
+        let action_json = dsl::os_pack::json::to_json_string(&invocation);
+        let pool = crate::renderer_worker_pool();
+        let instance_id = session.instance_id;
+        let _ = ShellPoolFuture::spawn(pool, Lane::Io, async move {
+            let _ = program.handle_action(instance_id, &action_json, &live_view_state).await;
+        });
+    }
+
     /// 🏠️ Begins one bounded canonical-page fetch owned by the retained Home bootstrap epoch.
     #[cfg(not(target_arch = "wasm32"))]
     fn start_directory_event_page_fetch(&mut self) {
@@ -11584,12 +11661,21 @@ impl ShellState {
             }
             let mut dirty = false;
             let mut rebootstrap = false;
+            let mut live_events: Vec<semio_framework_os_kernel::os_directory::DirectoryEvent> = Vec::new();
             for message in runner.drain() {
                 match message {
-                    DirectoryStreamMessage::Event { .. } | DirectoryStreamMessage::Heartbeat { .. } => dirty = true,
+                    DirectoryStreamMessage::Event { event } => {
+                        live_events.push(event.as_ref().clone());
+                        dirty = true;
+                    }
+                    DirectoryStreamMessage::Heartbeat { .. } => dirty = true,
                     DirectoryStreamMessage::Connection { .. } | DirectoryStreamMessage::Presence { .. } => {}
                     DirectoryStreamMessage::RebootstrapRequired { .. } => rebootstrap = true,
                 }
+            }
+            if !live_events.is_empty() {
+                self.dispatch_fold_directory_events(&live_events);
+                changed = true;
             }
             if dirty || rebootstrap {
                 if let Some(home) = self.directory_home.as_mut() {
@@ -23328,7 +23414,7 @@ impl ShellState {
         let connected_at_ms = channel.connected_at_ms;
         let label = self.session.as_ref().map(|session| session.app.id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
         let user_id = self.identity.as_ref().map(|identity| identity.user_id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
-        let peer = PresencePeer { actor, label, presence_pack: None, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None };
+        let peer = PresencePeer { actor, label, presence_pack: None, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None, active_tool: None };
         self.document_host.presence_heartbeat_key(&channel.document_key, chrome_now_ms() as u64, peer);
     }
 

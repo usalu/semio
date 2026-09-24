@@ -2,56 +2,119 @@
   "schema": "semio.framework.server.wire/v1",
   "note": "🔌️ The language-agnostic wire contract of the server product: the gateway's own route table, and one canonical JSON document per wire type. Rust (🧪️tests/🔬️wire/🦀️.rs) and TypeScript (🟦️.ts) each deserialize every vector into their own twin and serialize it back, asserting the result equals this document. A rename on either side fails the other side's suite. Field spellings are deliberate and not all camelCase: traceContext and frontierSummary carry no serde rename, and an internally tagged enum renames its variants but never the fields inside them, which is why commandOutcome carries canonical_events and rejection carries command_kind.",
   "routes": [
-    { "method": "GET", "path": "/instance" },
-    { "method": "POST", "path": "/commands" },
-    { "method": "POST", "path": "/queries" },
-    { "method": "POST", "path": "/scopes/{scope}/ephemeral" },
-    { "method": "GET", "path": "/scopes/{scope}/document/ws" },
-    { "method": "GET", "path": "/actors/{tenant}/{kind}/{id}/events" },
-    { "method": "GET", "path": "/actors/{tenant}/{kind}/{id}/events/ws" },
-    { "method": "GET", "path": "/blobs/{hash}" },
-    { "method": "HEAD", "path": "/blobs/{hash}" },
-    { "method": "PUT", "path": "/blobs/{hash}" },
-    { "method": "GET", "path": "/apps" },
-    { "method": "GET", "path": "/apps/{app}/installs" },
-    { "method": "GET", "path": "/apps/{app}" },
-    { "method": "GET", "path": "/apps/{app}/{*rest}" }
+    {
+      "method": "GET",
+      "path": "/instance"
+    },
+    {
+      "method": "POST",
+      "path": "/commands"
+    },
+    {
+      "method": "POST",
+      "path": "/queries"
+    },
+    {
+      "method": "POST",
+      "path": "/scopes/{scope}/ephemeral"
+    },
+    {
+      "method": "GET",
+      "path": "/actors/{tenant}/{kind}/{id}/events"
+    },
+    {
+      "method": "GET",
+      "path": "/actors/{tenant}/{kind}/{id}/events/ws"
+    },
+    {
+      "method": "GET",
+      "path": "/blobs/{hash}"
+    },
+    {
+      "method": "HEAD",
+      "path": "/blobs/{hash}"
+    },
+    {
+      "method": "PUT",
+      "path": "/blobs/{hash}"
+    },
+    {
+      "method": "GET",
+      "path": "/apps"
+    },
+    {
+      "method": "GET",
+      "path": "/apps/{app}/installs"
+    },
+    {
+      "method": "GET",
+      "path": "/apps/{app}"
+    },
+    {
+      "method": "GET",
+      "path": "/apps/{app}/{*rest}"
+    },
+    {
+      "method": "GET",
+      "path": "/scopes/{scope}/document/ws"
+    }
   ],
   "vectors": [
     {
       "name": "actor-key",
       "type": "actorKey",
-      "json": { "tenant": "t1", "kind": "counter", "id": "c1" }
+      "json": {
+        "tenant": "t1",
+        "kind": "counter",
+        "id": "c1"
+      }
     },
     {
       "name": "principal-user",
       "type": "principal",
-      "json": { "kind": "user", "id": "alice" }
+      "json": {
+        "kind": "user",
+        "id": "alice"
+      }
     },
     {
       "name": "principal-service-account",
       "type": "principal",
-      "json": { "kind": "serviceAccount", "id": "importer" }
+      "json": {
+        "kind": "serviceAccount",
+        "id": "importer"
+      }
     },
     {
       "name": "principal-device",
       "type": "principal",
-      "json": { "kind": "device", "id": "d1" }
+      "json": {
+        "kind": "device",
+        "id": "d1"
+      }
     },
     {
       "name": "principal-anonymous",
       "type": "principal",
-      "json": { "kind": "anonymous" }
+      "json": {
+        "kind": "anonymous"
+      }
     },
     {
       "name": "hybrid-logical-clock",
       "type": "hybridLogicalClock",
-      "json": { "millis": 1726700000000, "counter": 3 }
+      "json": {
+        "millis": 1726700000000,
+        "counter": 3
+      }
     },
     {
       "name": "trace-context-snake-case",
       "type": "traceContext",
-      "json": { "trace_id": "trace-1", "span_id": "span-1" }
+      "json": {
+        "trace_id": "trace-1",
+        "span_id": "span-1"
+      }
     },
     {
       "name": "frontier-summary-snake-case",
@@ -61,18 +124,60 @@
         "head_edit_ordinal": 12,
         "head_edit_id": "edit-12",
         "last_commit_seq": 9,
-        "chain_hash": [1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255]
+        "chain_hash": [
+          1,
+          2,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          255
+        ]
       }
     },
     {
       "name": "event-record",
       "type": "eventRecord",
       "json": {
-        "stream": { "tenant": "t1", "kind": "counter", "id": "c1" },
+        "stream": {
+          "tenant": "t1",
+          "kind": "counter",
+          "id": "c1"
+        },
         "seq": 4,
-        "hlc": { "millis": 1726700000001, "counter": 0 },
+        "hlc": {
+          "millis": 1726700000001,
+          "counter": 0
+        },
         "kind": "counter.incremented",
-        "payload": [3]
+        "payload": [
+          3
+        ]
       }
     },
     {
@@ -80,9 +185,17 @@
       "type": "ephemeralFrame",
       "json": {
         "scope": "space-1",
-        "principal": { "kind": "user", "id": "alice" },
+        "principal": {
+          "kind": "user",
+          "id": "alice"
+        },
         "kind": "cursor.moved",
-        "payload": [12, 200, 255, 0]
+        "payload": [
+          12,
+          200,
+          255,
+          0
+        ]
       }
     },
     {
@@ -92,24 +205,72 @@
         "commandId": "cmd-1",
         "kind": "counter.increment",
         "version": 1,
-        "target": { "tenant": "t1", "kind": "counter", "id": "c1" },
+        "target": {
+          "tenant": "t1",
+          "kind": "counter",
+          "id": "c1"
+        },
         "scope": "space-1",
-        "principal": { "kind": "user", "id": "alice" },
+        "principal": {
+          "kind": "user",
+          "id": "alice"
+        },
         "session": "s1",
         "device": "d1",
-        "payload": [3],
+        "payload": [
+          3
+        ],
         "causalFrontier": {
           "document_id": "doc-1",
           "head_edit_ordinal": 12,
           "head_edit_id": "edit-12",
           "last_commit_seq": 9,
-          "chain_hash": [1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255]
+          "chain_hash": [
+            1,
+            2,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            255
+          ]
         },
-        "clientHlc": { "millis": 1726700000000, "counter": 1 },
+        "clientHlc": {
+          "millis": 1726700000000,
+          "counter": 1
+        },
         "expectedRevision": 3,
         "idempotencyKey": "k1",
         "capabilityProof": "share-token-1",
-        "trace": { "trace_id": "trace-1", "span_id": "span-1" }
+        "trace": {
+          "trace_id": "trace-1",
+          "span_id": "span-1"
+        }
       }
     },
     {
@@ -119,18 +280,30 @@
         "commandId": "cmd-2",
         "kind": "counter.increment",
         "version": 1,
-        "target": { "tenant": "t1", "kind": "counter", "id": "c1" },
+        "target": {
+          "tenant": "t1",
+          "kind": "counter",
+          "id": "c1"
+        },
         "scope": "space-1",
-        "principal": { "kind": "anonymous" },
+        "principal": {
+          "kind": "anonymous"
+        },
         "session": null,
         "device": null,
         "payload": [],
         "causalFrontier": null,
-        "clientHlc": { "millis": 0, "counter": 0 },
+        "clientHlc": {
+          "millis": 0,
+          "counter": 0
+        },
         "expectedRevision": null,
         "idempotencyKey": null,
         "capabilityProof": null,
-        "trace": { "trace_id": "", "span_id": "" }
+        "trace": {
+          "trace_id": "",
+          "span_id": ""
+        }
       }
     },
     {
@@ -138,35 +311,58 @@
       "type": "commandReceipt",
       "json": {
         "commandId": "cmd-1",
-        "actor": { "tenant": "t1", "kind": "counter", "id": "c1" },
+        "actor": {
+          "tenant": "t1",
+          "kind": "counter",
+          "id": "c1"
+        },
         "revision": 4,
-        "acceptedAt": { "millis": 1726700000001, "counter": 0 }
+        "acceptedAt": {
+          "millis": 1726700000001,
+          "counter": 0
+        }
       }
     },
     {
       "name": "rejection-unauthorized",
       "type": "rejection",
-      "json": { "kind": "unauthorized", "detail": "no grant at commandAdmission" }
+      "json": {
+        "kind": "unauthorized",
+        "detail": "no grant at commandAdmission"
+      }
     },
     {
       "name": "rejection-revision-conflict",
       "type": "rejection",
-      "json": { "kind": "revisionConflict", "expected": 3, "actual": 4 }
+      "json": {
+        "kind": "revisionConflict",
+        "expected": 3,
+        "actual": 4
+      }
     },
     {
       "name": "rejection-invalid",
       "type": "rejection",
-      "json": { "kind": "invalid", "detail": "counter refuses" }
+      "json": {
+        "kind": "invalid",
+        "detail": "counter refuses"
+      }
     },
     {
       "name": "rejection-unknown-command-kind-keeps-snake-case-field",
       "type": "rejection",
-      "json": { "kind": "unknownCommandKind", "command_kind": "counter.teleport" }
+      "json": {
+        "kind": "unknownCommandKind",
+        "command_kind": "counter.teleport"
+      }
     },
     {
       "name": "rejection-actor-unavailable",
       "type": "rejection",
-      "json": { "kind": "actorUnavailable", "detail": "storage failure: disk is full" }
+      "json": {
+        "kind": "actorUnavailable",
+        "detail": "storage failure: disk is full"
+      }
     },
     {
       "name": "command-outcome-accepted",
@@ -175,17 +371,33 @@
         "status": "accepted",
         "receipt": {
           "commandId": "cmd-1",
-          "actor": { "tenant": "t1", "kind": "counter", "id": "c1" },
+          "actor": {
+            "tenant": "t1",
+            "kind": "counter",
+            "id": "c1"
+          },
           "revision": 4,
-          "acceptedAt": { "millis": 1726700000001, "counter": 0 }
+          "acceptedAt": {
+            "millis": 1726700000001,
+            "counter": 0
+          }
         },
         "events": [
           {
-            "stream": { "tenant": "t1", "kind": "counter", "id": "c1" },
+            "stream": {
+              "tenant": "t1",
+              "kind": "counter",
+              "id": "c1"
+            },
             "seq": 4,
-            "hlc": { "millis": 1726700000001, "counter": 0 },
+            "hlc": {
+              "millis": 1726700000001,
+              "counter": 0
+            },
             "kind": "counter.incremented",
-            "payload": [3]
+            "payload": [
+              3
+            ]
           }
         ],
         "frontier": null
@@ -198,17 +410,33 @@
         "status": "transformed",
         "receipt": {
           "commandId": "cmd-1",
-          "actor": { "tenant": "t1", "kind": "counter", "id": "c1" },
+          "actor": {
+            "tenant": "t1",
+            "kind": "counter",
+            "id": "c1"
+          },
           "revision": 5,
-          "acceptedAt": { "millis": 1726700000002, "counter": 0 }
+          "acceptedAt": {
+            "millis": 1726700000002,
+            "counter": 0
+          }
         },
         "canonical_events": [
           {
-            "stream": { "tenant": "t1", "kind": "counter", "id": "c1" },
+            "stream": {
+              "tenant": "t1",
+              "kind": "counter",
+              "id": "c1"
+            },
             "seq": 5,
-            "hlc": { "millis": 1726700000002, "counter": 0 },
+            "hlc": {
+              "millis": 1726700000002,
+              "counter": 0
+            },
             "kind": "counter.incremented",
-            "payload": [1]
+            "payload": [
+              1
+            ]
           }
         ],
         "frontier": {
@@ -216,9 +444,47 @@
           "head_edit_ordinal": 13,
           "head_edit_id": "edit-13",
           "last_commit_seq": 10,
-          "chain_hash": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7]
+          "chain_hash": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            7
+          ]
         },
-        "notices": [{ "code": "authority.rebased", "message": "the command was rebased onto revision 4" }]
+        "notices": [
+          {
+            "code": "authority.rebased",
+            "message": "the command was rebased onto revision 4"
+          }
+        ]
       }
     },
     {
@@ -228,12 +494,27 @@
         "status": "rejected",
         "receipt": {
           "commandId": "cmd-3",
-          "actor": { "tenant": "t1", "kind": "counter", "id": "c1" },
+          "actor": {
+            "tenant": "t1",
+            "kind": "counter",
+            "id": "c1"
+          },
           "revision": 4,
-          "acceptedAt": { "millis": 1726700000003, "counter": 0 }
+          "acceptedAt": {
+            "millis": 1726700000003,
+            "counter": 0
+          }
         },
-        "reason": { "kind": "actorUnavailable", "detail": "storage backend failure: disk is full" },
-        "notices": [{ "code": "authority.retryable", "message": "storage backend failure: disk is full" }]
+        "reason": {
+          "kind": "actorUnavailable",
+          "detail": "storage backend failure: disk is full"
+        },
+        "notices": [
+          {
+            "code": "authority.retryable",
+            "message": "storage backend failure: disk is full"
+          }
+        ]
       }
     },
     {
@@ -243,9 +524,16 @@
         "status": "pending",
         "receipt": {
           "commandId": "cmd-4",
-          "actor": { "tenant": "t1", "kind": "counter", "id": "c1" },
+          "actor": {
+            "tenant": "t1",
+            "kind": "counter",
+            "id": "c1"
+          },
           "revision": 4,
-          "acceptedAt": { "millis": 1726700000004, "counter": 0 }
+          "acceptedAt": {
+            "millis": 1726700000004,
+            "counter": 0
+          }
         },
         "process": "rebuild-1"
       }
@@ -253,12 +541,16 @@
     {
       "name": "query-consistency-local",
       "type": "queryConsistency",
-      "json": { "kind": "local" }
+      "json": {
+        "kind": "local"
+      }
     },
     {
       "name": "query-consistency-authority",
       "type": "queryConsistency",
-      "json": { "kind": "authority" }
+      "json": {
+        "kind": "authority"
+      }
     },
     {
       "name": "query-consistency-at-frontier",
@@ -270,7 +562,40 @@
           "head_edit_ordinal": 12,
           "head_edit_id": "edit-12",
           "last_commit_seq": 9,
-          "chain_hash": [1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255]
+          "chain_hash": [
+            1,
+            2,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            255
+          ]
         }
       }
     },
@@ -282,26 +607,61 @@
         "kind": "counter.value",
         "version": 1,
         "scope": "space-1",
-        "principal": { "kind": "user", "id": "alice" },
-        "arguments": [123, 125],
-        "consistency": { "kind": "local" },
+        "principal": {
+          "kind": "user",
+          "id": "alice"
+        },
+        "arguments": [
+          123,
+          125
+        ],
+        "consistency": {
+          "kind": "local"
+        },
         "cursor": null
       }
     },
     {
       "name": "query-result-snapshot",
       "type": "queryResult",
-      "json": { "kind": "snapshot", "value": [7], "frontier": null }
+      "json": {
+        "kind": "snapshot",
+        "value": [
+          7
+        ],
+        "frontier": null
+      }
     },
     {
       "name": "query-result-page",
       "type": "queryResult",
-      "json": { "kind": "page", "items": [[1], [2, 3]], "next": "cursor-2", "frontier": null }
+      "json": {
+        "kind": "page",
+        "items": [
+          [
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "next": "cursor-2",
+        "frontier": null
+      }
     },
     {
       "name": "query-result-subscription",
       "type": "queryResult",
-      "json": { "kind": "subscription", "subscription": "sub-1", "initial": [0], "cursor": null, "frontier": null }
+      "json": {
+        "kind": "subscription",
+        "subscription": "sub-1",
+        "initial": [
+          0
+        ],
+        "cursor": null,
+        "frontier": null
+      }
     },
     {
       "name": "server-instance-definition",
@@ -312,11 +672,40 @@
         "modules": [
           {
             "id": "counting",
-            "commands": [{ "kind": "counter.increment", "version": 1, "actorKind": "counter", "offline": "optimistic" }],
-            "queries": [{ "kind": "counter.value", "version": 1, "projection": "counters" }],
-            "projections": ["counters"],
-            "policies": [{ "name": "author", "grants": [{ "point": "commandAdmission", "resource": "*", "action": "*" }] }],
-            "actorKinds": ["counter"]
+            "commands": [
+              {
+                "kind": "counter.increment",
+                "version": 1,
+                "actorKind": "counter",
+                "offline": "optimistic"
+              }
+            ],
+            "queries": [
+              {
+                "kind": "counter.value",
+                "version": 1,
+                "projection": "counters"
+              }
+            ],
+            "projections": [
+              "counters"
+            ],
+            "policies": [
+              {
+                "name": "author",
+                "autoApply": false,
+                "grants": [
+                  {
+                    "point": "commandAdmission",
+                    "resource": "*",
+                    "action": "*"
+                  }
+                ]
+              }
+            ],
+            "actorKinds": [
+              "counter"
+            ]
           },
           {
             "id": "empty",

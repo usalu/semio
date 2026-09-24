@@ -103,10 +103,10 @@ impl protocol::OpText for Generation2dOperationDsl {
 
 impl OpBinary for Generation2dOperationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
+        dsl::variants_binary::encode_tagged_op(COMPONENT_PROTOCOL_SEMIO, self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
+        dsl::variants_binary::decode_tagged_op(COMPONENT_PROTOCOL_SEMIO, bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
@@ -803,6 +803,9 @@ struct Generation2dRetainedMutationRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for Generation2dRetainedMutationRetirement {
+    /// 🧹️ A `create-widget`/`update-widget` row owns a whole `Widget`, whose `Dictionary`/`OrderedSet`
+    /// roots fail-close on a bare drop, so every retired history row goes through the mutation's
+    /// declared cold disposal, exactly like generation3d's retirement.
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
         if self.value.is_none() {
             return Ok(store::SnapshotRetirementStep::Complete);
@@ -810,7 +813,9 @@ impl store::ErasedSnapshotRetirement for Generation2dRetainedMutationRetirement 
         if maximum_items == 0 || maximum_bytes < store::ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        drop(self.value.take());
+        if let Some(mutation) = self.value.take() {
+            mutation.retire_cold();
+        }
         Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES })
     }
 
@@ -2057,7 +2062,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
             }
             let expected = usize::try_from(span / 2).map_err(|_| self.diagnostic("generation2d-envelope.snapshot-pack-length", token.start))?;
             let maximum_items = generation2d_publication_item_credit(self.operation, self.generation).map_err(|_| self.diagnostic("generation2d-envelope.snapshot-item-authority", token.start))?;
-            *self.session = Some(crate::standards::v1::subsets::any::schema::snapshot::binary::Generation2dMountedPackSession::new(expected, maximum_items).map_err(|_| self.diagnostic("generation2d-envelope.snapshot-pack-preflight", token.start))?);
+            *self.session = Some(crate::standards::v1::subsets::any::schema::snapshot::binary::generation2d_mounted_pack_session(expected, maximum_items).map_err(|_| self.diagnostic("generation2d-envelope.snapshot-pack-preflight", token.start))?);
             self.token = Some(token);
             self.state = Generation2dPackSnapshotState::Ingest;
         }
@@ -2120,7 +2125,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
             let maximum_bytes = self.session.as_ref().expect("P2 mounted pack session retained").next_retained_release_allocation_bytes().unwrap_or(0);
             if matches!(
                 self.session.as_mut().expect("P2 mounted pack session retained").close_step(1, maximum_bytes).map_err(|_| self.diagnostic("generation2d-envelope.snapshot-session-close", token.start))?,
-                crate::standards::v1::subsets::any::schema::snapshot::binary::Generation2dMountedPackCloseStep::Pending { .. }
+                store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { .. }
             ) {
                 return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
@@ -2171,11 +2176,11 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
         if let Some(session) = self.session.as_mut() {
             session.request_cancel();
             match session.close_step(maximum_items.min(1), maximum_bytes).map_err(|_| diagnostic("generation2d-envelope.snapshot-session-close"))? {
-                crate::standards::v1::subsets::any::schema::snapshot::binary::Generation2dMountedPackCloseStep::Pending { released_items, released_bytes } => {
+                store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { released_items, released_bytes } => {
                     self.state = Generation2dPackSnapshotState::Closing;
                     return Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes });
                 }
-                crate::standards::v1::subsets::any::schema::snapshot::binary::Generation2dMountedPackCloseStep::Complete => {}
+                store::mounted_pack_rt::RetainedTypedPackCloseStep::Complete => {}
             }
             drop(self.session.take());
             self.token = None;

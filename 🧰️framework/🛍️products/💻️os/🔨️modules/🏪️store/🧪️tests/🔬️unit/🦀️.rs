@@ -5320,8 +5320,14 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
     let mut op_envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("op envelopes");
     let op_envelope = op_envelopes.pop().expect("exactly one op envelope for a single-op edit");
     let edit_text = (codec.edit_text_from_envelope)(&op_envelope).await.expect("codec edit_text_from_envelope");
-    assert!(edit_text.contains("set-n"), "edit text contains the printed op line: {edit_text:?}");
-    assert!(!edit_text.contains('\n') || edit_text.trim_end_matches('\n').lines().count() <= 2, "one header line + one op line: {edit_text:?}");
+    let lines: Vec<&str> = edit_text.lines().collect();
+    assert_eq!(lines.len(), 4, "one complete append unit: edit header, forward op, inverse record, one metadata record: {edit_text:?}");
+    assert!(lines[0].starts_with("edit "), "edit header first: {edit_text:?}");
+    assert_eq!(lines[1], "  set-n n=9", "forward op line: {edit_text:?}");
+    assert!(lines[2].starts_with("inverse ") && lines[2].contains("set-n n=4"), "inverse record carries the edit's inverse: {edit_text:?}");
+    assert!(lines[3].starts_with("metadata "), "one metadata record per forward: {edit_text:?}");
+    let replayed = parse_document_text::<DemoSnapshot, DemoMutation>(&text_files.dsl, &format!("{}{edit_text}", text_files.ops)).await.expect("strict replay accepts the codec's append unit appended to the document's ops");
+    assert_eq!(replayed.into_snapshot().n, Some(9), "the appended edit replays forward");
 
     preflight_document_codecs(std::slice::from_ref(&codec)).await.expect("preflight accepts an unclaimed full descriptor without publishing it");
     assert!(document_codec("test.document-codec-roundtrip/v1").await.expect("registry availability").is_none(), "preflight must not publish a codec");
@@ -5602,6 +5608,38 @@ async fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
     store.dispatch(ArtifactCommand::Redo).await.expect("redo brings the local edit back");
     assert_eq!(store.applied_edit_ids(), &[local_edit_id, foreign_id], "redo reinstates the local edit at its own HLC position, before the later concurrent edit — where every replica folds it");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2), "the later concurrent edit still wins");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
+    // Builds on the existing Revert/Reinstate ledger (S11/S12 history_row_applied_v1): plain Undo is
+    // selective; pack+.spr reload folds the same cursor; the session rebinds local_actor_id so Redo
+    // can reinstate this author's entry from the shared redo stack (hub restart model).
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], description: None }).await.expect("local a1");
+    let local_a1 = store.applied_edit_ids()[0].clone();
+    let author = store.local_actor_id().expect("local apply stamps an actor").to_string();
+    let foreign = foreign_mutation_envelope("author-b", DemoMutation::SetN(SetN { n: 2 })).await;
+    let foreign_id = foreign.mutation_id.0.clone();
+    store.dispatch(ArtifactCommand::IngestRemote { envelope: foreign }).await.expect("ingest foreign");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], description: None }).await.expect("local a2");
+    let local_a2 = store.applied_edit_ids().iter().find(|id| **id != local_a1 && **id != foreign_id).expect("a2").clone();
+
+    store.dispatch(ArtifactCommand::Undo).await.expect("plain undo skips foreign and undoes local a2");
+    assert_eq!(store.applied_edit_ids(), &[local_a1.clone(), foreign_id.clone()]);
+    assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&local_a2));
+
+    let files = print_document_pack(store.envelope()).await.expect("print pack");
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("parse pack");
+    let mut reloaded = ArtifactStore::new(parsed.envelope).await;
+    assert_eq!(reloaded.applied_edit_ids(), &[local_a1.clone(), foreign_id.clone()], "reload preserves selective undo projection");
+    assert_eq!(reloaded.redo_edit_ids(), std::slice::from_ref(&local_a2), "durable collaborative redo stack survives reload");
+    // Session rebind: construct seeds local_actor from the applied tail (here foreign). Real apps
+    // call set_local_actor_id from the signed-in actor before Undo/Redo — same as hub restart.
+    reloaded.set_local_actor_id(Some(author)).expect("rebind session actor");
+    reloaded.dispatch(ArtifactCommand::Redo).await.expect("redo after reload reinstates the local edit");
+    assert_eq!(reloaded.applied_edit_ids(), &[local_a1, foreign_id, local_a2]);
+    assert!(reloaded.redo_edit_ids().is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -7646,6 +7684,31 @@ async fn member_factory_closed_dialect_parent_projection_matches_neutral_corpus(
     eprintln!("[DEBUG] member parent projection: 15 neutral loaded-parent and complete-set admission rows");
 }
 
+/// 🧹️ A grant narrower than one identifier still retires the whole graph: every edge leaves its map
+/// whole and its identifiers page down one granted byte at a time, never refusing the turn.
+#[semio_framework_async_macros::async_test]
+async fn composition_graph_retires_under_a_one_byte_grant() {
+    let mut graph = CompositionGraph::new().await;
+    graph.insert_owns("s.flow.flow@1/parent", "slot", "s.flow.flow@1/child").await.expect("owns edge");
+    graph.insert_link("s.flow.flow@1/parent", "s.flow.flow@1/linked").await.expect("link edge");
+    let identifier_bytes = ["s.flow.flow@1/child", "s.flow.flow@1/parent", "slot", "s.flow.flow@1/linked", "s.flow.flow@1/parent"].iter().map(|value| value.len()).sum::<usize>();
+    let (mut released_bytes, mut idle) = (0usize, 0usize);
+    for _ in 0..1_000 {
+        match graph.close_step(1, 1) {
+            SnapshotRetirementStep::Pending { released_items, released_bytes: bytes } => {
+                assert!(released_items <= 1 && bytes <= 1);
+                released_bytes += bytes;
+                idle += usize::from(released_items == 0 && bytes == 0);
+            }
+            SnapshotRetirementStep::Complete => break,
+            SnapshotRetirementStep::Blocked => panic!("an unshared graph never blocks its own retirement"),
+        }
+    }
+    assert!(graph.terminal_is_empty());
+    assert_eq!(released_bytes, identifier_bytes);
+    assert_eq!(idle, 0, "every one-byte turn makes progress");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn member_factory_closed_dialect_graph_admission_matches_neutral_corpus() {
     let fixture = member_dialect_fixture();
@@ -8501,3 +8564,39 @@ async fn an_erased_retirement_publishes_its_physical_close_demand_and_a_nested_d
     assert_eq!(nested.inner.next_close_byte_demand(), 0, "a terminal owner owes no further physical grant");
 }
 //#endregion 🔖️ErasedCloseDemandTests
+
+/// 🪪️ Fixture law `🧫️fixtures/🪪️replica-edit-identity.json`: fresh replicas that author identical
+/// gestures never share an edit or wire operation id (the hub ledger dedupes by id).
+#[semio_framework_async_macros::async_test]
+async fn fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_operation_id() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️replica-edit-identity.json")).expect("replica identity fixture");
+    let mut edit_ids = std::collections::HashSet::new();
+    let mut operation_ids = std::collections::HashSet::new();
+    for _ in 0..fixture["replicas"].as_u64().expect("replica count") {
+        let genesis = DemoSnapshot { n: Some(fixture["genesisN"].as_i64().expect("genesis n") as i32) };
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["artifactSchema"].as_str().expect("schema"), fixture["documentId"].as_str().expect("document"), genesis, None)).await;
+        store.install_document_store_owners_exact(demo_closable_store_owners());
+        for gesture in fixture["gestures"].as_array().expect("gestures") {
+            let mutations = gesture["ops"]
+                .as_array()
+                .expect("gesture ops")
+                .iter()
+                .map(|op| match (op.get("set"), op.get("add")) {
+                    (Some(n), None) => DemoMutation::SetN(SetN { n: n.as_i64().expect("set n") as i32 }),
+                    (None, Some(delta)) => DemoMutation::AddN(AddN { delta: delta.as_i64().expect("add delta") as i32 }),
+                    _ => panic!("fixture op must be exactly one of set/add"),
+                })
+                .collect();
+            store.dispatch(ArtifactCommand::Apply { mutations, description: None }).await.expect("fixture gesture applies");
+        }
+        let edits = &store.envelope.vcs.edits;
+        assert_eq!(edits.len() as u64, fixture["expect"]["editsPerReplica"].as_u64().expect("edits per replica"));
+        let operations: Vec<String> = edits.iter().flat_map(|edit| crate::os_spr::mutation_ids_for_edit::<DemoSnapshot, DemoMutation>(edit)).map(|id| id.0).collect();
+        assert_eq!(operations.len() as u64, fixture["expect"]["operationIdsPerReplica"].as_u64().expect("operations per replica"));
+        edit_ids.extend(edits.iter().map(|edit| edit.id.clone()));
+        operation_ids.extend(operations);
+        close_demo_artifact_store(&mut store);
+    }
+    assert_eq!(edit_ids.len() as u64, fixture["expect"]["distinctEditIds"].as_u64().expect("distinct edits"));
+    assert_eq!(operation_ids.len() as u64, fixture["expect"]["distinctOperationIds"].as_u64().expect("distinct operations"));
+}

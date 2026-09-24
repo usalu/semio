@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetStructuralEntity {
-    pub(crate) id: u64,
-    pub(crate) entity: Option<Cv20StructuralEntity>,
+    pub id: u64,
+    pub entity: Option<Cv20StructuralEntity>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetStructuralEntity {

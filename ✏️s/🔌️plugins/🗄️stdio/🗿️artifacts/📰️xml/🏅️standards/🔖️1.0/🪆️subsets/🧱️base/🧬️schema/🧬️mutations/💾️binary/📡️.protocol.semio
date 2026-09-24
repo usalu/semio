@@ -3,8 +3,23 @@ protocol xml.mutations
 version 1
 schema stdio.xml
 start record
-
-# Direct descriptor identities and tags: set-declaration=1, set-doctype=2, insert-element=3, remove-element=4, set-attribute=5, set-text=6.
 framing record
-header fixed 0
-chain payload bytes
+
+# Real `XmlMutation` op frame (`dsl::tagged_value_binary`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`, then
+# the variant's `ToValue` tree without its variant name, as one framework wire value (`pack_rt::encode_wire_value`).
+# Each record is one mutation kind at its wire tag; this file is the only source of those tags.
+header fixed 2
+field format u8
+field tag varint
+record set-declaration tag=1
+field payload bytes
+record set-doctype tag=2
+field payload bytes
+record insert-element tag=3
+field payload bytes
+record remove-element tag=4
+field payload bytes
+record set-attribute tag=5
+field payload bytes
+record set-text tag=6
+field payload bytes

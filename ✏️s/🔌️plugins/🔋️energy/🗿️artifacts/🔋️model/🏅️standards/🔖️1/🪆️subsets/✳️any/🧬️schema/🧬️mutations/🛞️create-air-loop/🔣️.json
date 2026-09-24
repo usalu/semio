@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateAirLoop",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-air-loop",
-  "binaryTag": null,
+  "binaryTag": 170,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

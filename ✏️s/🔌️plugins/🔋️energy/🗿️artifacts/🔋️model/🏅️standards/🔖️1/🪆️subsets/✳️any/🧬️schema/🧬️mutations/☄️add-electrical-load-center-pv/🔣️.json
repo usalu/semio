@@ -7,7 +7,7 @@
   "aggregateVariant": "AddElectricalLoadCenterPv",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-electrical-load-center-pv",
-  "binaryTag": null,
+  "binaryTag": 195,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

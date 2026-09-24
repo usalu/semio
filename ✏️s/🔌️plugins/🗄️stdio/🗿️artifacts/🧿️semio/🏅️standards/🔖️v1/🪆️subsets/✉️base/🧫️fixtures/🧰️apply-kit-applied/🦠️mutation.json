@@ -1,0 +1,11 @@
+{
+  "mutation": "applyKit",
+  "payload": {
+    "mutation": {
+      "RenameType": {
+        "id": "0IJK4xQ0PB2hjiZlMVI36G",
+        "new_name": "F1-mutated-type-name"
+      }
+    }
+  }
+}

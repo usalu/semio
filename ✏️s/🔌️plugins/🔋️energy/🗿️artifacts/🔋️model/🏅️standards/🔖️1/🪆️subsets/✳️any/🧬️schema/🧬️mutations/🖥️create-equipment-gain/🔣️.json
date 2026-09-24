@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateEquipmentGain",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-equipment-gain",
-  "binaryTag": null,
+  "binaryTag": 93,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

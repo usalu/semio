@@ -4,8 +4,8 @@
 import type { ControlIcon, DockSkeleton, HistoryColumn, IntroductionStepDefinition, ModeWindowDescriptor, PanelDock, PanelDockContextValue, PanelTabNode, PanelTabRowDropTarget, PresenceAppearance, PresenceHsl, PresencePeer, RibbonRow, TreeDataSection, TutorialCameraKeyframe, TutorialClockPort, TutorialDefinition, UiDriver, UiRibbonParentCategory, UiTranslationKey, VirtualFileSystemNode, VirtualFileSystemRow, VirtualFileSystemSchema, WindowLayoutNode } from "../../🎯️targets/⚛️react/🟦️.tsx";
 /** 📐️ Type-only three.js namespace; the runtime `THREE` value arrives through the dependency bag and would shadow this name. */
 import type * as Three from "three";
-import panelResizeFixture from "../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️fixtures/↔️panel-resize/🔣️.json" with { type: "json" };
-import panelResizeFixtureSchema from "../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️fixtures/↔️panel-resize/🧬️schema/🔣️.json" with { type: "json" };
+import panelResizeFixture from "../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/↔️panel-resize/🔣️.json" with { type: "json" };
+import panelResizeFixtureSchema from "../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/↔️panel-resize/📐️schema/🔣️.json" with { type: "json" };
 
 type TestSource = { readonly directory: string; readonly url: string };
 import paneOwnerFixture from "../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🪪️window-surface-owner/🔣️.json" with { type: "json" };

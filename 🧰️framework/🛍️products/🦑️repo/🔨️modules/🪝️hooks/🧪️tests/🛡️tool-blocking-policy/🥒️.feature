@@ -20,7 +20,7 @@ Feature: A tool invocation that would rewrite shared repository state is refused
   @level-fundamental
   @mode-differential
   Scenario: Every fixture invocation gets the same verdict and the same refusal text
-    Given the invocation vectors local://🛡️invocations.json
+    Given the invocation vectors shared://🛡️tool-blocking-policy/🛡️invocations.json
     When each invocation is judged by the blocking policy
     Then every implementation projects the same verdict and the same reason for every invocation
 
@@ -28,7 +28,7 @@ Feature: A tool invocation that would rewrite shared repository state is refused
   @level-fundamental
   @mode-conformance
   Scenario: Every verdict matches the one the fixture pins beside the invocation
-    Given the invocation vectors local://🛡️invocations.json
+    Given the invocation vectors shared://🛡️tool-blocking-policy/🛡️invocations.json
     When each invocation is judged and compared against its pinned verdict
     Then every implementation agrees with the specification for every invocation
 
@@ -36,7 +36,7 @@ Feature: A tool invocation that would rewrite shared repository state is refused
   @level-fundamental
   @mode-differential
   Scenario: A composite command splits into the same segments, and quotes never split it
-    Given the invocation vectors local://🛡️invocations.json
+    Given the invocation vectors shared://🛡️tool-blocking-policy/🛡️invocations.json
     When each composite command is split into segments
     Then every implementation projects the same segments
 
@@ -44,7 +44,7 @@ Feature: A tool invocation that would rewrite shared repository state is refused
   @level-fundamental
   @mode-differential
   Scenario: Inline code is scanned for both the shell form and the list form of a blocked git call
-    Given the invocation vectors local://🛡️invocations.json
+    Given the invocation vectors shared://🛡️tool-blocking-policy/🛡️invocations.json
     When each inline code sample is scanned
     Then every implementation projects the same finding and the same reason
 
@@ -52,6 +52,6 @@ Feature: A tool invocation that would rewrite shared repository state is refused
   @level-quick
   @mode-property
   Scenario: Appending an allowed segment to a refused command never makes it allowed
-    Given the invocation vectors local://🛡️invocations.json
+    Given the invocation vectors shared://🛡️tool-blocking-policy/🛡️invocations.json
     When each refused invocation is extended with an allowed segment on either side
     Then every implementation still refuses it, with the reason of whichever refused segment comes first

@@ -7,7 +7,7 @@
   "aggregateVariant": "EditPart3dLabel",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "edit-part3d-label",
-  "binaryTag": null,
+  "binaryTag": 12,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

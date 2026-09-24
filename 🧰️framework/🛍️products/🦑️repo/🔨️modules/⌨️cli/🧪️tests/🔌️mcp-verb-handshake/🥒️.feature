@@ -9,13 +9,13 @@ Feature: The `mcp` verb serves the repo repository on stdio
   ignores members it does not know, and that the declared tool and resource vocabulary reaches a
   client unchanged.
 
-  local://🤝️handshake.json states the conversation and the vocabulary it owes.
+  shared://🔌️mcp-verb-handshake/🤝️handshake.json states the conversation and the vocabulary it owes.
 
   @id-the-verb-completes-the-handshake
   @level-fundamental
   @mode-conformance
   Scenario: `semio mcp` answers initialize, tools/list and resources/list over stdio
-    Given the conversation local://🤝️handshake.json
+    Given the conversation shared://🔌️mcp-verb-handshake/🤝️handshake.json
     When the host runs the conversation against the `mcp` verb
     Then the initialize result carries the stated protocol version, server name, server version and capabilities, and the declared tool and resource names equal the stated ones
 
@@ -23,7 +23,7 @@ Feature: The `mcp` verb serves the repo repository on stdio
   @level-fundamental
   @mode-conformance
   Scenario: An initialize request carrying an unknown member is still accepted
-    Given the conversation local://🤝️handshake.json
+    Given the conversation shared://🔌️mcp-verb-handshake/🤝️handshake.json
     When the host runs the conversation against the `mcp` verb
     Then the initialize response is a result rather than an error
 
@@ -31,6 +31,6 @@ Feature: The `mcp` verb serves the repo repository on stdio
   @level-quick
   @mode-conformance
   Scenario: `--dry-run` initializes the verb and exits without serving
-    Given the conversation local://🤝️handshake.json
+    Given the conversation shared://🔌️mcp-verb-handshake/🤝️handshake.json
     When the host runs the `mcp` verb with `--dry-run` and no standard input
     Then it exits successfully and writes nothing

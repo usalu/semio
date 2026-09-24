@@ -5,7 +5,7 @@
   "description": "Sparse, handcrafted diff over SemioValueSnapshot — mirrors the 🦀️.rs sibling's real fields.",
   "$defs": {
     "IndexedTripleDiff": {
-      "type": "value",
+      "type": "object",
       "properties": {
         "removed": {
           "type": "array",
@@ -16,7 +16,7 @@
         "modified": {
           "type": "array",
           "items": {
-            "type": "value",
+            "type": "object",
             "properties": {
               "index": {
                 "type": "integer"
@@ -30,7 +30,7 @@
         "added": {
           "type": "array",
           "items": {
-            "type": "value",
+            "type": "object",
             "properties": {
               "index": {
                 "type": "integer"
@@ -44,7 +44,7 @@
       }
     },
     "NamedTripleDiff": {
-      "type": "value",
+      "type": "object",
       "properties": {
         "removed": {
           "type": "array"
@@ -52,7 +52,7 @@
         "modified": {
           "type": "array",
           "items": {
-            "type": "value",
+            "type": "object",
             "properties": {
               "key": {},
               "diff": {
@@ -64,7 +64,7 @@
         "added": {
           "type": "array",
           "items": {
-            "type": "value",
+            "type": "object",
             "properties": {
               "index": {
                 "type": "integer"
@@ -76,7 +76,7 @@
       }
     },
     "SemioValueDiff": {
-      "type": "value",
+      "type": "object",
       "properties": {
         "kind": {
           "enum": [
@@ -99,7 +99,7 @@
           "$ref": "#/$defs/IndexedTripleDiff"
         },
         "id": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/value/snapshot.json#/$defs/valueId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/value/snapshot.json#/$defs/ValueId"
         }
       },
       "required": [
@@ -107,7 +107,7 @@
       ]
     }
   },
-  "type": "value",
+  "type": "object",
   "properties": {
     "root": {
       "$ref": "#/$defs/SemioValueDiff",
@@ -120,10 +120,10 @@
   },
   "definitions": {
     "semioValue": {
-      "type": "value"
+      "type": "object"
     },
     "semioValueEntry": {
-      "type": "value",
+      "type": "object",
       "properties": {
         "key": {
           "type": "string"
@@ -134,10 +134,10 @@
       }
     },
     "semioValueNode": {
-      "type": "value",
+      "type": "object",
       "properties": {
         "id": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/value/snapshot.json#/$defs/valueId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/value/snapshot.json#/$defs/ValueId"
         },
         "value": {
           "$ref": "#/definitions/semioValue"

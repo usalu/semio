@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetColorspace {
-    pub(crate) colorspace: SemioColorspace,
+    pub colorspace: SemioColorspace,
 }
 
 impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetColorspace {

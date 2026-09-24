@@ -138,7 +138,7 @@ impl From<std::io::Error> for PluginHostError {
 /// `TurnResult`/`JobBudget`/`JobStep`/`TurnFault` (packet `A3-kernel-types`, not yet landed in
 /// `🎠️kernel/🦀️.rs`). This region holds only the four pieces of §2 that do NOT depend on
 /// either: the one-per-process `Engine` (pooling allocator + on-demand fallback + fuel/epoch config),
-/// the 1 ms epoch ticker, a generic per-store `ResourceLimiter`, and the compiled-artifact cache.
+/// demand-driven epoch deadlines, a generic per-store `ResourceLimiter`, and the compiled-artifact cache.
 /// Wiring plan once A1/A3 land is in `📓️terra-B1-host-native-report.md`.
 /// ⚙️ Knobs for [`build_shared_engine`] — mirrors §2's pooling-allocator list verbatim. Plain fields
 /// rather than a `Budget`-derived config (A3's type) so this compiles today; `WasmtimeRuntime` will
@@ -149,6 +149,13 @@ pub struct SharedEngineConfig {
     pub max_memory_bytes: usize,
     pub linear_memory_keep_resident_bytes: usize,
     pub force_on_demand: bool,
+    /// ⛽️ Whether guest code is compiled with fuel metering, so a finite `Budget.fuel` can cut a
+    /// turn. Metering instruments every block of every guest: measured 2026-09-24 (ticket 26/09/23
+    /// slice G6) the `🀄️wfc` genesis solve ran 35.9–53.9 s unmetered against 79.6–84.1 s metered,
+    /// back to back in one process kind. A process whose every budget disarms fuel (`u64::MAX`) and
+    /// bounds guest calls by epoch deadline alone — the semio MCP gateway — builds its engine
+    /// unmetered; its compiled code lives under its own engine-config hash.
+    pub fuel_metering: bool,
 }
 
 /// 🧩️ Core instances (and memories/tables) the pooling allocator must reserve per component
@@ -171,13 +178,13 @@ const TABLES_PER_COMPONENT: u32 = 4;
 
 impl Default for SharedEngineConfig {
     fn default() -> Self {
-        Self { total_component_instances: 4096, max_memory_bytes: 512 * 1024 * 1024, linear_memory_keep_resident_bytes: 2 * 1024 * 1024, force_on_demand: false }
+        Self { total_component_instances: 4096, max_memory_bytes: 512 * 1024 * 1024, linear_memory_keep_resident_bytes: 2 * 1024 * 1024, force_on_demand: false, fuel_metering: true }
     }
 }
 
-/// 🐎️ ONE shared `Engine` for the process (§2). `consume_fuel` + `epoch_interruption` are both
-/// enabled, so every `Store` built on it MUST call `set_fuel` + `set_epoch_deadline` before its
-/// first wasm call — the bug this replaces (`WasmPluginRuntime::build_engine`/`prepare_call` below)
+/// 🐎️ ONE shared `Engine` for the process (§2). `epoch_interruption` is always enabled and
+/// `consume_fuel` follows [`SharedEngineConfig::fuel_metering`], so every `Store` built on it MUST
+/// install [`EpochDeadlines::install`]'s callback and arm [`EpochDeadlines::arm`] (and, when metered, `set_fuel`) before each wasm call — the bug this replaces (`WasmPluginRuntime::build_engine`/`prepare_call` below)
 /// sets fuel once and an epoch deadline of `u64::MAX`, so nothing is ever enforced. Falls back to
 /// `OnDemand` allocation — the fallback knob §2 asks for — if the pooling allocator rejects `cfg` on
 /// this host (e.g. insufficient virtual address space, or a hardened container); the returned `bool`
@@ -194,7 +201,7 @@ pub async fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, boo
         // `Store::run_concurrent` and `StreamReader` need) defaults to `true` and is left alone —
         // wasmtime rejects a Config that enables component-model-async while disabling it.
         config.wasm_component_model_async(true);
-        config.consume_fuel(true);
+        config.consume_fuel(cfg.fuel_metering);
         config.epoch_interruption(true);
         if pooling {
             let mut pooling_cfg = PoolingAllocationConfig::default();
@@ -242,9 +249,9 @@ pub async fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, boo
 /// (read ONCE, at first construction) overrides it — `👶️child/🦀️.rs` sets it to `1` before this
 /// pool is ever touched: an out-of-process shard's own `ShardLoop::pump` runs directly on that
 /// process's main thread (never submitted to this pool), so the ONLY work this pool ever carries
-/// there is the epoch ticker + heartbeat sender (below) — sizing it to `available_parallelism()-1`
-/// (potentially many cores) would spin up that many OS threads per shard CHILD PROCESS for two
-/// sub-millisecond periodic jobs, multiplying total host thread count by however many shard processes
+/// there is the heartbeat sender (below) — sizing it to `available_parallelism()-1`
+/// (potentially many cores) would spin up that many OS threads per shard CHILD PROCESS for one
+/// sub-millisecond periodic job, multiplying total host thread count by however many shard processes
 /// are running. No other caller (the renderer, `🏃️run`, the MCP gateway) sets this variable, so they
 /// keep the full-parallelism default.
 pub(crate) fn plugin_host_worker_pool() -> WorkerPool {
@@ -254,45 +261,44 @@ pub(crate) fn plugin_host_worker_pool() -> WorkerPool {
 //#endregion 🧵️PluginHostWorkerPool
 
 //#region ⏲️PeriodicPoolTimer
-/// ⏲️ P1f: the shared shape behind every "tick forever on `Lane::Timer`" mechanism this crate needs
-/// (the epoch ticker below; `process_transport::StdioTransport`'s heartbeat sender) — `WorkerPool::
-/// submit_at` retains the deadline without occupying a worker, then submits one finite callback and
-/// registers the next deadline instead of looping inside a job closure.
+/// ⏲️ P1f: the shared shape behind a "tick forever" mechanism (`process_transport::StdioTransport`'s
+/// heartbeat sender). Each tick is one callback on the
+/// pool's timer wheel, run by the worker that fires the wheel, and registers the next deadline from
+/// there — waiting owns no worker, and a tick wakes exactly one.
 ///
-/// [`EpochTicker`] and the heartbeat sender are not process singletons, so retaining their waits in
-/// the pool's timer wheel prevents any number of concurrent tickers from consuming worker permits.
+/// ⏱️ It used to `submit_at` a lane job per tick, so every tick woke the timer keeper
+/// AND a second worker to run the resubmitted job: measured 2026-09-24 (ticket 26/09/23 slice G6)
+/// in a solving semio MCP process, all nine pool workers each spent ~5.7 % of a core on it.
+///
+/// Heartbeat senders are not process singletons, so retaining their waits in the pool's timer wheel
+/// prevents any number of concurrent tickers from consuming worker permits.
 struct PeriodicPoolTimer {
     stop: Arc<AtomicBool>,
 }
 
 impl PeriodicPoolTimer {
-    /// ▶️ Submits the first tick job on `lane`. `tick` must be quick and non-blocking (it runs ON
-    /// the pool worker, between the wait that preceded it and the resubmission that follows) — the
-    /// epoch/heartbeat bodies below are a single atomic increment or a short, already-buffered write.
-    // 🚫️async: E1-adjacent — no suspension point of its own (only SUBMITS the job; never drives it
-    // here). See R9.
-    fn start(pool: &WorkerPool, lane: Lane, interval_ms: u64, tick: impl FnMut() -> bool + Send + 'static) -> Self {
+    /// ▶️ Registers the first tick. `tick` must be quick and non-blocking — it runs inside the pool's
+    /// timer firing — as the epoch/heartbeat bodies below are: a single atomic increment or a short,
+    /// already-buffered write.
+    // 🚫️async: E1-adjacent — no suspension point of its own (only REGISTERS the tick). See R9.
+    fn start(pool: &WorkerPool, interval_ms: u64, tick: impl FnMut() -> bool + Send + 'static) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
-        Self::schedule(pool, lane, interval_ms, Arc::new(Mutex::new(tick)), Arc::clone(&stop));
+        Self::schedule(pool, interval_ms, Arc::new(Mutex::new(tick)), Arc::clone(&stop));
         Self { stop }
     }
 
-    /// 🔁️ One timer registration = one `tick()`, one next registration. Waiting owns no worker.
-    fn schedule(pool: &WorkerPool, lane: Lane, interval_ms: u64, tick: Arc<Mutex<dyn FnMut() -> bool + Send>>, stop: Arc<AtomicBool>) {
+    /// 🔁️ One timer registration = one `tick()`, one next registration.
+    fn schedule(pool: &WorkerPool, interval_ms: u64, tick: Arc<Mutex<dyn FnMut() -> bool + Send>>, stop: Arc<AtomicBool>) {
         let driver_pool = pool.clone();
-        pool.submit_at(
-            pool.now_ms().saturating_add(interval_ms),
-            lane,
-            Box::new(move || {
-                if stop.load(std::sync::atomic::Ordering::Relaxed) {
-                    return;
-                }
-                let should_continue = (tick.lock().unwrap_or_else(std::sync::PoisonError::into_inner))();
-                if should_continue {
-                    Self::schedule(&driver_pool, lane, interval_ms, tick, stop);
-                }
-            }),
-        );
+        pool.callback_at(pool.now_ms().saturating_add(interval_ms), move || {
+            if stop.load(std::sync::atomic::Ordering::Relaxed) {
+                return;
+            }
+            let should_continue = (tick.lock().unwrap_or_else(std::sync::PoisonError::into_inner))();
+            if should_continue {
+                Self::schedule(&driver_pool, interval_ms, tick, stop);
+            }
+        });
     }
 }
 
@@ -304,36 +310,156 @@ impl Drop for PeriodicPoolTimer {
 }
 //#endregion ⏲️PeriodicPoolTimer
 
-/// ⏱️ Ticks `engine.increment_epoch()` every 1 ms on the shared `WorkerPool`'s `Lane::Timer` (P1f;
-/// was a dedicated `"semio-epoch-ticker"` OS thread — see `📓️p1c-actor-shards.md` §3 and
-/// `📓️p1f-epoch-transport.md` for the replacement mechanism and what a later, repo-owned WASM
-/// interpreter's fuel metering must take over from it). One ticker per shared `Engine`; `Drop`
-/// requests the pool job to stop (see [`PeriodicPoolTimer::drop`] — not a synchronous join).
-pub struct EpochTicker {
-    _driver: PeriodicPoolTimer,
+//#region ⏱️EpochDeadlines
+/// ⏱️ Demand-driven epoch interruption for ONE shared `Engine`: the engine's epoch advances only when
+/// an armed guest call's wall deadline arrives, and while a timesliced call runs. Every `Store`
+/// installs [`EpochDeadlines::install`]'s callback, which answers `Interrupt` once the store's own
+/// deadline ([`EpochDeadlineCell`]) has passed and `Continue(1)` otherwise, so an advance meant for
+/// another store costs this one a single callback. With no call armed no timer is registered, and an
+/// idle engine costs nothing.
+///
+/// ⏱️ It replaces a 1 ms periodic ticker that ran whenever an engine existed — measured 2026-09-24
+/// (ticket 26/09/23 slice G6) at ~8 % of a core in an idle semio MCP gateway, and 1 000 wake-ups a
+/// second in every guest call even though a deadline is reached once or never.
+#[derive(Clone)]
+pub struct EpochDeadlines {
+    inner: Arc<EpochDeadlinesInner>,
 }
 
-/// ⏱️ Matches wasmtime's own epoch granularity assumption (`Store::set_epoch_deadline` counts whole
-/// epochs, and every `Budget.deadline_ms` in this codebase is set 1:1 against milliseconds) — see
-/// `build_shared_engine`'s `config.epoch_interruption(true)`.
-const EPOCH_TICK_INTERVAL_MS: u64 = 1;
+struct EpochDeadlinesInner {
+    engine: Engine,
+    pool: WorkerPool,
+    demands: Mutex<EpochDemands>,
+}
 
-impl EpochTicker {
-    /// ▶️ `pool` is normally [`plugin_host_worker_pool`] — a caller-supplied pool is accepted (not
-    /// just the singleton) so a test can use its own small, deterministic `WorkerPool` instead of
-    /// this crate's shared one, matching `semio-framework-os-services`' own `test_pool` convention.
-    // 🚫️async: R9 — submitting the job is a synchronous, non-suspending call (`WorkerPool::submit`
-    // never awaits); both call sites already use this synchronously.
-    pub fn start(engine: &Engine, pool: &WorkerPool) -> Self {
-        let engine = engine.clone();
-        EpochTicker {
-            _driver: PeriodicPoolTimer::start(pool, Lane::Timer, EPOCH_TICK_INTERVAL_MS, move || {
-                engine.increment_epoch();
-                true
-            }),
+/// 📋️ Armed deadlines as (pool ms, demand id), running timeslices, the instants a timer is already
+/// registered for, and the latest instant every deadline up to which has advanced the epoch.
+#[derive(Default)]
+struct EpochDemands {
+    deadlines: BTreeSet<(u64, u64)>,
+    timeslices: usize,
+    armed: BTreeSet<u64>,
+    advanced_through: u64,
+    advances: u64,
+    next_id: u64,
+}
+
+/// 🎚️ A store's current wall deadline on the pool clock, read by its epoch callback.
+#[derive(Debug)]
+pub struct EpochDeadlineCell(std::sync::atomic::AtomicU64);
+
+impl Default for EpochDeadlineCell {
+    fn default() -> Self {
+        Self(std::sync::atomic::AtomicU64::new(u64::MAX))
+    }
+}
+
+/// 🔒️ One armed guest call's demand on the epoch; dropping it withdraws the demand.
+pub struct EpochDemand {
+    inner: Arc<EpochDeadlinesInner>,
+    kind: EpochDemandKind,
+}
+
+enum EpochDemandKind {
+    Deadline((u64, u64)),
+    Timeslice,
+}
+
+impl EpochDeadlines {
+    /// ▶️ `pool` is normally [`plugin_host_worker_pool`]; a test passes its own deterministic pool.
+    pub fn new(engine: &Engine, pool: &WorkerPool) -> Self {
+        Self { inner: Arc::new(EpochDeadlinesInner { engine: engine.clone(), pool: pool.clone(), demands: Mutex::new(EpochDemands::default()) }) }
+    }
+
+    /// 🪝️ Installs the deadline callback on a store built on this engine. Once per store: wasmtime
+    /// holds exactly one callback, and it reads `cell` fresh on every advance.
+    pub fn install<T: 'static>(&self, store: &mut Store<T>, cell: Arc<EpochDeadlineCell>) {
+        let pool = self.inner.pool.clone();
+        store.epoch_deadline_callback(move |_| Ok(if pool.now_ms() >= cell.0.load(std::sync::atomic::Ordering::Acquire) { wasmtime::UpdateDeadline::Interrupt } else { wasmtime::UpdateDeadline::Continue(1) }));
+        store.set_epoch_deadline(1);
+    }
+
+    /// ⏰️ Arms one guest call: `store` is interrupted once `after_ms` of wall time have passed, for
+    /// as long as the returned demand lives.
+    pub fn arm<T>(&self, store: &mut Store<T>, cell: &EpochDeadlineCell, after_ms: u64) -> EpochDemand {
+        let deadline = self.inner.pool.now_ms().saturating_add(after_ms);
+        cell.0.store(deadline, std::sync::atomic::Ordering::Release);
+        store.set_epoch_deadline(1);
+        let mut demands = self.inner.demands.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let key = (deadline, demands.next_id);
+        demands.next_id += 1;
+        demands.deadlines.insert(key);
+        EpochDeadlinesInner::rearm(&self.inner, &mut demands);
+        EpochDemand { inner: Arc::clone(&self.inner), kind: EpochDemandKind::Deadline(key) }
+    }
+
+    /// 🔁️ Arms a timesliced call: the epoch advances every millisecond while the demand lives, for a
+    /// store whose callback yields between slices.
+    pub fn arm_timeslice(&self) -> EpochDemand {
+        let mut demands = self.inner.demands.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        demands.timeslices += 1;
+        EpochDeadlinesInner::rearm(&self.inner, &mut demands);
+        EpochDemand { inner: Arc::clone(&self.inner), kind: EpochDemandKind::Timeslice }
+    }
+
+    /// 🔎️ Timers registered on the pool for this engine. A withdrawn deadline's timer stays
+    /// registered until its instant and then fires once without advancing anything.
+    pub fn armed_timers(&self) -> usize {
+        self.inner.demands.lock().unwrap_or_else(std::sync::PoisonError::into_inner).armed.len()
+    }
+
+    /// 🔢️ How many times this engine's epoch has advanced.
+    pub fn advances(&self) -> u64 {
+        self.inner.demands.lock().unwrap_or_else(std::sync::PoisonError::into_inner).advances
+    }
+}
+
+impl EpochDeadlinesInner {
+    /// 📅️ Registers a timer for the next instant the epoch must advance, unless one no later is
+    /// already registered: the first deadline not yet advanced through, or the next slice.
+    fn rearm(inner: &Arc<Self>, demands: &mut EpochDemands) {
+        let now = inner.pool.now_ms();
+        let deadline = demands.deadlines.iter().map(|(at, _)| *at).find(|at| *at > demands.advanced_through);
+        let slice = (demands.timeslices > 0).then(|| now.saturating_add(1));
+        let Some(next) = deadline.into_iter().chain(slice).min() else { return };
+        if demands.armed.first().is_some_and(|first| *first <= next) {
+            return;
+        }
+        demands.armed.insert(next);
+        let weak = Arc::downgrade(inner);
+        inner.pool.callback_at(next, move || {
+            if let Some(inner) = weak.upgrade() {
+                Self::fire(&inner, next);
+            }
+        });
+    }
+
+    fn fire(inner: &Arc<Self>, at: u64) {
+        let mut demands = inner.demands.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        demands.armed.remove(&at);
+        let now = inner.pool.now_ms();
+        let due = demands.timeslices > 0 || demands.deadlines.iter().any(|(deadline, _)| *deadline > demands.advanced_through && *deadline <= now);
+        if due {
+            inner.engine.increment_epoch();
+            demands.advances += 1;
+            demands.advanced_through = demands.advanced_through.max(now);
+        }
+        Self::rearm(inner, &mut demands);
+    }
+}
+
+impl Drop for EpochDemand {
+    fn drop(&mut self) {
+        let mut demands = self.inner.demands.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        match self.kind {
+            EpochDemandKind::Deadline(key) => {
+                demands.deadlines.remove(&key);
+            }
+            EpochDemandKind::Timeslice => demands.timeslices -= 1,
         }
     }
 }
+//#endregion ⏱️EpochDeadlines
 
 /// 📏️ Generic per-store `ResourceLimiter` (§2: "a `ResourceLimiter` per store bounding
 /// memory/tables/instances against the budget"). Plain numeric bounds rather than a `Budget`-typed
@@ -405,7 +531,7 @@ pub async fn default_compiled_cache_root() -> PathBuf {
 }
 
 pub async fn shared_engine_config_hash(cfg: &SharedEngineConfig, pooling_active: bool) -> [u8; 32] {
-    let descriptor = format!("wasmtime=47.0.3;component_model=1;fuel=1;epoch=1;pooling={};instances={};max_memory={};keep_resident={}", pooling_active, cfg.total_component_instances, cfg.max_memory_bytes, cfg.linear_memory_keep_resident_bytes);
+    let descriptor = format!("wasmtime=47.0.3;component_model=1;fuel={};epoch=1;pooling={};instances={};max_memory={};keep_resident={}", u8::from(cfg.fuel_metering), pooling_active, cfg.total_component_instances, cfg.max_memory_bytes, cfg.linear_memory_keep_resident_bytes);
     *semio_framework_hash::hash(descriptor.as_bytes()).as_bytes()
 }
 
@@ -420,8 +546,9 @@ pub async fn compiled_cache_path(cache_root: &Path, engine_config_hash: &[u8; 32
 }
 
 /// ⚠️ SAFETY: `deserialize_file` trusts the file completely (wasmtime docs). Callers MUST only point
-/// this at paths this process itself wrote via [`store_compiled_component`] with the SAME `engine`
-/// (same config, so same compiled ABI) — a hostile or stale `.cwasm` is a sandbox escape, not a
+/// this at paths written via [`store_compiled_component`] by an engine of the SAME config (so the
+/// same compiled ABI) — this process's own, or an isolated compile process that rebuilt it from
+/// [`SharedEngineConfig::to_isolated_arg`] — a hostile or stale `.cwasm` is a sandbox escape, not a
 /// cache-miss. Any I/O or deserialize error is treated as a cache miss (`None`), never surfaced as a
 /// fault: recompiling from the original component bytes is always the safe fallback.
 pub async fn load_compiled_component(engine: &Engine, path: &Path) -> Option<Component> {
@@ -431,13 +558,73 @@ pub async fn load_compiled_component(engine: &Engine, path: &Path) -> Option<Com
     unsafe { Component::deserialize_file(engine, path).ok() }
 }
 
+/// 💾️ Writes the compiled code under a scratch name owned by this process and renames it into
+/// place, so a reader never sees a partial `.cwasm` and a writer killed midway leaves only its own
+/// [`compiled_cache_scratch_path`] behind.
 pub async fn store_compiled_component(component: &Component, path: &Path) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
     let bytes = component.serialize().map_err(|error| std::io::Error::other(error.to_string()))?;
-    std::fs::write(path, bytes)
+    let scratch = compiled_cache_scratch_path(path, std::process::id());
+    std::fs::write(&scratch, bytes)?;
+    std::fs::rename(&scratch, path)
 }
+
+/// 🧻️ Where process `pid` stages a `.cwasm` before renaming it to `path`.
+pub fn compiled_cache_scratch_path(path: &Path, pid: u32) -> PathBuf {
+    let mut name = path.file_name().map(std::ffi::OsStr::to_os_string).unwrap_or_default();
+    name.push(format!(".{pid}.scratch"));
+    path.with_file_name(name)
+}
+
+//#region 🧊️IsolatedCompile
+/// 🧊️ Compiling a component is the one guest-preparation step with no interruption point inside it:
+/// cranelift runs to its end once started, on every core it can get. A host that must be able to
+/// abandon a compile runs it in a process of its own — [`compile_component_isolated`] is that
+/// process's whole body — and kills the process, which returns every thread and byte the compile
+/// held. The compiled code reaches the host through the same on-disk cache every other load reads,
+/// written atomically, so a killed compile leaves no entry behind.
+pub struct IsolatedCompileTarget {
+    /// 🗂️ The `.cwasm` the isolated process writes and the host then loads.
+    pub cache_path: PathBuf,
+    /// ⚙️ The host engine's configuration, as [`SharedEngineConfig::to_isolated_arg`] encodes it.
+    pub engine: String,
+}
+
+impl SharedEngineConfig {
+    /// ⚙️ One argument an isolated compile process rebuilds exactly this engine from.
+    pub fn to_isolated_arg(&self) -> String {
+        format!("instances={};max-memory={};keep-resident={};on-demand={};fuel={}", self.total_component_instances, self.max_memory_bytes, self.linear_memory_keep_resident_bytes, u8::from(self.force_on_demand), u8::from(self.fuel_metering))
+    }
+
+    pub fn from_isolated_arg(arg: &str) -> Result<Self, PluginHostError> {
+        let mut cfg = Self::default();
+        for field in arg.split(';') {
+            let (key, value) = field.split_once('=').ok_or_else(|| PluginHostError::Plugin(format!("isolated compile engine field `{field}` is not key=value")))?;
+            let number = value.parse::<u64>().map_err(|error| PluginHostError::Plugin(format!("isolated compile engine field `{key}`: {error}")))?;
+            match key {
+                "instances" => cfg.total_component_instances = u32::try_from(number).map_err(|error| PluginHostError::Plugin(error.to_string()))?,
+                "max-memory" => cfg.max_memory_bytes = usize::try_from(number).map_err(|error| PluginHostError::Plugin(error.to_string()))?,
+                "keep-resident" => cfg.linear_memory_keep_resident_bytes = usize::try_from(number).map_err(|error| PluginHostError::Plugin(error.to_string()))?,
+                "on-demand" => cfg.force_on_demand = number != 0,
+                "fuel" => cfg.fuel_metering = number != 0,
+                other => return Err(PluginHostError::Plugin(format!("isolated compile engine field `{other}` is unknown"))),
+            }
+        }
+        Ok(cfg)
+    }
+}
+
+/// 🧊️ The whole body of an isolated compile process: rebuild the host's engine from `engine`,
+/// compile `bytes`, and store the compiled code at `cache_path`.
+pub fn compile_component_isolated(engine: &str, bytes: &[u8], cache_path: &Path) -> Result<(), PluginHostError> {
+    let cfg = SharedEngineConfig::from_isolated_arg(engine)?;
+    let (engine, _pooling_active) = semio_framework_async::block_on(build_shared_engine(cfg))?;
+    let component = Component::from_binary(&engine, bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+    semio_framework_async::block_on(store_compiled_component(&component, cache_path)).map_err(|error| PluginHostError::Plugin(format!("storing {}: {error}", cache_path.display())))
+}
+//#endregion 🧊️IsolatedCompile
 
 #[cfg(test)]
 include!("🧪️tests/🔬️standalone/🦀️.rs");
@@ -660,7 +847,7 @@ impl From<PluginHostError> for TurnFault {
 }
 
 /// 🐎️ Host-side driver for one actor's execution — `design-runtime.md` §2. `WasmtimeRuntime` (the
-/// native implementation, backed by [`build_shared_engine`]/[`EpochTicker`]/[`BudgetLimiter`]/the
+/// native implementation, backed by [`build_shared_engine`]/[`EpochDeadlines`]/[`BudgetLimiter`]/the
 /// compiled-artifact cache above), `MockGuestRuntime` (test double, below), and
 /// `shard::RecordingRuntime` (`🧵️shard`'s own test double) all implement this; nothing else in the
 /// host — `ShardLoop`, the task manager, `WasmtimeNodeHost` — talks to a guest through any other
@@ -1309,7 +1496,15 @@ impl OwnedRuntime {
 
     /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
     pub async fn codec_pack_schema_hash(&self, compiled: &CompiledHandle, artifact_schema: &str, budget: Budget) -> Result<[u8; 32], TurnFault> {
-        let bytes: Vec<u8> = self.codec_call(compiled, OwnedOperation::PackSchemaHash, &OwnedCodecInput { artifact_schema, document_id: "", pack: &[], spr: &[], ops: &[] }, budget, |_, _| {})?;
+        self.codec_pack_schema_hash_observed(compiled, artifact_schema, budget, |_, _| {}).await
+    }
+
+    /// 🧬️ `codec.pack-schema-hash` with the same stall-bound fuel observations as [`Self::codec_genesis_observed`].
+    /// Catalog startup verifies every unlinked package through this call under
+    /// `OperationContext::stall_bounded`; without guest fuel reaching that context a 30 s quiet span
+    /// on a loaded machine looks like a wedged load (`trusted-catalog-load-stalled-before-it-finished`).
+    pub async fn codec_pack_schema_hash_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<[u8; 32], TurnFault> {
+        let bytes: Vec<u8> = self.codec_call(compiled, OwnedOperation::PackSchemaHash, &OwnedCodecInput { artifact_schema, document_id: "", pack: &[], spr: &[], ops: &[] }, budget, progress)?;
         <[u8; 32]>::try_from(bytes.as_slice()).map_err(|_| TurnFault::Trapped("guest pack schema hash is not 32 bytes".to_string()))
     }
 
@@ -1655,6 +1850,21 @@ fn owned_wasi_monotonic_clock() -> Result<Value, PluginHostError> {
     Ok(Value::I64(i64::from_ne_bytes(nanoseconds.to_ne_bytes())))
 }
 
+/// 🕰️ `wasi:clocks/wall-clock.now`'s `datetime` record (`seconds: u64` at 0, `nanoseconds: u32` at 8,
+/// padded to 16), read from the host's real wall clock — a guest Store stamps history with it.
+fn owned_wasi_wall_clock() -> Result<[u8; 16], PluginHostError> {
+    let since_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_| PluginHostError::Plugin("owned WASI wall clock reads before the Unix epoch".to_string()))?;
+    let mut datetime = [0u8; 16];
+    datetime[..8].copy_from_slice(&since_epoch.as_secs().to_le_bytes());
+    datetime[8..12].copy_from_slice(&since_epoch.subsec_nanos().to_le_bytes());
+    Ok(datetime)
+}
+
+/// 🎲️ One platform-entropy word for `wasi:random` — a guest Store's replica identity comes from it.
+fn owned_wasi_entropy() -> Result<u64, PluginHostError> {
+    semio_framework_os_kernel::os_identity::entropy_u64().map_err(|error| PluginHostError::Plugin(format!("owned WASI random: {error}")))
+}
+
 fn reply_owned_host(state: &mut OwnedInstanceState, call: &HostCall) -> Result<Vec<Value>, PluginHostError> {
     let values = match (call.module.as_str(), call.name.as_str()) {
         ("semio:framework/pure@1.0.0", "now-ms") => vec![Value::I64(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64))],
@@ -1686,15 +1896,17 @@ fn reply_owned_host(state: &mut OwnedInstanceState, call: &HostCall) -> Result<V
         | ("wasi:io/streams@0.2.0", "[resource-drop]output-stream") => Vec::new(),
         ("wasi:clocks/monotonic-clock@0.2.0", "now") => vec![owned_wasi_monotonic_clock()?],
         ("wasi:random/insecure-seed@0.2.9", "insecure-seed") => {
-            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 0)?, 16)?;
+            let seed = [owned_wasi_entropy()?.to_le_bytes(), owned_wasi_entropy()?.to_le_bytes()].concat();
+            write_owned_memory(&mut state.actor, owned_argument_i32(call, 0)?, &seed).map_err(turn_fault_host)?;
             Vec::new()
         }
+        ("wasi:random/random@0.2.9", "get-random-u64") => vec![Value::I64(i64::from_le_bytes(owned_wasi_entropy()?.to_le_bytes()))],
         ("wasi:cli/environment@0.2.0", "get-environment") => {
             write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 0)?, 8)?;
             Vec::new()
         }
         ("wasi:clocks/wall-clock@0.2.0", "now") => {
-            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 0)?, 16)?;
+            write_owned_memory(&mut state.actor, owned_argument_i32(call, 0)?, &owned_wasi_wall_clock()?).map_err(turn_fault_host)?;
             Vec::new()
         }
         ("wasi:cli/terminal-stdin@0.2.0", "get-terminal-stdin") | ("wasi:cli/terminal-stdout@0.2.0", "get-terminal-stdout") | ("wasi:cli/terminal-stderr@0.2.0", "get-terminal-stderr") => {
@@ -1919,7 +2131,7 @@ const GUEST_DIAGNOSTICS_CAPACITY_BYTES: usize = 4 * 1024 * 1024;
 /// prices; `BatchDriveConfig.step_budget_us`); the wasmtime store's epoch deadline and fuel are the
 /// host's hard kill, after which the component instance is unrecoverable ("cannot enter component
 /// instance"). Setting the second from the first gave a `step-job` crossing
-/// `USER_VISIBLE_LANE_WALL_US / 1_000` = **2** epoch ticks at [`EPOCH_TICK_INTERVAL_MS`] = 1 ms —
+/// `USER_VISIBLE_LANE_WALL_US / 1_000` = **2** ms of wall time —
 /// the host killed the guest at the exact instant the guest was supposed to yield cooperatively,
 /// with zero margin, inside a JIT, on a machine running a whole fleet. A state action that
 /// legitimately costs more than 2 ms (`💼️jobs`' `Execute`, priced `WORK_UNITS_EXECUTE` = 1 024 for
@@ -1933,13 +2145,13 @@ const GUEST_DIAGNOSTICS_CAPACITY_BYTES: usize = 4 * 1024 * 1024;
 const GUEST_JOB_WATCHDOG_MS: u64 = 30_000;
 
 
-/// ⏱️ Arms one guest job crossing with the host's watchdog instead of the guest's own grant.
-/// Fuel is deliberately disarmed, for the reason the gateway's cold-open budget already states: a
-/// fuel yield is exactly as unresumable as an epoch cut under the JIT, so arming both only adds a
-/// second, harder-to-read way to say "wedged".
-fn arm_guest_job_watchdog(store: &mut Store<ActorHostState>) -> Result<(), PluginHostError> {
-    store.set_fuel(u64::MAX).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-    store.set_epoch_deadline(GUEST_JOB_WATCHDOG_MS);
+
+/// ⛽️ Grants `fuel` on a metered engine; an unmetered engine has no fuel to grant and bounds the
+/// call by its epoch deadline alone — see [`SharedEngineConfig::fuel_metering`].
+fn arm_store_fuel(store: &mut Store<ActorHostState>, fuel_metering: bool, fuel: u64) -> wasmtime::Result<()> {
+    if fuel_metering {
+        store.set_fuel(fuel)?;
+    }
     Ok(())
 }
 
@@ -2146,6 +2358,8 @@ impl wit_host_async::HostWithStore<ActorHostState> for wasmtime::component::HasS
 struct WasmtimeInstanceState {
     store: Store<ActorHostState>,
     bindings: actor_bindings::Actor,
+    /// ⏱️ This store's wall deadline, read by the callback [`EpochDeadlines::install`] put on it.
+    deadline: Arc<EpochDeadlineCell>,
     /// 🪪️ "One actor per app instance is the default" (design-abi.md §4) — minted once at
     /// `instantiate` and used to fill the `instance` field WIT's per-instance events carry but
     /// `semio_framework::kernel::Event`'s own lifecycle variants (`InstanceClose`/`Activate`/
@@ -2159,17 +2373,19 @@ struct WasmtimeInstanceState {
 /// above — this is where they get consumed.
 pub struct WasmtimeRuntime {
     engine: Engine,
-    _epoch_ticker: EpochTicker,
+    epoch: EpochDeadlines,
     linker: Linker<ActorHostState>,
     cache_root: PathBuf,
     engine_config_hash: [u8; 32],
+    fuel_metering: bool,
+    isolated_engine: String,
     next_instance_id: std::sync::atomic::AtomicU32,
 }
 
 impl WasmtimeRuntime {
     pub async fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
         let (engine, pooling_active) = build_shared_engine(cfg).await?;
-        let epoch_ticker = EpochTicker::start(&engine, &plugin_host_worker_pool());
+        let epoch = EpochDeadlines::new(&engine, &plugin_host_worker_pool());
         let mut linker = Linker::new(&engine);
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `Actor::add_to_linker`
         // defines BOTH of the collapsed world's imports in one call (`pure` + `host-async`) —
@@ -2180,11 +2396,21 @@ impl WasmtimeRuntime {
         // sync WASI shim installs host functions that cannot be called from an async-lifted guest.
         wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let engine_config_hash = shared_engine_config_hash(&cfg, pooling_active).await;
-        Ok(Self { engine, _epoch_ticker: epoch_ticker, linker, cache_root: default_compiled_cache_root().await, engine_config_hash, next_instance_id: std::sync::atomic::AtomicU32::new(1) })
+        let isolated_engine = SharedEngineConfig { force_on_demand: !pooling_active, ..cfg }.to_isolated_arg();
+        Ok(Self { engine, epoch, linker, cache_root: default_compiled_cache_root().await, engine_config_hash, fuel_metering: cfg.fuel_metering, isolated_engine, next_instance_id: std::sync::atomic::AtomicU32::new(1) })
     }
 }
 
 impl WasmtimeRuntime {
+    /// ⏱️ Arms one guest crossing with the host's watchdog instead of the guest's own grant, for as
+    /// long as the returned demand lives. Fuel is deliberately disarmed, for the reason the gateway's
+    /// cold-open budget already states: a fuel yield is exactly as unresumable as an epoch cut under
+    /// the JIT, so arming both only adds a second, harder-to-read way to say "wedged".
+    fn arm_guest_watchdog(&self, store: &mut Store<ActorHostState>, deadline: &EpochDeadlineCell) -> Result<EpochDemand, PluginHostError> {
+        arm_store_fuel(store, self.fuel_metering, u64::MAX).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Ok(self.epoch.arm(store, deadline, GUEST_JOB_WATCHDOG_MS))
+    }
+
     /// 🌱️ The JIT half of [`OwnedRuntime::codec_call`]: one of the component's four pure `codec`
     /// functions on a throwaway instance. The hub itself runs these under the owned interpreter, so
     /// this exists as the A/B oracle — the two runtimes share nothing but the component bytes, and a
@@ -2201,7 +2427,8 @@ impl WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
             return Err(TurnFault::Trapped("codec.pack-schema-hash called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
         let artifact_schema = artifact_schema.to_string();
         let bytes = store
             .run_concurrent(async |accessor| bindings.semio_framework_codec().call_pack_schema_hash(accessor, artifact_schema).await)
@@ -2218,7 +2445,8 @@ impl WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
             return Err(TurnFault::Trapped("codec.genesis called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
         let artifact_schema = artifact_schema.to_string();
         let document_id = document_id.to_string();
         let pair = store
@@ -2238,7 +2466,8 @@ impl WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
             return Err(TurnFault::Trapped("codec.print-mirror called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
         let artifact_schema = artifact_schema.to_string();
         let pair = actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
         let mirror = store
@@ -2257,7 +2486,8 @@ impl WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
             return Err(TurnFault::Trapped("codec.apply-ops called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
         let artifact_schema = artifact_schema.to_string();
         let pair = actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
         let ops = ops.to_vec();
@@ -2283,6 +2513,20 @@ impl WasmtimeRuntime {
 /// ⛽️ Every one of these is pure by the WIT's own contract: it reads no storage, opens no window,
 /// emits no effect, and runs on a throwaway instance the runtime creates and drops per call.
 impl GuestRuntimes {
+    /// ♻️ `package`'s compiled code when this runtime already has it on disk, without compiling.
+    pub async fn load_compiled(&self, package: &PackageRef) -> Option<CompiledHandle> {
+        let Self::Wasmtime(runtime) = self else { return None };
+        let cache_path = compiled_cache_path(&runtime.cache_root, &runtime.engine_config_hash, &package.hash.0).await;
+        load_compiled_component(&runtime.engine, &cache_path).await.map(|component| CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)), owned: None })
+    }
+
+    /// 🧊️ Where an isolated compile of `package` must land for this runtime to load it — `None` for a
+    /// runtime whose compile is not a JIT (the owned interpreter prepares in memory).
+    pub async fn isolated_compile_target(&self, package: &PackageRef) -> Option<IsolatedCompileTarget> {
+        let Self::Wasmtime(runtime) = self else { return None };
+        Some(IsolatedCompileTarget { cache_path: compiled_cache_path(&runtime.cache_root, &runtime.engine_config_hash, &package.hash.0).await, engine: runtime.isolated_engine.clone() })
+    }
+
     /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
     pub async fn codec_pack_schema_hash(&self, compiled: &CompiledHandle, artifact_schema: &str, budget: &Budget) -> Result<[u8; 32], TurnFault> {
         match self {
@@ -2360,8 +2604,10 @@ impl GuestRuntime for WasmtimeRuntime {
         };
         let mut store = Store::new(&self.engine, host_state);
         store.limiter(|state| &mut state.limiter as &mut dyn ResourceLimiter);
-        store.set_fuel(budget.fuel).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        store.set_epoch_deadline(budget.deadline_ms as u64);
+        arm_store_fuel(&mut store, self.fuel_metering, budget.fuel).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let deadline = Arc::new(EpochDeadlineCell::default());
+        self.epoch.install(&mut store, Arc::clone(&deadline));
+        let _epoch = self.epoch.arm(&mut store, &deadline, budget.deadline_ms as u64);
         // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-wasmtime-upgrade): wasmtime 22.0.1's
         // `bindgen!`-generated `Actor::instantiate` returned `(Actor, wasmtime::component::Instance)`;
         // wasmtime 47.0.3 dropped the raw `Instance` from the convenience wrapper (it was never used
@@ -2373,16 +2619,16 @@ impl GuestRuntime for WasmtimeRuntime {
         // imports are async host functions, and the sync entry point refuses a Store whose linker
         // carries any.
         let bindings = actor_bindings::Actor::instantiate_async(&mut store, component, &self.linker).await.map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id }) })
+        Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id, deadline }) })
     }
 
     async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("execute_turn called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, instance_id } = state;
-        store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
-        store.set_epoch_deadline(budget.deadline_ms as u64);
+        let WasmtimeInstanceState { store, bindings, instance_id, deadline } = state;
+        arm_store_fuel(store, self.fuel_metering, budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
+        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
         let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         // 🚫️async: R10 residue shape 1 — `kernel_event_to_wit` is async, hoisted out of the sync
         // `Iterator::map` closure via a plain loop.
@@ -2467,12 +2713,12 @@ impl GuestRuntime for WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("start_job called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         // ⏱️ The host's own ceilings, never the guest's grant — see [`GUEST_JOB_WATCHDOG_MS`]. Armed
         // HERE because `start-job` armed nothing at all and inherited whatever the preceding
         // `execute_turn`/`step-job` left in the store: a start after a fully spent turn began with
         // an already-passed epoch and no fuel.
-        arm_guest_job_watchdog(store).map_err(TurnFault::Host)?;
+        let _epoch = self.arm_guest_watchdog(store, deadline).map_err(TurnFault::Host)?;
         let kind = kind.to_string();
         store
             .run_concurrent(async |accessor| bindings.semio_framework_jobs().call_start_job(accessor, job, kind, input).await)
@@ -2486,9 +2732,9 @@ impl GuestRuntime for WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("step_job called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         // ⏱️ …and the guest still receives its own cooperative grant, unchanged, on `wit_budget`.
-        arm_guest_job_watchdog(store).map_err(TurnFault::Host)?;
+        let _epoch = self.arm_guest_watchdog(store, deadline).map_err(TurnFault::Host)?;
         let wit_budget = wit_jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
         let step = store
             .run_concurrent(async |accessor| bindings.semio_framework_jobs().call_step_job(accessor, job, wit_budget).await)
@@ -2507,11 +2753,11 @@ impl GuestRuntime for WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("cancel_job called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         // ⏱️ A cancellation may arrive long after the step that preceded it, and an epoch deadline
         // is ABSOLUTE — an unarmed `cancel-job` ran against the previous crossing's spent deadline
         // and trapped the instance it was trying to wind down. See [`GUEST_JOB_WATCHDOG_MS`].
-        arm_guest_job_watchdog(store).map_err(TurnFault::Host)?;
+        let _epoch = self.arm_guest_watchdog(store, deadline).map_err(TurnFault::Host)?;
         // 🧬️ `jobs.wit`'s `cancel-job: async func(job: u64);` has no `result<_, plugin-error>`
         // wrapper (unlike `start-job`/`step-job`), so only the trap-level results can fail: one
         // from `run_concurrent` itself, one from the call.
@@ -2522,7 +2768,8 @@ impl GuestRuntime for WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(PluginHostError::Plugin("checkpoint called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        let _epoch = self.arm_guest_watchdog(store, deadline)?;
         store
             .run_concurrent(async |accessor| bindings.semio_framework_checkpoint().call_checkpoint(accessor).await)
             .await
@@ -2535,7 +2782,8 @@ impl GuestRuntime for WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(PluginHostError::Plugin("restore called on a non-wasmtime GuestInstance".to_string()));
         };
-        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
+        let _epoch = self.arm_guest_watchdog(store, deadline)?;
         let state_bytes = state_bytes.to_vec();
         store
             .run_concurrent(async |accessor| bindings.semio_framework_checkpoint().call_restore(accessor, state_bytes).await)
@@ -3297,25 +3545,166 @@ impl GuestRelayCompletionSender {
         if value.is_none() {
             *value = Some(completion);
             self.slot.wake.store(true, std::sync::atomic::Ordering::Release);
-            if let Some(waker) = self.slot.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-                waker.wake();
-            }
+            drop(value);
+            self.slot.signal.wake_owner();
         }
+    }
+}
+
+/// 🏃️ One relay request. Its first poll runs on the thread that owns the relay — the caller's own
+/// poll of the mounted future — so a crossing that completes inside that poll (every `step-job`
+/// that does not suspend) pays no pool queue and no hop back to the caller. A request that suspends
+/// (the instance gate is held, the guest yields, the step waits on the caller's cancel) is resumed by
+/// the pool exactly as before, so an abandoned or detached relay still finishes and releases the
+/// instance on its own.
+struct GuestRelayInlineRequest {
+    future: std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + 'static>>,
+    failure: Option<GuestRelayFailureHandler>,
+}
+
+enum GuestRelayDriveState {
+    Idle,
+    Owed(GuestRelayInlineRequest),
+    Polling { woken: bool },
+    Suspended(GuestRelayInlineRequest),
+    Handed,
+}
+
+struct GuestRelayDriveSignal {
+    state: Mutex<GuestRelayDriveState>,
+    owner: Mutex<Option<std::task::Waker>>,
+    pool: WorkerPool,
+}
+
+impl GuestRelayDriveSignal {
+    fn wake_owner(&self) {
+        if let Some(waker) = self.owner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            waker.wake();
+        }
+    }
+
+    fn is_owed(&self) -> bool {
+        matches!(&*self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner), GuestRelayDriveState::Owed(_))
+    }
+
+    fn hand_to_pool(&self, request: GuestRelayInlineRequest) {
+        let GuestRelayInlineRequest { future, failure } = request;
+        GuestRelayPoolFuture::spawn_inner(self.pool.clone(), Lane::UserVisible, future, failure.unwrap_or_else(|| Box::new(|_| {})));
+    }
+
+    fn resume(&self) {
+        let handed = {
+            let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            match std::mem::replace(&mut *state, GuestRelayDriveState::Idle) {
+                GuestRelayDriveState::Suspended(request) => {
+                    *state = GuestRelayDriveState::Handed;
+                    Some(request)
+                }
+                GuestRelayDriveState::Polling { .. } => {
+                    *state = GuestRelayDriveState::Polling { woken: true };
+                    None
+                }
+                other => {
+                    *state = other;
+                    None
+                }
+            }
+        };
+        if let Some(request) = handed {
+            self.hand_to_pool(request);
+        }
+    }
+}
+
+impl std::task::Wake for GuestRelayDriveSignal {
+    fn wake(self: Arc<Self>) {
+        self.resume();
+    }
+
+    fn wake_by_ref(self: &Arc<Self>) {
+        self.resume();
     }
 }
 
 struct GuestRelayCompletionSlot {
     value: Mutex<Option<GuestRelayCompletion>>,
     wake: AtomicBool,
-    waker: Mutex<Option<std::task::Waker>>,
+    signal: Arc<GuestRelayDriveSignal>,
 }
 
 impl GuestRelayCompletionSlot {
-    fn new() -> Self {
-        Self { value: Mutex::new(None), wake: AtomicBool::new(false), waker: Mutex::new(None) }
+    fn new(pool: WorkerPool) -> Self {
+        Self { value: Mutex::new(None), wake: AtomicBool::new(false), signal: Arc::new(GuestRelayDriveSignal { state: Mutex::new(GuestRelayDriveState::Idle), owner: Mutex::new(None), pool }) }
+    }
+
+    /// 🎟️ Retains the request this slot answers; it owes its first poll to the owner.
+    fn admit(&self, request: GuestRelayInlineRequest) {
+        *self.signal.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = GuestRelayDriveState::Owed(request);
+    }
+
+    /// 🏃️ Gives an owed request its first poll on the calling thread. A panic reaches the request's
+    /// own recovery exactly as the pool-hosted future's did, so the instance is restored or
+    /// quarantined and the owner still receives one completion.
+    fn drive(&self) {
+        let mut request = {
+            let mut state = self.signal.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            match std::mem::replace(&mut *state, GuestRelayDriveState::Idle) {
+                GuestRelayDriveState::Owed(request) => {
+                    *state = GuestRelayDriveState::Polling { woken: false };
+                    request
+                }
+                other => {
+                    *state = other;
+                    return;
+                }
+            }
+        };
+        let waker = std::task::Waker::from(Arc::clone(&self.signal));
+        let mut context = std::task::Context::from_waker(&waker);
+        let polled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| request.future.as_mut().poll(&mut context)));
+        let mut state = self.signal.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let woken = matches!(*state, GuestRelayDriveState::Polling { woken: true });
+        match polled {
+            Ok(std::task::Poll::Ready(())) => *state = GuestRelayDriveState::Idle,
+            Ok(std::task::Poll::Pending) if woken => {
+                *state = GuestRelayDriveState::Handed;
+                drop(state);
+                self.signal.hand_to_pool(request);
+            }
+            Ok(std::task::Poll::Pending) => *state = GuestRelayDriveState::Suspended(request),
+            Err(_) => {
+                *state = GuestRelayDriveState::Idle;
+                drop(state);
+                if let Some(failure) = request.failure.take() {
+                    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| failure(GuestRelayPoolFailure::FuturePanicked)));
+                }
+            }
+        }
+    }
+
+    /// 🧺️ An owner that goes away before the first poll hands the request to the pool, so nothing
+    /// it would have admitted is lost.
+    fn abandon(&self) {
+        let owed = {
+            let mut state = self.signal.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            match std::mem::replace(&mut *state, GuestRelayDriveState::Idle) {
+                GuestRelayDriveState::Owed(request) => {
+                    *state = GuestRelayDriveState::Handed;
+                    Some(request)
+                }
+                other => {
+                    *state = other;
+                    None
+                }
+            }
+        };
+        if let Some(request) = owed {
+            self.signal.hand_to_pool(request);
+        }
     }
 
     fn try_take(&self) -> Option<GuestRelayCompletion> {
+        self.drive();
         let completion = self.value.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
         if completion.is_some() {
             self.wake.store(false, std::sync::atomic::Ordering::Release);
@@ -3324,15 +3713,13 @@ impl GuestRelayCompletionSlot {
     }
 
     fn register_wake(&self, waker: &std::task::Waker) {
-        if self.wake.load(std::sync::atomic::Ordering::Acquire) {
+        if self.wake.load(std::sync::atomic::Ordering::Acquire) || self.signal.is_owed() {
             waker.wake_by_ref();
             return;
         }
-        *self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(waker.clone());
+        *self.signal.owner.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(waker.clone());
         if self.wake.load(std::sync::atomic::Ordering::Acquire) {
-            if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-                waker.wake();
-            }
+            self.signal.wake_owner();
         }
     }
 }
@@ -3508,12 +3895,6 @@ fn mark_guest_cleanup_pending(slot: &Arc<Mutex<GuestInstanceSlot>>, detail: Vec<
     };
 }
 
-async fn wait_for_guest_relay_cancellation(pool: WorkerPool, cancel: semio_framework_async::CancelToken) {
-    while !cancel.is_cancelled_now() {
-        pool.timer().sleep_until(pool.now_ms().saturating_add(1)).await;
-    }
-}
-
 async fn cancel_guest_job_once(runtime: &GuestRuntimes, instance: &mut GuestInstance, job: u64, cancel_admitted: &AtomicBool) -> Result<bool, TurnFault> {
     if cancel_admitted.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok() {
         runtime.cancel_job(instance, job).await?;
@@ -3562,11 +3943,11 @@ struct GuestRelayAttempt {
 }
 
 async fn run_guest_relay_request(attempt: GuestRelayAttempt, cancel: semio_framework_async::CancelToken, request: GuestRelayRequest) {
-    let GuestRelayAttempt { runtime, instance, instance_gate, pool, cancel_scheduled: _cancel_scheduled, cancel_admitted, job, sender } = attempt;
+    let GuestRelayAttempt { runtime, instance, instance_gate, pool: _pool, cancel_scheduled: _cancel_scheduled, cancel_admitted, job, sender } = attempt;
     let permit = if matches!(&request, GuestRelayRequest::Cancel) {
         instance_gate.acquire_owned().await
     } else {
-        match semio_framework_async::select2(instance_gate.acquire_owned(), wait_for_guest_relay_cancellation(pool.clone(), cancel.clone())).await {
+        match semio_framework_async::select2(instance_gate.acquire_owned(), cancel.cancelled()).await {
             semio_framework_async::Either::Left(permit) => permit,
             semio_framework_async::Either::Right(()) => {
                 sender.send(GuestRelayCompletion::Cancelled);
@@ -3587,7 +3968,7 @@ async fn run_guest_relay_request(attempt: GuestRelayAttempt, cancel: semio_frame
     };
     let mut cleanup_pending = false;
     let completion = match request {
-        GuestRelayRequest::Start { kind, input } => match semio_framework_async::select2(runtime.start_job(guest.guest(), job, &kind, input), wait_for_guest_relay_cancellation(pool.clone(), cancel.clone())).await {
+        GuestRelayRequest::Start { kind, input } => match semio_framework_async::select2(runtime.start_job(guest.guest(), job, &kind, input), cancel.cancelled()).await {
             semio_framework_async::Either::Left(Ok(())) => {
                 guest.available();
                 GuestRelayCompletion::Started(Ok(()))
@@ -3602,7 +3983,7 @@ async fn run_guest_relay_request(attempt: GuestRelayAttempt, cancel: semio_frame
                 foreground_cancel_completion(result, &mut guest)
             }
         },
-        GuestRelayRequest::Step => match semio_framework_async::select2(runtime.step_job(guest.guest(), job, RELAY_JOB_BUDGET), wait_for_guest_relay_cancellation(pool.clone(), cancel)).await {
+        GuestRelayRequest::Step => match semio_framework_async::select2(runtime.step_job(guest.guest(), job, RELAY_JOB_BUDGET), cancel.cancelled()).await {
             semio_framework_async::Either::Left(Ok(step)) => {
                 guest.available();
                 GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::from_guest(step)))
@@ -3808,8 +4189,8 @@ impl GuestColdRelayJob {
     }
 
     fn submit(&mut self, request: GuestRelayRequest) {
-        let slot = Arc::new(GuestRelayCompletionSlot::new());
         let request_kind = request.kind();
+        let slot = Arc::new(GuestRelayCompletionSlot::new(self.pool.clone()));
         let attempt = GuestRelayAttempt {
             runtime: Arc::clone(&self.runtime),
             instance: Arc::clone(&self.instance),
@@ -3820,7 +4201,8 @@ impl GuestColdRelayJob {
             job: self.job,
             sender: GuestRelayCompletionSender::new(Arc::clone(&slot)),
         };
-        GuestRelayPoolFuture::spawn_recoverable(self.pool.clone(), Lane::UserVisible, run_guest_relay_request(attempt.clone(), self.cancel.clone(), request), move |failure| recover_guest_relay_failure(attempt, request_kind, failure));
+        let recovery = attempt.clone();
+        slot.admit(GuestRelayInlineRequest { future: Box::pin(run_guest_relay_request(attempt, self.cancel.clone(), request)), failure: Some(Box::new(move |failure| recover_guest_relay_failure(recovery, request_kind, failure))) });
         self.pending = Some(slot);
     }
 
@@ -3949,8 +4331,8 @@ impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
             let Some(completion) = slot.try_take() else { return semio_framework_job::InteractiveJobCloseStep::Blocked };
             self.pending = None;
             self.publication = Some(match completion {
-                GuestRelayCompletion::Rejected(bytes) | GuestRelayCompletion::Fault(bytes) => GuestRelayPublication::new(GuestRelayPublicationKind::Fault, bytes.into_source()),
-                GuestRelayCompletion::TerminalFault(bytes) => {
+                GuestRelayCompletion::Fault(bytes) => GuestRelayPublication::new(GuestRelayPublicationKind::Fault, bytes.into_source()),
+                GuestRelayCompletion::Rejected(bytes) | GuestRelayCompletion::TerminalFault(bytes) => {
                     self.cleanup_required = false;
                     GuestRelayPublication::new(GuestRelayPublicationKind::Fault, bytes.into_source())
                 }
@@ -4013,6 +4395,9 @@ impl Drop for GuestColdRelayJob {
         if self.cleanup_required || self.start.is_some() || self.pending.is_some() || self.publication.as_ref().is_some_and(|publication| !publication.terminal_is_empty()) {
             self.cancel.cancel_now();
             self.closing = true;
+        }
+        if let Some(slot) = self.pending.take() {
+            slot.abandon();
         }
     }
 }
@@ -5022,7 +5407,7 @@ impl PluginInstanceHandle {
 
     /// 🧵️ Starts one cold job in the fixed mounted registry. Each host poll admits at most one
     /// relay or close opportunity; the pool never owns an internal run-to-completion chain.
-    async fn run_job_on_worker(&self, kind: &str, input: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+    async fn run_job_on_worker(&self, kind: &str, input: Vec<u8>, cancel: semio_framework_async::CancelToken) -> Result<Vec<u8>, PluginHostError> {
         if input.len() > semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES {
             return Err(PluginHostError::Plugin(format!("{kind} input exceeds the retained operation byte limit")));
         }
@@ -5031,7 +5416,6 @@ impl PluginInstanceHandle {
         }
         let job = self.next_job_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let pool = plugin_host_worker_pool();
-        let cancel = semio_framework_job::root_cancel_token();
         let operation = semio_framework_job::OperationId(self.actor.0);
         let generation = semio_framework_job::Generation(job);
         let params = semio_framework_job::BatchJobParams {
@@ -5072,7 +5456,7 @@ impl PluginInstanceHandle {
         let payload_text = std::str::from_utf8(&payload).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let io_payload: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(payload_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let input = dsl::os_pack::json::to_json_string(&IoRunInputWire { source: from, target: into, payload: io_payload }).into_bytes();
-        self.run_job_on_worker("semio.io-run", input).await
+        self.run_job_on_worker("semio.io-run", input, semio_framework_job::root_cancel_token()).await
     }
 
     /// 🔍️ Sniffs this plugin's own `(from, into)` hop — the absorbed `io-sniff` guest export, now
@@ -5088,7 +5472,7 @@ impl PluginInstanceHandle {
         let payload_text = std::str::from_utf8(payload).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let io_payload: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(payload_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let input = dsl::os_pack::json::to_json_string(&IoRunInputWire { source: from, target: into, payload: io_payload }).into_bytes();
-        let result = self.run_job_on_worker("semio.io-sniff", input).await?;
+        let result = self.run_job_on_worker("semio.io-sniff", input, semio_framework_job::root_cancel_token()).await?;
         result.first().copied().ok_or_else(|| PluginHostError::Plugin("semio.io-sniff job returned an empty result".to_string()))
     }
 
@@ -5096,9 +5480,11 @@ impl PluginInstanceHandle {
     /// `semio.infer` (`types.wit`'s own doc comment names this job kind explicitly). `request`/the
     /// result are the SAME JSON `io_schema::ArtifactInferenceRequest`/`ArtifactInferenceResult` bytes
     /// the deleted `WasmPluginRuntime::artifact_infer` used — no tuple wrapping needed, since that
-    /// call already took exactly one opaque payload.
-    pub async fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        self.run_job_on_worker("semio.infer", request.to_vec()).await
+    /// call already took exactly one opaque payload. The relay runs under a CHILD of `cancel`: the
+    /// caller's cancel stops the in-flight guest job, while the relay's own close never cancels the
+    /// caller's token (a dependency chain shares it).
+    pub async fn infer(&self, request: &[u8], cancel: &semio_framework_async::CancelToken) -> Result<Vec<u8>, PluginHostError> {
+        self.run_job_on_worker("semio.infer", request.to_vec(), cancel.child_now()).await
     }
 
     /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): executes one guest mutation-plan
@@ -5108,7 +5494,7 @@ impl PluginInstanceHandle {
     /// `HostArtifactMutationPlanRequest`/`Result`'s field-for-field guest mirror) — no tuple
     /// wrapping needed, mirroring `infer`'s own doc note above.
     pub async fn mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        self.run_job_on_worker("semio.mutation-plan", request.to_vec()).await
+        self.run_job_on_worker("semio.mutation-plan", request.to_vec(), semio_framework_job::root_cancel_token()).await
     }
 
     /// 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): executes one guest versioned
@@ -5128,7 +5514,7 @@ impl PluginInstanceHandle {
             pack: Vec<u8>,
         }
         let input = dsl::os_pack::json::to_json_string(&MigrateInputWire { from, to, pack }).into_bytes();
-        self.run_job_on_worker("semio.migrate", input).await
+        self.run_job_on_worker("semio.migrate", input, semio_framework_job::root_cancel_token()).await
     }
 
     /// 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): routes to this plugin's own
@@ -5148,7 +5534,7 @@ impl PluginInstanceHandle {
             sources: Vec<u8>,
         }
         let input = dsl::os_pack::json::to_json_string(&ComposeInput { key: key_bytes.to_vec(), sources: sources_bytes.to_vec() }).into_bytes();
-        self.run_job_on_worker("semio.compose", input).await
+        self.run_job_on_worker("semio.compose", input, semio_framework_job::root_cancel_token()).await
     }
 }
 
@@ -5970,7 +6356,7 @@ impl ArtifactInferenceRouter {
         Ok(self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?.values().map(|(_, item)| item.clone()).collect())
     }
 
-    pub async fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn infer(&self, request: &[u8], cancel: &semio_framework_async::CancelToken) -> Result<Vec<u8>, PluginHostError> {
         let request_text = std::str::from_utf8(request).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let identity: InferenceRouteRequest = dsl::os_pack::json::from_json_str(request_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         {
@@ -5979,7 +6365,7 @@ impl ArtifactInferenceRouter {
                 return Err(PluginHostError::Plugin(format!("inference cancellation identity {:?} is already active", identity.cancellation_id)));
             }
         }
-        let result = self.infer_with_visited(request, &mut Vec::new()).await;
+        let result = self.infer_with_visited(request, &mut Vec::new(), cancel).await;
         let live = self
             .live_commits
             .lock()
@@ -6015,7 +6401,7 @@ impl ArtifactInferenceRouter {
     /// registered graph can still recurse infinitely if two rows' `depends_on` disagree with what
     /// was toposorted (e.g. a hot-reloaded plugin), so this is real defense-in-depth, not
     /// redundant.
-    async fn infer_with_visited(&self, request: &[u8], visited: &mut Vec<String>) -> Result<Vec<u8>, PluginHostError> {
+    async fn infer_with_visited(&self, request: &[u8], visited: &mut Vec<String>, cancel: &semio_framework_async::CancelToken) -> Result<Vec<u8>, PluginHostError> {
         let request_text = std::str::from_utf8(request).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let mut route: InferenceRouteRequest = dsl::os_pack::json::from_json_str(request_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         if visited.contains(&route.inference_schema) {
@@ -6045,7 +6431,7 @@ impl ArtifactInferenceRouter {
                 // 🚫️async: R10 residue shape 3 — genuinely self-recursive (this fn really does
                 // await real plugin-runtime I/O via `handle.infer` below, so R9 does not apply);
                 // `Box::pin` breaks the otherwise-infinite future size, per rustc's own E0733 hint.
-                let dependency_result_bytes = Box::pin(self.infer_with_visited(&dependency_request_bytes, visited)).await?;
+                let dependency_result_bytes = Box::pin(self.infer_with_visited(&dependency_request_bytes, visited, cancel)).await?;
                 dependencies.push((dependency_schema.clone(), dependency_result_bytes));
             }
             visited.pop();
@@ -6054,7 +6440,7 @@ impl ArtifactInferenceRouter {
 
         let request = dsl::os_pack::json::to_json_string(&route).into_bytes();
         let handle = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("inference owner `{owner}` is not loaded")))?;
-        let result = handle.infer(&request).await?;
+        let result = handle.infer(&request, cancel).await?;
         let result_text = std::str::from_utf8(&result).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let echoed: InferenceRouteResult = dsl::os_pack::json::from_json_str(result_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
         validate_inference_echo(&route, &echoed).await?;

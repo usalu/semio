@@ -9,8 +9,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveListItem {
-    pub(crate) path: SemioValuePath,
-    pub(crate) index: usize,
+    pub path: SemioValuePath,
+    pub index: usize,
 }
 
 impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for RemoveListItem {

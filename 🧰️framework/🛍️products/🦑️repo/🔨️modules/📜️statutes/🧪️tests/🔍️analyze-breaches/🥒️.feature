@@ -30,7 +30,7 @@ Feature: The golden trees breach exactly the statutes they are written to breach
       | shared://📁️some/📁️folder/🧪️file-invalid/🔷️.cs          |
       | shared://📁️some/📁️folder/🧪️file-invalid/🟦️.tsx         |
     When the host analyzes the tree and renders every breach with its identifier, statute, scope, line and summary
-    Then every implementation projects the reviewed golden breach list local://🔣️breaches.json
+    Then every implementation projects the reviewed golden breach list shared://🔍️analyze-breaches/🔣️breaches.json
 
   @id-the-clean-sources-are-clean
   @level-fundamental

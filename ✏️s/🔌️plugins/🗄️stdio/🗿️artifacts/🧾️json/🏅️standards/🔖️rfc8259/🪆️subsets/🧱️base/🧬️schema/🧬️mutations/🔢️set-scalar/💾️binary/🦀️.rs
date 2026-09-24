@@ -1,6 +1,6 @@
 //! 💾️ Operation-specific binary payload codec for set-scalar/SetScalar.
 use super::SetScalarPayload;
-pub const BINARY_TAG: u32 = 5;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "set-scalar");
 pub fn encode_payload(value: &SetScalarPayload) -> Result<Vec<u8>, String> {
     Ok(pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(value))).into_bytes())
 }

@@ -242,9 +242,8 @@
     }
   },
   "socketGrant": {
-    "schema": "semio.hub.socket-grant/v1",
-    "protocol": "semio.socket.v1",
-    "grant": "socket.v1.44444444444444444444444444444444.5555555555555555555555555555555555555555555555555555555555555555",
+    "schema": "semio.hub.document-socket-grant/v1",
+    "protocol": "semio.session.v1",
     "actorId": "hub.v1.6666666666666666666666666666666666666666666666666666666666666666",
     "expiresAtMs": 2000000025000
   },

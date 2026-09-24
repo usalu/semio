@@ -1,0 +1,10 @@
+{
+  "title": "Build Semio Tech Play For CDN Deployment",
+  "emoji": "🚀️",
+  "status": "open",
+  "description": "Build semio-tech play (`@semio-tech/semio-tech-play:build`) successfully into a static `dist/site` so it can be deployed on a CDN; fix whatever blocks the release build and verify the static output boots.",
+  "goal": "🎯️r2602/🎯️runningsketchpad/🎯️runningsketchpadapps",
+  "parent": "26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP",
+  "sessions": [],
+  "note": "Ticket bookkeeping manual on disk: repo MCP ticket_open returned 'invalid tool params' on 2026-09-23."
+}

@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetGroupAssignment {
-    pub(crate) id: u64,
-    pub(crate) assignment: Option<SavGroupAssignment>,
+    pub id: u64,
+    pub assignment: Option<SavGroupAssignment>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetGroupAssignment {

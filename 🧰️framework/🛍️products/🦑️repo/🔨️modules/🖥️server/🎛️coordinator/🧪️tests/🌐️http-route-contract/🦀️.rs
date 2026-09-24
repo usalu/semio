@@ -15,7 +15,7 @@ struct RouteFixture {
 }
 
 fn route_fixture(ctx: &Context) -> Result<RouteFixture, String> {
-    let bytes = ctx.fixture_bytes("local://🌐️requests.json")?;
+    let bytes = ctx.fixture_bytes("shared://🌐️http-route-contract/🌐️requests.json")?;
     let parsed: SerdeJson = serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;
     Ok(RouteFixture {
         requests: parsed.get("requests").and_then(SerdeJson::as_array).ok_or("request fixture has no requests array")?.clone(),

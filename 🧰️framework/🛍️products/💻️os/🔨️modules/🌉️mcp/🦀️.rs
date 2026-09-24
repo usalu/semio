@@ -1001,8 +1001,7 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     // notification emitted from inside a tool call reaches the client mid-call.
     let notifications = crate::notify::notification_slot();
     let server = server.publishing_notifications_into(notifications.clone());
-    let stderr = std::io::stderr();
-    let mut transport = StdioTransport::new(std::io::BufReader::new(std::io::stdin()), std::io::stdout(), stderr.lock())
+    let mut transport = StdioTransport::new(std::io::BufReader::new(std::io::stdin()), std::io::stdout(), std::io::stderr())
         .publishing_elicitation_into(elicitation, features)
         .publishing_notifications_into(notifications);
     let result = transport.serve(server);

@@ -1,0 +1,1446 @@
+{
+ "bind-default-scene": {
+  "subset": "🎬️scene",
+  "module": "bind_default_scene",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏠️default-scene/🔗️bind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfBindDefaultScenePayload",
+    "pub scene: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfBindDefaultScenePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🏠️default-scene/🔗️bind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🏠️default-scene/🔗️bind/➡️after.gltf"
+  },
+  "notes": "Moves the document's default scene pointer from sceneA (0) to sceneB (1) — bind-default-scene.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "bind-node-camera": {
+  "subset": "🎬️scene",
+  "module": "bind_node_camera",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📷️node-camera/🔗️bind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfBindNodeCameraPayload",
+    "pub node: usize,\n    pub camera: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfBindNodeCameraPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/📷️node-camera/🔗️bind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/📷️node-camera/🔗️bind/➡️after.gltf"
+  },
+  "notes": "Points emptyNode at the camera — bind-node-camera{node,camera}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "bind-node-child": {
+  "subset": "🎬️scene",
+  "module": "bind_node_child",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌿️node-child/🔗️bind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfBindNodeChildPayload",
+    "pub parent: usize,\n    pub child: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfBindNodeChildPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌿️node-child/🔗️bind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌿️node-child/🔗️bind/➡️after.gltf"
+  },
+  "notes": "Adopts emptyNode as a child of the plane's sibling meshNode at position 0 — bind-node-child{parent,child,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "bind-node-mesh": {
+  "subset": "🎬️scene",
+  "module": "bind_node_mesh",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏗️node-mesh/🔗️bind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfBindNodeMeshPayload",
+    "pub node: usize,\n    pub mesh: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfBindNodeMeshPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🏗️node-mesh/🔗️bind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🏗️node-mesh/🔗️bind/➡️after.gltf"
+  },
+  "notes": "Points emptyNode at mesh 0 — bind-node-mesh{node,mesh}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "bind-node-skin": {
+  "subset": "🎬️scene",
+  "module": "bind_node_skin",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🩻️node-skin/🔗️bind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfBindNodeSkinPayload",
+    "pub node: usize,\n    pub skin: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfBindNodeSkinPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🩻️node-skin/🔗️bind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🩻️node-skin/🔗️bind/➡️after.gltf"
+  },
+  "notes": "Points emptyNode at skin 0 (leaves its mesh unset — a skin reference is checkable independent of a bound mesh) — bind-node-skin{node,skin}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "bind-scene-root-node": {
+  "subset": "🎬️scene",
+  "module": "bind_scene_root_node",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🔗️bind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfBindSceneRootNodePayload",
+    "pub scene: usize,\n    pub node: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🔗️bind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🔗️bind/➡️after.gltf"
+  },
+  "notes": "Adds emptyNode as an ADDITIONAL root of sceneB (which starts with only soloNode) at position 0 — bind-scene-root-node{scene,node,position}. emptyNode is first detached from root so it is not a root twice over.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-node-extension-data": {
+  "subset": "🎬️scene",
+  "module": "change_node_extension_data",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🧩️change-extensions/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangeNodeExtensionDataPayload",
+    "pub node: usize,\n    pub data: GltfDataPresence,"
+   ]
+  ],
+  "apply": "payload: &GltfChangeNodeExtensionDataPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🧩️change-extensions/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🧩️change-extensions/➡️after.gltf"
+  },
+  "notes": "Sets emptyNode.extensions.KHR_materials_unlit — change-node-extension-data{node,data}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-node-extra-data": {
+  "subset": "🎬️scene",
+  "module": "change_node_extra_data",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/📝️change-extras/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangeNodeExtraDataPayload",
+    "pub node: usize,\n    pub data: GltfDataPresence,"
+   ]
+  ],
+  "apply": "payload: &GltfChangeNodeExtraDataPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/📝️change-extras/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/📝️change-extras/➡️after.gltf"
+  },
+  "notes": "Sets emptyNode.extras.state — change-node-extra-data{node,data:{state:present,value}}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-node-morph-weights": {
+  "subset": "🎬️scene",
+  "module": "change_node_morph_weights",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/⚖️change-weights/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangeNodeMorphWeightsPayload",
+    "pub node: usize,\n    pub weights: Vec<f64>,"
+   ]
+  ],
+  "apply": "payload: &GltfChangeNodeMorphWeightsPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/⚖️change-weights/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/⚖️change-weights/➡️after.gltf"
+  },
+  "notes": "Overrides meshNode's morph weight from 0.5 to 0.9 at the node level — change-node-morph-weights{node,weights}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-node-name": {
+  "subset": "🎬️scene",
+  "module": "change_node_name",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangeNodeNamePayload",
+    "pub node: u32,\n    #[value(required)]\n    pub value: Option<String>,"
+   ]
+  ],
+  "apply": "payload: &GltfChangeNodeNamePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🏷️rename/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🏷️rename/➡️after.gltf"
+  },
+  "notes": "Renames emptyNode — change-node-name{node,value}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-node-transform": {
+  "subset": "🎬️scene",
+  "module": "change_node_transform",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/📐️transform/🦀️.rs",
+  "payloads": [
+   [
+    "GltfTransformNodePayload",
+    "pub node: usize,\n    pub transform: GltfNodeTransform,"
+   ]
+  ],
+  "apply": "payload: &GltfTransformNodePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/📐️transform/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/📐️transform/➡️after.gltf"
+  },
+  "notes": "Sets emptyNode's TRS translation to (2,3,4) — change-node-transform{node,transform:{kind:trs,...}}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-scene-extension-data": {
+  "subset": "🎬️scene",
+  "module": "change_scene_extension_data",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🧩️change-extensions/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangeSceneExtensionDataPayload",
+    "pub scene: usize,\n    pub data: GltfDataPresence,"
+   ]
+  ],
+  "apply": "payload: &GltfChangeSceneExtensionDataPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🧩️change-extensions/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🧩️change-extensions/➡️after.gltf"
+  },
+  "notes": "Sets sceneB.extensions.ACME_marker — change-scene-extension-data{scene,data}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-scene-extra-data": {
+  "subset": "🎬️scene",
+  "module": "change_scene_extra_data",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/📝️change-extras/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangeSceneExtraDataPayload",
+    "pub scene: usize,\n    pub data: GltfDataPresence,"
+   ]
+  ],
+  "apply": "payload: &GltfChangeSceneExtraDataPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/📝️change-extras/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/📝️change-extras/➡️after.gltf"
+  },
+  "notes": "Sets sceneB.extras.state — change-scene-extra-data{scene,data}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-scene-name": {
+  "subset": "🎬️scene",
+  "module": "change_scene_name",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🏷️rename/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangeSceneNamePayload",
+    "pub scene: usize,\n    pub value: Option<String>,"
+   ]
+  ],
+  "apply": "payload: &GltfChangeSceneNamePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🏷️rename/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🏷️rename/➡️after.gltf"
+  },
+  "notes": "Renames sceneB — change-scene-name{scene,value}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "create-node": {
+  "subset": "🎬️scene",
+  "module": "create_node",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🌱️create/🦀️.rs",
+  "payloads": [
+   [
+    "GltfCreateNodePayload",
+    "pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfCreateNodePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🌱️create/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🌱️create/➡️after.gltf"
+  },
+  "notes": "Inserts a new minimal node at index 1 of the flat nodes array, reindexing every node-reference site (children, scene roots, skin joints/skeleton, animation channel targets) so the document stays coherent — create-node{position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "create-scene": {
+  "subset": "🎬️scene",
+  "module": "create_scene",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🌱️create/🦀️.rs",
+  "payloads": [
+   [
+    "GltfCreateScenePayload",
+    "pub position: u32,"
+   ]
+  ],
+  "apply": null,
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🌱️create/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🌱️create/➡️after.gltf"
+  },
+  "notes": "Inserts a new empty scene at position 1, reindexing the document's default `scene` pointer — create-scene{position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "delete-node": {
+  "subset": "🎬️scene",
+  "module": "delete_node",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🗑️delete/🦀️.rs",
+  "payloads": [
+   [
+    "GltfDeleteNodePayload",
+    "pub index: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfDeleteNodePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🗑️delete/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🗑️delete/➡️after.gltf"
+  },
+  "notes": "Removes the unreferenced solo node from scene B's node list, reindexing every node-reference site — delete-node{index}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "delete-scene": {
+  "subset": "🎬️scene",
+  "module": "delete_scene",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🗑️delete/🦀️.rs",
+  "payloads": [
+   [
+    "GltfDeleteScenePayload",
+    "pub index: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfDeleteScenePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🗑️delete/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🗑️delete/➡️after.gltf"
+  },
+  "notes": "Removes sceneB, reindexing the document's default `scene` pointer (which stays at 0, unaffected) — delete-scene{index}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "move-node": {
+  "subset": "🎬️scene",
+  "module": "move_node",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMoveNodePayload",
+    "pub index: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMoveNodePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🚚️move/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🚚️move/➡️after.gltf"
+  },
+  "notes": "Relocates the flat nodes[] array entry for emptyNode from its original index to the front, reindexing every node-reference site that shifted as a result — move-node{index,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "move-node-child": {
+  "subset": "🎬️scene",
+  "module": "move_node_child",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌿️node-child/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMoveNodeChildPayload",
+    "pub parent: usize,\n    pub child: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMoveNodeChildPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌿️node-child/🚚️move/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌿️node-child/🚚️move/➡️after.gltf"
+  },
+  "notes": "Moves root's last child to the front of root.children — move-node-child{parent,child,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "move-node-parent": {
+  "subset": "🎬️scene",
+  "module": "move_node_parent",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🌿️reparent/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReparentNodePayload",
+    "pub parent: usize,\n    pub child: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfReparentNodePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🌿️reparent/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🌿️reparent/➡️after.gltf"
+  },
+  "notes": "Reparents emptyNode from root to sceneB's soloNode, clearing the old parent link and the old scene-root membership it never had — move-node-parent{parent,child,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "move-scene": {
+  "subset": "🎬️scene",
+  "module": "move_scene",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMoveScenePayload",
+    "pub index: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMoveScenePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🚚️move/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🚚️move/➡️after.gltf"
+  },
+  "notes": "Swaps sceneA and sceneB's positions, reindexing the default `scene` pointer with sceneA — move-scene{index,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "move-scene-root-node": {
+  "subset": "🎬️scene",
+  "module": "move_scene_root_node",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMoveSceneRootNodePayload",
+    "pub scene: usize,\n    pub node: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🚚️move/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🚚️move/➡️after.gltf"
+  },
+  "notes": "sceneA gets a second root (a detached copy-free extra: emptyNode) so a root-position move is observable, then moves it to the front — move-scene-root-node{scene,node,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "reorder-node-children": {
+  "subset": "🎬️scene",
+  "module": "reorder_node_children",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌿️node-child/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderNodeChildrenPayload",
+    "pub parent: usize,\n    pub order: Vec<usize>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderNodeChildrenPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌿️node-child/🔀️reorder/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌿️node-child/🔀️reorder/➡️after.gltf"
+  },
+  "notes": "Reverses root.children — a complete permutation, reorder-node-children{parent,order}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "reorder-nodes": {
+  "subset": "🎬️scene",
+  "module": "reorder_nodes",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderNodesPayload",
+    "pub order: Vec<usize>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderNodesPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🔀️reorder/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌳️node/🔀️reorder/➡️after.gltf"
+  },
+  "notes": "A full permutation of the flat nodes[] array (reversed), with every node-reference site reindexed to match — reorder-nodes{order}. Node identity is index-based, so parser.json.nodes order plus the reindexed reference sites are the observable signature.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "reorder-scene-root-nodes": {
+  "subset": "🎬️scene",
+  "module": "reorder_scene_root_nodes",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderSceneRootNodesPayload",
+    "pub scene: usize,\n    pub order: Vec<usize>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderSceneRootNodesPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🔀️reorder/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌲️scene-root/🔀️reorder/➡️after.gltf"
+  },
+  "notes": "sceneA gets a second root (emptyNode), then the two-element root list is reversed — reorder-scene-root-nodes{scene,order}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "reorder-scenes": {
+  "subset": "🎬️scene",
+  "module": "reorder_scenes",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderScenesPayload",
+    "pub order: Vec<usize>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderScenesPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🔀️reorder/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🎬️scene/🔀️reorder/➡️after.gltf"
+  },
+  "notes": "Reverses the scenes[] array, reindexing the default `scene` pointer with it — reorder-scenes{order}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "unbind-default-scene": {
+  "subset": "🎬️scene",
+  "module": "unbind_default_scene",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏠️default-scene/✂️unbind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfUnbindDefaultScenePayload",
+    "}\n// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9\npub fn validate(_payload: &GltfUnbindDefaultScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {\n    if base.document.scene.is_none() {\n        return Err(reject(\"gltf.mutation.relation-absent\", \"document/scene\", \"no default scene is bound\"));\n    }\n    Ok(())"
+   ]
+  ],
+  "apply": "payload: &GltfUnbindDefaultScenePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🏠️default-scene/✂️unbind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🏠️default-scene/✂️unbind/➡️after.gltf"
+  },
+  "notes": "Clears the document's default scene pointer entirely — unbind-default-scene.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "unbind-node-camera": {
+  "subset": "🎬️scene",
+  "module": "unbind_node_camera",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📷️node-camera/✂️unbind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfUnbindNodeCameraPayload",
+    "pub node: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfUnbindNodeCameraPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/📷️node-camera/✂️unbind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/📷️node-camera/✂️unbind/➡️after.gltf"
+  },
+  "notes": "Clears cameraNode's camera reference — unbind-node-camera{node}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "unbind-node-child": {
+  "subset": "🎬️scene",
+  "module": "unbind_node_child",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌿️node-child/✂️unbind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfUnbindNodeChildPayload",
+    "pub parent: usize,\n    pub child: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌿️node-child/✂️unbind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌿️node-child/✂️unbind/➡️after.gltf"
+  },
+  "notes": "Removes emptyNode from root's children — unbind-node-child{parent,child}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "unbind-node-mesh": {
+  "subset": "🎬️scene",
+  "module": "unbind_node_mesh",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏗️node-mesh/✂️unbind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfUnbindNodeMeshPayload",
+    "pub node: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🏗️node-mesh/✂️unbind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🏗️node-mesh/✂️unbind/➡️after.gltf"
+  },
+  "notes": "Clears meshNode's mesh reference — unbind-node-mesh{node}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "unbind-node-skin": {
+  "subset": "🎬️scene",
+  "module": "unbind_node_skin",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🩻️node-skin/✂️unbind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfUnbindNodeSkinPayload",
+    "pub node: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfUnbindNodeSkinPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🩻️node-skin/✂️unbind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🩻️node-skin/✂️unbind/➡️after.gltf"
+  },
+  "notes": "Clears skinnedNode's skin reference — unbind-node-skin{node}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "unbind-scene-root-node": {
+  "subset": "🎬️scene",
+  "module": "unbind_scene_root_node",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌲️scene-root/✂️unbind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfUnbindSceneRootNodePayload",
+    "pub scene: usize,\n    pub node: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfUnbindSceneRootNodePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🎬️scene/🧫️fixtures/🌲️scene-root/✂️unbind/⬅️before.gltf",
+   "expected-after-gltf": "../../🎬️scene/🧫️fixtures/🌲️scene-root/✂️unbind/➡️after.gltf"
+  },
+  "notes": "Removes soloNode from sceneB's root list, leaving sceneB empty — unbind-scene-root-node{scene,node}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "create-buffer": {
+  "subset": "💿️buffer",
+  "module": "create_buffer",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💿️buffer/🌱️create/🦀️.rs",
+  "payloads": [
+   [
+    "GltfCreateBufferPayload",
+    "pub position: usize,\n    pub bytes: Vec<u8>,"
+   ]
+  ],
+  "apply": "payload: &GltfCreateBufferPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../💿️buffer/🧫️fixtures/🌱️create-buffer-applied/⬅️before.gltf",
+   "expected-after-gltf": "../../💿️buffer/🧫️fixtures/🌱️create-buffer-applied/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "create-buffer-view": {
+  "subset": "💿️buffer",
+  "module": "create_buffer_view",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🌱️create/🦀️.rs",
+  "payloads": [
+   [
+    "GltfCreateBufferViewPayload",
+    "pub position: usize,\n    pub buffer: usize,\n    pub byte_offset: usize,\n    pub byte_length: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfCreateBufferViewPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../💿️buffer/🧫️fixtures/🪟️create-buffer-view-applied/⬅️before.gltf",
+   "expected-after-gltf": "../../💿️buffer/🧫️fixtures/🪟️create-buffer-view-applied/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "delete-buffer": {
+  "subset": "💿️buffer",
+  "module": "delete_buffer",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💿️buffer/🗑️delete/🦀️.rs",
+  "payloads": [
+   [
+    "GltfDeleteBufferPayload",
+    "pub index: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfDeleteBufferPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../💿️buffer/🧫️fixtures/🗑️delete-buffer-applied/⬅️before.gltf",
+   "expected-after-gltf": "../../💿️buffer/🧫️fixtures/🗑️delete-buffer-applied/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "delete-buffer-view": {
+  "subset": "💿️buffer",
+  "module": "delete_buffer_view",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🗑️delete/🦀️.rs",
+  "payloads": [
+   [
+    "GltfDeleteBufferViewPayload",
+    "pub index: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfDeleteBufferViewPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../💿️buffer/🧫️fixtures/✂️delete-buffer-view-applied/⬅️before.gltf",
+   "expected-after-gltf": "../../💿️buffer/🧫️fixtures/✂️delete-buffer-view-applied/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "move-buffer": {
+  "subset": "💿️buffer",
+  "module": "move_buffer",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💿️buffer/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMoveBufferPayload",
+    "pub index: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMoveBufferPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../💿️buffer/🧫️fixtures/🚚️move-buffer-applied/⬅️before.gltf",
+   "expected-after-gltf": "../../💿️buffer/🧫️fixtures/🚚️move-buffer-applied/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "move-buffer-view": {
+  "subset": "💿️buffer",
+  "module": "move_buffer_view",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMoveBufferViewPayload",
+    "pub index: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMoveBufferViewPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../💿️buffer/🧫️fixtures/➡️move-buffer-view-applied/⬅️before.gltf",
+   "expected-after-gltf": "../../💿️buffer/🧫️fixtures/➡️move-buffer-view-applied/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "reorder-buffer-views": {
+  "subset": "💿️buffer",
+  "module": "reorder_buffer_views",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderBufferViewsPayload",
+    "pub order: Vec<usize>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderBufferViewsPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../💿️buffer/🧫️fixtures/🔢️reorder-buffer-views-applied/⬅️before.gltf",
+   "expected-after-gltf": "../../💿️buffer/🧫️fixtures/🔢️reorder-buffer-views-applied/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "reorder-buffers": {
+  "subset": "💿️buffer",
+  "module": "reorder_buffers",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💿️buffer/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderBuffersPayload",
+    "pub order: Vec<usize>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderBuffersPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../💿️buffer/🧫️fixtures/🔀️reorder-buffers-applied/⬅️before.gltf",
+   "expected-after-gltf": "../../💿️buffer/🧫️fixtures/🔀️reorder-buffers-applied/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "bind-morph-target-attribute": {
+  "subset": "🕸️mesh",
+  "module": "bind_morph_target_attribute",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🔗️bind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfBindMorphTargetAttributePayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub target: usize,\n    pub semantic: String,\n    pub accessor: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfBindMorphTargetAttributePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🔗️bind/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🔗️bind/➡️after.gltf"
+  },
+  "notes": "Adds a NORMAL attribute to mesh 0 primitive 0's morph target 0 — bind-morph-target-attribute{mesh,primitive,target,semantic,accessor}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "bind-primitive-attribute": {
+  "subset": "🕸️mesh",
+  "module": "bind_primitive_attribute",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🔗️bind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfBindPrimitiveAttributePayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub semantic: String,\n    pub accessor: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfBindPrimitiveAttributePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🔗️bind/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🔗️bind/➡️after.gltf"
+  },
+  "notes": "Adds a COLOR_0 attribute to mesh 0 primitive 0, bound to a fresh accessor — bind-primitive-attribute{mesh,primitive,semantic,accessor}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "bind-primitive-indices": {
+  "subset": "🕸️mesh",
+  "module": "bind_primitive_indices",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive-indices/🔗️bind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfBindPrimitiveIndicesPayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub accessor: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔢️primitive-indices/🔗️bind/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔢️primitive-indices/🔗️bind/➡️after.gltf"
+  },
+  "notes": "Mesh 0 primitive 0 starts non-indexed (indices removed), then a fresh scalar accessor is created and bound — bind-primitive-indices{mesh,primitive,accessor}. three exposes this as geometry.index becoming non-null.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "bind-primitive-material": {
+  "subset": "🕸️mesh",
+  "module": "bind_primitive_material",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive-material/🔗️bind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfBindPrimitiveMaterialPayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub material: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfBindPrimitiveMaterialPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🧱️primitive-material/🔗️bind/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🧱️primitive-material/🔗️bind/➡️after.gltf"
+  },
+  "notes": "Rebinds mesh 0 primitive 0 from material 0 to material 1 — bind-primitive-material{mesh,primitive,material}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-mesh-extension-data": {
+  "subset": "🕸️mesh",
+  "module": "change_mesh_extension_data",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🧩️change-extensions/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangeMeshExtensionDataPayload",
+    "pub mesh: usize,\n    pub data: GltfDataPresence,"
+   ]
+  ],
+  "apply": "payload: &GltfChangeMeshExtensionDataPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🧩️change-extensions/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🧩️change-extensions/➡️after.gltf"
+  },
+  "notes": "Sets mesh 0's extensions.ACME_marker — change-mesh-extension-data{mesh,data}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-mesh-extra-data": {
+  "subset": "🕸️mesh",
+  "module": "change_mesh_extra_data",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/📝️change-extras/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangeMeshExtraDataPayload",
+    "pub mesh: usize,\n    pub data: GltfDataPresence,"
+   ]
+  ],
+  "apply": "payload: &GltfChangeMeshExtraDataPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/📝️change-extras/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/📝️change-extras/➡️after.gltf"
+  },
+  "notes": "Sets mesh 0's extras.state — change-mesh-extra-data{mesh,data}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-mesh-morph-weights": {
+  "subset": "🕸️mesh",
+  "module": "change_mesh_morph_weights",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/⚖️change-weights/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangeMeshMorphWeightsPayload",
+    "pub mesh: usize,\n    pub weights: Vec<f64>,"
+   ]
+  ],
+  "apply": "payload: &GltfChangeMeshMorphWeightsPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/⚖️change-weights/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/⚖️change-weights/➡️after.gltf"
+  },
+  "notes": "Sets mesh 0's default weights to [0.75] (mesh-level, distinct from the node-level override) — change-mesh-morph-weights{mesh,weights}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-mesh-name": {
+  "subset": "🕸️mesh",
+  "module": "change_mesh_name",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🏷️rename/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangeMeshNamePayload",
+    "pub mesh: usize,\n    pub value: Option<String>,"
+   ]
+  ],
+  "apply": "payload: &GltfChangeMeshNamePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🏷️rename/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🏷️rename/➡️after.gltf"
+  },
+  "notes": "Renames mesh 0 — change-mesh-name{mesh,value}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-primitive-extension-data": {
+  "subset": "🕸️mesh",
+  "module": "change_primitive_extension_data",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🧩️change-extensions/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangePrimitiveExtensionDataPayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub data: GltfDataPresence,"
+   ]
+  ],
+  "apply": "payload: &GltfChangePrimitiveExtensionDataPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🧩️change-extensions/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🧩️change-extensions/➡️after.gltf"
+  },
+  "notes": "Sets mesh 0 primitive 0's extensions.ACME_marker — change-primitive-extension-data{mesh,primitive,data}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-primitive-extra-data": {
+  "subset": "🕸️mesh",
+  "module": "change_primitive_extra_data",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/📝️change-extras/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangePrimitiveExtraDataPayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub data: GltfDataPresence,"
+   ]
+  ],
+  "apply": "payload: &GltfChangePrimitiveExtraDataPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/📝️change-extras/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/📝️change-extras/➡️after.gltf"
+  },
+  "notes": "Sets mesh 0 primitive 0's extras.state — change-primitive-extra-data{mesh,primitive,data}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "change-primitive-topology-mode": {
+  "subset": "🕸️mesh",
+  "module": "change_primitive_topology_mode",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/📐️change-topology/🦀️.rs",
+  "payloads": [
+   [
+    "GltfChangePrimitiveTopologyModePayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub mode: u64,"
+   ]
+  ],
+  "apply": "payload: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/📐️change-topology/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/📐️change-topology/➡️after.gltf"
+  },
+  "notes": "Changes mesh 0's primitive mode from 4 (TRIANGLES, three's default) to 0 (POINTS) — change-primitive-topology-mode{mesh,primitive,mode}. three converts drawing mode at parse time, so geometry shape itself is the witnessed evidence.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "create-accessor": {
+  "subset": "🕸️mesh",
+  "module": "create_accessor",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🌱️create/🦀️.rs",
+  "payloads": [
+   [
+    "GltfCreateAccessorPayload",
+    "pub position: usize,\n    pub component_type: GltfComponentType,\n    pub count: usize,\n    pub kind: GltfAccessorType,"
+   ]
+  ],
+  "apply": "payload: &GltfCreateAccessorPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/📐️accessor/🌱️create/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/📐️accessor/🌱️create/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "create-mesh": {
+  "subset": "🕸️mesh",
+  "module": "create_mesh",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🌱️create/🦀️.rs",
+  "payloads": [
+   [
+    "GltfCreateMeshPayload",
+    "pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfCreateMeshPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🌱️create/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🌱️create/➡️after.gltf"
+  },
+  "notes": "Inserts a minimal empty-primitive-list mesh at position 1, reindexing every node.mesh reference so nothing shifts onto the new entry — create-mesh{position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "create-morph-target": {
+  "subset": "🕸️mesh",
+  "module": "create_morph_target",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🌱️create/🦀️.rs",
+  "payloads": [
+   [
+    "GltfCreateMorphTargetPayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfCreateMorphTargetPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🌱️create/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🌱️create/➡️after.gltf"
+  },
+  "notes": "Appends a second (empty) morph target to mesh 0 primitive 0 — create-morph-target{mesh,primitive,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "create-primitive": {
+  "subset": "🕸️mesh",
+  "module": "create_primitive",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🌱️create/🦀️.rs",
+  "payloads": [
+   [
+    "GltfCreatePrimitivePayload",
+    "pub mesh: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfCreatePrimitivePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🌱️create/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🌱️create/➡️after.gltf"
+  },
+  "notes": "Appends a minimal empty primitive to mesh 0 — create-primitive{mesh,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "delete-accessor": {
+  "subset": "🕸️mesh",
+  "module": "delete_accessor",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🗑️delete/🦀️.rs",
+  "payloads": [
+   [
+    "GltfDeleteAccessorPayload",
+    "pub index: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfDeleteAccessorPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/📐️accessor/🗑️delete/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/📐️accessor/🗑️delete/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "delete-mesh": {
+  "subset": "🕸️mesh",
+  "module": "delete_mesh",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🗑️delete/🦀️.rs",
+  "payloads": [
+   [
+    "GltfDeleteMeshPayload",
+    "pub index: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfDeleteMeshPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🗑️delete/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🗑️delete/➡️after.gltf"
+  },
+  "notes": "Removes the plane mesh, reindexing every node.mesh reference (planeNode loses its mesh; any mesh index after it shifts down) — delete-mesh{index}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "delete-morph-target": {
+  "subset": "🕸️mesh",
+  "module": "delete_morph_target",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🗑️delete/🦀️.rs",
+  "payloads": [
+   [
+    "GltfDeleteMorphTargetPayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub target: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfDeleteMorphTargetPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🗑️delete/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🗑️delete/➡️after.gltf"
+  },
+  "notes": "Removes mesh 0 primitive 0's only morph target and its node/mesh-level weight entries so target-count coherence survives — delete-morph-target{mesh,primitive,target}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "delete-primitive": {
+  "subset": "🕸️mesh",
+  "module": "delete_primitive",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🗑️delete/🦀️.rs",
+  "payloads": [
+   [
+    "GltfDeletePrimitivePayload",
+    "pub mesh: usize,\n    pub primitive: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfDeletePrimitivePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🗑️delete/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🗑️delete/➡️after.gltf"
+  },
+  "notes": "Removes mesh 0's only primitive — delete-primitive{mesh,primitive}. Mesh weights stay coherent (unchanged) exactly as the manifest's referencePolicy states.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "move-accessor": {
+  "subset": "🕸️mesh",
+  "module": "move_accessor",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMoveAccessorPayload",
+    "pub index: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMoveAccessorPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/📐️accessor/🚚️move/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/📐️accessor/🚚️move/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "move-mesh": {
+  "subset": "🕸️mesh",
+  "module": "move_mesh",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMoveMeshPayload",
+    "pub index: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMoveMeshPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🚚️move/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🚚️move/➡️after.gltf"
+  },
+  "notes": "Swaps the box and plane meshes' array positions, reindexing every node.mesh reference to match — move-mesh{index,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "move-morph-target": {
+  "subset": "🕸️mesh",
+  "module": "move_morph_target",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMoveMorphTargetPayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub target: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMoveMorphTargetPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🚚️move/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🚚️move/➡️after.gltf"
+  },
+  "notes": "Mesh 0 primitive 0 gets a second, DISTINCT morph target appended (its own fresh accessor, so the two targets are not content-identical), then the two are swapped along with their parallel node.weights entries — move-morph-target{mesh,primitive,target,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "move-morph-target-attribute": {
+  "subset": "🕸️mesh",
+  "module": "move_morph_target_attribute",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMoveMorphTargetAttributePayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub target: usize,\n    pub semantic: String,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMoveMorphTargetAttributePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🚚️move/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🚚️move/➡️after.gltf"
+  },
+  "notes": "Target 0 gets a second attribute (NORMAL) appended, then POSITION is moved after it — move-morph-target-attribute{mesh,primitive,target,semantic,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "move-primitive": {
+  "subset": "🕸️mesh",
+  "module": "move_primitive",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMovePrimitivePayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMovePrimitivePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🚚️move/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🚚️move/➡️after.gltf"
+  },
+  "notes": "Mesh 0 gets a second (empty) primitive appended, then the two are swapped — move-primitive{mesh,primitive,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "move-primitive-attribute": {
+  "subset": "🕸️mesh",
+  "module": "move_primitive_attribute",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🚚️move/🦀️.rs",
+  "payloads": [
+   [
+    "GltfMovePrimitiveAttributePayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub semantic: String,\n    pub position: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfMovePrimitiveAttributePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🚚️move/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🚚️move/➡️after.gltf"
+  },
+  "notes": "Moves the POSITION key to the end of mesh 0 primitive 0's attribute map — move-primitive-attribute{mesh,primitive,semantic,position}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "reorder-accessors": {
+  "subset": "🕸️mesh",
+  "module": "reorder_accessors",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderAccessorsPayload",
+    "pub order: Vec<usize>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderAccessorsPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/📐️accessor/🔀️reorder/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/📐️accessor/🔀️reorder/➡️after.gltf"
+  },
+  "notes": null,
+  "pipeline": "gltf-2-0-resource-compare-v1",
+  "profile": "semantic-gltf-resource-v1"
+ },
+ "reorder-meshs": {
+  "subset": "🕸️mesh",
+  "module": "reorder_meshs",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderMeshsPayload",
+    "pub order: Vec<usize>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderMeshsPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🔀️reorder/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🕸️mesh/🔀️reorder/➡️after.gltf"
+  },
+  "notes": "Reverses the meshes[] array, reindexing every node.mesh reference to match — reorder-meshs{order}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "reorder-morph-target-attributes": {
+  "subset": "🕸️mesh",
+  "module": "reorder_morph_target_attributes",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderMorphTargetAttributesPayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub target: usize,\n    pub order: Vec<String>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderMorphTargetAttributesPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🔀️reorder/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/🔀️reorder/➡️after.gltf"
+  },
+  "notes": "Target 0 gets a second attribute (NORMAL) appended, then the two-key map is reversed — reorder-morph-target-attributes{mesh,primitive,target,order}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "reorder-morph-targets": {
+  "subset": "🕸️mesh",
+  "module": "reorder_morph_targets",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderMorphTargetsPayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub order: Vec<usize>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderMorphTargetsPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🔀️reorder/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🧬️morph-target/🔀️reorder/➡️after.gltf"
+  },
+  "notes": "Mesh 0 primitive 0 gets a second, DISTINCT morph target appended (its own fresh accessor), then the pair is reversed along with the parallel node.weights entries — reorder-morph-targets{mesh,primitive,order}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "reorder-primitive-attributes": {
+  "subset": "🕸️mesh",
+  "module": "reorder_primitive_attributes",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderPrimitiveAttributesPayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub order: Vec<String>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderPrimitiveAttributesPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🔀️reorder/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/🔀️reorder/➡️after.gltf"
+  },
+  "notes": "Reverses mesh 0 primitive 0's attribute key order — reorder-primitive-attributes{mesh,primitive,order}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "reorder-primitives": {
+  "subset": "🕸️mesh",
+  "module": "reorder_primitives",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🔀️reorder/🦀️.rs",
+  "payloads": [
+   [
+    "GltfReorderPrimitivesPayload",
+    "pub mesh: usize,\n    pub order: Vec<usize>,"
+   ]
+  ],
+  "apply": "payload: &GltfReorderPrimitivesPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🔀️reorder/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔺️primitive/🔀️reorder/➡️after.gltf"
+  },
+  "notes": "Mesh 0 gets a second (empty) primitive appended, then the pair is reversed — reorder-primitives{mesh,order}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "unbind-morph-target-attribute": {
+  "subset": "🕸️mesh",
+  "module": "unbind_morph_target_attribute",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/✂️unbind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfUnbindMorphTargetAttributePayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub target: usize,\n    pub semantic: String,"
+   ]
+  ],
+  "apply": "payload: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/✂️unbind/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🎚️morph-attribute/✂️unbind/➡️after.gltf"
+  },
+  "notes": "Removes mesh 0 primitive 0's morph target 0 POSITION attribute — unbind-morph-target-attribute{mesh,primitive,target,semantic}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "unbind-primitive-attribute": {
+  "subset": "🕸️mesh",
+  "module": "unbind_primitive_attribute",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/✂️unbind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfUnbindPrimitiveAttributePayload",
+    "pub mesh: usize,\n    pub primitive: usize,\n    pub semantic: String,"
+   ]
+  ],
+  "apply": "payload: &GltfUnbindPrimitiveAttributePayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/✂️unbind/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔤️primitive-attribute/✂️unbind/➡️after.gltf"
+  },
+  "notes": "Removes mesh 0 primitive 0's NORMAL attribute — unbind-primitive-attribute{mesh,primitive,semantic}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "unbind-primitive-indices": {
+  "subset": "🕸️mesh",
+  "module": "unbind_primitive_indices",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive-indices/✂️unbind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfUnbindPrimitiveIndicesPayload",
+    "pub mesh: usize,\n    pub primitive: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfUnbindPrimitiveIndicesPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🔢️primitive-indices/✂️unbind/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🔢️primitive-indices/✂️unbind/➡️after.gltf"
+  },
+  "notes": "Clears mesh 0 primitive 0's indices reference — unbind-primitive-indices{mesh,primitive}. three exposes this as geometry.index becoming null (a non-indexed draw).",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ },
+ "unbind-primitive-material": {
+  "subset": "🕸️mesh",
+  "module": "unbind_primitive_material",
+  "leaf": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive-material/✂️unbind/🦀️.rs",
+  "payloads": [
+   [
+    "GltfUnbindPrimitiveMaterialPayload",
+    "pub mesh: usize,\n    pub primitive: usize,"
+   ]
+  ],
+  "apply": "payload: &GltfUnbindPrimitiveMaterialPayload, base: &GltfSnapshot",
+  "fixture": {
+   "expected-before-gltf": "../../🕸️mesh/🧫️fixtures/🧱️primitive-material/✂️unbind/⬅️before.gltf",
+   "expected-after-gltf": "../../🕸️mesh/🧫️fixtures/🧱️primitive-material/✂️unbind/➡️after.gltf"
+  },
+  "notes": "Clears mesh 0 primitive 0's material reference — unbind-primitive-material{mesh,primitive}.",
+  "pipeline": null,
+  "profile": "semantic-gltf-reader-v1"
+ }
+}

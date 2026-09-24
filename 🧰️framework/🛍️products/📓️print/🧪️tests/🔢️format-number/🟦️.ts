@@ -11,7 +11,7 @@ import { compileVizProbe, probeProjection, type ProbeProjection } from "../../�
 
 // #region 🧫️Vectors
 const CASE = "format-number";
-const FIXTURE = "local://format-number.tex";
+const FIXTURE = "shared://🔢️format-number/format-number.tex";
 
 /** 🌍️ d3-format's own locale definitions; `−` (U+2212) is d3's default minus and print's correct one. */
 const LOCALES: Readonly<Record<string, FormatLocaleDefinition>> = {

@@ -34,7 +34,7 @@
     {
       "id": "semantic-ply-v1",
       "description": "PLY documents compared by wire format, in-order comments and name-keyed elements (each its own ordered property declarations and ordered rows of typed cell values). Unlike a pure mesh format, comments and element/property declarations are themselves normative here -- InsertComment/RemoveComment/AddElement/RemoveElement/SetFormat mutate exactly this surface -- so nothing here is producer freedom the way generator strings are for OBJ/STL.",
-      "tolerance": 1e-05
+      "tolerance": 0.00001
     }
   ],
   "mutationCatalogs": [

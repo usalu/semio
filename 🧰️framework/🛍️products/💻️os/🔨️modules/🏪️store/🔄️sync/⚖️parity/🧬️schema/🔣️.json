@@ -1,0 +1,322 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/sync/backbone-parity/schema.json",
+  "title": "Store Sync Backbone Parity",
+  "$defs": {
+    "Frontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "headEditOrdinal",
+        "headEditId",
+        "lastCommitSeq",
+        "chainHashByte"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headEditOrdinal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "headEditId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lastCommitSeq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chainHashByte": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "ServerFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "welcome",
+            "session",
+            "commands",
+            "ack",
+            "presence",
+            "rebootstrapRequired",
+            "preview"
+          ]
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "resumeToken": {
+          "type": "string"
+        },
+        "frontier": {
+          "$ref": "#/$defs/Frontier"
+        },
+        "bootstrap": {
+          "type": "string",
+          "enum": [
+            "none",
+            "tail"
+          ]
+        },
+        "actor": {
+          "type": "string"
+        },
+        "color": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "origin": {
+          "type": "string"
+        },
+        "envelopes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mutationId",
+              "n"
+            ],
+            "properties": {
+              "mutationId": {
+                "type": "string"
+              },
+              "n": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "batchId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "rejected"
+          ]
+        },
+        "rejectReason": {
+          "type": "string"
+        },
+        "peerCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "spaceId": {
+          "type": "string"
+        },
+        "documentId": {
+          "type": "string"
+        },
+        "previewKey": {
+          "type": "string"
+        },
+        "previewSeq": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "LocalDispatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "queueMutation",
+            "installSocketActor",
+            "failConnection",
+            "connectSocket"
+          ]
+        },
+        "mutationId": {
+          "type": "string"
+        },
+        "n": {
+          "type": "integer"
+        },
+        "actor": {
+          "type": "string"
+        }
+      }
+    },
+    "Expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "resumeToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "frontierEditId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "remoteKind": {
+          "type": "string",
+          "enum": [
+            "detached",
+            "connecting",
+            "live",
+            "offline"
+          ]
+        },
+        "peerCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outboxMutationIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pendingBatchCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "socketActorConfirmed": {
+          "type": "boolean"
+        },
+        "rebootstrapRequired": {
+          "type": "boolean"
+        },
+        "eventKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outgoingClientFrameKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ingestedMutationIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "commandOutcome": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "rejected"
+          ]
+        }
+      }
+    },
+    "Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op"
+      ],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": [
+            "serverFrame",
+            "localDispatch",
+            "expect"
+          ]
+        },
+        "frame": {
+          "$ref": "#/$defs/ServerFrame"
+        },
+        "dispatch": {
+          "$ref": "#/$defs/LocalDispatch"
+        },
+        "expect": {
+          "$ref": "#/$defs/Expectation"
+        }
+      }
+    },
+    "Scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "documentId",
+        "spaceId",
+        "actor",
+        "steps"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentId": {
+          "type": "string"
+        },
+        "spaceId": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Step"
+          }
+        }
+      }
+    },
+    "BackboneParity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "scenarios"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Scenario"
+          }
+        }
+      }
+    }
+  }
+}

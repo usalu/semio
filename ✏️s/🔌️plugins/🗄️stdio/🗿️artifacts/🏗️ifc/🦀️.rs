@@ -448,6 +448,9 @@ pub mod schema {
 }
 pub mod engine {
     pub use super::standards::v4::engine::*;
+    /// 🧱️ The ISO 10303-21 exchange structure an `IfcSnapshot` is built from, re-exported for clients
+    /// that author IFC documents directly.
+    pub use semio_s_artifact_stdio_step::engine::part21;
     /// 📎 Registers BOTH standards' engines (v4 canonical + v2x3 new-this-ticket) -- a
     /// flat glob re-export can't do this (two `register` fns of the same name would
     /// collide), so this local definition shadows the glob-imported v4 one and calls both

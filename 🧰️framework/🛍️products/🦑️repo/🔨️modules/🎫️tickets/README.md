@@ -12,7 +12,7 @@ label shapes, and the file resolution behind `ComputeTicketFiles`.
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
-`🧪️test` harness; the third-party references are registered in `🔮️oracle/🔣️.json`.
+`🧪️test` harness; the third-party references are registered in `🔮️oracles/🔣️.json`.
 
-`🪪️ticket-id-scheme`, `📄️ticket-document-codec`, `🔓️open-close-reopen-lifecycle`,
+`🪪️ticket-id-scheme`, `🎫️ticket-document-codec`, `🔓️open-close-reopen-lifecycle`,
 `💾️important-document-transaction`, `🐙️issue-sync-transcripts`.

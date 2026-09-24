@@ -17,7 +17,7 @@ Feature: A gauge sweeps the arc d3-shape's arc generator sweeps
   @level-long
   @mode-differential
   Scenario: A radial gauge sweeps from 180 to 0 degrees
-    Given the committed probe document local://radial-gauge.tex and the gauge
+    Given the committed probe document shared://⏱️charts-kpi-gauge/radial-gauge.tex and the gauge
       | value | min | max | startAngle | endAngle |
       | 72    | 0   | 100 | 180        | 0        |
     Then the compiled probe and the reference implementation agree on the arc centroid
@@ -26,7 +26,7 @@ Feature: A gauge sweeps the arc d3-shape's arc generator sweeps
   @level-long
   @mode-differential
   Scenario: A progress ring sweeps a full turn from twelve o'clock
-    Given the committed probe document local://progress-ring.tex and the gauge
+    Given the committed probe document shared://⏱️charts-kpi-gauge/progress-ring.tex and the gauge
       | value | min | max | startAngle | endAngle |
       | 72    | 0   | 100 | 90         | -270     |
     Then the compiled probe and the reference implementation agree on the arc centroid

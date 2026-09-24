@@ -2,7 +2,7 @@
 //#region 💾️PayloadCodec
 use super::RemoveLinePayload;
 use crate::schema::mutations::TxtMutation;
-pub const BINARY_TAG: u32 = 4;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "remove-line");
 pub fn encode_payload(value: &RemoveLinePayload) -> Result<Vec<u8>, String> {
     Ok(pack::to_json_string(value).into_bytes())
 }

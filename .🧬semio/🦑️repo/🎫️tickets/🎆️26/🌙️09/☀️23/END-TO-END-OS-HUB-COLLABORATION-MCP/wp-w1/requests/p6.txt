@@ -1,0 +1,5 @@
+p6 (2026-09-24 ~06:40): semio-s-plugin-playbook needs describe/descriptor regen.
+  reason: updatePlaybook flipped BatchOnlyPendingRewrite -> Migrated (retained tool + proofs row), demo example
+  🖼️assets/🎬️demo/🗣️.dsl.semio regenerated (facade-generator steps restored, new `steps=` line), so 🔣️.json /
+  🛂️.descriptor.semio and the wasm guest are stale.
+p6 (~07:45): semio-s-plugin-procedural descriptor regen — generation3d/generation2d example assets renamed stale schema flow.fixture -> flow.host_snapshot (examples are embedded in 🔣️.json/descriptor).

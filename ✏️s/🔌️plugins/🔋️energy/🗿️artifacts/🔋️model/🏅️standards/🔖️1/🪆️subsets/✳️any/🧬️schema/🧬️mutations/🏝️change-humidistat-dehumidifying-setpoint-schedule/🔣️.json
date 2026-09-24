@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeHumidistatDehumidifyingSetpointSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-humidistat-dehumidifying-setpoint-schedule",
-  "binaryTag": null,
+  "binaryTag": 132,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

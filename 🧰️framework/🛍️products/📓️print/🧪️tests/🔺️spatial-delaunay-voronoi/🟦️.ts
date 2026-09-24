@@ -70,13 +70,13 @@ export default defineTestAdapter({
       /** 🔮️ Delaunator's triangulation through d3-delaunay, canonicalised the same way as the probe. */
       oracle: (ctx: AdapterContext) => ({ projection: { "spatial/delaunay": triangleCodes(points(ctx)) } }),
       /** 🎯️ `\SemioVizDelaunay`'s Bowyer–Watson triangulation of the same point set. */
-      subject: async (ctx: AdapterContext) => (await subject(ctx, "local://delaunay.tex", DECIMALS_INDEX)),
+      subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🔺️spatial-delaunay-voronoi/delaunay.tex", DECIMALS_INDEX)),
     },
     "voronoi-cells": {
       /** 🔮️ `d3-delaunay`'s `voronoi(bounds).cellPolygon`, one sorted vertex list per site. */
       oracle: (ctx: AdapterContext) => ({ projection: { "spatial/voronoi": cellVertices(points(ctx), [0, 0, 70, 50]).flat() } }),
       /** 🎯️ `\SemioVizVoronoi` over the same sites and the same clip rectangle. */
-      subject: async (ctx: AdapterContext) => (await subject(ctx, "local://voronoi.tex", DECIMALS_PLANE)),
+      subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🔺️spatial-delaunay-voronoi/voronoi.tex", DECIMALS_PLANE)),
     },
   },
 });

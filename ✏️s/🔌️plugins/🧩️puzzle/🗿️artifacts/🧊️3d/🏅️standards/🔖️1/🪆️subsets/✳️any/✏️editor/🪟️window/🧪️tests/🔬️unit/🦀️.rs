@@ -34,6 +34,7 @@ use super::*;
                 y: 5.0,
                 window_id: "three-dimensional-window".repeat(256),
                 vortex_full_id: "vortex-owner".repeat(256),
+                submenu: true,
             }),
             engagement_input: "three-dimensional-input".repeat(256),
             brush_candidate_index: 2,
@@ -111,7 +112,7 @@ use super::*;
             let pointer = window_id.as_ptr();
             let capacity = window_id.capacity();
             let transient = rejected_puzzle3d_transient(Puzzle3dWindowTransient {
-                suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 0.0, y: 0.0, window_id, vortex_full_id: String::new() }),
+                suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 0.0, y: 0.0, window_id, vortex_full_id: String::new(), submenu: false }),
                 ..Default::default()
             });
             let window_id = &transient.suggestion_menu.as_ref().expect("returned suggestion menu").window_id;
@@ -126,7 +127,7 @@ use super::*;
             let pointer = vortex_full_id.as_ptr();
             let capacity = vortex_full_id.capacity();
             let transient = rejected_puzzle3d_transient(Puzzle3dWindowTransient {
-                suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 0.0, y: 0.0, window_id: String::new(), vortex_full_id }),
+                suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 0.0, y: 0.0, window_id: String::new(), vortex_full_id, submenu: false }),
                 ..Default::default()
             });
             let vortex_full_id = &transient.suggestion_menu.as_ref().expect("returned suggestion menu").vortex_full_id;
@@ -145,7 +146,7 @@ use super::*;
     #[test]
     fn window_transient_scratch_does_not_outlive_the_activation_it_was_captured_under() {
         let held = Puzzle3dWindowTransient {
-            suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 1.0, y: 2.0, window_id: "puzzle3d-main".into(), vortex_full_id: "object::vortex".into() }),
+            suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 1.0, y: 2.0, window_id: "puzzle3d-main".into(), vortex_full_id: "object::vortex".into(), submenu: true }),
             engagement_input: "12".into(),
             brush_candidate_index: 3,
             activation: "brush".into(),

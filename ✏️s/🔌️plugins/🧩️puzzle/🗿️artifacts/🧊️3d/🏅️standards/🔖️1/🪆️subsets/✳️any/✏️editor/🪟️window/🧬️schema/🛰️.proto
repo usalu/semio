@@ -46,6 +46,7 @@ message Puzzle3dSuggestionMenu {
   double y = 2;
   string window_id = 3;
   string vortex_full_id = 4;
+  bool submenu = 5;
 }
 
 message Puzzle3dWindowConfig {

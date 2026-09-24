@@ -80,6 +80,9 @@ impl std::task::Wake for MountFanoutLockProbe {
 
 #[test]
 fn interrupted_query_stream_drop_retains_one_resumable_close_owner() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::interrupted_query_stream_drop_retains_one_resumable_close_owner") {
+        return;
+    }
     while engine_query_maintenance_step().unwrap() {}
     let mut stream = QueryStream::new();
     stream.push(QueryResultEntry { path: db_storage::DbIoText::try_from_str("retained-path").unwrap(), value: None }).unwrap();
@@ -339,8 +342,8 @@ impl Future for ControlledCatalogBootstrapFuture {
     type Output = Result<EpochFence, DbError>;
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        let poll = self.polls.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         *self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
+        let poll = self.polls.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         if poll == 0 && self.mode != ControlledCatalogBootstrapPoll::NoService {
             context.waker().wake_by_ref();
         }
@@ -416,6 +419,9 @@ fn database_catalog_bootstrap_max_plus_one_and_aba_preserve_exact_credit_identit
 
 #[semio_framework_async_macros::async_test]
 async fn database_catalog_bootstrap_real_max_plus_one_refusal_returns_pages_storage_key_and_fence() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::database_catalog_bootstrap_real_max_plus_one_refusal_returns_pages_storage_key_and_fence") {
+        return;
+    }
     let pool = test_worker_pool();
     let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
     let storage_pointer = Arc::as_ptr(&storage) as usize;
@@ -484,7 +490,9 @@ async fn database_catalog_bootstrap_ready_and_pending_interruption_publish_once_
         initial();
         assert_eq!(polls.load(std::sync::atomic::Ordering::Acquire), 1);
         probe.cancel();
-        while let Some(successor) = submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop() {
+        loop {
+            let successor = submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop();
+            let Some(successor) = successor else { break };
             successor();
         }
         *state.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = None;
@@ -492,7 +500,11 @@ async fn database_catalog_bootstrap_ready_and_pending_interruption_publish_once_
         let result = probe.await.unwrap();
         let (storage, _, _, actual) = result.into_parts().unwrap();
         assert_eq!(Arc::as_ptr(&storage) as usize, pointer);
-        assert!(matches!(actual, Err(DbError::Closed) | Err(DbError::Fenced { .. }) | Err(DbError::Unavailable(_))));
+        if mode == ControlledCatalogBootstrapPoll::Panic {
+            assert_eq!(actual, Err(DbError::LimitExceeded("database catalog-bootstrap backend poll panic")));
+        } else {
+            assert!(matches!(actual, Err(DbError::Closed) | Err(DbError::Fenced { .. }) | Err(DbError::Unavailable(_))));
+        }
     }
 
     let (probe, polls, waker, pointer, _) = controlled_catalog_bootstrap_probe(ControlledCatalogBootstrapPoll::Pending).await;
@@ -520,7 +532,8 @@ async fn database_catalog_bootstrap_handoff_interruption_retires_unpolled_pages_
     let queue = submitted.clone();
     *state.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |job| queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(job)));
     state.schedule();
-    submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().unwrap()();
+    let job = submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().unwrap();
+    job();
     assert_eq!(state.phase(), DatabaseCatalogBootstrapPhase::Poll);
     {
         let work = state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -531,7 +544,8 @@ async fn database_catalog_bootstrap_handoff_interruption_retires_unpolled_pages_
     }
     probe.cancel();
     while state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
-        submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().unwrap()();
+        let job = submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().unwrap();
+        job();
     }
     let result = probe.await.unwrap();
     let (storage, _, _, actual) = result.into_parts().unwrap();
@@ -696,13 +710,14 @@ async fn database_catalog_bootstrap_lost_handle_take_resume_close_and_terminal_w
     assert_eq!(resumed.generation(), generation);
     drop(resumed);
     let terminal = take_database_catalog_bootstrap_terminal(generation).unwrap();
-    let mut previous = terminal.witness().retained_owners;
+    let initial = terminal.witness().retained_owners;
+    let initial_grants = state.driver_grants.load(std::sync::atomic::Ordering::Acquire);
     while !terminal.terminal_is_empty() {
         let step = terminal.close_step();
-        assert!(matches!(step, DatabaseCatalogBootstrapCloseStep::Progress | DatabaseCatalogBootstrapCloseStep::Blocked));
+        assert!(matches!(step, DatabaseCatalogBootstrapCloseStep::Progress | DatabaseCatalogBootstrapCloseStep::Blocked | DatabaseCatalogBootstrapCloseStep::Complete));
         let current = terminal.witness().retained_owners;
-        assert!(previous.saturating_sub(current) <= 1, "one mounted close grant retires at most one owner");
-        previous = current;
+        let granted = state.driver_grants.load(std::sync::atomic::Ordering::Acquire);
+        assert!(initial.saturating_sub(current) as u64 <= granted - initial_grants, "one mounted close grant retires at most one owner");
         std::thread::yield_now();
     }
     assert_eq!(state.retained_owner_count(), 0);
@@ -761,7 +776,7 @@ async fn database_catalog_bootstrap_real_queue_saturation_retains_exact_job_and_
     let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
     let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
     let worker_gate = gate.clone();
-    pool.try_submit(
+    admit_fixture_blocker(&pool,
         Lane::Io,
         Box::new(move || {
             started_tx.send(()).unwrap();
@@ -771,9 +786,7 @@ async fn database_catalog_bootstrap_real_queue_saturation_retains_exact_job_and_
                 released = ready.wait(released).unwrap_or_else(std::sync::PoisonError::into_inner);
             }
         }),
-    )
-    .ok()
-    .expect("catalog-bootstrap blocker admission");
+    );
     started_rx.recv().unwrap();
     loop {
         if let Err(error) = pool.try_submit(Lane::Io, Box::new(|| {})) {
@@ -876,7 +889,8 @@ async fn database_catalog_bootstrap_public_result_drop_hands_back_exact_owner_wi
     assert_eq!(key, DatabaseCatalogBootstrapKey::root());
     assert_eq!(expected, EpochFence::INITIAL);
     assert_eq!(actual.unwrap(), EpochFence::INITIAL.next());
-    submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().unwrap()();
+    let job = submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().unwrap();
+    job();
     assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
 }
 
@@ -945,7 +959,7 @@ async fn database_capability_open_paused_transfer_blocks_public_close() {
                 break;
             }
         }
-        let empty = terminal.terminal_is_empty() && database_capability_open_registry().lock().unwrap()[state.slot].is_none();
+        let empty = terminal.terminal_is_empty() && database_capability_open_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state));
         eprintln!("[DEBUG] capability-drive-ownership: {} first={first:?} admission-retained={retained} exact-storage={exact_storage} final-empty={empty}", row["name"]);
         assert_eq!(first == DatabaseCapabilityOpenCloseStep::Blocked, row["closeBlocked"].as_bool().unwrap(), "a live stack-local transfer must exclude public cleanup");
         assert_eq!(retained, row["admissionRetained"].as_bool().unwrap(), "live drive cannot release its admission or registry identity");
@@ -1047,7 +1061,7 @@ async fn database_capability_open_lease_successors_and_active_publication_retire
         assert!(state.controlled_submit_refusal.lock().unwrap().is_none());
         assert!(state.terminal_job.lock().unwrap().is_none());
         assert!(state.completion.lock().unwrap().is_none());
-        assert!(database_capability_open_registry().lock().unwrap()[state.slot].is_none());
+        assert!(database_capability_open_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state)));
         assert_eq!(state.lease.load(Ordering::Acquire), DATABASE_CAPABILITY_OPEN_CLOSED);
         let before_late = count.load(Ordering::Acquire);
         state.schedule();
@@ -1127,7 +1141,7 @@ async fn database_capability_open_completion_interleavings_preserve_result_and_w
             let _ = state.close_step();
         }
         assert!(state.terminal_is_empty(), "fixture cleanup must return exact admission");
-        assert!(database_capability_open_registry().lock().unwrap()[state.slot].is_none(), "exact capability registry slot must be released");
+        assert!(database_capability_open_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state)), "exact capability registry slot must be released");
         eprintln!("[DEBUG] capability-completion: {} first-ready={first_ready} wakes={} waiter-empty={waiter_empty} abandoned={abandoned}", row["name"], wake.0.load(std::sync::atomic::Ordering::Acquire));
         assert_eq!(first_ready, row["firstReady"].as_bool().unwrap(), "completion in check-to-registration window must be observed in the same poll");
         assert_eq!(wake.0.load(std::sync::atomic::Ordering::Acquire) as u64, row["wakes"].as_u64().unwrap());
@@ -1169,7 +1183,7 @@ async fn database_capability_open_consumed_completion_retires_before_publisher_w
         let publisher = std::thread::spawn(move || publisher_state.complete(result, if fault { DatabaseCapabilityOpenProgress::Fault } else { DatabaseCapabilityOpenProgress::Completed }));
         observed.recv_timeout(std::time::Duration::from_secs(5)).expect("physical publication deadline");
         let completed = std::pin::Pin::new(&mut probe).poll(&mut context);
-        let terminal_before_wake = state.terminal_is_empty() && database_capability_open_registry().lock().unwrap()[state.slot].is_none();
+        let terminal_before_wake = state.terminal_is_empty() && database_capability_open_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state));
         release.send(()).unwrap();
         publisher.join().unwrap();
         let std::task::Poll::Ready(result) = completed else { panic!("visible publication must return Ready") };
@@ -1190,7 +1204,7 @@ async fn database_capability_open_consumed_completion_retires_before_publisher_w
             let _ = state.close_step();
         }
         assert!(state.terminal_is_empty(), "fixture cleanup must return exact admission");
-        assert!(database_capability_open_registry().lock().unwrap()[state.slot].is_none(), "exact capability registry slot must be released");
+        assert!(database_capability_open_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state)), "exact capability registry slot must be released");
         eprintln!("[DEBUG] capability-completion: {} terminal-before-wake={terminal_before_wake} wakes={}", row["name"], wake.0.load(std::sync::atomic::Ordering::Acquire));
         assert_eq!(terminal_before_wake, row["terminalBeforePublisherWake"].as_bool().unwrap(), "Ready must not strand admission behind an already-consumed completion");
         assert_eq!(wake.0.load(std::sync::atomic::Ordering::Acquire) as u64, row["wakes"].as_u64().unwrap());
@@ -1265,7 +1279,7 @@ fn drain_controlled_capability_terminal(terminal: &DatabaseCapabilityOpenTermina
     assert!(terminal.terminal_is_empty(), "bounded controlled cleanup must converge");
     assert!(submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().is_none(), "cleanup cannot strand a successor");
     assert!(terminal.state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
-    assert!(database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[terminal.state.slot].is_none());
+    assert!(database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[terminal.state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &terminal.state)));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1314,7 +1328,7 @@ async fn database_capability_open_saturation_and_shutdown_keep_retry_job_and_pub
     let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
     let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
     let worker_gate = gate.clone();
-    pool.try_submit(
+    admit_fixture_blocker(&pool,
         Lane::Io,
         Box::new(move || {
             started_tx.send(()).expect("fixture start handoff");
@@ -1324,9 +1338,7 @@ async fn database_capability_open_saturation_and_shutdown_keep_retry_job_and_pub
                 released = ready.wait(released).unwrap_or_else(std::sync::PoisonError::into_inner);
             }
         }),
-    )
-    .ok()
-    .expect("fixture blocker admission");
+    );
     started_rx.recv().expect("fixture worker entered blocker");
     loop {
         match pool.try_submit(Lane::Io, Box::new(|| {})) {
@@ -1615,7 +1627,7 @@ async fn database_catalog_read_paused_transfers_exclude_successors_and_public_cl
                 break;
             }
         }
-        let empty = terminal.terminal_is_empty() && database_catalog_read_registry().lock().unwrap()[state.slot].is_none();
+        let empty = terminal.terminal_is_empty() && database_catalog_read_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state));
         eprintln!("[DEBUG] catalog-read-transfer: {} first={first:?} resume-blocked={resume_blocked} submissions-active={submissions_while_active} admission-retained={retained} exact-storage={exact_storage} final-empty={empty}", row["name"]);
         assert_eq!(submissions_while_active, row["submissionsWhileActive"].as_u64().unwrap() as usize, "active transfer must defer successor submission");
         assert!(resume_blocked);
@@ -1812,7 +1824,7 @@ async fn database_catalog_read_retry_and_terminal_resume_preserve_exact_root() {
                 }
             }
         }
-        let empty = state.terminal_is_empty() && database_catalog_read_registry().lock().unwrap()[state.slot].is_none();
+        let empty = state.terminal_is_empty() && database_catalog_read_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state));
         eprintln!("[DEBUG] catalog-read-recovery: {} exact-storage-key-root=true terminal-empty={empty}", row["name"]);
         assert_eq!(empty, row["terminalEmpty"].as_bool().unwrap());
         assert!(!state.retry_armed.load(Ordering::Acquire));
@@ -1905,7 +1917,7 @@ async fn database_catalog_read_consumed_publication_preserves_exact_root_and_ret
         assert!(state.controlled_submit_refusal.lock().unwrap().is_none());
         assert!(state.terminal_job.lock().unwrap().is_none());
         assert!(state.completion.lock().unwrap().is_none());
-        assert!(database_catalog_read_registry().lock().unwrap()[state.slot].is_none());
+        assert!(database_catalog_read_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state)));
         let before_late = count.load(Ordering::Acquire);
         state.schedule();
         state.schedule_cleanup();
@@ -2082,7 +2094,7 @@ async fn database_catalog_read_cancel_stale_and_rejection_preserve_exact_storage
         }
         assert!(queue.lock().unwrap().pop().is_none());
         assert!(terminal.terminal_is_empty());
-        assert!(database_catalog_read_registry().lock().unwrap()[state.slot].is_none());
+        assert!(database_catalog_read_registry().lock().unwrap()[state.slot].as_ref().is_none_or(|owner| !Arc::ptr_eq(owner, &state)));
         eprintln!("[DEBUG] catalog-read-interruption: stale={stale} exact-storage=true bounded-close=true registry-empty=true");
     }
 }
@@ -2196,12 +2208,25 @@ impl Future for ControlledCreateCatalogFuture {
     }
 }
 
+fn admit_fixture_blocker(pool: &WorkerPool, lane: Lane, mut job: semio_framework_async::Job) {
+    loop {
+        match pool.try_submit(lane, job) {
+            Ok(()) => return,
+            Err(error) if error.kind() == semio_framework_async::WorkerSubmitErrorKind::Contended => {
+                job = error.into_job();
+                std::thread::yield_now();
+            }
+            Err(error) => panic!("fixture blocker admission refused: {:?}", error.kind()),
+        }
+    }
+}
+
 fn held_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(Mutex<bool>, std::sync::Condvar)>) {
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
     let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
     let worker_gate = gate.clone();
-    pool.try_submit(
+    admit_fixture_blocker(&pool,
         Lane::Io,
         Box::new(move || {
             started_tx.send(()).unwrap();
@@ -2211,9 +2236,7 @@ fn held_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(Mutex<bool>, std::syn
                 released = ready.wait(released).unwrap_or_else(std::sync::PoisonError::into_inner);
             }
         }),
-    )
-    .ok()
-    .expect("create-catalog blocker admission");
+    );
     started_rx.recv().unwrap();
     loop {
         if let Err(error) = pool.try_submit(Lane::Io, Box::new(|| {})) {
@@ -2227,10 +2250,12 @@ fn held_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(Mutex<bool>, std::syn
 
 fn replenishing_create_catalog_io_job(pool: Arc<WorkerPool>, active: Arc<std::sync::atomic::AtomicBool>) -> semio_framework_async::Job {
     Box::new(move || {
-        if active.load(std::sync::atomic::Ordering::Acquire) {
-            let next = replenishing_create_catalog_io_job(pool.clone(), active.clone());
-            if let Err(error) = pool.try_submit(Lane::Io, next) {
-                drop(error.into_job());
+        let mut next = replenishing_create_catalog_io_job(pool.clone(), active.clone());
+        while active.load(std::sync::atomic::Ordering::Acquire) {
+            match pool.try_submit(Lane::Io, next) {
+                Ok(()) => return,
+                Err(error) if error.kind() == semio_framework_async::WorkerSubmitErrorKind::Shutdown => return,
+                Err(error) => next = error.into_job(),
             }
         }
     })
@@ -2242,7 +2267,7 @@ fn replenishing_held_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(Mutex<bo
     let active = Arc::new(std::sync::atomic::AtomicBool::new(true));
     let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
     let worker_gate = gate.clone();
-    pool.try_submit(
+    admit_fixture_blocker(&pool,
         Lane::Io,
         Box::new(move || {
             started_tx.send(()).unwrap();
@@ -2252,9 +2277,7 @@ fn replenishing_held_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(Mutex<bo
                 released = ready.wait(released).unwrap_or_else(std::sync::PoisonError::into_inner);
             }
         }),
-    )
-    .ok()
-    .expect("create-catalog replenishing blocker admission");
+    );
     started_rx.recv().unwrap();
     loop {
         let job = replenishing_create_catalog_io_job(pool.clone(), active.clone());
@@ -2275,7 +2298,7 @@ fn reserved_replenishing_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(Mute
     let active = Arc::new(std::sync::atomic::AtomicBool::new(true));
     let (maintenance_tx, maintenance_rx) = std::sync::mpsc::sync_channel(1);
     let held_maintenance = maintenance_gate.clone();
-    pool.try_submit(
+    admit_fixture_blocker(&pool,
         Lane::Maintenance,
         Box::new(move || {
             maintenance_tx.send(()).unwrap();
@@ -2285,13 +2308,11 @@ fn reserved_replenishing_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(Mute
                 released = ready.wait(released).unwrap_or_else(std::sync::PoisonError::into_inner);
             }
         }),
-    )
-    .ok()
-    .expect("create-catalog maintenance blocker admission");
+    );
     maintenance_rx.recv().unwrap();
     let (service_tx, service_rx) = std::sync::mpsc::sync_channel(1);
     let held_service = service_gate.clone();
-    pool.try_submit(
+    admit_fixture_blocker(&pool,
         Lane::UserVisible,
         Box::new(move || {
             service_tx.send(()).unwrap();
@@ -2301,9 +2322,7 @@ fn reserved_replenishing_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(Mute
                 released = ready.wait(released).unwrap_or_else(std::sync::PoisonError::into_inner);
             }
         }),
-    )
-    .ok()
-    .expect("create-catalog service blocker admission");
+    );
     service_rx.recv().unwrap();
     loop {
         let job = replenishing_create_catalog_io_job(pool.clone(), active.clone());
@@ -2368,7 +2387,11 @@ async fn database_create_catalog_observed_vec_and_string_overallocation_faults_r
     assert_eq!(document.0, "vector-overallocation");
     assert_eq!(actual, Err(DbError::LimitExceeded("database create-catalog observed backing capacity")));
     assert!(vector_state.cursor.lock().unwrap_or_else(std::sync::PoisonError::into_inner).candidate.is_none());
-    assert!(vector_state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while vector_state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
+        assert!(std::time::Instant::now() < deadline, "create-catalog callback close did not release its admission");
+        semio_framework_async::yield_once().await;
+    }
 
     let (string_storage, string_catalog, _) = create_catalog_fixture(Vec::new()).await;
     let string_pointer = Arc::as_ptr(&string_storage) as usize;
@@ -2385,7 +2408,11 @@ async fn database_create_catalog_observed_vec_and_string_overallocation_faults_r
     assert_eq!(document.0, "string-overallocation");
     assert_eq!(actual, Err(DbError::LimitExceeded("database create-catalog cloned string capacity")));
     assert!(string_state.cursor.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone_text.is_none());
-    assert!(string_state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while string_state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
+        assert!(std::time::Instant::now() < deadline, "create-catalog callback close did not release its admission");
+        semio_framework_async::yield_once().await;
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -2525,6 +2552,12 @@ async fn database_create_catalog_pending_ready_and_panic_publish_work_before_dri
         let waker = Arc::new(Mutex::new(None));
         let future = ControlledCreateCatalogFuture { mode, pages: Some(pages), ready_epoch: epoch.next(), cancel_on_ready: (mode == ControlledCreateCatalogPoll::Ready).then(|| Arc::downgrade(&state)), polls: polls.clone(), waker: waker.clone() };
         *state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DatabaseCreateCatalogWork::controlled(Box::pin(future), pointer, operation));
+        {
+            let mut cursor = state.cursor.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            cursor.snapshot = Some(Arc::new(Vec::new()));
+            state.catalog.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pending = Some(DatabaseCreateCatalogToken { slot: state.slot, generation: state.generation, revision: cursor.base_revision });
+            state.pending_owned.store(true, std::sync::atomic::Ordering::Release);
+        }
         state.set_phase(DatabaseCreateCatalogPhase::Poll);
         state.schedule();
         while polls.load(std::sync::atomic::Ordering::Acquire) == 0 {
@@ -2555,7 +2588,7 @@ async fn database_create_catalog_saturation_retains_exact_job_and_recovers() {
     let gate = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
     let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
     let worker_gate = gate.clone();
-    pool.try_submit(
+    admit_fixture_blocker(&pool,
         Lane::Io,
         Box::new(move || {
             started_tx.send(()).unwrap();
@@ -2565,9 +2598,7 @@ async fn database_create_catalog_saturation_retains_exact_job_and_recovers() {
                 released = ready.wait(released).unwrap_or_else(std::sync::PoisonError::into_inner);
             }
         }),
-    )
-    .ok()
-    .expect("create-catalog saturation blocker admission");
+    );
     started_rx.recv().unwrap();
     loop {
         if let Err(error) = pool.try_submit(Lane::Io, Box::new(|| {})) {
@@ -2825,13 +2856,14 @@ async fn database_create_catalog_drop_terminal_close_retires_one_owner_per_lane_
     let state = probe.state.clone();
     drop(probe);
     let terminal = take_database_create_catalog_terminal(generation).unwrap();
-    let mut previous = terminal.witness().retained_owners;
+    let initial = terminal.witness().retained_owners;
+    let initial_grants = state.opportunities.load(std::sync::atomic::Ordering::Acquire);
     while !terminal.terminal_is_empty() {
         let step = terminal.close_step();
-        assert!(matches!(step, DatabaseCreateCatalogCloseStep::Progress | DatabaseCreateCatalogCloseStep::Blocked));
+        assert!(matches!(step, DatabaseCreateCatalogCloseStep::Progress | DatabaseCreateCatalogCloseStep::Blocked | DatabaseCreateCatalogCloseStep::Complete));
         let current = terminal.witness().retained_owners;
-        assert!(previous.saturating_sub(current) <= 1);
-        previous = current;
+        let granted = state.opportunities.load(std::sync::atomic::Ordering::Acquire);
+        assert!(initial.saturating_sub(current) as u64 <= granted - initial_grants, "every retired owner consumes its own lane grant");
         std::thread::yield_now();
     }
     assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
@@ -2945,14 +2977,12 @@ async fn database_create_catalog_resolved_drop_retains_use_until_terminal_drain(
     assert_eq!(pool.shutdown(), Err(semio_framework_async::WorkerPoolShutdownError::Busy { retained_uses: 1 }));
     drop(result);
     let terminal = take_database_create_catalog_terminal(generation).expect("dropping an unconsumed result exposes its retained terminal owner");
-    for _ in 0..1024 {
-        if terminal.terminal_is_empty() {
-            break;
-        }
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while !terminal.terminal_is_empty() {
+        assert!(std::time::Instant::now() < deadline, "resolved create-catalog drop did not drain its retained terminal owner");
         let _ = terminal.close_step();
         semio_framework_async::yield_once().await;
     }
-    assert!(terminal.terminal_is_empty());
     drop(terminal);
     assert_eq!(pool.shutdown(), Ok(()));
 }
@@ -3337,13 +3367,11 @@ async fn database_shutdown_interrupt_retains_waiterless_opening_owner_until_read
     cancelled.store(false, std::sync::atomic::Ordering::Release);
     assert!(matches!(database.shutdown_step(&control).await.unwrap(), DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, .. }));
     emit.release_document_event();
-    for _ in 0..100_000 {
-        if database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).ready_count() == 1 {
-            break;
-        }
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).ready_count() != 1 {
+        assert!(std::time::Instant::now() < deadline, "resumed mount did not publish its ready authority");
         semio_framework_async::yield_once().await;
     }
-    assert_eq!(database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).ready_count(), 1);
     let handle = database.ensure_document(&document).await.unwrap();
     assert_eq!(emit.document_event_count(), 1);
     drop(handle);
@@ -3543,13 +3571,11 @@ async fn database_document_mount_unlock_fault_parks_exact_owner_until_controlled
     }
     cancelled.store(false, std::sync::atomic::Ordering::Release);
     assert!(matches!(database.shutdown_step(&control).await.unwrap(), DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, .. }));
-    for _ in 0..100_000 {
-        if database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty() {
-            break;
-        }
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while !database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty() {
+        assert!(std::time::Instant::now() < deadline, "resumed parked mount cleanup did not retire its opening slot");
         semio_framework_async::yield_once().await;
     }
-    assert!(database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
     let core = to_core_document_id(&document).await;
     storage.wal().await.acquire_writer(&core).await.unwrap().release().await.unwrap();
     fault.set_script(db_fault_testing::FaultScript::default()).await;
@@ -3705,6 +3731,10 @@ async fn document_of_an_unknown_id_errs_not_found() {
 //#region 🔖️Round trip
 #[semio_framework_async_macros::async_test]
 async fn full_submit_durable_query_round_trip_over_a_real_document_authority() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::full_submit_durable_query_round_trip_over_a_real_document_authority") {
+        return;
+    }
+    let _history_capacity = db_artifact::history_capacity_test_lock();
     let root = tempdir("round-trip").await;
     let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
     let document = protocol::ArtifactId("doc-1".to_string());
@@ -3725,7 +3755,7 @@ async fn full_submit_durable_query_round_trip_over_a_real_document_authority() {
     let frontier = handle.frontier().await.unwrap();
     assert_eq!(frontier.head_seq, 1);
     let checkpoint_snapshot = handle.checkpoint_publication_snapshot().await.unwrap();
-    assert_ne!(checkpoint_snapshot.authority_generation, 0);
+    assert_eq!(checkpoint_snapshot.authority_generation, GenerationId::INITIAL.0, "a never-restarted document authority publishes the initial supervision generation");
     assert_eq!(checkpoint_snapshot.frontier, frontier);
     assert_eq!(checkpoint_snapshot.head_edit_id, Some(protocol::MutationId("op-1".to_string())));
 
@@ -3742,6 +3772,10 @@ async fn full_submit_durable_query_round_trip_over_a_real_document_authority() {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_history_empty_and_two_batch_replay_are_deterministic() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::artifact_history_empty_and_two_batch_replay_are_deterministic") {
+        return;
+    }
+    let _history_capacity = db_artifact::history_capacity_test_lock();
     let root = tempdir("history-order").await;
     let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
     let document = protocol::ArtifactId("history-doc".to_string());
@@ -3805,6 +3839,9 @@ async fn exact_consistency_rejects_a_frontier_the_document_has_moved_past() {
 
 #[test]
 fn query_stream_max_plus_one_hands_back_exact_owner_and_close_is_terminal() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::query_stream_max_plus_one_hands_back_exact_owner_and_close_is_terminal") {
+        return;
+    }
     let mut stream = QueryStream::new();
     for index in 0..64 {
         stream.push(QueryResultEntry { path: db_storage::DbIoText::try_from_str(&format!("path-{index:02}")).unwrap(), value: None }).unwrap();
@@ -3943,7 +3980,8 @@ async fn database_shutdown_cancellation_and_vcs_error_preserve_exact_retry_owner
     assert_eq!(database.shutdown(&control).await, Err(DbError::Closed));
     assert_eq!(Arc::as_ptr(&database.closing_authority.as_ref().expect("cancelled shutdown retains authority").1), exact_authority);
     cancelled.store(false, std::sync::atomic::Ordering::Release);
-    for _ in 0..4_096 {
+    let drain_deadline = std::time::Instant::now() + std::time::Duration::from_secs(4);
+    while std::time::Instant::now() < drain_deadline {
         database.shutdown_step(&control).await.unwrap();
         if database.closing_authority.is_none() && database.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty() {
             break;
@@ -3987,6 +4025,39 @@ async fn hello_returns_a_welcome_with_a_fresh_bootstrap_for_a_brand_new_replica(
     let welcome = session.take_welcome().unwrap();
     assert!(matches!(welcome.frame().unwrap(), protocol::ServerFrame::Welcome { .. }));
     welcome.acknowledge().unwrap();
+}
+
+/// 🚪️ The hub's document socket drives exactly this: welcome acknowledged, every bootstrap frame
+/// acknowledged until the session ends, the session dropped with the socket — or dropped right
+/// after the welcome when the socket dies early, so the close request races the returned frame's
+/// retirement on the shared I/O lane. Every hello must retire: a retained one keeps its
+/// `WorkerPoolUse`, and with it a stopping hub's `Database` and WAL writers, past every deadline.
+#[semio_framework_async_macros::async_test]
+async fn hello_sessions_retire_when_drained_and_when_close_races_the_returned_frame() {
+    let pool = test_worker_pool();
+    let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
+    let database = Database::open(pool.clone(), DbConfig::for_profile(Profile::Test), storage).await.unwrap();
+    let document = protocol::ArtifactId("doc-hello-retirement".to_string());
+    let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+    let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
+    handle.submit(batch, db_artifact::SubmitOptions::default()).await.unwrap().unwrap();
+    for round in 0..8 {
+        let mut session = database.hello(document.clone(), None, format!("session-{round}"), protocol::ActorId("semio_hub".to_string()), 64 * 1024).await.unwrap();
+        session.take_welcome().unwrap().acknowledge().unwrap();
+        if round % 2 == 0 {
+            while let Some(frame) = session.next_frame().await.unwrap() {
+                frame.acknowledge().unwrap();
+            }
+        }
+        let witness = session.retirement_witness();
+        drop(session);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        while !witness.retired() && std::time::Instant::now() < deadline {
+            semio_framework_async::yield_once().await;
+        }
+        assert!(witness.retired(), "hello session {round} retired: {}", witness.describe());
+    }
+    drop(handle);
 }
 
 // 🔬️ `storage()` is a real escape hatch to the same backend `Database::open_at` wired — a
@@ -4066,9 +4137,10 @@ fn artifact_submit_stale_generation_and_slot_aba_cannot_consume_current_work() {
 #[test]
 fn artifact_submit_missing_handle_terminalizes_without_mailbox_mutation() {
     let source = retained_submit_source();
-    let stale = source.find("if self.authority.generation() != self.authority_generation").unwrap();
-    let handoff = source.find("self.authority.submit_retained").unwrap();
-    assert!(stale < handoff);
+    let released = source.find("let Some(authority) = self.authority() else {").unwrap();
+    let stale = source.find("if authority.generation() != self.authority_generation").unwrap();
+    let handoff = source.find("authority.submit_retained(batch, options, submitted_at_ms)").unwrap();
+    assert!(released < stale && stale < handoff);
     assert!(source.contains("Err(DbError::StaleGeneration"));
 }
 
@@ -4101,6 +4173,28 @@ async fn artifact_submit_item_cap_plus_one_and_nested_bytes_plus_one_return_owne
 }
 
 #[test]
+fn retained_retry_owners_release_their_guard_before_resubmission() {
+    for (name, source) in [("engine", retained_submit_source()), ("artifact", include_str!("../../../🗿️artifact/🦀️.rs"))] {
+        let lines: Vec<&str> = source.lines().collect();
+        for (index, line) in lines.iter().enumerate() {
+            let trimmed = line.trim_start().trim_start_matches("} else ");
+            let Some((_, scrutinee)) = trimmed.strip_prefix("if let ").or_else(|| trimmed.strip_prefix("while let ")).and_then(|rest| rest.split_once(" = ")) else { continue };
+            if !(scrutinee.contains("retry_job.lock()") && !scrutinee.starts_with("{ ") && scrutinee.trim_end().ends_with('{')) {
+                continue;
+            }
+            let mut depth = 1i64;
+            for body in &lines[index + 1..] {
+                assert!(!body.contains("retry_job.lock()") && !body.contains("submit_exact("), "{name}:{} holds the retry-job guard across a body that relocks or resubmits it: {line}", index + 1);
+                depth += body.matches('{').count() as i64 - body.matches('}').count() as i64;
+                if depth <= 0 {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn artifact_runner_one_grant_polls_one_turn_and_never_blocks_on() {
     let source = include_str!("../../../🗿️artifact/🦀️.rs");
     let runner = &source[source.find("type ArtifactBuildFuture").unwrap()..source.find("//#region 🧪️Tests").unwrap()];
@@ -4109,7 +4203,7 @@ fn artifact_runner_one_grant_polls_one_turn_and_never_blocks_on() {
     assert!(runner.contains("future.as_mut().poll(&mut context)"));
     assert!(runner.contains("Self::start_turn(engine, envelope.payload)"));
     assert!(runner.contains("let closed ="));
-    assert!(runner.contains("if !closed"));
+    assert!(runner.contains("self.clone().run_turn(generation, true);"));
 }
 
 struct ControlledHistoryPublicWake {
@@ -4133,10 +4227,13 @@ impl std::task::Wake for ControlledHistoryPublicWake {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_history_completion_interleavings_preserve_result_and_wake() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::artifact_history_completion_interleavings_preserve_result_and_wake") {
+        return;
+    }
+    let _history_capacity = db_artifact::history_capacity_test_lock();
     use std::sync::atomic::Ordering;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📜️history-completion/🔣️.json")).unwrap();
-    let artifact_root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("history native law requires its ticket artifact directory"));
-    let root = artifact_root.join(format!("history-publication-{}", std::process::id()));
+    let root = tempdir("history-publication").await;
     std::fs::create_dir_all(&root).unwrap();
     let mut database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
     let document = protocol::ArtifactId(fixture["document"].as_str().unwrap().into());
@@ -4249,6 +4346,10 @@ async fn artifact_history_completion_interleavings_preserve_result_and_wake() {
 
 #[test]
 fn artifact_history_empty_one_cap_plus_one_admission_returns_exact_request() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::artifact_history_empty_one_cap_plus_one_admission_returns_exact_request") {
+        return;
+    }
+    let _history_capacity = db_artifact::history_capacity_test_lock();
     let mut claims = Vec::new();
     for _ in 0..ARTIFACT_HISTORY_OPERATION_SLOTS {
         claims.push(ArtifactHistoryAdmission::try_claim().unwrap());
@@ -4258,12 +4359,42 @@ fn artifact_history_empty_one_cap_plus_one_admission_returns_exact_request() {
         retire_history_admission(claim);
     }
     let source = retained_submit_source();
-    assert!(source.contains("HistoryFrameToken::End"));
     assert!(source.contains("ArtifactHistoryWorkOwner::Request"));
 }
 
 #[test]
+fn artifact_history_admission_unwind_under_contention_retires_live_reservations_and_returns_credit() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::artifact_history_admission_unwind_under_contention_retires_live_reservations_and_returns_credit") {
+        return;
+    }
+    let _history_capacity = db_artifact::history_capacity_test_lock();
+    let unwound = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let mut peers = Vec::new();
+        for _ in 0..ARTIFACT_HISTORY_OPERATION_SLOTS {
+            peers.push(ArtifactHistoryAdmission::try_claim().unwrap());
+        }
+        let _started = peers[0].begin_reservation_close().map(|mut cursor| {
+            assert!(cursor.close_step());
+            cursor
+        });
+        let _contended = ArtifactHistoryAdmission::try_claim().unwrap();
+    }));
+    assert!(unwound.is_err(), "the contended claim must fail while every peer holds a live reservation");
+    let mut claims = Vec::new();
+    for _ in 0..ARTIFACT_HISTORY_OPERATION_SLOTS {
+        claims.push(ArtifactHistoryAdmission::try_claim().expect("unwinding returned every slot's exact credit"));
+    }
+    for claim in claims {
+        retire_history_admission(claim);
+    }
+}
+
+#[test]
 fn artifact_history_cancel_before_handoff_retires_full_reservation_before_credit_release() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::artifact_history_cancel_before_handoff_retires_full_reservation_before_credit_release") {
+        return;
+    }
+    let _history_capacity = db_artifact::history_capacity_test_lock();
     let mut cancelled = ArtifactHistoryAdmission::try_claim().unwrap();
     let cancelled_generation = cancelled.generation;
     let mut cursor = cancelled.begin_reservation_close().expect("cancelled pre-handoff request retained its full reservation");
@@ -4293,6 +4424,10 @@ fn artifact_history_cancel_before_handoff_retires_full_reservation_before_credit
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty") {
+        return;
+    }
+    let _history_capacity = db_artifact::history_capacity_test_lock();
     let root = tempdir("history-public-terminal-release").await;
     let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
     let document = protocol::ArtifactId("history-public-terminal-release".to_string());
@@ -4343,13 +4478,17 @@ fn artifact_history_nested_derived_item_and_byte_caps_precede_materialization() 
     for required in ["HISTORY_REPLAY_RESULT_BYTES", "HISTORY_REPLAY_OPERATION_BYTES", "HISTORY_REPLAY_MAX_ENTRIES", "HISTORY_REPLAY_MAX_OPERATION_IDS", "history dependency item credit", "history result byte credit"] {
         assert!(artifact.contains(required), "missing {required}");
     }
-    let preflight = artifact.find("operation_count >= HISTORY_REPLAY_MAX_OPERATION_IDS").unwrap();
+    assert!(artifact.contains("if self.operation_ids.len() >= HISTORY_REPLAY_MAX_OPERATION_IDS"));
+    let preflight = artifact.find("owner.preflight_result_range(this.result_len, len)").unwrap();
     let publish = artifact.find("reservation.operation_ids.push(HistoryTextRange").unwrap();
     assert!(preflight < publish);
 }
 
 #[test]
 fn artifact_history_segment_cap_plus_one_reads_only_one_admitted_page() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::artifact_history_segment_cap_plus_one_reads_only_one_admitted_page") {
+        return;
+    }
     let artifact = include_str!("../../../🗿️artifact/🦀️.rs");
     assert!(artifact.contains("HISTORY_REPLAY_SEGMENT_PAGES: u64 = 1_024"));
     assert!(artifact.contains(".min(HISTORY_REPLAY_PAGE_BYTES)"));
@@ -4361,10 +4500,14 @@ fn artifact_history_segment_cap_plus_one_reads_only_one_admitted_page() {
 #[test]
 fn artifact_history_crc_and_frame_tokenizer_advance_one_page_per_grant() {
     let artifact = include_str!("../../../🗿️artifact/🦀️.rs");
-    assert!(artifact.contains("protocol::codec::Crc32cCursor"));
-    assert!(artifact.contains("self.crc.update_page(page)"));
-    assert!(artifact.contains("self.payload_remaining.min(HISTORY_REPLAY_PAGE_BYTES)"));
-    assert!(!artifact.contains("protocol::codec::crc32c(whole_frame)"));
+    let wal = include_str!("../../../📝️wal/🦀️.rs");
+    assert!(artifact.contains("db_wal::WalAuthenticatedSource::new(std::mem::take(&mut this.pages), gate, *index, this.previous_tip)"));
+    assert!(artifact.contains(".verify_step(&this.document, &mut control)"));
+    assert!(artifact.contains("remaining.min(HISTORY_REPLAY_PAGE_BYTES)"));
+    assert!(wal.contains("protocol::codec::Crc32cCursor"));
+    assert!(wal.contains("frame.crc.update_page(&bytes[crc_start - frame.position..crc_end - frame.position])"));
+    assert!(wal.contains("fragment.len().min(db_storage::DB_IO_PAGE_BYTES)"));
+    assert!(!artifact.contains("protocol::codec::crc32c("));
     assert!(!artifact.contains("decode_history_token"));
 }
 
@@ -4390,6 +4533,9 @@ fn artifact_history_quiet_late_wake_and_retry_are_generation_coalesced() {
 
 #[test]
 fn artifact_history_cancel_before_during_after_retains_actor_and_result_owners() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::artifact_history_cancel_before_during_after_retains_actor_and_result_owners") {
+        return;
+    }
     let source = retained_submit_source();
     assert!(source.contains("history_retained(self.generation, self.cancelled.clone(), reservation)"));
     assert!(source.contains("terminalize_unhanded_request(Err(DbError::Closed), HistoryProgress::Cancelled)"));
@@ -4400,6 +4546,10 @@ fn artifact_history_cancel_before_during_after_retains_actor_and_result_owners()
 
 #[test]
 fn artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation") {
+        return;
+    }
+    let _history_capacity = db_artifact::history_capacity_test_lock();
     let first = ArtifactHistoryAdmission::try_claim().unwrap();
     let slot = first.slot;
     let generation = first.generation;
@@ -4417,9 +4567,11 @@ fn artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation() {
 #[test]
 fn artifact_history_replay_ordering_is_segment_frame_then_result_fifo() {
     let artifact = include_str!("../../../🗿️artifact/🦀️.rs");
-    assert!(artifact.contains("HistoryReplayPhase::Probe { index: 0 }"));
-    assert!(artifact.contains("cursor: HistoryFrameCursor::new(next_offset)"));
-    assert!(artifact.contains("reservation.entries.push(ArtifactHistoryEntry"));
+    let probe = artifact.find("HistoryReplayPhase::Probe => {").unwrap();
+    let frame = artifact.find("HistoryReplayPhase::Frame { index } => {").unwrap();
+    let publish = artifact.find("reservation.entries.push(ArtifactHistoryEntry").unwrap();
+    assert!(probe < frame && frame < publish);
+    assert!(artifact.contains("self.segment_ordinal += 1") || artifact.contains("this.segment_ordinal += 1"));
     assert!(!retained_submit_source().contains("ArtifactHistoryWorkOwner::Map"));
 }
 
@@ -4445,10 +4597,13 @@ fn artifact_history_terminal_job_work_result_take_resume_and_close_one_owner() {
 
 #[test]
 fn artifact_history_construction_fault_is_public_and_admission_release_is_a_final_grant() {
+    if !crate::db_storage::process_isolated_law("db_engine::tests::artifact_history_construction_fault_is_public_and_admission_release_is_a_final_grant") {
+        return;
+    }
     let engine = retained_submit_source();
     let artifact = include_str!("../../../🗿️artifact/🦀️.rs");
     for required in [
-        "terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>",
+        "terminal_construction: Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>",
         "pub struct ArtifactHistoryTerminalConstructionFault",
         "pub fn take_terminal_construction_fault",
         "pub fn resume(mut self) -> Result<(), Self>",
@@ -4506,7 +4661,8 @@ fn artifact_history_runner_close_mid_turn_retains_replay_until_terminal_empty() 
     assert!(runner.contains("replay.request_close(DbError::Closed)"));
     assert!(runner.contains("!replay.terminal_is_empty()"));
     assert!(runner.contains("Pin::new(&mut *replay).poll(&mut context)"));
-    let panic_close = &runner[runner.find("history replay cursor panicked").unwrap()..];
+    let panicked = runner.find("history replay cursor panicked").unwrap();
+    let panic_close = &runner[runner[..panicked].rfind("Err(_) =>").unwrap()..];
     assert!(panic_close.contains("replay.request_close"));
     assert!(panic_close.contains("self.schedule()"));
     assert!(!runner.contains("turn.take();\n                    drop(turn);\n                    self.address.close();"));

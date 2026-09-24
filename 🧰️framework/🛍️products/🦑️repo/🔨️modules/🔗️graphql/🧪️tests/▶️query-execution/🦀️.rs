@@ -32,7 +32,7 @@ mod subject {
     /// ⚙️ Runs every query whose id the predicate accepts.
     fn run(ctx: &Context, keep: fn(&SerdeJson) -> bool) -> Result<Outcome, String> {
         let records = fixture(ctx, "shared://🔣️repo-records.json")?;
-        let corpus = fixture(ctx, "local://🔣️queries.json")?;
+        let corpus = fixture(ctx, "shared://▶️query-execution/🔣️queries.json")?;
         let context = RecordingContext::from_json(&records).map_err(|error| error.to_string())?;
         let executor = Executor::new(&context);
         let queries = corpus.get("queries").and_then(SerdeJson::as_array).ok_or("corpus has no queries array")?;

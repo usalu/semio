@@ -12165,19 +12165,24 @@ pub mod app {
         }
 
         /// 🔐️ Supplies the exact snapshot/mutation/store disposal catalog used by document
-        /// replacement and close. `None` keeps both routes fail closed.
+        /// replacement and close. Framework-owned by default, paired with
+        /// [`Self::build_document_store_disposer`]'s default: that disposer drives the store's
+        /// installed owner catalog, so a default disposer over no catalog faulted every close with
+        /// `artifact store has no owner-supplied bounded disposer`. `None` keeps both routes fail closed.
         fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-            None
+            Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
         }
 
-        /// 🎛️ Supplies exact config snapshot/mutation/store retirement authority.
+        /// 🎛️ Supplies exact config snapshot/mutation/store retirement authority, framework-owned by
+        /// default beside [`Self::build_config_store_disposer`].
         fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-            None
+            Some(bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
         }
 
-        /// 📝️ Supplies exact draft snapshot/mutation/store retirement authority.
+        /// 📝️ Supplies exact draft snapshot/mutation/store retirement authority, framework-owned by
+        /// default beside [`Self::build_draft_store_disposer`].
         fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-            None
+            Some(bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
         }
 
         /// 📬️ Supplies the app-owned retained semantic preparation authority for one
@@ -12897,10 +12902,20 @@ pub mod app {
         /// behavior is reached exclusively through `handle_command_frame`'s typed `Self::Command` decode).
         /// An unrecognized `action` id is a hard error pointing at the typed channel.
         async fn handle_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
-        /// 🕰️ Completes one host-driven framework-reserved spawn-job. Default is a no-op so only
-        /// `VcsArtifactApp` owns the pending-admit registry.
-        async fn complete_reserved_spawned_job(&mut self, _job: u64, _output: Result<Vec<u8>, Fault>) -> Result<Option<InvocationResult>, Fault> {
-            Ok(None)
+        /// 🕰️ Hands one host-driven framework-reserved spawn-job to the app's reserved-commit queue,
+        /// whose units the typed-operation continuation then drives across turns. Answers `false` for a
+        /// job the app never admitted. Default is a no-op so only `VcsArtifactApp` owns the queue.
+        fn admit_reserved_spawned_job(&mut self, _job: u64, _output: Result<Vec<u8>, Fault>) -> Result<bool, Fault> {
+            Ok(false)
+        }
+        /// 🧾️ Takes the result of the last finished reserved commit — the payload of one unsolicited
+        /// `AppFrame::Invocation` (or `Error`), framed before that operation's `OperationCompleted`.
+        fn take_reserved_commit_outcome(&mut self) -> Option<Result<InvocationResult, Fault>> {
+            None
+        }
+        /// 📊️ Progress of the reserved commit this app is driving, if any.
+        fn reserved_commit_progress(&self) -> Option<FrameworkReservedCommitProgress> {
+            None
         }
         /// @emoji 📍️ Validates and dispatches a window-instance-owned action invocation.
         async fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
@@ -13233,6 +13248,8 @@ pub mod app {
         interaction_window_bodies: BTreeMap<String, Vec<String>>,
         /// 🌳️ Every declared panel leaf body key, the panel half of the same derivation.
         panel_body_keys: Vec<String>,
+        /// 🧹️ Identifiers of catalog rows already detached by close, paged down one grant at a time.
+        retiring: Vec<Vec<u8>>,
     }
 
     fn validate_ui_dispatch_classification(owner: &str, id: &str, classification: semio_framework::InteractiveJobClassification) -> Result<(), Fault> {
@@ -13256,9 +13273,8 @@ pub mod app {
         /// (`migrated_tool_ids`) reads, so it must hold EVERY action the app declares, not only the ones
         /// some window happens to carry. Two sources feed it, in this order:
         ///
-        /// 1. the per-window rosters — `AppBuilder::try_build_definition` copies each top-level
-        ///    `.action_with(...)`/`.mutation(...)` declaration onto every window kind that does not
-        ///    explicitly own that id, so a builder-authored definition surfaces its app-level actions here;
+        /// 1. the per-window rosters, each resolved through `semio_framework::window_kind_actions` — the
+        ///    window's own declarations plus every app-level action no window kind claims;
         /// 2. `semio_framework::interaction_action_definitions`, the six verbs an app's declared
         ///    `InteractionDefinition` domains inject. An `AppDefinition` assembled as a plain struct
         ///    literal (legal — every field is `pub`) never went through the builder's injection pass, so
@@ -13297,120 +13313,75 @@ pub mod app {
                 window_body_keys,
                 interaction_window_bodies,
                 panel_body_keys,
+                retiring: Vec::new(),
             }
         }
 
-        /// 🧹 Releases one catalog row or one empty nested catalog owner.
+        /// 🧹 Detaches one catalog row or one empty nested catalog owner whole (one item, no bytes), then
+        /// pages its identifiers down by at most `maximum_bytes` per turn, so a grant narrower than an
+        /// identifier still makes progress instead of refusing the row for ever.
         pub(crate) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
             if maximum_items == 0 {
                 return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
-            if let Some(key) = self.actions.keys().next() {
-                let bytes = key.len();
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            if let Some(identifier) = self.retiring.last_mut() {
+                let released_bytes = identifier.len().min(maximum_bytes);
+                identifier.truncate(identifier.len() - released_bytes);
+                if identifier.is_empty() {
+                    drop(self.retiring.pop());
                 }
-                let key = key.clone();
-                drop(self.actions.remove(&key));
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                return PluginCloseStep::Pending { released_items: 0, released_bytes };
             }
-            if let Some((owner, row)) = self.window_actions.iter().find_map(|(owner, rows)| rows.keys().next().map(|row| (owner.clone(), row.clone()))) {
-                let bytes = owner.len().saturating_add(row.len());
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                if let Some(rows) = self.window_actions.get_mut(&owner) {
-                    drop(rows.remove(&row));
-                }
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            let detached = self.detach_one_row();
+            if detached.is_empty() {
+                return PluginCloseStep::Complete;
             }
-            if let Some(owner) = self.window_actions.keys().next() {
-                let bytes = owner.len();
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                let owner = owner.clone();
-                drop(self.window_actions.remove(&owner));
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            self.retiring.extend(detached.into_iter().filter(|identifier| !identifier.is_empty()).map(String::into_bytes));
+            PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        }
+
+        fn detach_one_row(&mut self) -> Vec<String> {
+            fn first<V>(map: &mut HashMap<String, V>) -> Option<String> {
+                let key = map.keys().next().cloned()?;
+                map.remove_entry(&key).map(|(key, _)| key)
             }
-            if let Some((owner, row)) = self.mode_commands.iter().find_map(|(owner, rows)| rows.keys().next().map(|row| (owner.clone(), row.clone()))) {
-                let bytes = owner.len().saturating_add(row.len());
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                if let Some(rows) = self.mode_commands.get_mut(&owner) {
-                    drop(rows.remove(&row));
-                }
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            if let Some(key) = first(&mut self.actions) {
+                return vec![key];
             }
-            if let Some(owner) = self.mode_commands.keys().next() {
-                let bytes = owner.len();
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                let owner = owner.clone();
-                drop(self.mode_commands.remove(&owner));
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            if let Some(row) = self.window_actions.values_mut().find_map(first) {
+                return vec![row];
             }
-            if let Some(key) = self.app_commands.keys().next() {
-                let bytes = key.len();
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                let key = key.clone();
-                drop(self.app_commands.remove(&key));
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            if let Some(owner) = first(&mut self.window_actions) {
+                return vec![owner];
             }
-            if let Some(key) = self.tool_runs.keys().next() {
-                let bytes = key.len();
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                let key = key.clone();
-                drop(self.tool_runs.remove(&key));
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            if let Some(row) = self.mode_commands.values_mut().find_map(first) {
+                return vec![row];
             }
-            if let Some(key) = self.interactions.keys().next() {
-                let bytes = key.len();
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                let key = key.clone();
-                drop(self.interactions.remove(&key));
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            if let Some(owner) = first(&mut self.mode_commands) {
+                return vec![owner];
             }
-            if let Some(key) = self.window_body_keys.keys().next() {
-                let bytes = key.len();
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                let key = key.clone();
-                drop(self.window_body_keys.remove(&key));
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            if let Some(key) = first(&mut self.app_commands) {
+                return vec![key];
             }
-            if let Some(key) = self.interaction_window_bodies.keys().next() {
-                let bytes = key.len();
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                let key = key.clone();
-                drop(self.interaction_window_bodies.remove(&key));
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            if let Some(key) = first(&mut self.tool_runs) {
+                return vec![key];
+            }
+            if let Some(key) = first(&mut self.interactions) {
+                return vec![key];
+            }
+            if let Some(key) = self.window_body_keys.keys().next().cloned() {
+                return self.window_body_keys.remove_entry(&key).map_or_else(Vec::new, |(key, body)| vec![key, body]);
+            }
+            if let Some((domain, bodies)) = self.interaction_window_bodies.pop_first() {
+                return std::iter::once(domain).chain(bodies).collect();
             }
             if let Some(body) = self.panel_body_keys.pop() {
-                let bytes = body.len();
-                drop(body);
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                return vec![body];
             }
             if !self.controller_id.is_empty() {
-                let bytes = self.controller_id.len();
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(std::mem::take(&mut self.controller_id));
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                return vec![std::mem::take(&mut self.controller_id)];
             }
-            PluginCloseStep::Complete
+            Vec::new()
         }
 
         /// 🧺 Proves that every catalog row and nested catalog owner was retired.
@@ -13425,6 +13396,7 @@ pub mod app {
                 && self.window_body_keys.is_empty()
                 && self.interaction_window_bodies.is_empty()
                 && self.panel_body_keys.is_empty()
+                && self.retiring.is_empty()
         }
 
         /// 🪟️ The body key of a declared window kind.
@@ -18098,7 +18070,7 @@ pub mod app {
     pub const FRAMEWORK_RESERVED_JOB_KIND: &str = "framework.reserved.tool";
     const FRAMEWORK_RESERVED_JOB_MAGIC: &[u8; 8] = b"FRRESV01";
 
-    fn initialize_framework_reserved_jobs() {
+    pub(crate) fn initialize_framework_reserved_jobs() {
         crate::reactor::jobs::register_bounded_job_kind(FRAMEWORK_RESERVED_JOB_KIND, framework_reserved_job_factory);
     }
 
@@ -18164,6 +18136,48 @@ pub mod app {
         args: Option<DslValue>,
         meta: ActionMeta,
         permit: FrameworkReservedCommitPermit,
+    }
+
+    /// 🧾️ A framework-reserved route whose spawned job finished and whose commit the app now owns.
+    /// [`VcsArtifactApp::step_framework_reserved_commit`] advances it one bounded unit per call from the
+    /// reactor's typed-operation continuation, so a commit that fans out over composed children
+    /// (checkpoint pins, checkout cascade) or walks history (revert) is driven across turns instead of
+    /// having to finish inside the turn that saw its `JobCompleted`. Every unit re-reads the
+    /// operation's cancellation lease, and `applied`/`total` is its progress.
+    struct FrameworkReservedCommit {
+        action: String,
+        args: Option<DslValue>,
+        meta: ActionMeta,
+        permit: FrameworkReservedCommitPermit,
+        log_generation_before: u64,
+        stage: FrameworkReservedCommitStage,
+        applied: u64,
+        total: u64,
+    }
+
+    /// 🪜️ The next unit a [`FrameworkReservedCommit`] runs.
+    enum FrameworkReservedCommitStage {
+        Validate,
+        CheckpointChildren { message: String, authors: Vec<vcs::Author>, keys: Vec<(String, String)>, next: usize, pins: Vec<vcs::CompositionPin> },
+        Route { pins: Vec<vcs::CompositionPin> },
+        CheckoutChildren { pins: Vec<vcs::CompositionPin>, next: usize, result: InvocationResult },
+        Revert { lane: FrameworkRevertLane, edit_id: String },
+    }
+
+    /// ⏪️ The store a `revertToCommand` walks back one undo per unit.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum FrameworkRevertLane {
+        Document,
+        Configuration,
+    }
+
+    /// 📊️ Progress of the framework-reserved commit at the head of an app's commit queue: `applied` of
+    /// `total` bounded units, for the operation that admitted it.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct FrameworkReservedCommitProgress {
+        pub operation: u64,
+        pub applied: u64,
+        pub total: u64,
     }
 
     /// 🫧️ Yields one mounted plugin-job transition back to the host executor.
@@ -18717,6 +18731,10 @@ pub mod app {
         ui_pending: bool,
         published_artifact: bool,
         published_config: bool,
+        /// 🪟 The per-window config lane published. A `View` whose only durable emission is this lane
+        /// is session view state, and [`Self::record_settled_typed_operation_command`] leaves it out
+        /// of the artifact command history — the same exception [`Self::dispatch_emit_inner`] makes.
+        published_window_config: bool,
         command_logged: bool,
         interaction_revalidated: bool,
         terminal_fault: Option<ArtifactBoundedToolFault>,
@@ -21885,6 +21903,8 @@ pub mod app {
         latest_wins_turn: bool,
         media_exports: ArtifactFixedRegistry<ActiveMediaExport>,
         pending_reserved: ArtifactFixedRegistry<PendingFrameworkReserved>,
+        reserved_commits: std::collections::VecDeque<FrameworkReservedCommit>,
+        reserved_commit_outcome: Option<Result<InvocationResult, Fault>>,
         media_closures: ArtifactFixedRegistry<ActiveMediaExport>,
         snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>,
         current_media_export: Option<u64>,
@@ -22978,6 +22998,8 @@ pub mod app {
                 latest_wins_turn: true,
                 media_exports: ArtifactFixedRegistry::new(),
                 pending_reserved: ArtifactFixedRegistry::new(),
+                reserved_commits: std::collections::VecDeque::with_capacity(ARTIFACT_LIVE_OUTPUT_SLOTS),
+                reserved_commit_outcome: None,
                 media_closures: ArtifactFixedRegistry::new(),
                 snapshot_retirements: ArtifactFixedRegistry::new(),
                 current_media_export: None,
@@ -24553,8 +24575,8 @@ pub mod app {
         /// be filed under `apply` by the time the slot retired. A second durable lane of the SAME
         /// operation (a verb writing both the document and the config store) folds its edit into the row
         /// the first lane opened, exactly as `dispatch_emit` carries both ids on one row. A coalesced
-        /// gesture amends the edit its first dispatch already logged, so later dispatches find no
-        /// unlogged edit and append nothing — the same rule as `amended_same_edit`.
+        /// gesture amends the edit its first dispatch already logged, so later dispatches append no
+        /// second row — and they mark that row dirty, so the admitting completion re-upserts it.
         fn record_typed_operation_lane(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, artifact_lane: bool) {
             if mounted.terminal_fault.is_some() {
                 return;
@@ -24565,15 +24587,10 @@ pub mod app {
                 self.config_store.envelope().vcs.edits.last().map(|edit| (edit.id.clone(), edit.description.clone()))
             };
             let Some((edit_id, _description)) = edit else { return };
-            let already_logged = self.command_log.iter().any(|entry| {
-                if artifact_lane {
-                    entry.edit_id.as_deref() == Some(edit_id.as_str())
-                } else {
-                    entry.config_edit_ids.iter().any(|logged| logged == &edit_id)
-                }
-            });
-            if already_logged {
+            let logged_seq = self.command_log.iter().find(|entry| if artifact_lane { entry.edit_id.as_deref() == Some(edit_id.as_str()) } else { entry.config_edit_ids.iter().any(|logged| logged == &edit_id) }).map(|entry| entry.seq);
+            if let Some(seq) = logged_seq {
                 mounted.command_logged = true;
+                self.history_dirty_sequences.insert(seq);
                 return;
             }
             if mounted.command_logged {
@@ -24598,20 +24615,31 @@ pub mod app {
             }
         }
 
-        /// 🧾️ A settled typed operation that published NO durable lane still owes the history panel one
-        /// row: `dispatch_emit`'s `artifact_mutations.is_empty()` branch files it under the verb's own
-        /// declared kind (`View` for `select`, `Mutation` for a reducer that emitted nothing), and the
-        /// migrated route must too. The one retirement site is the only place that knows no lane ever
-        /// came, so this is where it lands — idempotent through `command_logged`, silent for a faulted
-        /// operation exactly as `dispatch_emit`'s `Err` path is.
+        /// 🧾️ A settled typed operation that published no document lane and no shared-config lane still
+        /// owes the history panel one row, on the admitting completion: `dispatch_emit`'s empty
+        /// `artifact_mutations` branch files the verb under its declared kind (`View` for `select`,
+        /// `Mutation` for a reducer that emitted nothing, `edit_id: None`). Recording that row only from
+        /// retirement lands it after [`Self::take_typed_operation_completion`] has built `history_patch`,
+        /// so the row surfaced on the next command. Both the completion take and
+        /// [`Self::retire_typed_operation_unit`] call this; `command_logged` makes the second a no-op.
+        /// Silent for a faulted operation, exactly as `dispatch_emit`'s `Err` path is, and for a `View`
+        /// whose only durable emission is the per-window config lane — an orbit tick is not a command.
         fn record_settled_typed_operation_command(&mut self, operation_id: u64) {
-            let Some(operation) = self.tool_operations.get_mut(operation_id) else { return };
-            if operation.command_logged || operation.terminal_fault.is_some() || operation.published_artifact || operation.published_config {
-                return;
+            let logged = {
+                let Some(operation) = self.tool_operations.get(operation_id) else { return };
+                if operation.command_logged || operation.terminal_fault.is_some() || operation.published_artifact || operation.published_config {
+                    return;
+                }
+                let kind = self.typed_operation_command_kind(&operation.verb, false);
+                if operation.published_window_config && matches!(kind, ActionKind::View) {
+                    return;
+                }
+                (operation.verb.clone(), kind)
+            };
+            let (verb, kind) = logged;
+            if let Some(operation) = self.tool_operations.get_mut(operation_id) {
+                operation.command_logged = true;
             }
-            operation.command_logged = true;
-            let verb = operation.verb.clone();
-            let kind = self.typed_operation_command_kind(&verb, false);
             self.record_command(&verb, kind, None, None, None, None);
         }
 
@@ -24899,35 +24927,19 @@ pub mod app {
         /// A child with no checkpoint at all after committing contributes no pin rather than
         /// aborting the parent's checkpoint: a pin that named nothing would be worse than an absent
         /// one, and the parent's history is still perfectly valid without it.
-        async fn commit_children_for_checkpoint(&mut self, message: Option<String>, authors: Vec<vcs::Author>, permit: &FrameworkReservedCommitPermit) -> Result<Vec<vcs::CompositionPin>, Fault> {
-            let message = message.unwrap_or_else(|| "checkpoint".to_string());
-            let mut pins = Vec::new();
-            let keys: Vec<(String, String)> = self
-                .children
-                .entries()
-                .map(|entry| (entry.owner.slot.clone(), entry.reference.artifact_id.clone()))
-                .collect();
-            self.admit_child_content_publication_span(keys.len())?;
-            for (slot, child_id) in keys {
-                if permit.is_cancelled().await {
-                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), "checkpoint cascade was cancelled between child steps"));
+        /// @emoji 📌️ One checkpoint-cascade unit: commits the child at `slot`/`child_id` when it is dirty,
+        /// republishes its content root, and answers the pin its current checkpoint contributes.
+        async fn checkpoint_child_unit(&mut self, message: &str, authors: &[vcs::Author], slot: &str, child_id: &str) -> Result<Option<vcs::CompositionPin>, Fault> {
+            let publication_generation = self.admit_child_content_publication()?;
+            let (dialect, checkpoint_id) = {
+                let entry = self.children.get_mut(&(slot.to_string(), child_id.to_string())).ok_or_else(|| plugin_sdk_fault("checkpoint child authority changed during bounded publication"))?;
+                if entry.member.is_dirty().await {
+                    entry.member.commit_checkpoint(message.to_string(), authors.to_vec()).await.map_err(|error| error.into_fault())?;
                 }
-                let publication_generation = self.admit_child_content_publication()?;
-                let (dialect, checkpoint_id) = {
-                    let entry = self.children.get_mut(&(slot.clone(), child_id.clone())).ok_or_else(|| plugin_sdk_fault("checkpoint child authority changed during bounded publication"))?;
-                    if entry.member.is_dirty().await {
-                        entry.member.commit_checkpoint(message.clone(), authors.clone()).await.map_err(|error| error.into_fault())?;
-                    }
-                    (entry.reference.dialect.clone(), entry.member.current_checkpoint_id().await)
-                };
-                self.publish_child_content_member(publication_generation, &slot, &child_id).await?;
-                if let Some(checkpoint_id) = checkpoint_id {
-                    pins.push(vcs::CompositionPin { child_ref: ArtifactRef { artifact_id: child_id, dialect }, checkpoint_id });
-                }
-                semio_framework_async::yield_once().await;
-            }
-            pins.sort_by(|left, right| left.child_ref.artifact_id.cmp(&right.child_ref.artifact_id));
-            Ok(pins)
+                (entry.reference.dialect.clone(), entry.member.current_checkpoint_id().await)
+            };
+            self.publish_child_content_member(publication_generation, slot, child_id).await?;
+            Ok(checkpoint_id.map(|checkpoint_id| vcs::CompositionPin { child_ref: ArtifactRef { artifact_id: child_id.to_string(), dialect }, checkpoint_id }))
         }
 
         /// @emoji 📌️ Records `pins` on the checkpoint the parent's dispatch just created. Runs AFTER
@@ -24944,37 +24956,34 @@ pub mod app {
             Ok(())
         }
 
-        /// @emoji ⏮️ Checkout half of the cascade: restores every live child to the checkpoint the
-        /// parent's now-current checkpoint pinned it at. A pin naming a child that is not currently
-        /// open is QUEUED (`pending_child_pins`) rather than dropped, so a child adopted later still
-        /// lands on its pinned state instead of silently staying at head — see `open_child`.
-        async fn cascade_checkout_to_children(&mut self, permit: &FrameworkReservedCommitPermit) -> Result<(), Fault> {
-            let Some(checkpoint_id) = self.store.current_checkpoint_id().map(str::to_string) else { return Ok(()) };
-            let Some(pins) = self.store.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).map(|checkpoint| checkpoint.composition_pins.clone()) else { return Ok(()) };
+        /// @emoji ⏮️ Checkout half of the cascade: the pins the parent's now-current checkpoint recorded,
+        /// each restored by one [`Self::checkout_child_unit`]. A pin naming a child that is not currently
+        /// open is QUEUED (`pending_child_pins`) rather than dropped, so a child adopted later still lands
+        /// on its pinned state instead of silently staying at head — see `open_child`.
+        fn checkout_cascade_pins(&mut self) -> Result<Vec<vcs::CompositionPin>, Fault> {
+            let Some(checkpoint_id) = self.store.current_checkpoint_id().map(str::to_string) else { return Ok(Vec::new()) };
+            let Some(pins) = self.store.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).map(|checkpoint| checkpoint.composition_pins.clone()) else { return Ok(Vec::new()) };
             self.pending_child_pins.clear();
             self.admit_child_content_publication_span(pins.len())?;
-            for pin in pins {
-                if permit.is_cancelled().await {
-                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), "checkout cascade was cancelled between child steps"));
-                }
-                let child_key = self
-                    .children
-                    .entries()
-                    .find(|entry| entry.reference.artifact_id == pin.child_ref.artifact_id)
-                    .map(|entry| (entry.owner.slot.clone(), entry.reference.artifact_id.clone()));
-                match child_key {
-                    Some((slot, child_id)) => {
-                        let publication_generation = self.admit_child_content_publication()?;
-                        let entry = self.children.get_mut(&(slot.clone(), child_id.clone())).ok_or_else(|| plugin_sdk_fault("checkout child authority changed during bounded publication"))?;
-                        let alternative_id = entry.member.current_alternative_id().await.unwrap_or_default();
-                        let _ = entry.member.checkout(&pin.checkpoint_id, &alternative_id).await;
-                        self.publish_child_content_member(publication_generation, &slot, &child_id).await?;
-                    }
-                    None => self.pending_child_pins.push(pin),
-                }
-                semio_framework_async::yield_once().await;
-            }
-            Ok(())
+            Ok(pins)
+        }
+
+        /// @emoji ⏮️ One checkout-cascade unit: restores one live child to `pin`, or queues the pin.
+        async fn checkout_child_unit(&mut self, pin: &vcs::CompositionPin) -> Result<(), Fault> {
+            let child_key = self
+                .children
+                .entries()
+                .find(|entry| entry.reference.artifact_id == pin.child_ref.artifact_id)
+                .map(|entry| (entry.owner.slot.clone(), entry.reference.artifact_id.clone()));
+            let Some((slot, child_id)) = child_key else {
+                self.pending_child_pins.push(pin.clone());
+                return Ok(());
+            };
+            let publication_generation = self.admit_child_content_publication()?;
+            let entry = self.children.get_mut(&(slot.clone(), child_id.clone())).ok_or_else(|| plugin_sdk_fault("checkout child authority changed during bounded publication"))?;
+            let alternative_id = entry.member.current_alternative_id().await.unwrap_or_default();
+            let _ = entry.member.checkout(&pin.checkpoint_id, &alternative_id).await;
+            self.publish_child_content_member(publication_generation, &slot, &child_id).await
         }
         //#endregion 🔖️CheckpointCascade
 
@@ -27368,37 +27377,140 @@ pub mod app {
             Ok(FrameworkReservedCommitPermit { operation, lease })
         }
 
-        async fn complete_reserved_spawned_job_inner(&mut self, job: u64, output: Result<Vec<u8>, Fault>) -> Result<Option<InvocationResult>, Fault> {
+        /// 🕰️ Hands one finished framework-reserved spawn-job to the app's commit queue. Nothing here
+        /// suspends: the commit itself runs unit by unit in [`Self::step_framework_reserved_commit`].
+        /// Answers `false` for a job this app never admitted.
+        fn admit_framework_reserved_commit(&mut self, job: u64, output: Result<Vec<u8>, Fault>) -> Result<bool, Fault> {
             let Some(pending) = self.pending_reserved.remove(job) else {
-                return Ok(None);
+                return Ok(false);
             };
             if let Err(fault) = output {
                 pending.permit.finish();
                 return Err(fault);
             }
-            let PendingFrameworkReserved { action, args, meta, permit } = pending;
-            let log_generation_before = self.log_generation;
-            let committed = async {
-                self.validate_framework_reserved_commit(&action, &permit).await?;
-                if HISTORY_ACTION_IDS.contains(&action.as_str()) {
-                    self.commit_framework_history_route(&action, args.as_ref(), &meta, &permit).await
-                } else if action == REVERT_TO_COMMAND_ACTION_ID {
-                    self.commit_framework_revert_route(args.as_ref(), &meta, &permit).await
-                } else {
-                    self.commit_framework_shared_host_route(&action, args.as_ref(), &meta, &permit).await
-                }
+            if self.reserved_commits.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS {
+                pending.permit.finish();
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-commit-capacity"), format!("framework route '{}' found the reserved commit queue full", pending.action)));
             }
-            .await;
-            match committed {
-                Ok(result) => {
-                    let result = self.finish_recorded(log_generation_before, &action, result).await;
-                    let _ = self.typed_completion_outbox.push(TypedOperationCompletionWitness { operation: permit.operation.operation.0, ui_scope: result.ui_scope.clone() });
-                    permit.finish();
-                    Ok(Some(result))
+            let PendingFrameworkReserved { action, args, meta, permit } = pending;
+            self.reserved_commits.push_back(FrameworkReservedCommit { action, args, meta, permit, log_generation_before: self.log_generation, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1 });
+            Ok(true)
+        }
+
+        /// 📊️ Progress of the commit at the head of the reserved-commit queue.
+        pub fn framework_reserved_commit_progress(&self) -> Option<FrameworkReservedCommitProgress> {
+            self.reserved_commits.front().map(|commit| FrameworkReservedCommitProgress { operation: commit.permit.operation.operation.0, applied: commit.applied, total: commit.total })
+        }
+
+        /// 🪜️ Runs ONE bounded unit of the commit at the head of the queue. Commits are strictly FIFO,
+        /// and the head waits while a finished outcome is still untaken, so at most one outcome is ever
+        /// owed to the host. A finished commit leaves its result in `reserved_commit_outcome`.
+        async fn step_framework_reserved_commit(&mut self) -> Result<(), Fault> {
+            if self.reserved_commit_outcome.is_some() {
+                return Ok(());
+            }
+            let Some(mut commit) = self.reserved_commits.pop_front() else {
+                return Ok(());
+            };
+            match self.run_framework_reserved_commit_unit(&mut commit).await {
+                Ok(Some(result)) => {
+                    let result = self.finish_recorded(commit.log_generation_before, &commit.action, result).await;
+                    let _ = self.typed_completion_outbox.push(TypedOperationCompletionWitness { operation: commit.permit.operation.operation.0, ui_scope: result.ui_scope.clone() });
+                    commit.permit.finish();
+                    self.reserved_commit_outcome = Some(Ok(result));
+                }
+                Ok(None) => {
+                    commit.applied = commit.applied.saturating_add(1);
+                    self.reserved_commits.push_front(commit);
                 }
                 Err(fault) => {
-                    permit.finish();
-                    Err(fault)
+                    commit.permit.finish();
+                    self.reserved_commit_outcome = Some(Err(fault));
+                }
+            }
+            Ok(())
+        }
+
+        /// 🧾️ Takes the result of the last finished reserved commit.
+        fn take_framework_reserved_commit_outcome(&mut self) -> Option<Result<InvocationResult, Fault>> {
+            self.reserved_commit_outcome.take()
+        }
+
+        async fn run_framework_reserved_commit_unit(&mut self, commit: &mut FrameworkReservedCommit) -> Result<Option<InvocationResult>, Fault> {
+            if commit.permit.is_cancelled().await {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{}' was cancelled between commit units", commit.action)));
+            }
+            if matches!(commit.stage, FrameworkReservedCommitStage::Validate) {
+                    self.validate_framework_reserved_commit(&commit.action, &commit.permit).await?;
+                    commit.stage = match Self::history_command(&commit.action, commit.args.as_ref()).await {
+                        Some(ArtifactCommand::CommitCheckpoint { message, authors }) if !self.children.is_empty() => {
+                            let keys: Vec<(String, String)> = self.children.entries().map(|entry| (entry.owner.slot.clone(), entry.reference.artifact_id.clone())).collect();
+                            self.admit_child_content_publication_span(keys.len())?;
+                            commit.total = keys.len() as u64 + 1;
+                            FrameworkReservedCommitStage::CheckpointChildren { message: message.unwrap_or_else(|| "checkpoint".to_string()), authors, keys, next: 0, pins: Vec::new() }
+                        }
+                        _ => {
+                            commit.total = 1;
+                            FrameworkReservedCommitStage::Route { pins: Vec::new() }
+                        }
+                    };
+            }
+            match std::mem::replace(&mut commit.stage, FrameworkReservedCommitStage::Validate) {
+                FrameworkReservedCommitStage::Validate => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-commit-stage"), format!("framework route '{}' re-entered its validation unit", commit.action))),
+                FrameworkReservedCommitStage::CheckpointChildren { message, authors, keys, next, mut pins } => {
+                    if let Some((slot, child_id)) = keys.get(next) {
+                        if let Some(pin) = self.checkpoint_child_unit(&message, &authors, slot, child_id).await? {
+                            pins.push(pin);
+                        }
+                    }
+                    commit.stage = if next + 1 < keys.len() {
+                        FrameworkReservedCommitStage::CheckpointChildren { message, authors, keys, next: next + 1, pins }
+                    } else {
+                        pins.sort_by(|left, right| left.child_ref.artifact_id.cmp(&right.child_ref.artifact_id));
+                        FrameworkReservedCommitStage::Route { pins }
+                    };
+                    Ok(None)
+                }
+                FrameworkReservedCommitStage::Route { pins } => {
+                    let action = commit.action.clone();
+                    if HISTORY_ACTION_IDS.contains(&action.as_str()) {
+                        let result = self.commit_framework_history_route(&action, commit.args.as_ref(), &commit.meta, &commit.permit, pins).await?;
+                        if action == "checkoutCheckpoint" && result.ui_scope != UiDirtyScope::None {
+                            let pins = self.checkout_cascade_pins()?;
+                            if !pins.is_empty() {
+                                commit.total = commit.total.saturating_add(pins.len() as u64);
+                                commit.stage = FrameworkReservedCommitStage::CheckoutChildren { pins, next: 0, result };
+                                return Ok(None);
+                            }
+                        }
+                        Ok(Some(result))
+                    } else if action == REVERT_TO_COMMAND_ACTION_ID {
+                        match self.begin_framework_revert_route(commit.args.as_ref(), &commit.meta).await? {
+                            Ok(result) => Ok(Some(result)),
+                            Err((lane, edit_id)) => {
+                                commit.stage = FrameworkReservedCommitStage::Revert { lane, edit_id };
+                                Ok(None)
+                            }
+                        }
+                    } else {
+                        self.commit_framework_shared_host_route(&action, commit.args.as_ref(), &commit.meta, &commit.permit).await.map(Some)
+                    }
+                }
+                FrameworkReservedCommitStage::CheckoutChildren { pins, next, result } => {
+                    let Some(pin) = pins.get(next) else { return Ok(Some(result)) };
+                    self.checkout_child_unit(pin).await?;
+                    commit.stage = FrameworkReservedCommitStage::CheckoutChildren { pins, next: next + 1, result };
+                    Ok(None)
+                }
+                FrameworkReservedCommitStage::Revert { lane, edit_id } => {
+                    if self.framework_revert_unit(lane, &edit_id).await? {
+                        commit.total = commit.total.saturating_add(1);
+                        commit.stage = FrameworkReservedCommitStage::Revert { lane, edit_id };
+                        return Ok(None);
+                    }
+                    self.cache = None;
+                    self.record_command(REVERT_TO_COMMAND_ACTION_ID, ActionKind::History, None, None, None, None);
+                    Ok(Some(Self::empty_result(REVERT_TO_COMMAND_ACTION_ID, &commit.meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await))
                 }
             }
         }
@@ -27451,7 +27563,7 @@ pub mod app {
             Ok(Some(Self::empty_result(action, meta, vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }], vec![history_changed_event().await], UiDirtyScope::Full).await))
         }
 
-        async fn commit_framework_history_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
+        async fn commit_framework_history_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit, pins: Vec<vcs::CompositionPin>) -> Result<InvocationResult, Fault> {
             crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] history route action={action}"));
             if permit.lease.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled at commit")));
@@ -27473,16 +27585,9 @@ pub mod app {
                 }
             }
             let command = Self::history_command(action, args).await.ok_or_else(|| format!("history action {action} missing required argument"))?;
-            let pending_pins = match &command {
-                ArtifactCommand::CommitCheckpoint { message, authors } => self.commit_children_for_checkpoint(message.clone(), authors.clone(), permit).await?,
-                _ => Vec::new(),
-            };
             match self.store.dispatch(command).await {
                 Ok(_) => {
-                    self.stamp_checkpoint_composition_pins(pending_pins).await?;
-                    if action == "checkoutCheckpoint" {
-                        self.cascade_checkout_to_children(permit).await?;
-                    }
+                    self.stamp_checkpoint_composition_pins(pins).await?;
                     self.cache = None;
                     self.record_command(action, ActionKind::History, None, None, None, None);
                     Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await)
@@ -27493,58 +27598,56 @@ pub mod app {
             }
         }
 
-        async fn commit_framework_revert_route(&mut self, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
+        /// ⏪️ Resolves a `revertToCommand` target. A document or configuration edit answers the lane and
+        /// edit id [`Self::framework_revert_unit`] walks back one undo per commit unit; every other target
+        /// answers its complete result.
+        async fn begin_framework_revert_route(&mut self, args: Option<&DslValue>, meta: &ActionMeta) -> Result<Result<InvocationResult, (FrameworkRevertLane, String)>, Fault> {
             let action = REVERT_TO_COMMAND_ACTION_ID;
             self.refresh_cache().await?;
             let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(DslValue::as_f64).map(|seq| seq as u64);
             let target = entry_seq.and_then(|seq| {
                 self.cache.as_ref().and_then(|(_, _, _, history)| history.commands.iter().find(|entry| entry.seq == seq && entry.revertible)).map(|entry| (entry.edit_id.clone(), entry.config_edit_id.clone(), entry.kind, entry.inverse.clone()))
             });
-            match target {
-                Some((Some(edit_id), _, _, _)) => {
+            let (lane, edit_id) = match target {
+                Some((Some(edit_id), _, _, _)) => (FrameworkRevertLane::Document, edit_id),
+                Some((None, Some(config_edit_id), _, _)) => (FrameworkRevertLane::Configuration, config_edit_id),
+                Some((None, None, ActionKind::Shell, Some(inverse))) => return Ok(Ok(Self::empty_result(action, meta, vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }], Vec::new(), UiDirtyScope::None).await)),
+                _ => return Ok(Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await)),
+            };
+            let applied = match lane {
+                FrameworkRevertLane::Document => self.store.applied_edit_ids(),
+                FrameworkRevertLane::Configuration => self.config_store.applied_edit_ids(),
+            };
+            if !applied.iter().any(|id| *id == edit_id) {
+                return Ok(Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await));
+            }
+            Ok(Err((lane, edit_id)))
+        }
+
+        /// ⏪️ One revert unit: undoes the newest edit of `lane` while `edit_id` is not yet its tail.
+        /// Answers whether an undo was applied (`false` once the target is the tail or the lane refuses).
+        async fn framework_revert_unit(&mut self, lane: FrameworkRevertLane, edit_id: &str) -> Result<bool, Fault> {
+            let pending = match lane {
+                FrameworkRevertLane::Document => {
                     let applied = self.store.applied_edit_ids();
-                    let Some(position) = applied.iter().position(|id| *id == edit_id) else {
-                        return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await);
-                    };
-                    let undo_count = applied.len() - (position + 1);
-                    for _cursor in 0..undo_count {
-                        if permit.is_cancelled().await {
-                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), "revert was cancelled between document-history steps"));
-                        }
-                        match self.store.dispatch(ArtifactCommand::Undo).await {
-                            Ok(_) => {}
-                            Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => break,
-                            Err(error) => return Err(error.into_fault()),
-                        }
-                        semio_framework_async::yield_once().await;
-                    }
-                    self.cache = None;
-                    self.record_command(action, ActionKind::History, None, None, None, None);
-                    Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await)
+                    applied.iter().any(|id| id.as_str() == edit_id) && applied.last().is_some_and(|tail| tail.as_str() != edit_id)
                 }
-                Some((None, Some(config_edit_id), _, _)) => {
+                FrameworkRevertLane::Configuration => {
                     let applied = self.config_store.applied_edit_ids();
-                    let Some(position) = applied.iter().position(|id| *id == config_edit_id) else {
-                        return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await);
-                    };
-                    let undo_count = applied.len() - (position + 1);
-                    for _cursor in 0..undo_count {
-                        if permit.is_cancelled().await {
-                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), "revert was cancelled between configuration-history steps"));
-                        }
-                        match self.config_store.dispatch(ArtifactCommand::Undo).await {
-                            Ok(_) => {}
-                            Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => break,
-                            Err(error) => return Err(error.into_fault()),
-                        }
-                        semio_framework_async::yield_once().await;
-                    }
-                    self.cache = None;
-                    self.record_command(action, ActionKind::History, None, None, None, None);
-                    Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await)
+                    applied.iter().any(|id| id.as_str() == edit_id) && applied.last().is_some_and(|tail| tail.as_str() != edit_id)
                 }
-                Some((None, None, ActionKind::Shell, Some(inverse))) => Ok(Self::empty_result(action, meta, vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }], Vec::new(), UiDirtyScope::None).await),
-                _ => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await),
+            };
+            if !pending {
+                return Ok(false);
+            }
+            let undone = match lane {
+                FrameworkRevertLane::Document => self.store.dispatch(ArtifactCommand::Undo).await.map(|_| ()),
+                FrameworkRevertLane::Configuration => self.config_store.dispatch(ArtifactCommand::Undo).await.map(|_| ()),
+            };
+            match undone {
+                Ok(()) => Ok(true),
+                Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => Ok(false),
+                Err(error) => Err(error.into_fault()),
             }
         }
 
@@ -28418,6 +28521,7 @@ pub mod app {
                     ui_pending: false,
                     published_artifact: false,
                     published_config: false,
+                    published_window_config: false,
                     command_logged: false,
                     interaction_revalidated: false,
                     terminal_fault: None,
@@ -28748,6 +28852,7 @@ pub mod app {
                             TypedOperationResultLane::Presence => mounted.presence_generation = receipt.generation_after,
                             TypedOperationResultLane::Transient => mounted.transient_generation = receipt.generation_after,
                             TypedOperationResultLane::WindowConfig => {
+                                mounted.published_window_config = true;
                                 let authority = mounted.window_config_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window config receipt lost its captured window authority"))?;
                                 self.window_config_store.refresh(authority)?;
                                 self.tool_runs.note_window_config_published();
@@ -29448,6 +29553,7 @@ pub mod app {
                     ui_pending: false,
                     published_artifact: false,
                     published_config: false,
+                    published_window_config: false,
                     command_logged: false,
                     interaction_revalidated: false,
                     terminal_fault: None,
@@ -29976,6 +30082,9 @@ pub mod app {
                     break;
                 }
             }
+            while let Some(commit) = self.reserved_commits.pop_front() {
+                commit.permit.finish();
+            }
         }
     }
 
@@ -30010,7 +30119,27 @@ pub mod app {
             }
         }
         let output = terminal.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-stall"), "framework reserved spawn-job did not reach a terminal step"))?;
-        app.complete_reserved_spawned_job_inner(job, output).await?.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-missing"), "framework reserved spawn-job had no pending admit"))
+        settle_framework_reserved_commit(app, job, output).await
+    }
+
+    /// 🪜️ Most units one reserved commit may take in a settle law — one per composed child or undone
+    /// edit, well above anything a fixture composes.
+    pub const FRAMEWORK_RESERVED_COMMIT_SETTLE_UNITS: usize = 4_096;
+
+    /// 🪜️ Hands a finished reserved spawn-job to `app`'s commit queue and drives the commit one unit
+    /// per call — the same units the reactor's typed-operation continuation runs across turns — to its
+    /// outcome.
+    pub async fn settle_framework_reserved_commit<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, job: u64, output: Result<Vec<u8>, Fault>) -> Result<InvocationResult, Fault> {
+        if !app.admit_framework_reserved_commit(job, output)? {
+            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-missing"), "framework reserved spawn-job had no pending admit"));
+        }
+        for _ in 0..FRAMEWORK_RESERVED_COMMIT_SETTLE_UNITS {
+            app.step_framework_reserved_commit().await?;
+            if let Some(outcome) = app.take_framework_reserved_commit_outcome() {
+                return outcome;
+            }
+        }
+        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-commit-stall"), format!("framework reserved commit did not finish within {FRAMEWORK_RESERVED_COMMIT_SETTLE_UNITS} units")))
     }
 
     /// 🧪 Browser `driveSpawnedJob` contract: one Isolated admission of 32 `step-job`s with the host's
@@ -30047,7 +30176,7 @@ pub mod app {
         if steps > 2 {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-budget"), format!("framework reserved dummy job took {steps} steps; host noteShellCommand finishes in 2")));
         }
-        let settled = app.complete_reserved_spawned_job_inner(job, output).await?.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-missing"), "framework reserved spawn-job had no pending admit"))?;
+        let settled = settle_framework_reserved_commit(app, job, output).await?;
         Ok((settled, steps))
     }
 
@@ -30555,6 +30684,13 @@ pub mod app {
                 if let Some(pending) = self.pending_reserved.remove(id) {
                     pending.permit.finish();
                 }
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some(commit) = self.reserved_commits.pop_front() {
+                commit.permit.finish();
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if self.reserved_commit_outcome.take().is_some() {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if !self.tool_runs.terminal_is_empty() {
@@ -31089,6 +31225,8 @@ pub mod app {
                 && self.instance_operation_owner.terminal_is_empty().unwrap_or(false)
                 && self.media_exports.is_empty()
                 && self.pending_reserved.is_empty()
+                && self.reserved_commits.is_empty()
+                && self.reserved_commit_outcome.is_none()
                 && self.media_closures.is_empty()
                 && self.snapshot_retirements.is_empty()
                 && self.segmented_downloads.is_empty()
@@ -31228,6 +31366,9 @@ pub mod app {
         }
 
         async fn advance_typed_operation_publication(&mut self) -> Result<(), Fault> {
+            if !self.reserved_commits.is_empty() && self.reserved_commit_outcome.is_none() {
+                return self.step_framework_reserved_commit().await;
+            }
             if self.tool_run_has_pending_work() {
                 self.drive_tool_run_turn().await?;
             }
@@ -31252,6 +31393,8 @@ pub mod app {
 
         fn has_pending_typed_operations(&self) -> bool {
             self.tool_run_has_pending_work()
+                || !self.reserved_commits.is_empty()
+                || self.reserved_commit_outcome.is_some()
                 || !self.tool_operations.is_empty()
                 || !self.latest_wins_commands.is_empty()
                 || self.typed_effect_outbox.len() != 0
@@ -31267,6 +31410,8 @@ pub mod app {
 
         fn has_runnable_typed_operations(&self) -> bool {
             self.tool_run_has_pending_work()
+                || !self.reserved_commits.is_empty()
+                || self.reserved_commit_outcome.is_some()
                 || !self.tool_operations.is_empty()
                 || self.has_runnable_artifact_envelope_decode_worker_step()
                 || !self.latest_wins_commands.is_empty()
@@ -31418,6 +31563,9 @@ pub mod app {
         /// (`📓️2026-09-12-wave-B19-mutation-lane-regression.md` §3).
         async fn take_typed_operation_completion(&mut self) -> Result<Option<TypedOperationCompletion>, Fault> {
             let Some(witness) = self.typed_completion_outbox.pop() else { return Ok(None) };
+            // 🧾️ Lane-less rows (a View, a Mutation that emitted nothing) join this patch. Retirement
+            // still records them, but only after this function has already read `history_dirty_sequences`.
+            self.record_settled_typed_operation_command(witness.operation);
             self.refresh_cache().await?;
             let history_patch = if self.history_dirty_sequences.is_empty() { None } else { Some(self.history_patch(false).await?) };
             let revision = self.store.content_revision_now();
@@ -31454,8 +31602,16 @@ pub mod app {
             Ok(self.finish_recorded(log_generation_before, action, result).await)
         }
 
-        async fn complete_reserved_spawned_job(&mut self, job: u64, output: Result<Vec<u8>, Fault>) -> Result<Option<InvocationResult>, Fault> {
-            self.complete_reserved_spawned_job_inner(job, output).await
+        fn admit_reserved_spawned_job(&mut self, job: u64, output: Result<Vec<u8>, Fault>) -> Result<bool, Fault> {
+            self.admit_framework_reserved_commit(job, output)
+        }
+
+        fn take_reserved_commit_outcome(&mut self) -> Option<Result<InvocationResult, Fault>> {
+            self.take_framework_reserved_commit_outcome()
+        }
+
+        fn reserved_commit_progress(&self) -> Option<FrameworkReservedCommitProgress> {
+            self.framework_reserved_commit_progress()
         }
 
         async fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
@@ -33495,17 +33651,19 @@ pub mod app {
             None
         }
 
+        /// 🔐️ Framework-owned owner catalogs, paired with this trait's default disposers below — the
+        /// adapter forwards these answers to `ArtifactApp`, so the defaults live on both traits.
         fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-            None
+            Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
         }
 
         fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-            None
+            Some(bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
         }
 
         /// 📝️ Grants exact draft retirement ownership to this editor adapter.
         fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-            None
+            Some(bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
         }
 
         /// 📬️ Grants retained one-item document preparation to this editor adapter.
@@ -33534,8 +33692,10 @@ pub mod app {
         }
 
         /// 🧹️ Grants bounded displaced-presence-root retirement to this editor adapter.
+        /// Framework-owned by default — `EditorApp<E>` forwards THIS answer, so a `None` here
+        /// would strip the `ArtifactApp` default and break registered-fixture close.
         fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            None
+            Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
         }
 
         /// 👥️ Grants exact typed retirement for peer presence snapshots to this editor adapter.
@@ -33860,15 +34020,22 @@ pub mod app {
             None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
         };
         envelope.cursor = Some(store::ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
-        if ops.is_empty() {
+        // 🎯️ `encode_ops_vec(&[])` is a framed header, not a zero-length slice — key the empty
+        // path off the DECODED mutation count (native twin, ticket 26/09/18 TC5).
+        let mutations: Vec<A::Mutation> = if ops.is_empty() {
+            Vec::new()
+        } else {
+            let blobs = store::os_spr::decode_ops_vec(ops).map_err(|error| store::VcsError::Deserialize(error.to_string()))?;
+            let mut decoded = Vec::with_capacity(blobs.len());
+            for bytes in &blobs {
+                decoded.push(<A::Mutation as OpBinary>::decode_op(bytes).map_err(|error| store::VcsError::Deserialize(error.to_string()))?);
+            }
+            decoded
+        };
+        if mutations.is_empty() {
             let printed = store::print_document_pack(&envelope).await;
             drop(envelope.into_owners());
             return printed;
-        }
-        let blobs = store::os_spr::decode_ops_vec(ops).map_err(|error| store::VcsError::Deserialize(error.to_string()))?;
-        let mut mutations: Vec<A::Mutation> = Vec::with_capacity(blobs.len());
-        for bytes in &blobs {
-            mutations.push(<A::Mutation as OpBinary>::decode_op(bytes).map_err(|error| store::VcsError::Deserialize(error.to_string()))?);
         }
         let mut owner = store::ArtifactStore::<A::Snapshot, A::Mutation>::new(envelope).await?;
         // 🛂️ The throwaway reduction store gets the app's OWN owner catalogue, the same call
@@ -33877,9 +34044,9 @@ pub mod app {
         // `artifact store has no owner-supplied bounded disposer` for the first nonempty batch this
         // path ever ran (ticket 26/09/18 slice TC3e). The EMPTY batch returns before a store exists,
         // which is why this went unseen.
-        if let Some(owners) = A::build_document_store_owners() {
-            owner.install_document_store_owners_exact(owners);
-        }
+        // 🛂️ Prefer the app's catalogue; fall back to the framework's bounded catalogue so a
+        // throwaway reduction store can always close (native twin, ticket 26/09/18 TC5).
+        owner.install_document_store_owners_exact(A::build_document_store_owners().unwrap_or_else(store::bounded_artifact_store_owners));
         // 🪦️ `?` must never touch this store: a live `ArtifactStore` that reaches `Drop` asserts its
         // exact terminal-empty shallow-shell witness, so an early return here aborts — the guest, on
         // wasm32. The reduction's own fault leaves as a VALUE and the close cursor below runs either
@@ -33938,13 +34105,16 @@ pub mod app {
         /// 🧩️ Read-only twin of `ArtifactEditor::Members` — the roster this viewer's composed children
         /// are opened through, carried by the app rather than by whoever registers it.
         type Members: store::SpaceMember + store::MemberFactory + Send + 'static = store::NoMembers;
-        /// 🛂️ Viewers explicitly declare every nontrivial store owner; absent authority fails closed.
+        /// 🔐️ Framework-owned owner catalogs, paired with this trait's default disposers below — the
+        /// adapter forwards these answers to `ArtifactApp`, so a `None` here beside a default disposer
+        /// faulted every viewer close (the trusted codec probe's throwaway viewer included) with
+        /// `artifact store has no owner-supplied bounded disposer`.
         fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-            None
+            Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
         }
 
         fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-            None
+            Some(bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
         }
 
         /// 🧹️ The bounded close lanes are FRAMEWORK-owned by default — see `ArtifactApp`'s own
@@ -34081,8 +34251,10 @@ pub mod app {
         }
 
         /// 🧹️ Grants bounded displaced-presence-root retirement to this viewer adapter.
+        /// Framework-owned by default — `ViewerApp<V>` forwards THIS answer, so a `None` here
+        /// would strip the `ArtifactApp` default and break registered-fixture close.
         fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            None
+            Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
         }
 
         /// 🧹️ Grants bounded displaced-transient-root retirement to this viewer adapter.
@@ -38209,8 +38381,11 @@ pub mod plugin_runtime {
         .await
     }
 
+    /// 📡️ One inbound backbone delivery's turn output. `document_changed` is true when the delivery
+    /// merged remote edits into the document, so every view of it must be re-projected.
     pub struct DocumentBackboneTurnOutputV1 {
         pub instance_id: u32,
+        pub document_changed: bool,
         pub frames: Vec<Vec<u8>>,
         pub effects: Vec<Effect>,
     }
@@ -38336,7 +38511,7 @@ pub mod plugin_runtime {
         if !reports.is_empty() {
             frames.push(protocol::encode_app_frame(&protocol::AppFrame::Conflicts { in_reply_to: None, conflicts: encode_wire_serialized(&conflicts) }).await);
         }
-        Ok(DocumentBackboneTurnOutputV1 { instance_id, frames, effects: document_backbone_effects(&owner, uri)? })
+        Ok(DocumentBackboneTurnOutputV1 { instance_id, document_changed: !reports.is_empty(), frames, effects: document_backbone_effects(&owner, uri)? })
     }
 
     pub fn plugin_drain_document_backbones<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Result<Vec<Effect>, Fault> {
@@ -38512,6 +38687,15 @@ pub mod plugin_runtime {
     /// `SurfaceContexts::background_surfaces`). Answers empty for an instance with nothing mounted, so a
     /// job that completes before the first refresh dirties nothing instead of minting a synthetic surface
     /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
+    pub(crate) async fn plugin_instance_document_surfaces<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Vec<String> {
+        with_instances_mut(runtime, |list| {
+            let instance = find_instance(list, instance_id)?;
+            Ok(instance.surface_contexts.document_surfaces())
+        })
+        .await
+        .unwrap_or_default()
+    }
+
     pub(crate) async fn plugin_instance_background_surfaces<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Vec<String> {
         with_instances_mut(runtime, |list| {
             let instance = find_instance(list, instance_id)?;
@@ -39071,6 +39255,29 @@ pub mod plugin_runtime {
         resolve_ready(app.advance_typed_operation_publication())?;
         trace_typed_operation_slot_occupancy(app, instance);
         let mut output = PluginExchangeOutput::default();
+        match app.take_reserved_commit_outcome() {
+            Some(Ok(result)) => {
+                output.frames.push(resolve_ready(protocol::encode_app_frame(&protocol::AppFrame::Invocation {
+                    in_reply_to: 0,
+                    output: encode_wire_serialized(&result.output),
+                    diagnostics: encode_wire_serialized(&result.diagnostics),
+                    ui_scope: encode_wire_serialized(&result.ui_scope),
+                    history_patch: encode_wire_serialized(&result.history_patch),
+                    messages: Vec::new(),
+                    mutations: encode_wire_serialized(&result.mutations),
+                    inverse_group: encode_wire_serialized(&result.inverse_group),
+                })));
+                resolve_ready(push_invocation_side_frames(&mut output.effects, &mut output.events, &result));
+            }
+            Some(Err(fault)) => {
+                let mut frames = Vec::new();
+                resolve_ready(push_app_fault(&mut frames, None, fault));
+                for frame in frames.iter() {
+                    output.frames.push(resolve_ready(protocol::encode_app_frame(frame)));
+                }
+            }
+            None => {}
+        }
         while output.typed_operation_results.len() < TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM {
             let Some(page) = app.take_typed_operation_result_page(instance) else { break };
             output.typed_operation_results.push(page);
@@ -39450,56 +39657,40 @@ pub mod plugin_runtime {
         }
     }
 
-    /// 🕰️ Host-driven completion for one framework-reserved spawn-job. Missing pending state is a
-    /// no-op so fill and other isolated jobs keep their existing JobCompleted path.
+    /// 🕰️ Host-driven completion for one framework-reserved spawn-job: the job's output joins the app's
+    /// reserved-commit queue and one typed-operation continuation unit runs at once. A commit that
+    /// needs more units (composed children, revert walks) stays runnable and the reactor's
+    /// continuation finishes it on this and later turns. A job the app never admitted is a no-op so
+    /// fill and other isolated jobs keep their existing JobCompleted path.
     pub async fn plugin_complete_reserved_spawned_job<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, job: u64, output: Result<Vec<u8>, Fault>) -> PluginExchangeOutput {
-        let dispatched = with_instances_mut(runtime, |list| {
+        let admitted = with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
-            resolve_ready(instance.app.complete_reserved_spawned_job(job, output))
+            instance.app.admit_reserved_spawned_job(job, output)
         })
         .await;
-        let mut frames: Vec<protocol::AppFrame> = Vec::new();
-        let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
-        let mut event_bytes: Vec<Vec<u8>> = Vec::new();
-        match dispatched {
-            Ok(Some(result)) => {
-                frames.push(protocol::AppFrame::Invocation {
-                    in_reply_to: 0,
-                    output: encode_wire_serialized(&result.output),
-                    diagnostics: encode_wire_serialized(&result.diagnostics),
-                    ui_scope: encode_wire_serialized(&result.ui_scope),
-                    history_patch: encode_wire_serialized(&result.history_patch),
-                    messages: Vec::new(),
-                    mutations: encode_wire_serialized(&result.mutations),
-                    inverse_group: encode_wire_serialized(&result.inverse_group),
-                });
-                push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
-                let typed = with_instances_mut(runtime, |list| {
+        let advanced = match admitted {
+            Ok(false) => return PluginExchangeOutput::default(),
+            Ok(true) => {
+                with_instances_mut(runtime, |list| {
                     let mut instance = find_instance(list, instance_id)?;
                     advance_typed_operation_output(&mut instance.app, instance_id)
                 })
-                .await;
-                let mut frame_bytes = Vec::with_capacity(frames.len() + 1);
-                for frame in frames.iter() {
-                    frame_bytes.push(protocol::encode_app_frame(frame).await);
-                }
-                let mut typed_operation_results = Vec::new();
-                if let Ok(typed) = typed {
-                    frame_bytes.extend(typed.frames);
-                    effect_bytes.extend(typed.effects);
-                    event_bytes.extend(typed.events);
-                    typed_operation_results = typed.typed_operation_results;
-                }
-                return PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None, typed_operation_results };
+                .await
             }
-            Ok(None) => {}
-            Err(fault) => push_app_fault(&mut frames, None, fault).await,
+            Err(fault) => Err(fault),
+        };
+        match advanced {
+            Ok(output) => output,
+            Err(fault) => {
+                let mut frames = Vec::new();
+                push_app_fault(&mut frames, None, fault).await;
+                let mut output = PluginExchangeOutput::default();
+                for frame in frames.iter() {
+                    output.frames.push(protocol::encode_app_frame(frame).await);
+                }
+                output
+            }
         }
-        let mut frame_bytes = Vec::with_capacity(frames.len());
-        for frame in frames.iter() {
-            frame_bytes.push(protocol::encode_app_frame(frame).await);
-        }
-        PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None, typed_operation_results: Vec::new() }
     }
 
     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): dispatches every `intents` entry for

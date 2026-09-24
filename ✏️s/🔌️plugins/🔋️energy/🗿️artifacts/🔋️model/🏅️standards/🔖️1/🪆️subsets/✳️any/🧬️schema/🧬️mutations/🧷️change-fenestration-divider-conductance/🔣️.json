@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeFenestrationDividerConductance",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-divider-conductance",
-  "binaryTag": null,
+  "binaryTag": 44,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

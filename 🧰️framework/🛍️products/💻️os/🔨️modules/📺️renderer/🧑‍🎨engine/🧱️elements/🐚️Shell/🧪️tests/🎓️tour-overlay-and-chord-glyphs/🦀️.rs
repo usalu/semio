@@ -8,6 +8,7 @@
 //! which React's own suite reads too.
 
 use super::*;
+use ui_wgpu::wgpu::InputState;
 
 /// 🌳️ `…/🧑‍🎨engine` — the same derivation the two sibling law files use.
 fn engine_root() -> std::path::PathBuf {
@@ -160,7 +161,7 @@ fn the_veil_owns_every_pointer_it_covers() {
 
     let press = |shell: &mut ShellState, control_id: &str| {
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None };
-        assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit)).expect("a tour press never errors"), "🧯️ the shell claims {control_id}");
+        assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a tour press never errors"), "🧯️ the shell claims {control_id}");
     };
     press(&mut shell, UI_INTRODUCTION_NEXT_CONTROL_ID);
     assert_eq!(shell.chrome_build.tour_state.as_ref().map(|tour| tour.step_index), Some(1), "🎓️ Next advances");

@@ -2,6 +2,9 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn cli_verify_checks_neutral_logical_commit_boundaries() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_verify_checks_neutral_logical_commit_boundaries") {
+        return;
+    }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for (name, expected) in [("aborted-commands-snapshot-cas-have-no-effects", Some(0)), ("two-commands-only-after-logical-commit", Some(2)), ("wrong-commit-count", None), ("active-incomplete-needs-durable-abort", None)] {
         let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == name).expect("registered neutral CLI boundary");
@@ -71,6 +74,9 @@ async fn seed_document(root: &Path) {
 //#region 🔖️Inspect
 #[semio_framework_async_macros::async_test]
 async fn cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root") {
+        return;
+    }
     let root = tempdir("inspect-fresh").await;
     assert_eq!(main_impl(&[String::from("inspect"), root.to_string_lossy().to_string()]).await, 0);
 }
@@ -79,6 +85,10 @@ async fn cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root
 //#region 🔖️FullCycle
 #[semio_framework_async_macros::async_test]
 async fn cli_full_cycle_succeeds_for_a_seeded_document() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_full_cycle_succeeds_for_a_seeded_document") {
+        return;
+    }
+    let _history_capacity = crate::db_artifact::history_capacity_test_lock();
     let root = tempdir("full-cycle").await;
     seed_document(&root).await;
     let root_str = root.to_string_lossy().to_string();
@@ -97,6 +107,10 @@ async fn cli_full_cycle_succeeds_for_a_seeded_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn cli_doc_and_query_err_cleanly_on_an_unknown_document() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_doc_and_query_err_cleanly_on_an_unknown_document") {
+        return;
+    }
+    let _history_capacity = crate::db_artifact::history_capacity_test_lock();
     let root = tempdir("unknown-doc").await;
     let root_str = root.to_string_lossy().to_string();
     assert_eq!(main_impl(&[String::from("doc"), root_str.clone(), String::from("never-created")]).await, 1);
@@ -107,6 +121,9 @@ async fn cli_doc_and_query_err_cleanly_on_an_unknown_document() {
 //#region 🔖️Verify
 #[semio_framework_async_macros::async_test]
 async fn cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it") {
+        return;
+    }
     let root = tempdir("torn-tail").await;
     seed_document(&root).await;
 
@@ -128,12 +145,18 @@ async fn cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it() {
 //#region 🔖️ConflictSimulate
 #[semio_framework_async_macros::async_test]
 async fn cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_ones() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_ones") {
+        return;
+    }
     assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a/name"), String::from("--touch-b"), String::from("a/name")]).await, 1);
     assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a/name"), String::from("--touch-b"), String::from("b/name")]).await, 0);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn cli_conflict_simulate_requires_both_touch_flags() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_conflict_simulate_requires_both_touch_flags") {
+        return;
+    }
     assert_eq!(main_impl(&[String::from("conflict-simulate")]).await, 2);
     assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a")]).await, 2);
 }
@@ -142,6 +165,9 @@ async fn cli_conflict_simulate_requires_both_touch_flags() {
 //#region 🔖️ReplicaSimulate
 #[semio_framework_async_macros::async_test]
 async fn cli_replica_simulate_copies_missing_commands_to_a_fresh_follower() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_replica_simulate_copies_missing_commands_to_a_fresh_follower") {
+        return;
+    }
     let leader_root = tempdir("replica-leader").await;
     let follower_root = tempdir("replica-follower").await;
     seed_document(&leader_root).await;
@@ -156,6 +182,9 @@ async fn cli_replica_simulate_copies_missing_commands_to_a_fresh_follower() {
 //#region 🔖️Migrate
 #[semio_framework_async_macros::async_test]
 async fn cli_migrate_appends_a_migration_record_visible_to_wal_inspect() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_migrate_appends_a_migration_record_visible_to_wal_inspect") {
+        return;
+    }
     let root = tempdir("migrate").await;
     let root_str = root.to_string_lossy().to_string();
     assert_eq!(main_impl(&[String::from("migrate"), root_str.clone(), String::from("doc-1"), String::from("rename-field"), String::from("--payload"), String::from("old->new")]).await, 0);
@@ -164,6 +193,9 @@ async fn cli_migrate_appends_a_migration_record_visible_to_wal_inspect() {
 
 #[semio_framework_async_macros::async_test]
 async fn cli_migrate_reports_a_usage_error_with_too_few_args() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_migrate_reports_a_usage_error_with_too_few_args") {
+        return;
+    }
     assert_eq!(main_impl(&[String::from("migrate"), String::from("root-only")]).await, 2);
 }
 //#endregion 🔖️Migrate
@@ -171,6 +203,9 @@ async fn cli_migrate_reports_a_usage_error_with_too_few_args() {
 //#region 🔖️Profile
 #[semio_framework_async_macros::async_test]
 async fn cli_profile_reports_throughput_for_n_commands_on_a_fresh_document() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_profile_reports_throughput_for_n_commands_on_a_fresh_document") {
+        return;
+    }
     let root = tempdir("profile").await;
     let root_str = root.to_string_lossy().to_string();
     assert_eq!(main_impl(&[String::from("profile"), root_str.clone(), String::from("doc-1"), String::from("--commands"), String::from("5"), String::from("--durability"), String::from("memory")]).await, 0);
@@ -181,6 +216,9 @@ async fn cli_profile_reports_throughput_for_n_commands_on_a_fresh_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn cli_profile_rejects_a_bad_durability_flag() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_profile_rejects_a_bad_durability_flag") {
+        return;
+    }
     let root = tempdir("profile-bad-durability").await;
     let root_str = root.to_string_lossy().to_string();
     assert_eq!(main_impl(&[String::from("profile"), root_str, String::from("doc-1"), String::from("--durability"), String::from("bogus")]).await, 2);
@@ -190,6 +228,9 @@ async fn cli_profile_rejects_a_bad_durability_flag() {
 //#region 🔖️Cli
 #[semio_framework_async_macros::async_test]
 async fn cli_help_and_unknown_subcommand() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_help_and_unknown_subcommand") {
+        return;
+    }
     assert_eq!(main_impl(&[]).await, 2);
     assert_eq!(main_impl(&[String::from("help")]).await, 0);
     assert_eq!(main_impl(&[String::from("--help")]).await, 0);
@@ -198,6 +239,9 @@ async fn cli_help_and_unknown_subcommand() {
 
 #[semio_framework_async_macros::async_test]
 async fn cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses() {
+    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses") {
+        return;
+    }
     let waker = std::task::Waker::noop();
     let context = &mut std::task::Context::from_waker(waker);
     let mut record = MountedWalRecordCommandClose::new(db::wal::WalRecord::VcsRef(db::storage::DbIoText::try_from_str("retained-cli-record").unwrap()));

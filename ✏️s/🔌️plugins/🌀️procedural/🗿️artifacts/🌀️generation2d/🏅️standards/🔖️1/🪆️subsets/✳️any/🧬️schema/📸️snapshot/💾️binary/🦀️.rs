@@ -149,7 +149,7 @@ enum Generation2dMountedDslFrame {
 /// 🧬️ Fixed-depth schema owner consuming catalog/value events directly into P2 domain
 /// fields, with one scalar byte opportunity per retained grant. It has no generic record tree
 /// and cannot invoke a batch pack decoder.
-struct Generation2dMountedTypedSnapshotOwner {
+pub struct Generation2dMountedTypedSnapshotOwner {
     candidate: std::mem::ManuallyDrop<Option<Generation2dSnapshot>>,
     stack: Vec<Generation2dMountedContainerOwner>,
     string: Option<Generation2dMountedStringOwner>,
@@ -275,17 +275,6 @@ impl Generation2dMountedTypedSnapshotOwner {
         Ok(())
     }
 
-    fn grant_symbol(&mut self, catalog: &mounted::RetainedPackCatalogCursor) -> Result<bool, &'static str> {
-        let Some(owner) = self.string.as_mut() else { return Ok(false) };
-        let Some((symbol, index, chars)) = owner.symbol else { return Ok(false) };
-        owner.value.push(catalog.symbol_char(symbol, index).map_err(|_| "generation2d-mounted.symref-char")?.ok_or("generation2d-mounted.symref-short")?);
-        if index + 1 == chars {
-            self.finish_string()?;
-        } else {
-            self.string.as_mut().expect("P2 mounted symbol retained").symbol = Some((symbol, index + 1, chars));
-        }
-        Ok(true)
-    }
 
     fn finish_string(&mut self) -> Result<(), &'static str> {
         let owner = self.string.take().ok_or("generation2d-mounted.string-handoff")?;
@@ -800,6 +789,26 @@ impl Generation2dMountedTypedSnapshotOwner {
         Ok(())
     }
 
+
+
+
+}
+
+impl mounted::RetainedTypedPackOwner for Generation2dMountedTypedSnapshotOwner {
+    type Value = Generation2dSnapshot;
+
+    fn grant_symbol(&mut self, catalog: &mounted::RetainedPackCatalogCursor) -> Result<bool, &'static str> {
+        let Some(owner) = self.string.as_mut() else { return Ok(false) };
+        let Some((symbol, index, chars)) = owner.symbol else { return Ok(false) };
+        owner.value.push(catalog.symbol_char(symbol, index).map_err(|_| "generation2d-mounted.symref-char")?.ok_or("generation2d-mounted.symref-short")?);
+        if index + 1 == chars {
+            self.finish_string()?;
+        } else {
+            self.string.as_mut().expect("P2 mounted symbol retained").symbol = Some((symbol, index + 1, chars));
+        }
+        Ok(true)
+    }
+
     fn accept(&mut self, token: mounted::RetainedValueToken, catalog: &mounted::RetainedPackCatalogCursor) -> Result<(), &'static str> {
         use mounted::{RetainedValueContainer as Container, RetainedValueRole as Role, RetainedValueToken as Token};
         match token {
@@ -987,475 +996,18 @@ impl Generation2dMountedTypedSnapshotOwner {
 
 impl Drop for Generation2dMountedTypedSnapshotOwner {
     fn drop(&mut self) {
-        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation2d mounted typed snapshot owner reached Drop before handoff or terminal-empty close");
+        assert!(std::thread::panicking() || mounted::RetainedTypedPackOwner::terminal_is_empty(self), "Generation2d mounted typed snapshot owner reached Drop before handoff or terminal-empty close");
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Generation2dMountedPackPhase {
-    Prefix,
-    Ingress,
-    Drive,
-    Ready,
-    Published,
-    Closing,
-    Closed,
-}
+/// 🧵️ The mounted canonical session of this artifact: its own `P2D2` discriminator, then the unchanged
+/// canonical `.spk` stream. `P3D3` and every other header is refused before the typed owner or any
+/// retained cursor is allocated.
+pub type Generation2dMountedPackSession = mounted::RetainedTypedPackSession<Generation2dMountedTypedSnapshotOwner>;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Generation2dMountedPackCloseStep {
-    Pending { released_items: usize, released_bytes: usize },
-    Complete,
-}
-
-/// 🧵️ Worker-owned mounted session. P2D2 is rejected before semantic allocation; every byte
-/// after it is handed unchanged to the canonical retained page source.
-pub struct Generation2dMountedPackSession {
-    phase: Generation2dMountedPackPhase,
-    expected_bytes: usize,
-    maximum_items: usize,
-    prefix: [u8; 4],
-    prefix_len: usize,
-    page: [u8; mounted::RETAINED_PACK_PAGE_BYTES],
-    page_len: usize,
-    admitted: usize,
-    canonical_ledger: u64,
-    source: std::mem::ManuallyDrop<Option<mounted::RetainedPackSourceCursor>>,
-    anchor: std::mem::ManuallyDrop<Option<mounted::RetainedPackAnchorCursor>>,
-    segment: std::mem::ManuallyDrop<Option<mounted::RetainedPackSegmentCursor>>,
-    catalog: std::mem::ManuallyDrop<Option<mounted::RetainedPackCatalogCursor>>,
-    value: std::mem::ManuallyDrop<Option<mounted::RetainedValueCursor>>,
-    typed: std::mem::ManuallyDrop<Option<Generation2dMountedTypedSnapshotOwner>>,
-    catalog_value: std::mem::ManuallyDrop<Option<mounted::RetainedPackCatalog>>,
-    /// 🚦️ One-slot ingress backpressure between the catalog's document-byte stream and the value
-    /// producer: a byte the producer cannot take yet waits HERE instead of being handed back.
-    document_byte: Option<(u64, u8)>,
-    source_complete: bool,
-    segment_complete: bool,
-    anchor_ready: bool,
-    catalog_complete: bool,
-    value_sealed: bool,
-    value_complete: bool,
-}
-
-impl Generation2dMountedPackSession {
-    pub fn new(expected_bytes: usize, maximum_items: usize) -> Result<Self, &'static str> {
-        if expected_bytes <= GENERATION2D_MOUNTED_PREFIX.len() || expected_bytes > store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES || maximum_items == 0 {
-            return Err("generation2d-mounted.exact-credits");
-        }
-        Ok(Self {
-            phase: Generation2dMountedPackPhase::Prefix,
-            expected_bytes,
-            maximum_items,
-            prefix: [0; 4],
-            prefix_len: 0,
-            page: [0; mounted::RETAINED_PACK_PAGE_BYTES],
-            page_len: 0,
-            admitted: 0,
-            canonical_ledger: 0xcbf2_9ce4_8422_2325,
-            source: std::mem::ManuallyDrop::new(None),
-            anchor: std::mem::ManuallyDrop::new(None),
-            segment: std::mem::ManuallyDrop::new(None),
-            catalog: std::mem::ManuallyDrop::new(None),
-            value: std::mem::ManuallyDrop::new(None),
-            typed: std::mem::ManuallyDrop::new(None),
-            catalog_value: std::mem::ManuallyDrop::new(None),
-            document_byte: None,
-            source_complete: false,
-            segment_complete: false,
-            anchor_ready: false,
-            catalog_complete: false,
-            value_sealed: false,
-            value_complete: false,
-        })
-    }
-
-    fn allocate_after_discriminator(&mut self) -> Result<(), &'static str> {
-        if self.prefix != GENERATION2D_MOUNTED_PREFIX {
-            return Err("generation2d-mounted.schema-discriminator");
-        }
-        let canonical = self.expected_bytes - GENERATION2D_MOUNTED_PREFIX.len();
-        let pages = canonical.div_ceil(mounted::RETAINED_PACK_PAGE_BYTES);
-        let maximum_symbols = self.maximum_items.min(u32::MAX as usize) as u32;
-        let limits = || mounted::PackLimits {
-            max_file_len: canonical as u64,
-            max_segment_len: canonical as u64,
-            max_symbols: maximum_symbols,
-            max_depth: GENERATION2D_MOUNTED_TYPED_DEPTH as u16,
-            max_items: self.maximum_items as u64,
-            max_total_alloc: canonical as u64,
-        };
-        let maximum_source_allocation_bytes = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES.checked_mul(4).ok_or("generation2d-mounted.source-allocation-credits")?;
-        *self.source = Some(mounted::RetainedPackSourceCursor::try_new(pages, canonical, maximum_source_allocation_bytes)?);
-        *self.anchor = Some(mounted::RetainedPackAnchorCursor::new());
-        *self.segment = Some(
-            mounted::RetainedPackSegmentCursor::try_new(limits(), store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES)
-                .map_err(|_| "generation2d-mounted.segment-preflight")?,
-        );
-        *self.catalog = Some(
-            mounted::RetainedPackCatalogCursor::try_new(
-                limits(),
-                maximum_symbols as usize,
-                canonical,
-                canonical,
-                self.maximum_items,
-                store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,
-            )
-            .map_err(|_| "generation2d-mounted.catalog-preflight")?,
-        );
-        *self.value = Some(
-            mounted::RetainedValueCursor::try_new(limits(), store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES)
-                .map_err(|_| "generation2d-mounted.value-preflight")?,
-        );
-        *self.typed = Some(Generation2dMountedTypedSnapshotOwner::new()?);
-        self.phase = Generation2dMountedPackPhase::Ingress;
-        Ok(())
-    }
-
-    pub fn admit_byte(&mut self, value: u8) -> Result<(), u8> {
-        if !matches!(self.phase, Generation2dMountedPackPhase::Prefix | Generation2dMountedPackPhase::Ingress) || self.admitted == self.expected_bytes {
-            return Err(value);
-        }
-        if self.prefix_len < GENERATION2D_MOUNTED_PREFIX.len() {
-            if value != GENERATION2D_MOUNTED_PREFIX[self.prefix_len] {
-                return Err(value);
-            }
-            self.prefix[self.prefix_len] = value;
-            self.prefix_len += 1;
-            self.admitted += 1;
-            if self.prefix_len == GENERATION2D_MOUNTED_PREFIX.len() && self.allocate_after_discriminator().is_err() {
-                self.admitted -= 1;
-                return Err(value);
-            }
-            return Ok(());
-        }
-        if !self.source.as_ref().is_some_and(mounted::RetainedPackSourceCursor::has_reserved_page) {
-            return Err(value);
-        }
-        self.page[self.page_len] = value;
-        self.canonical_ledger ^= u64::from(value);
-        self.canonical_ledger = self.canonical_ledger.wrapping_mul(0x0000_0100_0000_01b3);
-        self.page_len += 1;
-        self.admitted += 1;
-        if self.page_len == mounted::RETAINED_PACK_PAGE_BYTES && self.flush_page().is_err() {
-            self.admitted -= 1;
-            return Err(value);
-        }
-        Ok(())
-    }
-
-    fn flush_page(&mut self) -> Result<(), &'static str> {
-        if self.page_len == 0 {
-            return Ok(());
-        }
-        let len = self.page_len;
-        let source = self.source.as_mut().ok_or("generation2d-mounted.source-owner")?;
-        source.preflight_page(len)?;
-        let page = mounted::RetainedPackPage::try_from_array(std::mem::replace(&mut self.page, [0; mounted::RETAINED_PACK_PAGE_BYTES]), len).map_err(|_| "generation2d-mounted.page-owner")?;
-        self.page_len = 0;
-        if let Err(page) = source.admit_page(page) {
-            (self.page, self.page_len) = page.into_array();
-            return Err("generation2d-mounted.producer-handback");
-        }
-        Ok(())
-    }
-
-    pub fn seal(&mut self) -> Result<(), &'static str> {
-        if self.admitted != self.expected_bytes || self.prefix_len != GENERATION2D_MOUNTED_PREFIX.len() {
-            return Err("generation2d-mounted.exact-byte-seal");
-        }
-        self.flush_page()?;
-        self.source.as_mut().ok_or("generation2d-mounted.source-owner")?.seal()?;
-        self.phase = Generation2dMountedPackPhase::Drive;
-        Ok(())
-    }
-
-    pub fn grant(&mut self) -> Result<bool, &'static str> {
-        if matches!(self.phase, Generation2dMountedPackPhase::Ready | Generation2dMountedPackPhase::Published) {
-            return Ok(true);
-        }
-        if self.phase != Generation2dMountedPackPhase::Drive {
-            return Err("generation2d-mounted.missing-seal");
-        }
-        if self.next_retained_allocation_bytes()?.is_some() {
-            return Ok(false);
-        }
-        if self.typed.as_mut().ok_or("generation2d-mounted.typed-owner")?.grant_symbol(self.catalog.as_ref().ok_or("generation2d-mounted.catalog-owner")?)? {
-            return Ok(false);
-        }
-        if let Some((index, byte)) = self.document_byte {
-            if self.value.as_ref().ok_or("generation2d-mounted.value-owner")?.ingress_ready() {
-                self.document_byte = None;
-                self.value.as_mut().expect("P2 value retained").admit_byte(index, byte).map_err(|_| "generation2d-mounted.value-backpressure")?;
-                return Ok(false);
-            }
-        }
-        if !self.value_complete {
-            if let Some(token) = self.value.as_mut().ok_or("generation2d-mounted.value-owner")?.grant().map_err(|_| "generation2d-mounted.value-malformed")? {
-                self.value_complete = matches!(token, mounted::RetainedValueToken::Complete { .. });
-                self.typed.as_mut().expect("P2 typed owner retained").accept(token, self.catalog.as_ref().expect("P2 catalog retained"))?;
-                return Ok(false);
-            }
-        }
-        if self.catalog_complete && !self.value_sealed {
-            let bytes = self.catalog.as_ref().expect("P2 catalog retained").document_bytes();
-            self.value.as_mut().expect("P2 value owner retained").seal(bytes).map_err(|_| "generation2d-mounted.value-seal")?;
-            self.value_sealed = true;
-            return Ok(false);
-        }
-        if self.catalog.as_ref().is_some_and(mounted::RetainedPackCatalogCursor::has_pending_input) {
-            let event = self.catalog.as_mut().expect("P2 catalog retained").grant().map_err(|_| "generation2d-mounted.catalog-malformed")?;
-            if let Some(event) = event {
-                match event {
-                    mounted::RetainedPackCatalogEvent::DocumentByte { index, value, .. } => self.document_byte = Some((index, value)),
-                    mounted::RetainedPackCatalogEvent::Complete => self.catalog_complete = true,
-                    _ => {}
-                }
-            }
-            return Ok(false);
-        }
-        if self.document_byte.is_none() && !self.segment_complete && (self.segment.as_ref().ok_or("generation2d-mounted.segment-owner")?.preflight().is_err() || self.source_complete) {
-            if let Some(event) = self.segment.as_mut().expect("P2 segment retained").grant().map_err(|_| "generation2d-mounted.segment-malformed")? {
-                self.segment_complete = matches!(event, mounted::RetainedPackSegmentEvent::PackComplete { .. });
-                let catalog = self.catalog.as_mut().expect("P2 catalog retained");
-                catalog.admit(event).map_err(|_| "generation2d-mounted.catalog-backpressure")?;
-                if let Some(event) = catalog.grant().map_err(|_| "generation2d-mounted.catalog-malformed")? {
-                    match event {
-                        mounted::RetainedPackCatalogEvent::DocumentByte { index, value, .. } => self.document_byte = Some((index, value)),
-                        mounted::RetainedPackCatalogEvent::Complete => self.catalog_complete = true,
-                        _ => {}
-                    }
-                }
-                return Ok(false);
-            }
-        }
-        if !self.source_complete && self.segment.as_ref().expect("P2 segment retained").preflight().is_ok() {
-            if let Some(event) = self.source.as_mut().ok_or("generation2d-mounted.source-owner")?.grant()? {
-                self.source_complete = matches!(event, mounted::RetainedPackSourceEvent::Complete { .. });
-                self.anchor.as_mut().expect("P2 anchor retained").grant(Some(event)).map_err(|_| "generation2d-mounted.anchor-malformed")?;
-                self.segment.as_mut().expect("P2 segment retained").admit(event).map_err(|_| "generation2d-mounted.segment-handback")?;
-                return Ok(false);
-            }
-        }
-        if self.source_complete && !self.anchor_ready {
-            self.anchor_ready = self.anchor.as_mut().expect("P2 anchor retained").grant(None).map_err(|_| "generation2d-mounted.anchor-malformed")?;
-            return Ok(false);
-        }
-        if self.anchor_ready && self.catalog_complete && self.value_complete && self.catalog_value.is_none() {
-            let superblock = self.anchor.as_mut().expect("P2 anchor retained").take().ok_or("generation2d-mounted.anchor-handoff")?;
-            *self.catalog_value = self.catalog.as_mut().expect("P2 catalog retained").take(superblock).map_err(|_| "generation2d-mounted.catalog-validation")?;
-            self.phase = Generation2dMountedPackPhase::Ready;
-            return Ok(true);
-        }
-        Ok(false)
-    }
-
-    pub fn take(&mut self) -> Option<Generation2dSnapshot> {
-        if self.phase != Generation2dMountedPackPhase::Ready {
-            return None;
-        }
-        let value = self.typed.as_mut()?.take()?;
-        self.phase = Generation2dMountedPackPhase::Published;
-        Some(value)
-    }
-
-    pub fn progress(&self) -> Option<mounted::RetainedPackSourceProgress> {
-        self.source.as_ref().map(mounted::RetainedPackSourceCursor::progress)
-    }
-
-    pub fn next_retained_allocation_bytes(&mut self) -> Result<Option<usize>, &'static str> {
-        let requested = if self.phase == Generation2dMountedPackPhase::Ingress {
-            let Some(source) = self.source.as_ref() else { return Ok(None) };
-            if source.has_reserved_page() { None } else { Some(source.next_allocation_bytes()?) }
-        } else if self.phase == Generation2dMountedPackPhase::Drive {
-            match self.segment.as_ref().ok_or("generation2d-mounted.segment-owner")?.next_allocation_bytes() {
-                Some(requested) => Some(requested),
-                None => match self.value.as_mut().ok_or("generation2d-mounted.value-owner")?.next_allocation_bytes().map_err(|_| "generation2d-mounted.value-allocation")? {
-                    Some(requested) => Some(requested),
-                    None => self.catalog.as_mut().ok_or("generation2d-mounted.catalog-owner")?.next_allocation_bytes().map_err(|fault| fault.code)?,
-                },
-            }
-        } else {
-            None
-        };
-        if let Some(requested) = requested {
-            self.retained_allocated_bytes()
-                .checked_add(requested)
-                .filter(|total| *total <= store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES)
-                .ok_or("generation2d-mounted.retained-allocation-credits")?;
-        }
-        Ok(requested)
-    }
-
-    pub fn reserve_retained_allocation(&mut self, maximum_bytes: usize) -> Result<mounted::RetainedPackSourceAllocationStep, mounted::RetainedPackSourceAllocationError> {
-        let retained = self.retained_allocated_bytes();
-        let remaining = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES.saturating_sub(retained);
-        if self.phase == Generation2dMountedPackPhase::Ingress {
-            return self
-                .source
-                .as_mut()
-                .ok_or(mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation2d-mounted.source-owner" })?
-                .reserve_page(maximum_bytes.min(remaining));
-        }
-        if self.phase == Generation2dMountedPackPhase::Drive {
-            let segment = self
-                .segment
-                .as_mut()
-                .ok_or(mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation2d-mounted.segment-owner" })?;
-            if segment.next_allocation_bytes().is_some() {
-                return segment.reserve_allocation(maximum_bytes.min(remaining));
-            }
-            let value = self
-                .value
-                .as_mut()
-                .ok_or(mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation2d-mounted.value-owner" })?;
-            if value
-                .next_allocation_bytes()
-                .map_err(|_| mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation2d-mounted.value-allocation" })?
-                .is_some()
-            {
-                return value
-                    .reserve_allocation(maximum_bytes.min(remaining))
-                    .map(|step| mounted::RetainedPackSourceAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
-                    .map_err(|error| mounted::RetainedPackSourceAllocationError { allocated_bytes: error.allocated_bytes, reason: "generation2d-mounted.value-allocation" });
-            }
-            return self
-                .catalog
-                .as_mut()
-                .ok_or(mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason: "generation2d-mounted.catalog-owner" })?
-                .reserve_allocation(maximum_bytes.min(remaining))
-                .map(|step| mounted::RetainedPackSourceAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
-                .map_err(|error| mounted::RetainedPackSourceAllocationError { allocated_bytes: error.allocated_bytes, reason: error.fault.code });
-        }
-        Ok(mounted::RetainedPackSourceAllocationStep::default())
-    }
-
-    pub fn retained_allocated_bytes(&self) -> usize {
-        self.source.as_ref().map_or(0, mounted::RetainedPackSourceCursor::allocated_bytes)
-            + self.segment.as_ref().map_or(0, mounted::RetainedPackSegmentCursor::allocated_bytes)
-            + self.catalog.as_ref().map_or(0, mounted::RetainedPackCatalogCursor::allocated_bytes)
-            + self.value.as_ref().map_or(0, mounted::RetainedValueCursor::allocated_bytes)
-    }
-
-    #[cfg(test)]
-    fn canonical_ingress_ledger(&self) -> u64 {
-        self.canonical_ledger
-    }
-
-    #[cfg(test)]
-    fn semantic_allocated(&self) -> bool {
-        self.typed.is_some()
-    }
-
-    pub fn request_cancel(&mut self) {
-        if let Some(source) = self.source.as_mut() {
-            source.request_cancel();
-        }
-        self.phase = Generation2dMountedPackPhase::Closing;
-    }
-
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Generation2dMountedPackCloseStep, &'static str> {
-        if maximum_items == 0 {
-            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        self.phase = Generation2dMountedPackPhase::Closing;
-        if self.document_byte.take().is_some() {
-            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.page_len != 0 {
-            self.page.fill(0);
-            self.page_len = 0;
-            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.catalog_value.is_some() {
-            let _ = self.catalog_value.take();
-            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(typed) = self.typed.as_mut() {
-            if !typed.close_step() {
-                return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            drop(self.typed.take());
-            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(value) = self.value.as_mut() {
-            match value.close_step(1, maximum_bytes)? {
-                mounted::RetainedPackCloseStep::Pending { released_items, released_bytes } => {
-                    return Ok(Generation2dMountedPackCloseStep::Pending { released_items, released_bytes });
-                }
-                mounted::RetainedPackCloseStep::Complete => {}
-            }
-            drop(self.value.take());
-            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(catalog) = self.catalog.as_mut() {
-            match catalog.close_step(1, maximum_bytes)? {
-                mounted::RetainedPackCloseStep::Pending { released_items, released_bytes } => {
-                    return Ok(Generation2dMountedPackCloseStep::Pending { released_items, released_bytes });
-                }
-                mounted::RetainedPackCloseStep::Complete => {}
-            }
-            drop(self.catalog.take());
-            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(segment) = self.segment.as_mut() {
-            match segment.close_step(1, maximum_bytes) {
-                mounted::RetainedPackCloseStep::Pending { released_items, released_bytes } => {
-                    return Ok(Generation2dMountedPackCloseStep::Pending { released_items, released_bytes });
-                }
-                mounted::RetainedPackCloseStep::Complete => {}
-            }
-            drop(self.segment.take());
-            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(anchor) = self.anchor.as_mut() {
-            anchor.close_step();
-            drop(self.anchor.take());
-            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(source) = self.source.as_mut() {
-            match source.close_step(1, maximum_bytes)? {
-                mounted::RetainedPackCloseStep::Pending { released_items, released_bytes } => {
-                    return Ok(Generation2dMountedPackCloseStep::Pending { released_items, released_bytes });
-                }
-                mounted::RetainedPackCloseStep::Complete => {}
-            }
-            drop(self.source.take());
-            return Ok(Generation2dMountedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        self.phase = Generation2dMountedPackPhase::Closed;
-        Ok(Generation2dMountedPackCloseStep::Complete)
-    }
-
-    pub fn next_retained_release_allocation_bytes(&self) -> Option<usize> {
-        if self.document_byte.is_some()
-            || self.page_len != 0
-            || self.catalog_value.is_some()
-            || self.typed.is_some()
-        {
-            return None;
-        }
-        if let Some(value) = self.value.as_ref() {
-            return value.next_release_allocation_bytes();
-        }
-        if let Some(catalog) = self.catalog.as_ref() {
-            return catalog.next_release_allocation_bytes().ok().flatten();
-        }
-        if let Some(segment) = self.segment.as_ref() {
-            return segment.next_release_allocation_bytes();
-        }
-        self.source.as_ref()?.next_release_allocation_bytes().ok()
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.phase == Generation2dMountedPackPhase::Closed && self.page_len == 0 && self.source.is_none() && self.anchor.is_none() && self.segment.is_none() && self.catalog.is_none() && self.value.is_none() && self.typed.is_none() && self.catalog_value.is_none() && self.document_byte.is_none()
-    }
-}
-
-impl Drop for Generation2dMountedPackSession {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Generation2d mounted canonical pack session reached Drop before exact terminal-empty close");
-    }
+/// 🚪️ Opens a mounted session over exactly `expected_bytes` stream bytes and `maximum_items` items.
+pub fn generation2d_mounted_pack_session(expected_bytes: usize, maximum_items: usize) -> Result<Generation2dMountedPackSession, &'static str> {
+    Generation2dMountedPackSession::new(GENERATION2D_MOUNTED_PREFIX.to_vec(), expected_bytes, maximum_items, GENERATION2D_MOUNTED_TYPED_DEPTH as u16, Generation2dMountedTypedSnapshotOwner::new)
 }
 //#endregion 🔖️MountedCanonicalPackSession
 

@@ -95,7 +95,7 @@
       "id": "vscode-extension-test",
       "tool": "vscode-test",
       "previousPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/.vscode-test.mjs",
-      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧩️extension/🎚️config/🟨️.mjs",
+      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🎚️config/🟨️.mjs",
       "effectiveRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
       "loader": "vscode-test",
       "mode": "test"
@@ -214,7 +214,7 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts",
       "tokens": [
-        "../../🧪️tests/🧩️extension/🎚️config/🟨️.mjs",
+        "../../🧪️tests/🎚️config/🟨️.mjs",
         "../../../../🧹️lint/📐️source-policy/🟨️.mjs"
       ]
     },

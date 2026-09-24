@@ -10,7 +10,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ApplyMesh {
-    pub(crate) mutation: SemioMeshMutation,
+    pub mutation: SemioMeshMutation,
 }
 
 impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyMesh {

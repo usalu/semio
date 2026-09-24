@@ -78,7 +78,7 @@ export default defineTestAdapter({
       }),
       /** 🎯️ `\semio_viz_georte_rk_step:` over the same seeds and step sizes. */
       subject: async (ctx: AdapterContext): Promise<{ projection: ProbeProjection }> => {
-        const records = await compileVizProbe(ctx.fixture("local://streamlines.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+        const records = await compileVizProbe(ctx.fixture("shared://🌊️field-streamlines/streamlines.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
         return { projection: probeProjection(roundProbeNumbers(records, DECIMALS)) };
       },
     },

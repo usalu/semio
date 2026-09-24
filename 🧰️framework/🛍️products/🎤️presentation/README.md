@@ -14,7 +14,7 @@ mount it through the renderer.
 | `📦️packages/🟦️typescript/` | The core: the declarative model, the slide-glob loader, resolution scopes, morph-run auto-animate id assignment and the deck templates. Zero runtime imports. |
 | `📦️packages/🟦️typescript/🎯️targets/⚛️react/` | The React + reveal.js renderer (`🟦️.tsx`), its stylesheet `🎨️.css`, and `🔨️modules/` — the markdown → HTML compiler and the pdf.js canvas port. |
 | `🧪️tests/` | One directory per language-agnostic test case: `🥒️.feature`, `🟦️.ts`, `🧫️fixtures/`. |
-| `🔮️oracle/🔣️.json` | The owner oracle registry: the third-party packages the tests compare against, and the justified no-oracle decisions. |
+| `🔮️oracles/🔣️.json` | The owner oracle registry: the third-party packages the tests compare against, and the justified no-oracle decisions. |
 
 ## Commands
 

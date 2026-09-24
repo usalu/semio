@@ -84,7 +84,7 @@ func theGoldenTreeBreaches(ctx *host.Context) (host.Outcome, error) {
 		return host.Outcome{}, err
 	}
 	rendered := renderAll(statutes.Analyze(sources))
-	data, err := ctx.FixtureBytes("local://🔣️breaches.json")
+	data, err := ctx.FixtureBytes("shared://🔍️analyze-breaches/🔣️breaches.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

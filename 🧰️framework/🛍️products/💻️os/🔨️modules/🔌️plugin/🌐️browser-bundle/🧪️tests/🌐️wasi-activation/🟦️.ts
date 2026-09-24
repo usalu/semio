@@ -91,7 +91,7 @@ export async function testBrowserWasiActivation(repoRoot: string): Promise<void>
     "wasi:cli/environment@0.2.0", "wasi:cli/exit@0.2.0", "wasi:cli/stderr@0.2.0", "wasi:cli/stdin@0.2.0", "wasi:cli/stdout@0.2.0",
     "wasi:cli/terminal-input@0.2.0", "wasi:cli/terminal-output@0.2.0", "wasi:cli/terminal-stderr@0.2.0", "wasi:cli/terminal-stdin@0.2.0", "wasi:cli/terminal-stdout@0.2.0",
     "wasi:clocks/monotonic-clock@0.2.0", "wasi:clocks/wall-clock@0.2.0", "wasi:io/error@0.2.0", "wasi:io/poll@0.2.0", "wasi:io/streams@0.2.0",
-    "wasi:random/insecure-seed@0.2.9",
+    "wasi:random/insecure-seed@0.2.9", "wasi:random/random@0.2.9",
   ];
   assert.deepEqual([...browserWasiInterfaces].sort(), admitted);
   assert.deepEqual(Object.keys(aImports).sort(), admitted);
@@ -104,12 +104,19 @@ export async function testBrowserWasiActivation(repoRoot: string): Promise<void>
   assert.equal(seed.length, 2);
   assert(seed.every(word => typeof word === "bigint" && word >= 0n && word <= 0xffffffffffffffffn));
   assert.deepEqual(wall.imports["wasi:random/insecure-seed@0.2.9"].insecureSeed(), seed);
+  const random = wall.imports["wasi:random/random@0.2.9"];
+  const word = random.getRandomU64();
+  assert(typeof word === "bigint" && word >= 0n && word <= 0xffffffffffffffffn);
+  assert.notEqual(random.getRandomU64(), word);
+  assert.equal(random.getRandomBytes(16n).length, 16);
+  assert.throws(() => random.getRandomBytes(65537n), /65536/);
   const sibling = createBrowserWasiActivation(wallPort);
   assert.notDeepEqual(sibling.imports["wasi:random/insecure-seed@0.2.9"].insecureSeed(), seed);
   await sibling.close();
   await wall.close();
   assert.throws(() => wall.imports["wasi:clocks/wall-clock@0.2.0"].now(), /closed/);
   assert.throws(() => wall.imports["wasi:random/insecure-seed@0.2.9"].insecureSeed(), /closed/);
+  assert.throws(() => random.getRandomU64(), /closed/);
   const clock = aImports[key("clocks/monotonic-clock")], polling = aImports[key("io/poll")];
   const hostileDurations: readonly unknown[] = [-1n, 0x10000000000000000n, 1, NaN];
   for (const value of hostileDurations) assert.throws(() => clock.subscribeDuration(value), /u64/);

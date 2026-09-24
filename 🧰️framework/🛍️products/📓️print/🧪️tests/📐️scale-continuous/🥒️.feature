@@ -20,7 +20,7 @@ Feature: Continuous scales map, invert, tick and nice exactly as d3-scale does
   @level-quick
   @mode-differential
   Scenario: A linear scale maps, clamps, inverts and ticks as d3-scale does
-    Given the committed probe document local://scale-continuous.tex and the linear scales
+    Given the committed probe document shared://📐️scale-continuous/scale-continuous.tex and the linear scales
       | name     | domain | range | options | inputs             |
       | lin      | 0,100  | 0,180 |         | 0,25,42,100,150    |
       | linrev   | -5,5   | 100,0 |         | -5,0,2.5,5         |
@@ -31,7 +31,7 @@ Feature: Continuous scales map, invert, tick and nice exactly as d3-scale does
   @level-quick
   @mode-differential
   Scenario: A logarithmic scale maps, inverts and lists its decade ticks as d3-scale does
-    Given the committed probe document local://scale-continuous.tex and the logarithmic scales
+    Given the committed probe document shared://📐️scale-continuous/scale-continuous.tex and the logarithmic scales
       | name    | domain  | range | inputs           |
       | lg      | 1,1000  | 0,300 | 1,10,100,1000,42 |
       | lgsmall | 0.001,1 | 0,100 |                  |
@@ -41,7 +41,7 @@ Feature: Continuous scales map, invert, tick and nice exactly as d3-scale does
   @level-quick
   @mode-differential
   Scenario: Power and square-root scales honour their exponent
-    Given the committed probe document local://scale-continuous.tex and the power scales
+    Given the committed probe document shared://📐️scale-continuous/scale-continuous.tex and the power scales
       | name    | kind | domain | range | exponent |
       | pw      | pow  | 0,10   | 0,100 | 2        |
       | pwhalf  | pow  | 0,16   | 0,64  | 0.5      |
@@ -52,7 +52,7 @@ Feature: Continuous scales map, invert, tick and nice exactly as d3-scale does
   @level-quick
   @mode-differential
   Scenario: A symmetric-logarithmic scale stays linear around zero
-    Given the committed probe document local://scale-continuous.tex and the symlog scales
+    Given the committed probe document shared://📐️scale-continuous/scale-continuous.tex and the symlog scales
       | name | domain   | range | constant |
       | sl   | -100,100 | 0,200 | 1        |
       | slc  | -100,100 | 0,200 | 10       |
@@ -62,7 +62,7 @@ Feature: Continuous scales map, invert, tick and nice exactly as d3-scale does
   @level-quick
   @mode-differential
   Scenario: The nice option extends a domain to round tick values
-    Given the committed probe document local://scale-continuous.tex and the domains
+    Given the committed probe document shared://📐️scale-continuous/scale-continuous.tex and the domains
       | name | domain    | count |
       | n1   | 0.1,0.9   | 10    |
       | n2   | 1.1,10.9  | 10    |

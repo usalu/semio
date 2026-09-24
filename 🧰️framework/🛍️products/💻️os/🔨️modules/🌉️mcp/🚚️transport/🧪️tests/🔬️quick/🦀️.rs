@@ -223,6 +223,7 @@ fn one_terminal_close_grant_drains_exactly_one_fifo_owner() {
 fn partial_http_read_and_parser_turn_advance_one_page_or_token_per_grant() {
     let (mut state, mut peer) = state_with_connection();
     peer.write_all(b"POST /mcp HTTP/1.1\r\nAuthorization: Bearer test-token\r\n").unwrap();
+    await_readable(&state, 0);
     assert!(matches!(state.drive_one(1), HttpTurn::MoreWork));
     let connection = state.connections[0].as_ref().unwrap();
     assert!(connection.ingress.len() <= HTTP_IO_PAGE_BYTES);
@@ -420,10 +421,22 @@ fn state_with_connection() -> (HttpTransportState, TcpStream) {
     (state, peer)
 }
 
+/// ⏳️ Blocks until the loopback bytes the peer wrote are readable on `slot`'s server stream, so a
+/// read grant observes them instead of racing the kernel's delivery under load.
+fn await_readable(state: &HttpTransportState, slot: usize) {
+    let stream = &state.connections[slot].as_ref().unwrap().stream;
+    stream.set_nonblocking(false).unwrap();
+    assert!(stream.peek(&mut [0; 1]).unwrap() > 0);
+    stream.set_nonblocking(true).unwrap();
+}
+
 fn replacement_connection(state: &HttpTransportState, slot: u16, generation: u64) -> HttpConnection {
-    let address = state.listener.as_ref().unwrap().local_addr().unwrap();
+    let listener = state.listener.as_ref().unwrap();
+    let address = listener.local_addr().unwrap();
     let _peer = TcpStream::connect(address).unwrap();
-    let (stream, remote) = state.listener.as_ref().unwrap().accept().unwrap();
+    listener.set_nonblocking(false).unwrap();
+    let (stream, remote) = listener.accept().unwrap();
+    listener.set_nonblocking(true).unwrap();
     stream.set_nonblocking(true).unwrap();
     HttpConnection {
         key: HttpConnectionKey { slot, generation },

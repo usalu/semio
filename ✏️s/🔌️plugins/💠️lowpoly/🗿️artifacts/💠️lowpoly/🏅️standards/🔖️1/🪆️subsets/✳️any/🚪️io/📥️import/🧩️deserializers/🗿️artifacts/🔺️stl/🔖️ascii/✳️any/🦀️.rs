@@ -1,11 +1,8 @@
 //! lowpoly <- stl
 //!
-//! Real STL geometry import: ASCII (`engine::decode_stl_ascii`) or binary
-//! (`engine::decode_stl_binary`), picked by content — binary when the 84-byte header's triangle
-//! count exactly frames the file length, ASCII when the text starts with `solid`. Triangles are
-//! welded on bit-identical vertex positions (STL has no shared-vertex topology) and become ONE
-//! lowpoly object named after the `solid` (or "STL Mesh"). Degenerate triangles (two corners
-//! welded together) are dropped; a file with no usable triangle is rejected loudly.
+//! Geometry over the real STL codecs: ASCII (`engine::decode_stl_ascii`) or binary (`engine::decode_stl_binary`), picked
+//!    by content. Triangles are welded on bit-identical vertex positions and become ONE lowpoly
+//!    object. Degenerate triangles are dropped; a file with no usable triangle is rejected loudly.
 use crate::io::mesh_geometry::{snapshot_from_parts, text_error, PolygonPart};
 use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_stl::engine::{decode_stl_ascii, decode_stl_binary};
@@ -20,7 +17,6 @@ pub fn deserialize(from: &StlSnapshot) -> Result<LowpolySnapshot, store::TextErr
         let mut face = [0u32; 3];
         for (corner, vertex) in triangle.vertices.iter().enumerate() {
             let position = [vertex[0] as f32, vertex[1] as f32, vertex[2] as f32];
-            // ➕️ `+ 0.0` folds -0.0 into 0.0 so both weld together.
             let key = [(position[0] + 0.0).to_bits(), (position[1] + 0.0).to_bits(), (position[2] + 0.0).to_bits()];
             face[corner] = *welded.entry(key).or_insert_with(|| {
                 part.positions.push(position);

@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct AddBlock {
-    pub(crate) block: CadBlock,
+    pub block: CadBlock,
 }
 
 impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for AddBlock {

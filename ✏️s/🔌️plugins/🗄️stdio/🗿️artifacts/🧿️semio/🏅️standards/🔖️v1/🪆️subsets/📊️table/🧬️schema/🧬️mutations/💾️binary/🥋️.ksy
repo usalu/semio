@@ -14,6 +14,6 @@ seq:
     doc: "OP_BINARY_FORMAT, currently 1"
   - id: tag
     type: u1
-    doc: "variant ordinal, 0-7 (see OP_KEYWORDS)"
+    doc: "the kind's record tag in 📡️.protocol.semio"
   - id: payload
     size-eos: true

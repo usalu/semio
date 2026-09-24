@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePvSystemDcCapacity",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-pv-system-dc-capacity",
-  "binaryTag": null,
+  "binaryTag": 201,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

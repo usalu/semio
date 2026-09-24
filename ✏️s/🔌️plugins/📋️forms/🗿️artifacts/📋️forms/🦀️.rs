@@ -730,30 +730,6 @@ pub mod standards {
                                     }
                                 }
                                 #[path = "."]
-                                pub mod csv {
-                                    #[path = "."]
-                                    pub mod v_rfc4180 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod xlsx {
-                                    #[path = "."]
-                                    pub mod v_ecma_376 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📕️xlsx/🔖️ecma-376/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
                                 pub mod json {
                                     #[path = "."]
                                     pub mod v_rfc8259 {

@@ -1,6 +1,6 @@
 //! 🛠️ Direct binary identity for `set-viewer-preferences`.
 
-pub const TAG: u8 = 51;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-viewer-preferences");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetViewerPreferences;

@@ -13,7 +13,7 @@ import (
 
 // region 🔖️Support
 
-const transcripts = "local://🎞️gh-transcripts.json"
+const transcripts = "shared://🐙️github-management-transcripts/🎞️gh-transcripts.json"
 
 func provider(ctx *host.Context) (*providers.GitHubManagementProvider, error) {
 	raw, err := ctx.FixtureBytes(transcripts)

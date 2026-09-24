@@ -240,8 +240,8 @@ fn decode_request(input: &[u8]) -> Result<crate::app::WireArtifactInferenceReque
 }
 
 /// 🚦️ The explicit states of one ActionBus-routed inference. Each is exactly one `step-job`
-/// opportunity: `Dispatch` admits the worker session, `Pump` advances it by one bounded worker
-/// step, `OutcomeClose` retires one page of the checked-out outcome, `SessionClose` retires one
+/// opportunity: `Dispatch` admits the worker session, `Pump` advances it by as many bounded worker
+/// steps as the crossing's grant covers, `OutcomeClose` retires one page of the checked-out outcome, `SessionClose` retires one
 /// page of the session after a terminal outcome, `RejectedClose` retires an admission rejection,
 /// and `Complete` has no action left. The state walk is the literal translation of the former
 /// `run_interactive_inference` future: every `ctx.tick().await` in that body is one state boundary
@@ -254,6 +254,21 @@ enum InteractivePhase {
     SessionClose,
     RejectedClose,
     Complete,
+}
+
+/// 📄️ Pages a `Yield`/`PreviewReady` outcome may retire inside a `Pump` crossing before the machine
+/// hands it to `OutcomeClose` instead — a preview the size of a WFC trace frame retires in one.
+const ABSORB_CLOSE_PAGES: usize = 4;
+
+/// 🔁️ What one mounted-session transition left the `Pump` crossing with.
+enum PumpTransition {
+    Absorbed { progress: Vec<u8>, preview: bool },
+    Settled(JobStep),
+}
+
+/// 🧾️ Retires an absorbed outcome's payload in place; `false` leaves it for `OutcomeClose`.
+fn retire_absorbed_outcome(outcome: &mut StepOutcome) -> bool {
+    (0..ABSORB_CLOSE_PAGES).any(|_| matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) && outcome.terminal_is_empty())
 }
 
 struct InteractiveInferenceJob {
@@ -398,57 +413,60 @@ impl InteractiveInferenceJob {
         JobStep::Running(progress)
     }
 
-    /// ⚙️ `Pump`: one bounded worker transition. An outcome that is not ready keeps the machine in
-    /// this state with a fresh scheduled progress item, so the stall guard sees real movement.
+    /// ⚙️ `Pump`: drives the mounted session transition after transition inside ONE host crossing,
+    /// spending the crossing's own grant — `budget.fuel` at [`WORK_UNITS_PUMP`] per transition and
+    /// `budget.deadline_ms` against the monotonic clock — instead of ending the crossing at the first
+    /// outcome. A `Yield`/`PreviewReady` outcome whose payload retires within
+    /// [`ABSORB_CLOSE_PAGES`] is retired and resumed in place, the latest preview coalescing into the
+    /// crossing's progress bytes; anything lossless or terminal still leaves through `OutcomeClose`.
+    /// One transition per crossing made the host relay pay a whole `step-job` round trip (plus an
+    /// `OutcomeClose` one) for every 16-unit preview a WFC solve publishes: the 24 × 24 genesis solve
+    /// that settles natively in 16.6 s crossed 541 650 times in 582 s over the semio MCP without
+    /// finishing (ticket 26/09/23, `📓️wp-g5.md`). Without a clock the grant is one transition, as before.
+    /// The deadline is checked against the step driver's own exit reading, never a read of its own.
     // 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
-    fn pump(&mut self) -> JobStep {
+    fn pump(&mut self, budget: JobBudget) -> JobStep {
+        let deadline_us = semio_framework_job::default_now_us().and_then(|now_us| now_us.checked_add(u64::from(budget.deadline_ms).saturating_mul(1_000)));
+        let mut granted = budget.fuel;
+        let mut latest: Option<(Vec<u8>, bool)> = None;
+        loop {
+            granted = granted.saturating_sub(WORK_UNITS_PUMP);
+            match self.pump_transition() {
+                PumpTransition::Settled(step) => return step,
+                PumpTransition::Absorbed { progress, preview } => {
+                    if preview || !latest.as_ref().is_some_and(|(_, kept_preview)| *kept_preview) {
+                        latest = Some((progress, preview));
+                    }
+                }
+            }
+            let clock_spent = deadline_us.is_none_or(|deadline_us| self.session.as_ref().and_then(InferenceSession::last_step_end_us).is_none_or(|now_us| now_us >= deadline_us));
+            if granted < WORK_UNITS_PUMP || clock_spent {
+                return JobStep::Running(Some(latest.map_or_else(|| self.retirement_progress(), |(progress, _)| progress)));
+            }
+        }
+    }
+
+    /// 🔁️ One mounted-session transition of [`Self::pump`]: submits and settles one worker step,
+    /// then either absorbs its non-terminal outcome in place or hands the crossing back.
+    // 🚫️async: E1 state action body consumed by the sync `pump` loop above.
+    fn pump_transition(&mut self) -> PumpTransition {
         match crate::app::inference_cancelled(&self.request.cancellation_id) {
             Ok(true) => self.cancel.cancel_now(),
             Ok(false) => {}
-            Err(error) => return self.fail(super::fault(error.code, error.message)),
+            Err(error) => return PumpTransition::Settled(self.fail(super::fault(error.code, error.message))),
         }
         let scheduled = self.bridge.scheduled();
         let mut progress = encode_bridge_item(&scheduled);
-        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-        let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
-
-        // 🧵️ ONE transition, and then the pool that owes it its work. `pump_one` only SUBMITS a step
-        // to `semio_framework_async::process_worker_pool`; on wasm that pool has no threads and runs
-        // a submitted step only inside `WorkerPool::pump`, which the reactor turn calls — and NO
-        // reactor turn runs during a `step-job` crossing. So the session answered `Submitted`
-        // forever, the machine stayed in `Pump`, and the host reissued `step-job` for as long as the
-        // client waited: measured on `s.wfc.bitmap.solve` at 907 s and again at 423 s with a
-        // 6 000 000-unit grant (`🗑️generated/gj1-solve-probe-{1,2}.txt`) — the grant is irrelevant to
-        // a step that never runs. This is `📓️…project-wasm-pool-pump-starves-interactive-jobs`'s own
-        // law ("any loop that waits on a cooperative-pool step on wasm must pump the pool itself")
-        // applied to the one lane that still had no pump. Natively the pool has real workers and
-        // `pump_process_worker_pool` is a no-op, so both hosts run the identical code.
-        let poll = match self.session.as_mut() {
-            Some(session) => session.pump_one(&pool, semio_framework_async::Lane::UserVisible),
-            None => return self.fail(super::fault("job.infer.session-missing", "interactive inference lost its mounted worker session before pumping")),
+        let mut preview = false;
+        let stepped = match self.session.as_mut() {
+            Some(session) => session.step_on_caller(),
+            None => return PumpTransition::Settled(self.fail(super::fault("job.infer.session-missing", "interactive inference lost its mounted worker session before pumping"))),
         };
-        let poll = match poll {
-            Ok(poll) => poll,
-            Err(_) => return self.fail(super::fault("job.infer.worker-pump", "interactive inference mounted worker transition was rejected")),
-        };
-        let poll = if matches!(poll, semio_framework_job::WorkerJobPoll::Submitted) {
-            crate::reactor::turn::pump_process_worker_pool();
-            let repoll = match self.session.as_mut() {
-                Some(session) => session.pump_one(&pool, semio_framework_async::Lane::UserVisible),
-                None => return self.fail(super::fault("job.infer.session-missing", "interactive inference lost its mounted worker session before pumping")),
-            };
-            match repoll {
-                Ok(poll) => poll,
-                Err(_) => return self.fail(super::fault("job.infer.worker-pump", "interactive inference mounted worker transition was rejected")),
-            }
-        } else {
-            poll
-        };
-        if !matches!(poll, semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) {
-            return JobStep::Running(Some(progress));
+        if stepped.is_err() {
+            return PumpTransition::Settled(self.fail(super::fault("job.infer.worker-pump", "interactive inference mounted worker transition was rejected")));
         }
         let Some(outcome) = self.session.as_mut().and_then(InferenceSession::take_checked_out_outcome) else {
-            return self.fail(super::fault("job.infer.outcome-missing", "interactive inference mounted worker checkout lost its exact outcome"));
+            return PumpTransition::Settled(self.fail(super::fault("job.infer.outcome-missing", "interactive inference mounted worker checkout lost its exact outcome")));
         };
         self.terminal = outcome.is_terminal();
         let result = match &outcome {
@@ -458,15 +476,16 @@ impl InteractiveInferenceJob {
                     Ok(bytes) => bytes,
                     Err(error) => {
                         self.outcome = Some(outcome);
-                        return self.fail(error);
+                        return PumpTransition::Settled(self.fail(error));
                     }
                 };
                 if let Err(error) = self.bridge.publish_preview(bytes) {
                     self.outcome = Some(outcome);
-                    return self.fail(bridge_fault(&error));
+                    return PumpTransition::Settled(self.fail(bridge_fault(&error)));
                 }
                 if let Some(item) = self.bridge.take_preview() {
                     progress = encode_bridge_item(&item);
+                    preview = true;
                 }
                 None
             }
@@ -475,7 +494,7 @@ impl InteractiveInferenceJob {
                     Ok(bytes) => self.checkpoint = Some(bytes),
                     Err(error) => {
                         self.outcome = Some(outcome);
-                        return self.fail(error);
+                        return PumpTransition::Settled(self.fail(error));
                     }
                 }
                 None
@@ -484,7 +503,7 @@ impl InteractiveInferenceJob {
                 Ok(output) => Some(encode_result(self.request.clone(), output)),
                 Err(error) => {
                     self.outcome = Some(outcome);
-                    return self.fail(error);
+                    return PumpTransition::Settled(self.fail(error));
                 }
             },
             StepOutcome::Cancelled => Some(Err(super::fault("job.infer.cancelled", "interactive inference was cancelled"))),
@@ -493,7 +512,7 @@ impl InteractiveInferenceJob {
                     Ok(bytes) => self.bridge.publish_diagnostic(bytes),
                     Err(error) => {
                         self.outcome = Some(outcome);
-                        return self.fail(error);
+                        return PumpTransition::Settled(self.fail(error));
                     }
                 }
                 if let Some(item) = self.bridge.latest_diagnostic() {
@@ -503,10 +522,17 @@ impl InteractiveInferenceJob {
                 Some(Err(super::fault("job.infer.interactive", detail)))
             }
         };
+        let mut outcome = outcome;
+        if result.is_none() && matches!(outcome, StepOutcome::Yield | StepOutcome::PreviewReady(_)) && retire_absorbed_outcome(&mut outcome) {
+            return match self.session.as_mut().map(InferenceSession::resume) {
+                Some(Ok(())) => PumpTransition::Absorbed { progress, preview },
+                _ => PumpTransition::Settled(self.fail(super::fault("job.infer.resume", "interactive inference outcome lost its exact resume authority"))),
+            };
+        }
         self.result = result;
         self.outcome = Some(outcome);
         self.phase = InteractivePhase::OutcomeClose;
-        JobStep::Running(Some(progress))
+        PumpTransition::Settled(JobStep::Running(Some(progress)))
     }
 
     /// 🧾️ `OutcomeClose`: one page of the checked-out outcome's retained payload authority. On
@@ -601,7 +627,7 @@ impl BoundedJob for InteractiveInferenceJob {
         }
         match self.phase {
             InteractivePhase::Dispatch => self.dispatch(),
-            InteractivePhase::Pump => self.pump(),
+            InteractivePhase::Pump => self.pump(budget),
             InteractivePhase::OutcomeClose => self.close_outcome(),
             InteractivePhase::SessionClose => self.close_session(),
             InteractivePhase::RejectedClose => self.close_rejected(),

@@ -47,7 +47,7 @@ pub enum Generation2dMutation {
     DisconnectSynapse(super::disconnect_synapse::DisconnectSynapse),
     MoveWidget(super::move_widget::MoveWidget),
     ClearWidgetLayout(super::clear_widget_layout::ClearWidgetLayout),
-    UpdateCamera(super::set_camera::UpdateCamera),
+    UpdateCamera(super::update_camera::UpdateCamera),
     ChangeSchema(super::change_schema::ChangeSchema),
     CreateGeneration(super::create_generation::CreateGeneration),
     DeleteGeneration(super::delete_generation::DeleteGeneration),
@@ -78,6 +78,20 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
+
+//#region 🧊️Retirement
+impl Generation2dMutation {
+    /// 🧊️ Explicit cold-only disposal of one owned mutation. `create-widget`/`replace-widget` carry a
+    /// whole `Widget`, whose `neural::Dictionary` (and `OrderedSet`/`Tree`) fail-close on a bare drop,
+    /// so a dropped mutation aborts the process. Every other variant drops freely.
+    pub fn retire_cold(self) {
+        match self {
+            Self::CreateWidget(super::create_widget::CreateWidget { widget, .. }) | Self::ReplaceWidget(super::replace_widget::ReplaceWidget { widget }) => widget.retire_cold(),
+            _ => {}
+        }
+    }
+}
+//#endregion 🧊️Retirement
 
 //#region 🔖️GenerationBridge
 /// 🌉️ Bridges one `semio_framework_artifact_playbook_playbook::GenerationMutation` (the framework's own generation-editing
@@ -111,7 +125,7 @@ pub use super::move_widget::move_widget;
 pub use super::rename_generation::rename_generation;
 pub use super::replace_synapse::replace_synapse;
 pub use super::replace_widget::replace_widget;
-pub use super::set_camera::update_camera;
+pub use super::update_camera::update_camera;
 //#endregion 🔖️Builders
 
 //#region 🔖️HostSnapshotOperations

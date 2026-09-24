@@ -1,4 +1,37 @@
-dialect protocol stdio.epw.mutations
-; protocol::OpBinary raw text encoding of EpwMutation — NOT wrapped in the shared `.semio`
-; binary envelope
-payload = *OCTET   ; UTF-8 hand-rolled mutation text (see ../📝️text/📖️.grammar.semio)
+dialect protocol
+protocol None
+version 1
+schema None
+start op
+framing record
+
+# Real `EpwMutation` op frame (`dsl::tagged_value_binary`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`, then
+# the variant's `ToValue` tree without its variant name, as one framework wire value (`pack_rt::encode_wire_value`).
+# Each record is one mutation kind at its wire tag; this file is the only source of those tags.
+header fixed 2
+field format u8
+field tag varint
+record set-snapshot tag=0
+field payload bytes
+record set-location tag=1
+field payload bytes
+record set-design-conditions tag=2
+field payload bytes
+record set-typical-extreme-periods tag=3
+field payload bytes
+record set-ground-temperatures tag=4
+field payload bytes
+record set-holidays-dst tag=5
+field payload bytes
+record set-comments1 tag=6
+field payload bytes
+record set-comments2 tag=7
+field payload bytes
+record set-data-periods tag=8
+field payload bytes
+record insert-record tag=9
+field payload bytes
+record remove-record tag=10
+field payload bytes
+record set-record-field tag=11
+field payload bytes

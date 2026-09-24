@@ -215,6 +215,10 @@ impl store::ArtifactPack for Wfc2dSnapshot {
         let parsed = <Wfc2dSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         wfc2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        <Wfc2dSnapshotDsl as store::ArtifactPack>::record_spec()
+    }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 

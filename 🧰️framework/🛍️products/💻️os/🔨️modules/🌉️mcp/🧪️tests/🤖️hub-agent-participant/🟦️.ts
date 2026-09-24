@@ -22,7 +22,7 @@ import { chmodSync, existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { McpClientSession, mcpServerEntries, requireMcpBinary } from "../../🟦️.ts";
+import { McpClientSession, mcpServerEntries, minimalInputForSchema, requireMcpBinary } from "../../🟦️.ts";
 
 // 📁️ `new URL(x, import.meta.url).pathname` percent-encodes emoji path segments, and a counted
 // `..` chain silently walks past the root when a file moves — so the root is LOCATED, not counted.
@@ -102,7 +102,7 @@ row("4 the credential file is written at mode 0600", true, credentialPath);
 
 const declared = mcpServerEntries(repoRoot).semio;
 const scopes = declared?.args.includes("--scopes") ? String(declared.args[declared.args.indexOf("--scopes") + 1]) : "workspace.read,artifact.write,inference.execute,ui.observe,ui.control";
-// 🚧️ `.mcp.json`'s `semio` entry hard-codes `--folder .`, and `--folder`/`--hub` are mutually
+// 🚧️ `.mcp.json`'s `semio` entry binds a `--folder`, and `--folder`/`--hub` are mutually
 // exclusive, so a hub-bound agent is a DIFFERENT argv, not an extension of that one. This gate
 // spawns the identical binary the wrapper execs, with the hub selector in its place.
 const entry = { command: requireMcpBinary(repoRoot), args: ["stdio", "--scopes", scopes] };
@@ -143,8 +143,10 @@ try {
   const capabilityId = String(hits[0]?.id ?? hits[0]?.capabilityId ?? "");
 
   if (capabilityId) {
-    const prepared = await session.call("action_prepare", { capabilityId, input: {} });
-    row("11 action_prepare reaches a guest the HUB authorized", prepared.isError !== true, prepared.isError === true ? `${capabilityId}: ${JSON.stringify(prepared.structuredContent).slice(0, 300)}` : `handle=${prepared.structuredContent?.preparedHandle}`);
+    const described = await session.call("capabilities_describe", { capabilityId });
+    const input = minimalInputForSchema(described.structuredContent?.inputSchema ?? described.structuredContent?.capability?.inputSchema);
+    const prepared = await session.call("action_prepare", { capabilityId, input });
+    row("11 action_prepare reaches a guest the HUB authorized", prepared.isError !== true, prepared.isError === true ? `${capabilityId} input=${JSON.stringify(input)}: ${JSON.stringify(prepared.structuredContent).slice(0, 300)}` : `${capabilityId} input=${JSON.stringify(input)} handle=${prepared.structuredContent?.preparedHandle}`);
     const handle = prepared.structuredContent?.preparedHandle as string | undefined;
     if (handle) {
       const invoked = await session.call("action_invoke", { preparedActionHandle: handle });

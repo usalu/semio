@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceFenestrationVertices",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-fenestration-vertices",
-  "binaryTag": null,
+  "binaryTag": 276,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

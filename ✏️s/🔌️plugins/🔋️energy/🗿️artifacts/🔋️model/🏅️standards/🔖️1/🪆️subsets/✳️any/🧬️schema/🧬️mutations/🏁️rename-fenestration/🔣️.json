@@ -7,7 +7,7 @@
   "aggregateVariant": "RenameFenestration",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-fenestration",
-  "binaryTag": null,
+  "binaryTag": 37,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

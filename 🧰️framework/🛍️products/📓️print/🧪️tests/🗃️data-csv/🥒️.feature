@@ -19,7 +19,7 @@ Feature: A delimiter-separated file loads into a table exactly as d3-dsv parses 
   @level-quick
   @mode-differential
   Scenario: The first record names the columns
-    Given the committed probe document local://data-csv.tex and the committed file local://cities.csv
+    Given the committed probe document shared://🗃️data-csv/data-csv.tex and the committed file shared://🗃️data-csv/cities.csv
       | columns               |
       | city,population,note  |
     Then the compiled probe and the reference implementation agree on the columns and every cell
@@ -28,7 +28,7 @@ Feature: A delimiter-separated file loads into a table exactly as d3-dsv parses 
   @level-quick
   @mode-differential
   Scenario: A quoted field keeps its delimiter and unescapes its doubled quotes
-    Given the committed probe document local://data-csv.tex and the committed file local://cities.csv
+    Given the committed probe document shared://🗃️data-csv/data-csv.tex and the committed file shared://🗃️data-csv/cities.csv
       | row | note         |
       | 1   | Leine, Ihme  |
       | 2   | say "moin"   |
@@ -40,7 +40,7 @@ Feature: A delimiter-separated file loads into a table exactly as d3-dsv parses 
   @level-quick
   @mode-differential
   Scenario: A headerless file with a semicolon delimiter gets positional column names
-    Given the committed probe document local://data-csv.tex and the committed file local://places.tsv
+    Given the committed probe document shared://🗃️data-csv/data-csv.tex and the committed file shared://🗃️data-csv/places.tsv
       | delimiter | header | columns  |
       | ;         | false  | c1,c2,c3 |
     Then the compiled probe and the reference implementation agree on the columns and every cell

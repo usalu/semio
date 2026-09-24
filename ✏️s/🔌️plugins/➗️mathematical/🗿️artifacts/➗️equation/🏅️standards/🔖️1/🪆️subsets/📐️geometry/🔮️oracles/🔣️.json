@@ -9,7 +9,7 @@
       "id": "equation-1-geometry",
       "capability": "equation-1-geometry-mutate",
       "standardDirectoryName": "🔖️1",
-      "subsetDirectoryName": "✳️geometry",
+      "subsetDirectoryName": "📐️geometry",
       "vectors": [
         {
           "mutationId": "replace-points",
@@ -75,7 +75,7 @@
       "standard": "1",
       "subset": "geometry",
       "standardDirectoryName": "🔖️1",
-      "subsetDirectoryName": "✳️geometry",
+      "subsetDirectoryName": "📐️geometry",
       "mutations": [
         {
           "id": "replace-points",

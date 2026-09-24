@@ -7,7 +7,7 @@
   "aggregateVariant": "DuplicateWidget",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": null,
+  "binaryTag": 9,
   "invertibility": "plan",
   "diffParticipation": "none",
   "outcomeClasses": [

@@ -20,7 +20,7 @@ Feature: ISO timestamps are formatted by the d3-time-format grammar in both loca
   @level-quick
   @mode-differential
   Scenario: The English locale renders every directive as d3-time-format does
-    Given the committed probe document local://format-time.tex and the directives
+    Given the committed probe document shared://🕰️format-time/format-time.tex and the directives
       | specifier      | timestamp           |
       | %Y-%m-%d       | 2026-09-05          |
       | %A %B %e, %Y   | 2026-09-05          |
@@ -40,7 +40,7 @@ Feature: ISO timestamps are formatted by the d3-time-format grammar in both loca
   @level-quick
   @mode-differential
   Scenario: The German locale renders the localized month and weekday names
-    Given the committed probe document local://format-time.tex and the same directives
+    Given the committed probe document shared://🕰️format-time/format-time.tex and the same directives
       | locale | january | saturday | shortMarch |
       | de     | Januar  | Samstag  | Mrz        |
     Then the compiled probe and the reference implementation agree on every rendered string

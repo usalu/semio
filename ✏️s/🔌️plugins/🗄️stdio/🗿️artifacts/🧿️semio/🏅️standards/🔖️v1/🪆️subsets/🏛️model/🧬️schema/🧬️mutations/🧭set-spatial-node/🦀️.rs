@@ -9,15 +9,15 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetSpatialNode {
-    pub(crate) id: String,
+    pub id: String,
     #[value(default)]
-    pub(crate) kind: Option<SpatialKind>,
+    pub kind: Option<SpatialKind>,
     #[value(default)]
-    pub(crate) name: Option<String>,
+    pub name: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub(crate) parent_id: Option<Option<String>>,
+    pub parent_id: Option<Option<String>>,
     #[value(default)]
-    pub(crate) placement: Option<SemioTransform>,
+    pub placement: Option<SemioTransform>,
 }
 
 impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for SetSpatialNode {

@@ -25,7 +25,7 @@ type Surface = {
 /** 📋️ Loads the authored surface table and the authored description table. */
 function authored(ctx: AdapterContext): { surface: Surface; describe: (profile: string, key: string) => string } {
   const surface = JSON.parse(readFileSync(ctx.fixture("shared://📋️surface.json"), "utf8")) as Surface;
-  const table = JSON.parse(readFileSync(ctx.fixture("asset://🧬️schema/🔣️descriptions.json"), "utf8")) as { descriptions: Record<string, Record<string, string>> };
+  const table = JSON.parse(readFileSync(ctx.fixture("asset://🔣️descriptions.json"), "utf8")) as { descriptions: Record<string, Record<string, string>> };
   const describe = (profile: string, key: string): string => table.descriptions[key]?.[profile] || table.descriptions[key]?.generic || "";
   return { surface, describe };
 }

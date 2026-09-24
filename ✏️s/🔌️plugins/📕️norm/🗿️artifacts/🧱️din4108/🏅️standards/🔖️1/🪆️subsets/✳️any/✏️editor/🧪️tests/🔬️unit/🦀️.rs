@@ -61,8 +61,14 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
     let definition = create_din4108_app();
     let mut classified = 0usize;
     for window in definition.window_kinds.iter() {
+        // 🕹️ `window.actions` holds only what a window kind claims FOR ITSELF. Since the app-wide
+        // roster stopped being cloned into every window kind, the dispatchable set of a window is
+        // `semio_framework::window_kind_actions` — the same predicate the framework's own
+        // command-bridge law uses. Norm declares all three retained tools at app level, so reading
+        // `window.actions` here saw an empty roster.
+        let dispatchable = semio_framework::window_kind_actions(&definition, window);
         for id in crate::app_surface::NORM_RETAINED_TOOL_IDS {
-            let action = window.actions.iter().find(|action| action.id == *id).unwrap_or_else(|| panic!("window {} must declare {id}", window.id));
+            let action = dispatchable.iter().find(|action| action.id == *id).unwrap_or_else(|| panic!("window {} must dispatch {id}", window.id));
             assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
             classified += 1;
         }

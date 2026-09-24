@@ -18,7 +18,7 @@ import {
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️fixtures/🖋️ink-clipboard/🔣️.json"), "utf8")) as any;
+const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖋️ink-clipboard/🔣️.json"), "utf8")) as any;
 const schema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖋️ink-clipboard/🔣️.json"), "utf8")) as any;
 
 type ClipboardDataStub = {

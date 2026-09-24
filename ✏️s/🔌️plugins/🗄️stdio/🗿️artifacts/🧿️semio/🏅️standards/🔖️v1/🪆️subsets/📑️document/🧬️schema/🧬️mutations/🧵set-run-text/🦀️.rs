@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetRunText {
-    pub(crate) path: DocBlockPath,
-    pub(crate) run_index: usize,
-    pub(crate) text: String,
+    pub path: DocBlockPath,
+    pub run_index: usize,
+    pub text: String,
 }
 
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for SetRunText {

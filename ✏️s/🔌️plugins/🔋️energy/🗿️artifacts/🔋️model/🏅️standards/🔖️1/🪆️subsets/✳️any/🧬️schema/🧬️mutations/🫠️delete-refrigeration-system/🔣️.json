@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteRefrigerationSystem",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-refrigeration-system",
-  "binaryTag": null,
+  "binaryTag": 227,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

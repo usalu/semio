@@ -14,7 +14,7 @@ import (
 
 // region 🔖️Vectors
 
-const hookVectors = "local://🪝️hook-outputs.json"
+const hookVectors = "shared://🪝️editor-hook-output-format/🪝️hook-outputs.json"
 
 type hookRecord struct {
 	ID            string `json:"id"`

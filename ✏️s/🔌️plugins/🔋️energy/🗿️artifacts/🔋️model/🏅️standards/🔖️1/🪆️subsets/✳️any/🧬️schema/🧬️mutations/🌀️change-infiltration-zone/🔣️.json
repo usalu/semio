@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeInfiltrationZone",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-zone",
-  "binaryTag": null,
+  "binaryTag": 102,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

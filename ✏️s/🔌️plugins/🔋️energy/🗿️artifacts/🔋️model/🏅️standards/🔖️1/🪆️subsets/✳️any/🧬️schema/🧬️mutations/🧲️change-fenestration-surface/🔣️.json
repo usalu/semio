@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeFenestrationSurface",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-surface",
-  "binaryTag": null,
+  "binaryTag": 38,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

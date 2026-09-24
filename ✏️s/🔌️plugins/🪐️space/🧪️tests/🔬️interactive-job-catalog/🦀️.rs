@@ -21,7 +21,7 @@ const GENERATED_REGISTRY: &str = include_str!("../../../../../🧰️framework/�
 /// disposition `validate_ui_dispatch_classification` will read for it.
 fn declared_dispositions(definition: &AppDefinition) -> BTreeMap<String, InteractiveJobClassification> {
     let mut declared = BTreeMap::new();
-    for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
+    for action in definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())) {
         declared.insert(action.id.clone(), action.semantics.execution.interactive_job);
     }
     for command in definition.commands.iter().chain(definition.modes.iter().flat_map(|mode| mode.commands.iter())) {
@@ -120,7 +120,7 @@ async fn home_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_fac
     assert_eq!(factory_contract_ids::<semio_s_artifact_space_home::editor::home::HomeRetainedCommandJobFactory>(), owned);
     assert_eq!(factory_host_only_ids::<semio_s_artifact_space_home::editor::home::HomeRetainedCommandJobFactory>(), fixture_host_only);
     assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
-    // 🏠️ Home's retained (migrated) surface is the nine rows `HOME_RETAINED_TOOL_IDS` declares and the
+    // 🏠️ Home's retained (migrated) surface is the rows `HOME_RETAINED_TOOL_IDS` declares and the
     // committed fixture pins above; the spot-check below keeps this assertion from going vacuous if
     // the fixture and the factory ever drift to the same empty set together.
     for tool in ["openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "presenceHeartbeat"] {
@@ -248,11 +248,10 @@ async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
     let mut studio = VcsArtifactApp::<engine::space::SpaceApp>::with_registry(Default::default(), AppActionRegistry::from_definition(&engine::space::create_space_app().await.definition)).await;
     let mut home = VcsArtifactApp::<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_home::editor::home::create_home_app().await)).await;
     let mut index = VcsArtifactApp::<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_space::editor::space_index::create_space_index_editor())).await;
-    assert_eq!(<engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 15);
-    // 🏠️ 11 since ticket 26/09/18 S4: `applyDirectoryEventPage` (the directory bootstrap's
-    // acknowledgement) and `createStudio` (the local, hub-free studio path) joined Home's retained
-    // set — both were `BatchOnlyPendingRewrite` and therefore hard-dead at UI dispatch.
-    assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 11);
+    assert_eq!(<engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 16);
+    // 🏠️ 13: ticket 26/09/18 S4 retained `applyDirectoryEventPage` and `createStudio`; the
+    // data-classification lane added `promoteToHubSpace` (HostOnly) and `persistLocally` (Artifact).
+    assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 13);
     assert_eq!(<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 14);
     artifact_app_laws::close_registered_fixture_app(&mut studio);
     artifact_app_laws::close_registered_fixture_app(&mut home);

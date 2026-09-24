@@ -7,7 +7,7 @@
   "aggregateVariant": "ConnectKindCompatibility",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "connect-kind-compatibility",
-  "binaryTag": null,
+  "binaryTag": 25,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

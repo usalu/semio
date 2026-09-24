@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateSetpointManager",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-setpoint-manager",
-  "binaryTag": null,
+  "binaryTag": 165,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

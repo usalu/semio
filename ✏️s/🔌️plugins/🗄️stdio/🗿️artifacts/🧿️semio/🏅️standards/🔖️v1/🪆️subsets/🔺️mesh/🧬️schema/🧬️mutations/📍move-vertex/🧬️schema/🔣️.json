@@ -27,24 +27,7 @@
   },
   "$defs": {
     "SemioPoint3": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "z": {
-          "type": "number"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/snapshot.json#/definitions/SemioPoint3"
     }
   }
 }

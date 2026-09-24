@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceQc",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-qc",
-  "binaryTag": null,
+  "binaryTag": 32,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

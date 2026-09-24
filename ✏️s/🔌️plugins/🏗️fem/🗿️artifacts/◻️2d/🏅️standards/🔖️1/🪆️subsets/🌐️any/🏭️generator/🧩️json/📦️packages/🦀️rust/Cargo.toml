@@ -1,7 +1,8 @@
 # 🧭️ Own workspace root: never joins the repository's root workspace, whose root manifest is a shared,
 # contended file.
 #
-# 🧾️ Uses the first-party `pack::json` carrier for this subset's non-geometric mutations.
+# 🚫️ DEPENDS ON `json` (json-rust) AND NOTHING ELSE. The fem plugin itself links `serde_json` and the
+# first-party `pack` JSON tree, so a reader built on either would compare the implementation with itself.
 #
 # The two mesh oracles already registered here (`three-fem2d-mesh-reader`, `manifold-fem2d-mesh-measure`)
 # read the STL/OBJ export and therefore see GEOMETRY only — which is why they cover the three
@@ -28,4 +29,4 @@ name = "fem2d_json"
 path = "../../🦀️.rs"
 
 [dependencies]
-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+json = "0.12"

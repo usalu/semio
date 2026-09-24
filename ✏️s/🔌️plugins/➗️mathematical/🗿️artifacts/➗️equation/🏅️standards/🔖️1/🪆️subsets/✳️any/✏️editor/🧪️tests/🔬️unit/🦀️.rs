@@ -240,8 +240,19 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     assert_eq!(cancelled_after.close_step(1, usize::MAX), InteractiveJobCloseStep::Complete);
 }
 
+/// ⏱️ The runtime's own step law over the maximum document: `StepOverrunLedger` records any turn past
+/// `INTERACTIVE_STEP_CEILING_US` and quarantines a session only after
+/// `SUSTAINED_OVERRUN_QUARANTINE_STEPS` consecutive overruns. So one descheduled turn on a loaded host is
+/// forgiven, and a turn whose own cost exceeds the ceiling overruns every time and is convicted. A turn
+/// that re-derived the whole document (the per-step extent re-check) failed this law on every run.
 #[semio_framework_async_macros::async_test]
 async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
+    let ceiling = std::time::Duration::from_micros(semio_framework_job::INTERACTIVE_STEP_CEILING_US);
+    let mut consecutive = 0_u32;
+    let mut admit = |elapsed: std::time::Duration, turn: &str| {
+        consecutive = if elapsed < ceiling { 0 } else { consecutive + 1 };
+        assert!(consecutive < semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS, "maximum Equation {turn} turns overran {ceiling:?} {consecutive} times in a row (last {elapsed:?})");
+    };
     let graph = graph_with_shape(EQUATION_MAX_NODES, EQUATION_MAX_EDGES);
     let snapshot = crate::equation_snapshot_with_state(&graph, &EquationGeometry::default());
     let ids = (0..EQUATION_MAX_DELETE_IDS).map(|index| format!("n{index}")).collect::<Vec<_>>();
@@ -260,8 +271,7 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
         let step = work
             .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation })
             .expect("maximum retained turn");
-        let elapsed = started.elapsed();
-        assert!(elapsed < std::time::Duration::from_millis(8), "maximum Equation microturn exceeded 8 ms: {elapsed:?}");
+        admit(started.elapsed(), "micro");
         if matches!(step, ArtifactCommandWorkStep::Complete(_)) {
             break;
         }
@@ -270,7 +280,7 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
     while !work.terminal_is_empty() {
         let started = std::time::Instant::now();
         let _ = work.close_step(1, usize::MAX);
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum Equation close turn exceeded 8 ms");
+        admit(started.elapsed(), "close");
     }
 }
 //#endregion 🔖️RetainedCommands

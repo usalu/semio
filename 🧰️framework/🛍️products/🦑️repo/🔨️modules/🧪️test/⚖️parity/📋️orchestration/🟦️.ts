@@ -26,17 +26,27 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 /** 🎭️ The case's oracle decision: which implementation serves the oracle role, or the recorded no-oracle decision. */
-export function oracleDecision(repoRoot: string, discovered: DiscoveredCase, level: TestLevel): { implementation: Implementation | null; noOracleDecision: string | null; comparison: ComparisonProfile; problem: string | null } {
+export function oracleDecision(repoRoot: string, discovered: DiscoveredCase, level: TestLevel): { implementation: Implementation | null; hostedByCase: boolean; noOracleDecision: string | null; comparison: ComparisonProfile; problem: string | null } {
   const registry = loadOracleRegistry(repoRoot);
   const { plan } = buildCasePlan(repoRoot, discovered, level);
   if (plan.oracle === null)
-    return { implementation: null, noOracleDecision: plan.noOracleDecision, comparison: plan.comparison, problem: plan.noOracleDecision === null ? `${discovered.caseDir}: feature declares neither an oracle nor a no-oracle decision` : null };
+    return { implementation: null, hostedByCase: false, noOracleDecision: plan.noOracleDecision, comparison: plan.comparison, problem: plan.noOracleDecision === null ? `${discovered.caseDir}: feature declares neither an oracle nor a no-oracle decision` : null };
   const entry = registry.oracles.find((candidate) => candidate.id === plan.oracle);
-  if (entry === undefined) return { implementation: null, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: unknown oracle id ${plan.oracle}` };
+  if (entry === undefined) return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: unknown oracle id ${plan.oracle}` };
   const mapped = (entry.ecosystem === "javascript" ? "typescript" : entry.ecosystem) as Implementation;
   if ((discovered.adapters as Record<string, string | undefined>)[mapped] === undefined)
-    return { implementation: null, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: oracle ${entry.id} needs a ${mapped} adapter to run in` };
-  return { implementation: mapped, noOracleDecision: null, comparison: plan.comparison, problem: null };
+    return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: oracle ${entry.id} needs a ${mapped} adapter to run in` };
+  return { implementation: mapped, hostedByCase: entry.hostPath === discovered.caseDir, noOracleDecision: null, comparison: plan.comparison, problem: null };
+}
+
+/**
+ * 🔬️ The languages dispatched as this case's subject: those the owner ships a package in, minus the
+ * one whose adapter IS the declared oracle. An oracle registered with `hostPath` equal to the case
+ * directory is an implementation written in that adapter itself — the second implementation the
+ * subject is judged against — so the same adapter can never also answer as the subject.
+ */
+export function subjectImplementations(repoRoot: string, discovered: DiscoveredCase, decision: ReturnType<typeof oracleDecision>, candidates: readonly Implementation[]): Implementation[] {
+  return candidates.filter((candidate) => ownerShipsImplementation(repoRoot, discovered, candidate) && !(decision.hostedByCase && decision.implementation === candidate));
 }
 
 /** 🎯️ The declared execution mode of one planned scenario — what a no-oracle substitute must match. */
@@ -66,13 +76,13 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
       if (!phases.includes("subject") && !rawInputOracle) return;
       // 🔬️Only the languages this repository actually implements the owner in are dispatched as
       // subjects; see `ownerShipsImplementation`.
-      const subjects = selectImplementations(discovered, rest).filter((candidate) => ownerShipsImplementation(repoRoot, discovered, candidate));
+      const subjects = subjectImplementations(repoRoot, discovered, decision, selectImplementations(discovered, rest));
       // 🚫️A case every one of whose adapters is a reference HOST has no subject half at all. That is
       // a real gap and it must stay visible — reported the same way `not-exercised` is, rather than
       // as a per-scenario `errored` result whose null projection would enter the parity ratio and
       // read as a subject that ran and disagreed.
       if (subjects.length === 0 && selectImplementations(discovered, rest).length > 0)
-        console.error(`[test] no-subject-implementation ${discovered.caseDir} (adapters ${Object.keys(discovered.adapters).join(", ")} host references only; this repository ships no implementation of the owner in any of those languages)`);
+        console.error(`[test] no-subject-implementation ${discovered.caseDir} (requested adapters ${selectImplementations(discovered, rest).join(", ")} host references only: the owner ships no package in their language, or the adapter is the case's own declared oracle)`);
       for (const implementation of subjects) {
         const outcome = executeOne(repoRoot, discovered, level, "subject", implementation);
         caseResults.push(...outcome.results);

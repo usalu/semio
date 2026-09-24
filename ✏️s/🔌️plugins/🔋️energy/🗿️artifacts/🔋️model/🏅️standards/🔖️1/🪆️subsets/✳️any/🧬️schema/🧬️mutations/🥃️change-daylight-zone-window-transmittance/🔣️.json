@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeDaylightZoneWindowTransmittance",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-daylight-zone-window-transmittance",
-  "binaryTag": null,
+  "binaryTag": 156,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

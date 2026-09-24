@@ -7,7 +7,7 @@
   "aggregateVariant": "ConnectVortices",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "connect-vortices",
-  "binaryTag": null,
+  "binaryTag": 14,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -30,7 +30,7 @@ export default defineConfig({
     // 🚫️ Four files live under `🧪️tests/` and are NOT vitest suites, so the glob above swept them in
     // and the project reported them as failures that measured nothing:
     //   · `🎚️config` is the configuration you are reading — vitest called it a suite with no tests;
-    //   · `💬️agent-reply`, `🤖️live-agent-loop` and `🤖️hub-agent-participant` are LIVE GATES with
+    //   · `💬️agent-reply`, `🤖️live-agent-loop`, `🤖️hub-agent-participant` and `🤝️hub-edit-durability` are LIVE GATES with
     //     their own `*-check` Nx targets and `.vscode/launch.json` rows (group `4_gate`). Each one
     //     needs an already-running `dev` serve or hub handed to it by environment, executes at
     //     import time and ends in `process.exit`. Run under `test quick` they crashed on an unset
@@ -41,6 +41,7 @@ export default defineConfig({
       resolve(root, "../../🧪️tests/💬️agent-reply/🟦️.ts"),
       resolve(root, "../../🧪️tests/🤖️live-agent-loop/🟦️.ts"),
       resolve(root, "../../🧪️tests/🤖️hub-agent-participant/🟦️.ts"),
+      resolve(root, "../../🧪️tests/🤝️hub-edit-durability/🟦️.ts"),
     ],
     coverage: { include: ["../../🟦️.ts"] },
     includeSource: ["../../🟦️.ts"],

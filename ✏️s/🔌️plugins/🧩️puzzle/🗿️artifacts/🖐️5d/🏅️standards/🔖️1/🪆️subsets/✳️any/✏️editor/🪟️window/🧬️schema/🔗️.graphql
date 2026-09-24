@@ -71,7 +71,16 @@ type Puzzle5dWorldWindowConfig {
   voxelDims: [Int!]!
 }
 
+type Puzzle5dSuggestionMenu {
+  x: Float!
+  y: Float!
+  windowId: String!
+  vortexFullId: String!
+  submenu: Boolean!
+}
+
 type Puzzle5dWindowTransient {
+  suggestionMenu: Puzzle5dSuggestionMenu
   engagementInput: String!
   brushCandidateIndex: Int!
 }

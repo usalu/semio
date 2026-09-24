@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeModel",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-model",
-  "binaryTag": null,
+  "binaryTag": 7,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

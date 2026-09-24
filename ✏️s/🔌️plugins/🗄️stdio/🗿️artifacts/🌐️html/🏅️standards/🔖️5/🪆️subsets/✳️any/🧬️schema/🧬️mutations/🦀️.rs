@@ -271,14 +271,19 @@ impl OpText for HtmlMutation {
     }
 }
 
+//#region 🏷️WireTags
+/// 🏷️ `HtmlMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+//#endregion 🏷️WireTags
+
 /// ⚡️ Binary = the text bytes verbatim, same simplification as `HtmlDiff`'s hand-rolled codec.
 impl OpBinary for HtmlMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        dsl::tagged_text_binary::encode_line(WIRE_PROTOCOL, &self.print_op())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        let line = dsl::tagged_text_binary::decode_line(WIRE_PROTOCOL, bytes)?;
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

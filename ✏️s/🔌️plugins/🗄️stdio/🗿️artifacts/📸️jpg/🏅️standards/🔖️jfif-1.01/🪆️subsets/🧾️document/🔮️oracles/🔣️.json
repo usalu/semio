@@ -1517,7 +1517,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts markers",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-jpg-marker-v1",
       "reproducible": true,
@@ -1566,7 +1566,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts markers",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-jpg-marker-v1",
       "reproducible": true,
@@ -1615,7 +1615,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts markers",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-jpg-marker-v1",
       "reproducible": true,
@@ -1664,7 +1664,7 @@
         "engineFamily": "libjpeg-turbo",
         "engineVersion": "3.2.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts libjpeg",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-jpg-libjpeg-marker-v1",
       "reproducible": true,
@@ -1712,7 +1712,7 @@
         "engineFamily": "libjpeg-turbo",
         "engineVersion": "3.2.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts libjpeg",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-jpg-libjpeg-marker-v1",
       "reproducible": true,
@@ -1760,7 +1760,7 @@
         "engineFamily": "libjpeg-turbo",
         "engineVersion": "3.2.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts libjpeg",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-jpg-libjpeg-marker-v1",
       "reproducible": true,

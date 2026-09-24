@@ -36,7 +36,7 @@ const grid = (value: number): number => {
 
 /** 🎯️ Every record of one compiled fixture that carries the given key. */
 async function records(ctx: AdapterContext, fixture: string, key: string): Promise<number[][]> {
-  const parsed = await compileVizProbe(ctx.fixture(`local://${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const parsed = await compileVizProbe(ctx.fixture(`shared://💹️charts-financial/${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   return roundProbeNumbers(parsed, DECIMALS)
     .filter((record) => record.key === key)
     .map((record) => record.values.map(Number));

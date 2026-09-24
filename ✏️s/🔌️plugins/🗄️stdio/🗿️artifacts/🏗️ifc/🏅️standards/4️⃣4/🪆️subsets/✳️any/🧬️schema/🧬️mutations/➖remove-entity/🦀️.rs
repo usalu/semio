@@ -9,7 +9,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveEntity {
-    pub(crate) id: u64,
+    pub id: u64,
 }
 
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for RemoveEntity {

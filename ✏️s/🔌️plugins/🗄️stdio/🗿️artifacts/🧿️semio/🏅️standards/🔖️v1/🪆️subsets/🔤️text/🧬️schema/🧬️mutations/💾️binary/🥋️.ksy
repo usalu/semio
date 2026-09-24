@@ -10,7 +10,7 @@ seq:
     doc: "OP_BINARY_FORMAT, currently 1"
   - id: tag
     type: u1
-    doc: "variant ordinal, 0-6 — see OP_KEYWORDS in ../💾️binary/🦀️.rs"
+    doc: "the kind's record tag in 📡️.protocol.semio"
   - id: payload
     size-eos: true
     doc: "the variant's own argument tail; real codec in ../💾️binary/🦀️.rs"

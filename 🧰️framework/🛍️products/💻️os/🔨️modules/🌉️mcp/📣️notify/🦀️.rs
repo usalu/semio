@@ -18,7 +18,7 @@
 
 use crate::protocol::{JsonRpcNotification, NOTIFICATION_RESOURCES_LIST_CHANGED, NOTIFICATION_RESOURCES_UPDATED};
 use std::cell::RefCell;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::{Arc, Mutex, OnceLock, Weak};
 
 //#region 🔖️NotificationSink
@@ -304,12 +304,37 @@ pub const NOTIFICATION_PROGRESS: &str = "notifications/progress";
 #[derive(Clone)]
 pub struct ProgressBinding {
     pub token: serde_json::Value,
-    pub request_id: Option<serde_json::Value>,
     pub slot: NotificationSlot,
 }
 
 thread_local! {
     static ACTIVE_PROGRESS: RefCell<Option<ProgressBinding>> = const { RefCell::new(None) };
+    static ACTIVE_REQUEST: RefCell<Option<String>> = const { RefCell::new(None) };
+}
+
+/// 🧷️ RAII guard naming the JSON-RPC request whose `tools/call` runs on this thread — with or
+/// without a progress token — so every job it mints is cancellable by `notifications/cancelled`.
+/// Dropping it forgets a cancel that named this request.
+pub struct RequestScope {
+    previous: Option<String>,
+    key: Option<String>,
+}
+
+impl Drop for RequestScope {
+    fn drop(&mut self) {
+        let previous = self.previous.take();
+        ACTIVE_REQUEST.with(|active| *active.borrow_mut() = previous);
+        if let Some(key) = self.key.take() {
+            progress_bindings().lock().expect("progress binding lock poisoned").cancelled_requests.retain(|cancelled| cancelled != &key);
+        }
+    }
+}
+
+/// 🆔️ Enters the request scope for one `tools/call`; `None` (a notification) binds nothing.
+pub fn enter_request_scope(request_id: Option<&serde_json::Value>) -> RequestScope {
+    let key = request_id.map(request_key);
+    let previous = ACTIVE_REQUEST.with(|active| std::mem::replace(&mut *active.borrow_mut(), key.clone()));
+    RequestScope { previous, key }
 }
 
 /// 🧷️ RAII guard for the thread-local binding — restoring the previous value on drop rather than
@@ -343,7 +368,13 @@ pub fn active_progress_binding() -> Option<ProgressBinding> {
 struct ProgressBindings {
     by_job: BTreeMap<String, ProgressBinding>,
     jobs_by_request: BTreeMap<String, Vec<String>>,
+    cancelled_requests: VecDeque<String>,
 }
+
+/// 🛑️ How many cancels for requests that have not minted a job yet are remembered — the stdio reader
+/// runs ahead of dispatch by at most the client's pipelined requests, and a cancel for a request that
+/// already finished must not accumulate forever.
+const CANCELLED_REQUEST_MEMORY: usize = 256;
 
 static PROGRESS_BINDINGS: OnceLock<Mutex<ProgressBindings>> = OnceLock::new();
 
@@ -359,12 +390,41 @@ fn request_key(request_id: &serde_json::Value) -> String {
 /// `JobRegistry::begin_with_id`, so EVERY job producer in the crate is covered by construction
 /// rather than each one remembering to opt in. Outside a scope this is a no-op.
 pub fn bind_job_to_active_scope(job_id: &str) {
-    let Some(binding) = active_progress_binding() else { return };
-    let mut bindings = progress_bindings().lock().expect("progress binding lock poisoned");
-    if let Some(request_id) = binding.request_id.as_ref() {
-        bindings.jobs_by_request.entry(request_key(request_id)).or_default().push(job_id.to_string());
+    let request = ACTIVE_REQUEST.with(|active| active.borrow().clone());
+    let progress = active_progress_binding();
+    let cancelled = {
+        let mut bindings = progress_bindings().lock().expect("progress binding lock poisoned");
+        if let Some(key) = request.as_ref() {
+            bindings.jobs_by_request.entry(key.clone()).or_default().push(job_id.to_string());
+        }
+        if let Some(binding) = progress {
+            bindings.by_job.insert(job_id.to_string(), binding);
+        }
+        request.as_ref().is_some_and(|key| bindings.cancelled_requests.contains(key))
+    };
+    if cancelled {
+        let _ = crate::ui::job_registry().request_cancel(job_id);
     }
-    bindings.by_job.insert(job_id.to_string(), binding);
+}
+
+/// 🛑️ `notifications/cancelled`'s effect: every job minted under `request_id` is asked to stop
+/// through the job registry (which fires each producer's bound interrupt), and a request that has
+/// not minted its job yet is remembered so the job is cancelled the moment it is minted.
+pub fn cancel_request(request_id: &serde_json::Value) {
+    let key = request_key(request_id);
+    let jobs = {
+        let mut bindings = progress_bindings().lock().expect("progress binding lock poisoned");
+        if !bindings.cancelled_requests.contains(&key) {
+            if bindings.cancelled_requests.len() == CANCELLED_REQUEST_MEMORY {
+                bindings.cancelled_requests.pop_front();
+            }
+            bindings.cancelled_requests.push_back(key.clone());
+        }
+        bindings.jobs_by_request.get(&key).cloned().unwrap_or_default()
+    };
+    for job_id in jobs {
+        let _ = crate::ui::job_registry().request_cancel(&job_id);
+    }
 }
 
 /// 📈️ Publishes one `notifications/progress` for `job_id` if it was minted under a progress token —

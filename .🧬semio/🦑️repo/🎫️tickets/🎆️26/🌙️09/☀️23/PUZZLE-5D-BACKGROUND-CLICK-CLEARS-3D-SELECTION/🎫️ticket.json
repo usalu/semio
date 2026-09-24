@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 5d Background Click Clears 3d Selection",
+  "emoji": "🖐️",
+  "status": "open",
+  "description": "There is a bug that when deselecting everything by clicking on the background the selection in 3d wrongly stays. Clicking empty space must clear the selection in the puzzle 5d 3d view the same way puzzle 3d does.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪6f9e179c0f844bfeacd3a999a864fe6b"
+  ]
+}

@@ -47,11 +47,11 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-value", "set-map-en
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, JsonMember, JsonValue};
-    use crate::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use crate::standards::v1::subsets::value::schema::mutations::{
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::{
         apply_semio_value_mutation, insert_list_item, inverse_semio_value_mutation, remove_list_item, remove_map_entry, remove_node, set_map_entry, set_node, set_snapshot, set_value, SemioValueMutation, SemioValuePath, SemioValuePathSegment,
     };
-    use crate::standards::v1::subsets::value::schema::snapshot::{
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{
         decode_semio_value_pack, decode_semio_value_snapshot_json, encode_semio_value_pack, encode_semio_value_snapshot_json, parse_semio_value_dsl, print_semio_value_dsl, SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId,
     };
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;

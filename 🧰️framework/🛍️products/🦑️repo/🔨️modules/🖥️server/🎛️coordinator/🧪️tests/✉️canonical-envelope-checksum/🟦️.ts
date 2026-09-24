@@ -22,7 +22,7 @@ const readGolden = (ctx: { fixtureBytes(uri: string): Uint8Array }): Envelope =>
   JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://📜️g3-event-log.jsonl")).trimEnd());
 
 const readSchema = (ctx: { fixtureBytes(uri: string): Uint8Array }): Record<string, unknown> =>
-  JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://🧬️g3-event-schema.json")));
+  Object.fromEntries(Object.entries((JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("schema://repo.server.coordinator/G3EventLogContract"))) as { $defs: { G3EventLogContract: { properties: Record<string, { const: unknown }> } } }).$defs.G3EventLogContract.properties).map(([key, property]) => [key, property.const]));
 
 /** ♻️ The payload as the store persists it: object keys sorted, no insignificant whitespace. */
 const canonical = (value: unknown): string => {

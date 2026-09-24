@@ -3,24 +3,131 @@ protocol stdio.pdf.1.7.mutations
 version 1
 schema stdio.pdf.1.7.op
 start record
-
-# Exact binary op frame: format byte, direct-owner tag, payload length, then canonical aggregate
-# JSON. `tag` is the `PdfMutation` direct-owner ordinal, exactly 0-59 in declaration order:
-# InsertPage, RemovePage, SetPageMediaBox, SetPageCropBox, AppendPageContent, SetInfo,
-# InsertObject, RemoveObject, SetObjectValue, SetDictEntry, RemoveDictEntry, SetTrailerEntry,
-# RemoveTrailerEntry, MovePage, SetPageContent, SetPageRotation, SetPageBox, SetPageUserUnit,
-# InsertContent, RemoveContent, ReplaceContent, InsertAnnotation, RemoveAnnotation,
-# SetAnnotation, SetFont, RemoveFont, SetImage, RemoveImage, SetForm, RemoveForm,
-# SetExtGState, RemoveExtGState, SetShading, RemoveShading, SetPattern, RemovePattern,
-# SetColorSpace, RemoveColorSpace, SetProperties, RemoveProperties, SetEmbeddedFile,
-# RemoveEmbeddedFile, SetOutlines, SetNamedDestination, RemoveNamedDestination, SetPageLabels,
-# SetOutputIntents, SetAcroForm, SetOptionalContent, SetPageLayout, SetPageMode,
-# SetViewerPreferences, SetOpenAction, SetLanguage, SetMarkInfo, SetMetadata, SetDocumentId,
-# SetEncryption, SetCatalogEntry, RemoveCatalogEntry
-#
-# The schema-derived JSON tail retains recursive PDF values without duplicating their grammar.
 framing record
+
+# Real op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload (its leaf's `💾️binary` codec).
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: every leaf
+# codec derives its tag from its record at compile time (`dsl::protocol_record::tag_u8`).
 header fixed 2
 field format u8
 field tag u8
-chain payload bytes
+record insert-page tag=0
+field payload bytes
+record remove-page tag=1
+field payload bytes
+record set-page-media-box tag=2
+field payload bytes
+record set-page-crop-box tag=3
+field payload bytes
+record append-page-content tag=4
+field payload bytes
+record set-info tag=5
+field payload bytes
+record insert-object tag=6
+field payload bytes
+record remove-object tag=7
+field payload bytes
+record set-object-value tag=8
+field payload bytes
+record set-dict-entry tag=9
+field payload bytes
+record remove-dict-entry tag=10
+field payload bytes
+record set-trailer-entry tag=11
+field payload bytes
+record remove-trailer-entry tag=12
+field payload bytes
+record move-page tag=13
+field payload bytes
+record set-page-content tag=14
+field payload bytes
+record set-page-rotation tag=15
+field payload bytes
+record set-page-box tag=16
+field payload bytes
+record set-page-user-unit tag=17
+field payload bytes
+record insert-content tag=18
+field payload bytes
+record remove-content tag=19
+field payload bytes
+record replace-content tag=20
+field payload bytes
+record insert-annotation tag=21
+field payload bytes
+record remove-annotation tag=22
+field payload bytes
+record set-annotation tag=23
+field payload bytes
+record set-font tag=24
+field payload bytes
+record remove-font tag=25
+field payload bytes
+record set-image tag=26
+field payload bytes
+record remove-image tag=27
+field payload bytes
+record set-form tag=28
+field payload bytes
+record remove-form tag=29
+field payload bytes
+record set-ext-g-state tag=30
+field payload bytes
+record remove-ext-g-state tag=31
+field payload bytes
+record set-shading tag=32
+field payload bytes
+record remove-shading tag=33
+field payload bytes
+record set-pattern tag=34
+field payload bytes
+record remove-pattern tag=35
+field payload bytes
+record set-color-space tag=36
+field payload bytes
+record remove-color-space tag=37
+field payload bytes
+record set-properties tag=38
+field payload bytes
+record remove-properties tag=39
+field payload bytes
+record set-embedded-file tag=40
+field payload bytes
+record remove-embedded-file tag=41
+field payload bytes
+record set-outlines tag=42
+field payload bytes
+record set-named-destination tag=43
+field payload bytes
+record remove-named-destination tag=44
+field payload bytes
+record set-page-labels tag=45
+field payload bytes
+record set-output-intents tag=46
+field payload bytes
+record set-acro-form tag=47
+field payload bytes
+record set-optional-content tag=48
+field payload bytes
+record set-page-layout tag=49
+field payload bytes
+record set-page-mode tag=50
+field payload bytes
+record set-viewer-preferences tag=51
+field payload bytes
+record set-open-action tag=52
+field payload bytes
+record set-language tag=53
+field payload bytes
+record set-mark-info tag=54
+field payload bytes
+record set-metadata tag=55
+field payload bytes
+record set-document-id tag=56
+field payload bytes
+record set-encryption tag=57
+field payload bytes
+record set-catalog-entry tag=58
+field payload bytes
+record remove-catalog-entry tag=59
+field payload bytes

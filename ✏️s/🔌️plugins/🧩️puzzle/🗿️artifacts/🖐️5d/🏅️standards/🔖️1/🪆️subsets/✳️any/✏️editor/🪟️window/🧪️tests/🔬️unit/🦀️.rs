@@ -19,7 +19,7 @@ use super::*;
         assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(6));
         assert_eq!(oracle["fillCount"], serde_json::json!(crate::editor::puzzle5d::PUZZLE5D_DEFAULT_FILL_COUNT), "the fill count is document-instance configuration the fill run reads");
         let pack = store::ArtifactPack::encode_pack(&shared);
-        for forbidden in ["camera2d", "camera3d", "engagementInput", "brushCandidateIndex", "sun"] {
+        for forbidden in ["camera2d", "camera3d", "engagementInput", "brushCandidateIndex", "suggestionMenu", "sun"] {
             assert!(!spr.contains(forbidden));
             assert!(!pack.windows(forbidden.len()).any(|bytes| bytes == forbidden.as_bytes()));
         }
@@ -27,7 +27,11 @@ use super::*;
 
     #[test]
     fn transient_string_retirement_reaches_terminal_empty_with_tiny_grants() {
-        let transient = Puzzle5dWindowTransient { engagement_input: "five-dimensional-input".repeat(512), brush_candidate_index: 3 };
+        let transient = Puzzle5dWindowTransient {
+            suggestion_menu: Some(super::Puzzle5dSuggestionMenu { x: 3.0, y: 5.0, window_id: "five-dimensional-window".repeat(256), vortex_full_id: "grip-owner".repeat(256), submenu: true }),
+            engagement_input: "five-dimensional-input".repeat(512),
+            brush_candidate_index: 3,
+        };
         let mutation = Puzzle5dWindowTransientMutation::Snapshot { transient };
         assert!(puzzle5d_window_transient_preflight(&mutation).expect("large Puzzle 5D transient admission").is_admissible());
         let mut retirement = store::retirement::owned_retirement(mutation);

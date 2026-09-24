@@ -51,7 +51,7 @@ import Ajv, { type ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import deepEqual from "fast-deep-equal";
 import viewport2dSchema from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json";
-import viewportPoseFixture from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🧫️fixtures/🪟️poses/🔣️.json";
+import viewportPoseFixture from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/🪟️poses/🔣️.json";
 import treeDragHandleFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🌳️tree-drag-handles/🔣️.json";
 import sceneListTransferFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json" with { type: "json" };
 import { BlockListHost } from "../../🧱️elements/🧩️BlockListHost/🟦️.tsx";
@@ -1852,7 +1852,6 @@ import {
   resolveVortexPointerDownIntent,
   worldMeshMaterialRevision,
   worldVortexMaterialRevision,
-  worldSuggestionMenuOwnsWindow,
   resolveWorldMergeMode,
   resolveWorldContextMenuTarget,
   world3dContextMenuSurfaceV1,
@@ -2061,6 +2060,7 @@ import {
   peerIdsHovering,
   SyncAttachCard,
 } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
+import { suggestionMenuOwnsWindow } from "../../🧱️elements/🎣️suggestion-submenu/🟦️.ts";
 import { windowActionPaneNode, applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, captureTutorialUiSnapshot, chordUsesCanonicalKeyTokens, clipboardWriteFragmentFromEffect, createUiRefreshCoalescerV1, hostEffectRefreshScopeV1, keyboardEventMatchesChord, mergeUiDirtyScopeV1, pasteActionWithRetainedFragment, pasteArgsFragment, programArmedToolRevealV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId, worldSceneContentBounds, worldSceneContentBoundsKey } from "@semio-tech/infinite-world-r3f";
 
@@ -5546,10 +5546,7 @@ describe("framework renderer hosts", () => {
   it("numbers suggestion menu rows with digit shortcuts for the first nine candidates", () => {
     const items = suggestionMenuItems(
       {
-        open: true,
         pending: false,
-        x: 0,
-        y: 0,
         candidates: [
           { index: 2, objectLabel: "Capsule", vortexLabel: "port-a", icon: "box" },
           { index: 5, objectLabel: "Box", vortexLabel: "port-b", icon: "box" },
@@ -6294,11 +6291,11 @@ describe("framework renderer hosts", () => {
   });
 
   it("scopes suggestion menu ownership to the opening world window so sibling panes stay interactive", () => {
-    expect(worldSuggestionMenuOwnsWindow(null, "puzzle3d-main-top")).toBe(false);
-    expect(worldSuggestionMenuOwnsWindow({ open: false, windowId: "puzzle3d-main-top" }, "puzzle3d-main-top")).toBe(false);
-    expect(worldSuggestionMenuOwnsWindow({ open: true, windowId: "puzzle3d-main-top" }, "puzzle3d-main-top")).toBe(true);
-    expect(worldSuggestionMenuOwnsWindow({ open: true, windowId: "puzzle3d-main-top" }, "puzzle3d-main-perspective")).toBe(false);
-    expect(worldSuggestionMenuOwnsWindow({ open: true }, "puzzle3d-main-perspective")).toBe(true);
+    expect(suggestionMenuOwnsWindow(null, "puzzle3d-main-top")).toBe(false);
+    expect(suggestionMenuOwnsWindow({ open: false, windowId: "puzzle3d-main-top" }, "puzzle3d-main-top")).toBe(false);
+    expect(suggestionMenuOwnsWindow({ open: true, windowId: "puzzle3d-main-top" }, "puzzle3d-main-top")).toBe(true);
+    expect(suggestionMenuOwnsWindow({ open: true, windowId: "puzzle3d-main-top" }, "puzzle3d-main-perspective")).toBe(false);
+    expect(suggestionMenuOwnsWindow({ open: true }, "puzzle3d-main-perspective")).toBe(true);
   });
 
   it("revisions vortex materials when selection or hover state changes", () => {

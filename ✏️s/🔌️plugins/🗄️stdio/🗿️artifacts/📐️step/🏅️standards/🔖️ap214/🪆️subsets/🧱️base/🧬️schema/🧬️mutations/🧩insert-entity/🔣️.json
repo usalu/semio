@@ -7,7 +7,7 @@
   "aggregateVariant": "InsertEntity",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "insert-entity",
-  "binaryTag": null,
+  "binaryTag": 4,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

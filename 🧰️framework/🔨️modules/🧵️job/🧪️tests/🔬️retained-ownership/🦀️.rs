@@ -9,7 +9,7 @@ fn params(operation: OperationId, generation: Generation, cancel: CancelToken) -
 
 #[test]
 fn retained_payload_physical_close_preserves_short_pages_until_the_exact_backing_grant() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📦️physical-close/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️physical-close/🔣️.json")).unwrap();
     assert_eq!(fixture["pageBytes"], JOB_PAYLOAD_PAGE_BYTES);
     let streams = [JobPayloadStream::CheckpointState, JobPayloadStream::Preview, JobPayloadStream::CommitState, JobPayloadStream::CommitOutput, JobPayloadStream::Fault];
     for stream in streams {
@@ -18,7 +18,7 @@ fn retained_payload_physical_close_preserves_short_pages_until_the_exact_backing
             let generation = Generation(21);
             let ledger = Arc::new(JobPayloadOperationLedger::new(operation, generation));
             let mut sequence = 0;
-            let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+            let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
             let bytes = vec![42; row["logicalBytes"].as_u64().unwrap() as usize];
             let mut writer = RetainedJobPayloadWriter::new(stream);
             let mut page = writer.admit_page(&mut context).unwrap();
@@ -50,13 +50,13 @@ fn retained_payload_physical_close_preserves_short_pages_until_the_exact_backing
 
 #[test]
 fn retained_writer_physical_close_preserves_staged_and_rejected_backing() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📦️physical-close/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️physical-close/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let operation = OperationId(90_020);
         let generation = Generation(21);
         let ledger = Arc::new(JobPayloadOperationLedger::new(operation, generation));
         let mut sequence = 0;
-        let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+        let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
         let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::Preview);
         writer.begin_staged_page(&mut context).unwrap();
         writer.write_staged(&vec![42; row["logicalBytes"].as_u64().unwrap() as usize]).unwrap();
@@ -118,6 +118,7 @@ impl InteractiveJob for ShortGrantCloseJob {
 /// after `begin_close` onwards, with nothing in the protocol able to say so.
 #[test]
 fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
+    let _slots = super::worker_session_slots_shared();
     let grant = 4_096;
     assert!(grant < JOB_PAYLOAD_PAGE_BYTES, "this law is about a grant shorter than one physical page");
     let mut mounted = MountedWorkerJobSession::try_new(ShortGrantCloseJob { backing: Some(Box::new(51)), closing: false }, params(OperationId(90_030), Generation(23), root_cancel_token()))
@@ -163,8 +164,14 @@ fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
     );
 }
 
+/// ⏳️ A liveness bound, not a performance one: the pool worker that owns the step may be
+/// descheduled for a long time on a loaded machine (a hostile panic also unwinds and captures a
+/// backtrace there), so the wait is bounded by wall time rather than by a count of yields.
+const WORKER_LIVENESS_BOUND: std::time::Duration = std::time::Duration::from_secs(30);
+
 fn wait_for(session: &WorkerJobSession<HostileJob>, expected: WorkerJobPoll) {
-    for _ in 0..4_096 {
+    let deadline = std::time::Instant::now() + WORKER_LIVENESS_BOUND;
+    while std::time::Instant::now() < deadline {
         if session.poll() == expected {
             return;
         }
@@ -178,12 +185,12 @@ fn payload_ledger_identity_must_match_the_exact_step_context() {
     let ledger = Arc::new(JobPayloadOperationLedger::new(OperationId(90_000), Generation(6)));
     let operation_mismatch = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let mut sequence = 0;
-        let _ = StepContext::with_payload_ledger(OperationId(90_001), Generation(6), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+        let _ = StepContext::with_payload_ledger(OperationId(90_001), Generation(6), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
     }));
     assert!(operation_mismatch.is_err());
     let generation_mismatch = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let mut sequence = 0;
-        let _ = StepContext::with_payload_ledger(OperationId(90_000), Generation(7), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+        let _ = StepContext::with_payload_ledger(OperationId(90_000), Generation(7), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
     }));
     assert!(generation_mismatch.is_err());
 }
@@ -197,14 +204,14 @@ fn retained_payload_max_plus_one_zero_grant_nested_and_exact_close_are_owned() {
     let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState);
     for index in 0..JOB_PAYLOAD_OPERATION_PAGES {
         let mut preview_sequence = index as u64;
-        let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut preview_sequence, Arc::clone(&ledger));
+        let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut preview_sequence, Arc::clone(&ledger));
         let source = JobPayloadPageSource::new();
         let mut page = context.admit_payload_page(&mut writer, source).expect("each fixed payload page is admitted before write");
         page.write(&[index as u8]).expect("one byte fits admitted page");
         page.commit();
     }
     let mut sequence = 0;
-    let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+    let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
     let plus_one = JobPayloadPageSource::new();
     let plus_one_pointer = plus_one.backing_identity();
     let rejected = match context.admit_payload_page(&mut writer, plus_one) {
@@ -234,7 +241,7 @@ fn retained_state_and_output_have_separate_credits_and_close_one_page_per_grant(
     let mut state_writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitState);
     let mut output_writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput);
     let mut sequence = 0;
-    let mut state_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+    let mut state_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
     let mut state_page = state_context.admit_payload_page(&mut state_writer, JobPayloadPageSource::new()).expect("state page");
     state_page.write(b"state").expect("state bytes");
     state_page.commit();
@@ -242,7 +249,7 @@ fn retained_state_and_output_have_separate_credits_and_close_one_page_per_grant(
     assert_eq!(rejected.fault, JobPayloadAdmissionFault::OpportunityExhausted);
     drop(rejected.into_source());
     assert_eq!(state_writer.page_count(), 1);
-    let mut output_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+    let mut output_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
     let mut output_page = output_context.admit_payload_page(&mut output_writer, JobPayloadPageSource::new()).expect("separate output page");
     output_page.write(b"output").expect("output bytes");
     output_page.commit();
@@ -262,13 +269,13 @@ fn retained_writer_and_reader_advance_exactly_one_page_per_opportunity() {
     let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput);
     let mut cursor = 0;
     let mut sequence = 0;
-    let mut zero = StepContext::with_payload_ledger(operation, generation, StepBudget::new(0, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+    let mut zero = StepContext::with_payload_ledger(operation, generation, StepBudget::new(0, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
     assert_eq!(writer.write_slice_page(&mut zero, &bytes, &mut cursor), Ok(false));
     assert_eq!(cursor, 0);
-    let mut first = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+    let mut first = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
     assert_eq!(writer.write_slice_page(&mut first, &bytes, &mut cursor), Ok(false));
     assert_eq!(cursor, JOB_PAYLOAD_PAGE_BYTES);
-    let mut second = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
+    let mut second = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
     assert_eq!(writer.write_slice_page(&mut second, &bytes, &mut cursor), Ok(true));
     let mut payload = writer.finish().expect("two-page retained payload");
     let mut reader = payload.reader();
@@ -412,8 +419,20 @@ impl InteractiveJob for HostileJob {
     }
 }
 
+/// 🔁️ [`admitted`] for a mounted session, whose own pump takes a rejected opportunity back and
+/// resumes it (`WorkerJobPoll::Rejected`) on the pump after a contended submit.
+fn mounted_admitted<J: InteractiveJob + Send + 'static>(mounted: &mut MountedWorkerJobSession<J>, pool: &WorkerPool, lane: Lane) -> Result<WorkerJobPoll, MountedWorkerJobPumpFault> {
+    loop {
+        match mounted.pump_one(pool, lane) {
+            Err(MountedWorkerJobPumpFault::Submit(WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Contended))) | Ok(WorkerJobPoll::Rejected) => std::thread::yield_now(),
+            answer => return answer,
+        }
+    }
+}
+
 #[test]
 fn worker_authority_keeps_one_heap_identity_through_mounted_submit_and_checkout() {
+    let _slots = super::worker_session_slots_shared();
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
     let mut mounted = MountedWorkerJobSession::try_new(
         HostileJob { backing: Some(Box::new(73)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false },
@@ -422,11 +441,9 @@ fn worker_authority_keeps_one_heap_identity_through_mounted_submit_and_checkout(
     .unwrap_or_else(|_| panic!("heap authority fixture admission"));
     assert!(size_of::<WorkerJobAuthorityOwner<HostileJob>>() < size_of::<WorkerJobAuthority<HostileJob>>());
     let admitted_identity = unsafe { (&*mounted.session.inner.authority.get()).as_ref().expect("idle session owns its authority").0.as_ptr() };
-    assert!(matches!(mounted.pump_one(&pool, Lane::Background), Ok(WorkerJobPoll::Submitted)), "a non-interactive lane submits to the pool");
-    for _ in 0..4_096 {
-        if mounted.poll() == WorkerJobPoll::Outcome {
-            break;
-        }
+    assert!(matches!(mounted_admitted(&mut mounted, &pool, Lane::Background), Ok(WorkerJobPoll::Submitted)), "a non-interactive lane submits to the pool");
+    let deadline = std::time::Instant::now() + WORKER_LIVENESS_BOUND;
+    while mounted.poll() != WorkerJobPoll::Outcome && std::time::Instant::now() < deadline {
         std::thread::yield_now();
     }
     assert!(matches!(mounted.pump_one(&pool, Lane::Background), Ok(WorkerJobPoll::Outcome)));
@@ -444,21 +461,40 @@ fn worker_authority_keeps_one_heap_identity_through_mounted_submit_and_checkout(
     let _ = pool.shutdown();
 }
 
+/// 🔁️ `try_submit` never waits for queue ownership: a lane queue the pool's own worker holds for
+/// a moment answers `Contended`, the session retains the exact rejected opportunity, and its owner
+/// takes it back and resumes before retrying. Tests that need an admitted opportunity follow exactly
+/// that protocol for exactly that answer, and consume the wake their own resume raised, so a test's
+/// wake assertions see only the transitions it is asserting.
+fn admitted<J: InteractiveJob + Send + 'static>(session: &WorkerJobSession<J>, pool: &WorkerPool, lane: Lane) -> Result<WorkerJobTicket, WorkerJobSubmitFault> {
+    loop {
+        match session.try_submit_step(pool, lane) {
+            Err(WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Contended)) => {
+                session.take_rejected().unwrap_or_else(|_| panic!("a contended opportunity is retained for its owner")).resume();
+                let _ = session.take_wake();
+                std::thread::yield_now();
+            }
+            answer => return answer,
+        }
+    }
+}
+
 #[test]
 fn worker_session_contention_rejection_take_resume_terminal_drop_and_close_are_exact() {
+    let _slots = super::worker_session_slots_shared();
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
     let operation = OperationId(90_004);
     let generation = Generation(10);
     let steps = Arc::new(AtomicUsize::new(0));
     let session =
         WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(91)), steps: Some(Arc::clone(&steps)), panic: false, closing: false }, params(operation, generation, root_cancel_token())).unwrap_or_else(|_| panic!("worker session slot"));
-    let first = session.try_submit_step(&pool, Lane::Interactive).expect("first opportunity submitted");
+    let first = admitted(&session, &pool, Lane::Interactive).expect("first opportunity submitted");
     assert!(matches!(session.try_submit_step(&pool, Lane::Interactive), Err(WorkerJobSubmitFault::Contention(WorkerJobContention::Submitted(_)))));
     wait_for(&session, WorkerJobPoll::Outcome);
     let mut first_owner = session.take_outcome(first).expect("first exact outcome");
     assert!(matches!(first_owner.take_outcome(), StepOutcome::Yield));
     first_owner.resume().unwrap_or_else(|_| panic!("yield owner resumes exact generation"));
-    let second = session.try_submit_step(&pool, Lane::Interactive).expect("second opportunity submitted");
+    let second = admitted(&session, &pool, Lane::Interactive).expect("second opportunity submitted");
     wait_for(&session, WorkerJobPoll::Terminal);
     let terminal = session.take_terminal().expect("terminal owner is take-only");
     let terminal_pointer = terminal.job().backing.as_deref().expect("terminal hostile backing") as *const u8;
@@ -476,6 +512,7 @@ fn worker_session_contention_rejection_take_resume_terminal_drop_and_close_are_e
 
 #[test]
 fn worker_pool_rejection_returns_exact_job_before_resume() {
+    let _slots = super::worker_session_slots_shared();
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
     pool.shutdown();
     let backing = Box::new(33u8);
@@ -495,6 +532,7 @@ fn worker_pool_rejection_returns_exact_job_before_resume() {
 
 #[test]
 fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent() {
+    let _slots = super::worker_session_slots_shared();
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
     let session = WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(1)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: true, closing: false }, params(OperationId(90_006), Generation(12), root_cancel_token()))
         .unwrap_or_else(|_| panic!("worker session slot"));
@@ -507,9 +545,13 @@ fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent() {
             .expect("panic fault backing is admitted before submission")
     };
     session.register_wake(Waker::noop()).expect("quiet wake registration");
-    let _ = session.try_submit_step(&pool, Lane::Interactive).expect("panic opportunity submitted");
-    wait_for(&session, WorkerJobPoll::Terminal);
-    assert!(session.take_wake());
+    let _ = admitted(&session, &pool, Lane::Interactive).expect("panic opportunity submitted");
+    let deadline = std::time::Instant::now() + WORKER_LIVENESS_BOUND;
+    while !session.take_wake() {
+        assert!(std::time::Instant::now() < deadline, "the worker panic never raised its durable wake intent");
+        std::thread::yield_now();
+    }
+    assert_eq!(session.poll(), WorkerJobPoll::Terminal, "a raised wake intent is published after the terminal it announces");
     assert!(!session.take_wake(), "redundant quiet poll raises no wake");
     let terminal = session.take_terminal().expect("panic becomes retained terminal");
     let StepOutcome::Fault(fault) = terminal.outcome() else { panic!("panic publishes the pre-admitted fault") };
@@ -524,6 +566,7 @@ fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent() {
 
 #[test]
 fn worker_quiet_wake_sequence_exhaustion_is_permanent_and_typed() {
+    let _slots = super::worker_session_slots_shared();
     let session = WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(2)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_009), Generation(15), root_cancel_token()))
         .unwrap_or_else(|_| panic!("worker session slot"));
     session.inner.wake_sequence.store(u64::MAX, Ordering::Release);
@@ -568,6 +611,14 @@ fn checked_out_and_worker_begin_close_transitions_report_exact_zero_release() {
 
 #[test]
 fn worker_session_slots_max_plus_one_exact_rejection_and_drop_pump_are_owned() {
+    let _slots = super::worker_session_slots_exclusive();
+    for _ in 0..WORKER_JOB_SESSION_SLOTS * 64 {
+        if !worker_job_retirements_are_parked() {
+            break;
+        }
+        let _ = pump_worker_job_retirements(WORKER_JOB_SESSION_SLOTS, 1, JOB_PAYLOAD_PAGE_BYTES);
+    }
+    assert!(!worker_job_retirements_are_parked(), "earlier tests' dropped sessions retire before this test owns every slot");
     let mut sessions = Vec::with_capacity(WORKER_JOB_SESSION_SLOTS);
     for index in 0..WORKER_JOB_SESSION_SLOTS {
         let job = HostileJob { backing: Some(Box::new(index as u8)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false };

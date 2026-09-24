@@ -1,0 +1,152 @@
+{
+  "schema": "semio.repo.library.test-level-budgets/v1",
+  "levels": {
+    "fundamental": 15000,
+    "quick": 300000,
+    "long": 900000,
+    "exhaustive": 1800000
+  },
+  "packages": {
+    "semio-s-plugin-writer": {
+      "quick": 600000
+    },
+    "semio-s-plugin-mathematical": {
+      "quick": 1800000
+    },
+    "semio-s-plugin-wfc": {
+      "quick": 1800000
+    },
+    "semio-s-plugin-procedural": {
+      "quick": 1200000
+    },
+    "semio-s-plugin-flow": {
+      "quick": 1200000
+    },
+    "semio-s-plugin-gis": {
+      "quick": 900000
+    },
+    "semio-s-plugin-vcs": {
+      "quick": 600000
+    },
+    "semio-s-plugin-animate": {
+      "quick": 900000
+    },
+    "semio-s-plugin-shooting": {
+      "quick": 600000
+    },
+    "semio-s-plugin-demonstrator": {
+      "quick": 1200000
+    },
+    "semio-s-plugin-sequence": {
+      "quick": 600000
+    },
+    "semio-s-plugin-fem": {
+      "quick": 1800000
+    },
+    "semio-s-plugin-architect": {
+      "quick": 1800000
+    },
+    "semio-s-plugin-process": {
+      "quick": 1200000
+    },
+    "semio-s-plugin-lowpoly": {
+      "quick": 900000
+    },
+    "semio-s-plugin-reasoning": {
+      "quick": 600000
+    },
+    "semio-s-plugin-forms": {
+      "quick": 600000
+    },
+    "semio-s-plugin-layout": {
+      "quick": 600000
+    },
+    "semio-s-plugin-cad": {
+      "quick": 1200000
+    },
+    "semio-s-plugin-norm": {
+      "quick": 1800000
+    },
+    "semio-s-plugin-playbook": {
+      "quick": 600000
+    },
+    "semio-s-plugin-imperative": {
+      "quick": 600000
+    },
+    "semio-s-plugin-remodel": {
+      "quick": 600000
+    },
+    "semio-s-plugin-energy": {
+      "quick": 600000
+    },
+    "semio-s-plugin-trinity": {
+      "quick": 600000
+    },
+    "semio-s-plugin-dag": {
+      "quick": 600000
+    },
+    "semio-s-plugin-draw": {
+      "quick": 900000
+    },
+    "semio-s-plugin-raster": {
+      "quick": 600000
+    },
+    "semio-s-plugin-stdio": {
+      "quick": 1800000
+    },
+    "semio-s-plugin-note": {
+      "quick": 600000
+    },
+    "semio-s-plugin-puzzle": {
+      "quick": 1200000
+    },
+    "semio-s-plugin-block": {
+      "quick": 1200000
+    },
+    "semio-s-plugin-space": {
+      "quick": 1200000
+    },
+    "semio-s-plugin-sourcing": {
+      "quick": 600000
+    },
+    "semio-s-plugin-cad-aec-building": {
+      "quick": 600000
+    },
+    "semio-s-plugin-cad-aec-building-energy": {
+      "quick": 600000
+    },
+    "semio-s-plugin-cad-aec-building-structure": {
+      "quick": 600000
+    },
+    "semio-s-plugin-cad-spatial-shape": {
+      "quick": 600000
+    },
+    "semio-s-plugin-imperative-control": {
+      "quick": 600000
+    },
+    "semio-s-plugin-imperative-effect": {
+      "quick": 600000
+    },
+    "semio-s-plugin-imperative-logic": {
+      "quick": 600000
+    },
+    "semio-s-plugin-imperative-math": {
+      "quick": 600000
+    },
+    "semio-s-plugin-imperative-text": {
+      "quick": 600000
+    },
+    "semio-s-plugin-playbook-procedural": {
+      "quick": 600000
+    },
+    "semio-s-plugin-sourcing-beams": {
+      "quick": 600000
+    },
+    "semio-s-plugin-sourcing-slabs": {
+      "quick": 600000
+    },
+    "semio-s-plugin-sourcing-windows": {
+      "quick": 600000
+    }
+  }
+}

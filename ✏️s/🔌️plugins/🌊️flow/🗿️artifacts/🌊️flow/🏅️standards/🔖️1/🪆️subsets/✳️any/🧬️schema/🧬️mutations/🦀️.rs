@@ -182,38 +182,19 @@ pub fn to_framework_mutation(mutation: &FlowMutation) -> Option<semio_framework_
 //#endregion 🌉️FrameworkBridge
 
 //#region 🔹WireCodecs
-/// 🏷️ First byte of a `DuplicateWidget` op's binary encoding — reserved so it can never collide with
-/// `store::os_dsl::variants_binary::OP_BINARY_FORMAT` (always `1`), the format every framework-bridged
-/// leaf op decodes through. Any composite's own bytes are canonical-JSON of its payload (the same
-/// idiom `HistoryOpMeta.origin` uses for a structured, non-hot-path field), not a `semio_framework_artifact_flow_flow::FlowMutation`
-/// bridge — see [`to_framework_mutation`]'s doc comment for why one cannot exist.
-const DUPLICATE_WIDGET_OP_BINARY_TAG: u8 = 0xD0;
 const DUPLICATE_WIDGET_OP_TEXT_KEYWORD: &str = "duplicate-widget ";
+
+//#region 🏷️WireTags
+/// 🏷️ `FlowMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+//#endregion 🏷️WireTags
 
 impl protocol::OpBinary for FlowMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let FlowMutation::DuplicateWidget(payload) = self else {
-            let framework_mutation = to_framework_mutation(self).expect("only DuplicateWidget has no framework-generic op");
-            return protocol::OpBinary::encode_op(&framework_mutation);
-        };
-        let mut bytes = vec![DUPLICATE_WIDGET_OP_BINARY_TAG];
-        let json: serde_json::Value = dsl::ToValue::to_value(payload).into();
-        bytes.extend(serde_json::to_vec(&json).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 0, detail: format!("duplicate-widget: {error}") })?);
-        Ok(bytes)
+        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        if bytes.first() == Some(&DUPLICATE_WIDGET_OP_BINARY_TAG) {
-            let json: serde_json::Value = serde_json::from_slice(&bytes[1..]).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
-            let value: dsl::DslValue = json.into();
-            let payload: super::duplicate_widget::mutation::DuplicateWidget = dsl::FromValue::from_value(value).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
-            return Ok(FlowMutation::DuplicateWidget(payload));
-        }
-        let framework_mutation = <semio_framework_artifact_flow_flow::FlowMutation as protocol::OpBinary>::decode_op(bytes)?;
-        from_framework_mutation(framework_mutation).ok_or_else(|| protocol::ProtocolError::Malformed {
-            what: "flow.op",
-            offset: 0,
-            detail: "replace-flow-host-snapshot has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)".into(),
-        })
+        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
     }
 }
 impl protocol::OpText for FlowMutation {

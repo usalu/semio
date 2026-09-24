@@ -1,2 +1,31 @@
-dialect protocol stdio.mp4.mutations
-document = tagged-record:BYTES(*)
+dialect protocol
+protocol None
+version 1
+schema None
+start op
+framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record set-snapshot tag=0
+field payload bytes
+record set-ftyp tag=1
+field payload bytes
+record insert-track tag=2
+field payload bytes
+record remove-track tag=3
+field payload bytes
+record set-track-dimensions tag=4
+field payload bytes
+record set-track-codec tag=5
+field payload bytes
+record insert-sample tag=6
+field payload bytes
+record remove-sample tag=7
+field payload bytes
+record set-sample-sync tag=8
+field payload bytes

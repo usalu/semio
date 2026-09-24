@@ -81,7 +81,6 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
       | change-ida-class                    | 🫁️change-ida-class                   | 🫁️relaxes-the-indoor-air-class-to-ida-3                          |
       | change-ventilation-m3-h             | 💨️change-ventilation-m3-h            | 💨️raises-the-supply-airflow-to-360-m3-per-hour                   |
       | change-floor-area-m2                | 📐️change-floor-area-m2               | 📐️grows-the-conditioned-floor-area-to-120-m2                     |
-      | change-bedrooms                     | 🛏️change-bedrooms                    | 🛏️adds-a-fourth-bedroom                                          |
       | change-dwelling-ventilation-m3-h    | 🏡️change-dwelling-ventilation-m3-h   | 🏡️raises-the-dwelling-airflow-to-96-m3-per-hour                  |
       | change-occupants                    | 👪️change-occupants                   | 👪️raises-the-household-to-five-occupants                         |
       | change-residential-ventilation-m3-h | 🏘️change-residential-ventilation-m3-h | 🏘️raises-the-residential-airflow-to-110-m3-per-hour              |

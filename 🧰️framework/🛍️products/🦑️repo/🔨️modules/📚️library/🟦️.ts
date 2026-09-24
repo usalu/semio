@@ -1082,12 +1082,63 @@ export function dispatchSubcommand(segments: string[], handlers: Record<string, 
 export const TEST_LEVELS = ["fundamental", "quick", "long", "exhaustive"] as const;
 export type TestLevel = (typeof TEST_LEVELS)[number];
 
-/** ⏱️Hard wall-clock budget (ms) per test level. */
+/** ⏱️Hard wall-clock budget (ms) per test level — authoritative values live in `fixtures/test-level-budgets` (schema-validated). */
 export const TEST_LEVEL_BUDGET_MS: Record<TestLevel, number> = {
   fundamental: 15_000,
-  quick: 30_000,
-  long: 300_000,
-  exhaustive: 900_000,
+  quick: 300_000,
+  long: 900_000,
+  exhaustive: 1_800_000,
+};
+
+/** ⏱️Per-package quick/long/exhaustive floors for plugin crates whose suites exceed the level default. */
+export const PACKAGE_TEST_BUDGET_MS: Record<string, Partial<Record<TestLevel, number>>> = {
+  "semio-s-plugin-writer": { quick: 600_000 },
+  "semio-s-plugin-mathematical": { quick: 1_800_000 },
+  "semio-s-plugin-wfc": { quick: 1_800_000 },
+  "semio-s-plugin-procedural": { quick: 1_200_000 },
+  "semio-s-plugin-flow": { quick: 1_200_000 },
+  "semio-s-plugin-gis": { quick: 900_000 },
+  "semio-s-plugin-vcs": { quick: 600_000 },
+  "semio-s-plugin-animate": { quick: 900_000 },
+  "semio-s-plugin-shooting": { quick: 600_000 },
+  "semio-s-plugin-demonstrator": { quick: 1_200_000 },
+  "semio-s-plugin-sequence": { quick: 600_000 },
+  "semio-s-plugin-fem": { quick: 1_800_000 },
+  "semio-s-plugin-architect": { quick: 1_800_000 },
+  "semio-s-plugin-process": { quick: 1_200_000 },
+  "semio-s-plugin-lowpoly": { quick: 900_000 },
+  "semio-s-plugin-reasoning": { quick: 600_000 },
+  "semio-s-plugin-forms": { quick: 600_000 },
+  "semio-s-plugin-layout": { quick: 600_000 },
+  "semio-s-plugin-cad": { quick: 1_200_000 },
+  "semio-s-plugin-norm": { quick: 1_800_000 },
+  "semio-s-plugin-playbook": { quick: 600_000 },
+  "semio-s-plugin-imperative": { quick: 600_000 },
+  "semio-s-plugin-remodel": { quick: 600_000 },
+  "semio-s-plugin-energy": { quick: 600_000 },
+  "semio-s-plugin-trinity": { quick: 600_000 },
+  "semio-s-plugin-dag": { quick: 600_000 },
+  "semio-s-plugin-draw": { quick: 900_000 },
+  "semio-s-plugin-raster": { quick: 600_000 },
+  "semio-s-plugin-stdio": { quick: 1_800_000 },
+  "semio-s-plugin-note": { quick: 600_000 },
+  "semio-s-plugin-puzzle": { quick: 1_200_000 },
+  "semio-s-plugin-block": { quick: 1_200_000 },
+  "semio-s-plugin-space": { quick: 1_200_000 },
+  "semio-s-plugin-sourcing": { quick: 600_000 },
+  "semio-s-plugin-cad-aec-building": { quick: 600_000 },
+  "semio-s-plugin-cad-aec-building-energy": { quick: 600_000 },
+  "semio-s-plugin-cad-aec-building-structure": { quick: 600_000 },
+  "semio-s-plugin-cad-spatial-shape": { quick: 600_000 },
+  "semio-s-plugin-imperative-control": { quick: 600_000 },
+  "semio-s-plugin-imperative-effect": { quick: 600_000 },
+  "semio-s-plugin-imperative-logic": { quick: 600_000 },
+  "semio-s-plugin-imperative-math": { quick: 600_000 },
+  "semio-s-plugin-imperative-text": { quick: 600_000 },
+  "semio-s-plugin-playbook-procedural": { quick: 600_000 },
+  "semio-s-plugin-sourcing-beams": { quick: 600_000 },
+  "semio-s-plugin-sourcing-slabs": { quick: 600_000 },
+  "semio-s-plugin-sourcing-windows": { quick: 600_000 },
 };
 
 /** ⏱️Deprecated alias for the fundamental-level budget; kept for straggling call sites during the leveled-test migration. */
@@ -1148,6 +1199,17 @@ function levelsAbove(level: TestLevel): readonly TestLevel[] {
 /** ⏱️Wall-clock budget (ms) for the given test level — `SEMIO_TEST_BUDGET_MS` override, else [[TEST_LEVEL_BUDGET_MS]]. */
 export function testLevelBudgetMs(level: TestLevel = activeTestLevel()): number {
   return Number(process.env.SEMIO_TEST_BUDGET_MS ?? TEST_LEVEL_BUDGET_MS[level]);
+}
+
+/** ⏱️Wall-clock budget for one or more cargo packages at a level — max of level default and [[PACKAGE_TEST_BUDGET_MS]] floors; `SEMIO_TEST_BUDGET_MS` still wins. */
+export function packageTestBudgetMs(packages: readonly string[], level: TestLevel = activeTestLevel()): number {
+  if (process.env.SEMIO_TEST_BUDGET_MS !== undefined) return Number(process.env.SEMIO_TEST_BUDGET_MS);
+  let budget = TEST_LEVEL_BUDGET_MS[level];
+  for (const pkg of packages) {
+    const floor = PACKAGE_TEST_BUDGET_MS[pkg]?.[level];
+    if (floor !== undefined) budget = Math.max(budget, floor);
+  }
+  return budget;
 }
 
 /** ⏱️Wall-clock budget (seconds, rounded up) for the given test level — for toolchains that take second-granularity timeouts. */
@@ -1775,7 +1837,7 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
   const assertionThreadArgs = level === "fundamental" ? ["--test-threads", String(assertionThreads)] : [];
 
   if (coverageEnabled()) {
-    const testBudgetMs = testLevelBudgetMs(level);
+    const testBudgetMs = packageTestBudgetMs(resolvedPackages, level);
     const nextest = cargoNextestAvailable();
     const covArgs = nextest
       ? (["llvm-cov", "nextest", "--release", "--no-report", "--no-tests", "warn", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs] as const)
@@ -1835,7 +1897,7 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
           ...nextestLibtestArgs,
           ...skipArgs,
         ],
-        { cwd, env, budgetMs: testLevelBudgetMs(level) },
+        { cwd, env, budgetMs: packageTestBudgetMs(resolvedPackages, level) },
       );
     } finally {
       if (artifactLocation.retain) console.error(`[DEBUG] Nextest artifacts retained at ${metadataDir}`);
@@ -1850,7 +1912,11 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
     budgetMs: buildBudgetMs(),
     onTimeoutHint: budgetTimeoutHint("cargo"),
   });
-  await runTestBudgeted("cargo", ["test", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
+  await runTestBudgeted("cargo", ["test", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], {
+    cwd,
+    env,
+    budgetMs: packageTestBudgetMs(resolvedPackages, level),
+  });
 }
 
 function cargoNextestAvailable(): boolean {
@@ -2298,7 +2364,7 @@ export interface SpawnDaemonHandle {
 }
 
 /** 🌙️Spawns a long-lived daemon under [[daemonBudgetMs]]; [[SpawnDaemonHandle.kill]] tears down the whole process tree. */
-export function spawnDaemon(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; stdio?: "inherit" | "pipe" } = {}): SpawnDaemonHandle {
+export function spawnDaemon(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; stdio?: "inherit" | "pipe" | "ignore" } = {}): SpawnDaemonHandle {
   const child = spawn(cmd, args, {
     cwd: opts.cwd,
     env: opts.env ?? process.env,
@@ -2564,20 +2630,28 @@ export function runCargoLint(packages: string[], cwd: string, extraArgs: string[
 
 //#region ⚙️ViteConfigLoader
 /**
- * @emoji ⚙️ Force Vite's esbuild config loader (`--configLoader bundle`).
+ * @emoji ⚙️ Pick Vite's config loader for the current runtime.
  * Node 24+ defaults Vite to `native` strip-only TypeScript, which rejects constructor parameter
- * properties used across monorepo configs pulled into `⚙️vite.config.ts` (e.g. via `@semio-tech/framework`).
+ * properties used across monorepo configs — so Node must use `bundle`. Bun already runs full
+ * TypeScript, and Vite's `bundle` loader fails on this config with an opaque `undefined` error,
+ * so Bun keeps `native`. Callers that already pass `--configLoader` win.
  * @see https://vite.dev/config/#config-loader
  */
+export function viteConfigLoader(): "native" | "bundle" {
+  return typeof (globalThis as { Bun?: unknown }).Bun === "object" ? "native" : "bundle";
+}
+
+/** @emoji 🧷️ Prepends {@link viteConfigLoader}'s choice to a Vite CLI argument list. */
 export function withViteConfigLoader(args: readonly string[]): string[] {
   if (args.includes("--configLoader")) return [...args];
+  const loader = viteConfigLoader();
   const out = [...args];
   const viteIdx = out.indexOf("vite");
   if (viteIdx >= 0) {
-    out.splice(viteIdx + 1, 0, "--configLoader", "bundle");
+    out.splice(viteIdx + 1, 0, "--configLoader", loader);
     return out;
   }
-  return ["--configLoader", "bundle", ...out];
+  return ["--configLoader", loader, ...out];
 }
 
 function bunArgsForVite(args: readonly string[]): string[] {

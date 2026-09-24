@@ -178,31 +178,58 @@ fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Resul
     pack::json::from_json_str(text).map_err(|e| e.to_string())
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `Din4108Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("../💾️binary/📡️.protocol.semio");
+const TAG_CHANGE_CATEGORY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-category");
+const TAG_CHANGE_CLIMATE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-climate");
+const TAG_CHANGE_AIRTIGHTNESS_N50: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-airtightness-n50");
+const TAG_CHANGE_PSI_TIMES_L_SUM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-psi-times-l-sum");
+const TAG_CHANGE_RH_INT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-rh-int");
+const TAG_CHANGE_CATALOG_ID: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-catalog-id");
+const TAG_CHANGE_MATERIAL_ID: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-material-id");
+const TAG_CHANGE_AIRTIGHTNESS_CLASS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-airtightness-class");
+const TAG_CHANGE_T_INT_C: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-t-int-c");
+const TAG_CHANGE_SOLAR_ABSORPTANCE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-solar-absorptance");
+const TAG_CHANGE_IRRADIANCE_WM2: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-irradiance-wm2");
+const TAG_CHANGE_MOISTURE_MU_EXTERIOR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-moisture-mu-exterior");
+const TAG_CHANGE_MOISTURE_MU_INTERIOR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-moisture-mu-interior");
+const TAG_CHANGE_ENVELOPE_AREA_M2: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-envelope-area-m2");
+const TAG_CHANGE_BB2_DETAILS_CONFORM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-bb2-details-conform");
+const TAG_CHANGE_APPLICATION_TYPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-application-type");
+const TAG_CHANGE_DECLARED_APPLICATION_CLASS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-declared-application-class");
+const TAG_INSERT_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-layer");
+const TAG_REMOVE_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-layer");
+const TAG_REORDER_LAYERS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "reorder-layers");
+const TAG_CHANGE_LAYER_THICKNESS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-layer-thickness");
+const TAG_CHANGE_LAYER_LAMBDA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-layer-lambda");
+//#endregion 🏷️WireTags
+
 impl protocol::OpBinary for Din4108Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            Din4108Mutation::ChangeCategory(_) => 0,
-            Din4108Mutation::ChangeClimate(_) => 1,
-            Din4108Mutation::ChangeAirtightnessN50(_) => 2,
-            Din4108Mutation::ChangePsiTimesLSum(_) => 3,
-            Din4108Mutation::ChangeRhInt(_) => 4,
-            Din4108Mutation::ChangeCatalogId(_) => 5,
-            Din4108Mutation::ChangeMaterialId(_) => 6,
-            Din4108Mutation::ChangeAirtightnessClass(_) => 7,
-            Din4108Mutation::ChangeTIntC(_) => 8,
-            Din4108Mutation::ChangeSolarAbsorptance(_) => 9,
-            Din4108Mutation::ChangeIrradianceWM2(_) => 10,
-            Din4108Mutation::ChangeMoistureMuExterior(_) => 11,
-            Din4108Mutation::ChangeMoistureMuInterior(_) => 12,
-            Din4108Mutation::ChangeEnvelopeAreaM2(_) => 13,
-            Din4108Mutation::ChangeBb2DetailsConform(_) => 14,
-            Din4108Mutation::ChangeApplicationType(_) => 15,
-            Din4108Mutation::ChangeDeclaredApplicationClass(_) => 16,
-            Din4108Mutation::InsertLayer(_) => 17,
-            Din4108Mutation::RemoveLayer(_) => 18,
-            Din4108Mutation::ReorderLayers(_) => 19,
-            Din4108Mutation::ChangeLayerThickness(_) => 20,
-            Din4108Mutation::ChangeLayerLambda(_) => 21,
+            Din4108Mutation::ChangeCategory(_) => TAG_CHANGE_CATEGORY,
+            Din4108Mutation::ChangeClimate(_) => TAG_CHANGE_CLIMATE,
+            Din4108Mutation::ChangeAirtightnessN50(_) => TAG_CHANGE_AIRTIGHTNESS_N50,
+            Din4108Mutation::ChangePsiTimesLSum(_) => TAG_CHANGE_PSI_TIMES_L_SUM,
+            Din4108Mutation::ChangeRhInt(_) => TAG_CHANGE_RH_INT,
+            Din4108Mutation::ChangeCatalogId(_) => TAG_CHANGE_CATALOG_ID,
+            Din4108Mutation::ChangeMaterialId(_) => TAG_CHANGE_MATERIAL_ID,
+            Din4108Mutation::ChangeAirtightnessClass(_) => TAG_CHANGE_AIRTIGHTNESS_CLASS,
+            Din4108Mutation::ChangeTIntC(_) => TAG_CHANGE_T_INT_C,
+            Din4108Mutation::ChangeSolarAbsorptance(_) => TAG_CHANGE_SOLAR_ABSORPTANCE,
+            Din4108Mutation::ChangeIrradianceWM2(_) => TAG_CHANGE_IRRADIANCE_WM2,
+            Din4108Mutation::ChangeMoistureMuExterior(_) => TAG_CHANGE_MOISTURE_MU_EXTERIOR,
+            Din4108Mutation::ChangeMoistureMuInterior(_) => TAG_CHANGE_MOISTURE_MU_INTERIOR,
+            Din4108Mutation::ChangeEnvelopeAreaM2(_) => TAG_CHANGE_ENVELOPE_AREA_M2,
+            Din4108Mutation::ChangeBb2DetailsConform(_) => TAG_CHANGE_BB2_DETAILS_CONFORM,
+            Din4108Mutation::ChangeApplicationType(_) => TAG_CHANGE_APPLICATION_TYPE,
+            Din4108Mutation::ChangeDeclaredApplicationClass(_) => TAG_CHANGE_DECLARED_APPLICATION_CLASS,
+            Din4108Mutation::InsertLayer(_) => TAG_INSERT_LAYER,
+            Din4108Mutation::RemoveLayer(_) => TAG_REMOVE_LAYER,
+            Din4108Mutation::ReorderLayers(_) => TAG_REORDER_LAYERS,
+            Din4108Mutation::ChangeLayerThickness(_) => TAG_CHANGE_LAYER_THICKNESS,
+            Din4108Mutation::ChangeLayerLambda(_) => TAG_CHANGE_LAYER_LAMBDA,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -250,94 +277,94 @@ impl protocol::OpBinary for Din4108Mutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            0 => {
+            TAG_CHANGE_CATEGORY => {
                 let new_category = read_json_bin(&mut reader).map_err(|e| malformed("new_category", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeCategory(ChangeCategory { new_category }))
             }
-            1 => {
+            TAG_CHANGE_CLIMATE => {
                 let new_climate = read_json_bin(&mut reader).map_err(|e| malformed("new_climate", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeClimate(ChangeClimate { new_climate }))
             }
-            2 => {
+            TAG_CHANGE_AIRTIGHTNESS_N50 => {
                 let new_airtightness_n50 = read_json_bin(&mut reader).map_err(|e| malformed("new_airtightness_n50", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeAirtightnessN50(ChangeAirtightnessN50 { new_airtightness_n50 }))
             }
-            3 => {
+            TAG_CHANGE_PSI_TIMES_L_SUM => {
                 let new_psi_times_l_sum = read_json_bin(&mut reader).map_err(|e| malformed("new_psi_times_l_sum", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangePsiTimesLSum(ChangePsiTimesLSum { new_psi_times_l_sum }))
             }
-            4 => {
+            TAG_CHANGE_RH_INT => {
                 let new_rh_int = read_json_bin(&mut reader).map_err(|e| malformed("new_rh_int", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeRhInt(ChangeRhInt { new_rh_int }))
             }
-            5 => {
+            TAG_CHANGE_CATALOG_ID => {
                 let new_catalog_id = read_json_bin(&mut reader).map_err(|e| malformed("new_catalog_id", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeCatalogId(ChangeCatalogId { new_catalog_id }))
             }
-            6 => {
+            TAG_CHANGE_MATERIAL_ID => {
                 let new_material_id = read_json_bin(&mut reader).map_err(|e| malformed("new_material_id", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeMaterialId(ChangeMaterialId { new_material_id }))
             }
-            7 => {
+            TAG_CHANGE_AIRTIGHTNESS_CLASS => {
                 let new_airtightness_class = read_json_bin(&mut reader).map_err(|e| malformed("new_airtightness_class", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeAirtightnessClass(ChangeAirtightnessClass { new_airtightness_class }))
             }
-            8 => {
+            TAG_CHANGE_T_INT_C => {
                 let new_t_int_c = read_json_bin(&mut reader).map_err(|e| malformed("new_t_int_c", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeTIntC(ChangeTIntC { new_t_int_c }))
             }
-            9 => {
+            TAG_CHANGE_SOLAR_ABSORPTANCE => {
                 let new_solar_absorptance = read_json_bin(&mut reader).map_err(|e| malformed("new_solar_absorptance", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeSolarAbsorptance(ChangeSolarAbsorptance { new_solar_absorptance }))
             }
-            10 => {
+            TAG_CHANGE_IRRADIANCE_WM2 => {
                 let new_irradiance_w_m2 = read_json_bin(&mut reader).map_err(|e| malformed("new_irradiance_w_m2", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeIrradianceWM2(ChangeIrradianceWM2 { new_irradiance_w_m2 }))
             }
-            11 => {
+            TAG_CHANGE_MOISTURE_MU_EXTERIOR => {
                 let new_moisture_mu_exterior = read_json_bin(&mut reader).map_err(|e| malformed("new_moisture_mu_exterior", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeMoistureMuExterior(ChangeMoistureMuExterior { new_moisture_mu_exterior }))
             }
-            12 => {
+            TAG_CHANGE_MOISTURE_MU_INTERIOR => {
                 let new_moisture_mu_interior = read_json_bin(&mut reader).map_err(|e| malformed("new_moisture_mu_interior", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeMoistureMuInterior(ChangeMoistureMuInterior { new_moisture_mu_interior }))
             }
-            13 => {
+            TAG_CHANGE_ENVELOPE_AREA_M2 => {
                 let new_envelope_area_m2 = read_json_bin(&mut reader).map_err(|e| malformed("new_envelope_area_m2", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeEnvelopeAreaM2(ChangeEnvelopeAreaM2 { new_envelope_area_m2 }))
             }
-            14 => {
+            TAG_CHANGE_BB2_DETAILS_CONFORM => {
                 let new_bb2_details_conform = read_json_bin(&mut reader).map_err(|e| malformed("new_bb2_details_conform", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeBb2DetailsConform(ChangeBb2DetailsConform { new_bb2_details_conform }))
             }
-            15 => {
+            TAG_CHANGE_APPLICATION_TYPE => {
                 let new_application_type = read_json_bin(&mut reader).map_err(|e| malformed("new_application_type", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeApplicationType(ChangeApplicationType { new_application_type }))
             }
-            16 => {
+            TAG_CHANGE_DECLARED_APPLICATION_CLASS => {
                 let new_declared_application_class = read_json_bin(&mut reader).map_err(|e| malformed("new_declared_application_class", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeDeclaredApplicationClass(ChangeDeclaredApplicationClass { new_declared_application_class }))
             }
-            17 => {
+            TAG_INSERT_LAYER => {
                 let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 let layer = read_json_bin(&mut reader).map_err(|e| malformed("layer", reader.position(), e))?;
                 Ok(Din4108Mutation::InsertLayer(InsertLayer { index, layer }))
             }
-            18 => {
+            TAG_REMOVE_LAYER => {
                 let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 Ok(Din4108Mutation::RemoveLayer(RemoveLayer { index }))
             }
-            19 => {
+            TAG_REORDER_LAYERS => {
                 let from = read_json_bin(&mut reader).map_err(|e| malformed("from", reader.position(), e))?;
                 let to = read_json_bin(&mut reader).map_err(|e| malformed("to", reader.position(), e))?;
                 Ok(Din4108Mutation::ReorderLayers(ReorderLayers { from, to }))
             }
-            20 => {
+            TAG_CHANGE_LAYER_THICKNESS => {
                 let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 let new_thickness_m = read_json_bin(&mut reader).map_err(|e| malformed("new_thickness_m", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeLayerThickness(ChangeLayerThickness { index, new_thickness_m }))
             }
-            21 => {
+            TAG_CHANGE_LAYER_LAMBDA => {
                 let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 let new_lambda_w_mk = read_json_bin(&mut reader).map_err(|e| malformed("new_lambda_w_mk", reader.position(), e))?;
                 Ok(Din4108Mutation::ChangeLayerLambda(ChangeLayerLambda { index, new_lambda_w_mk }))

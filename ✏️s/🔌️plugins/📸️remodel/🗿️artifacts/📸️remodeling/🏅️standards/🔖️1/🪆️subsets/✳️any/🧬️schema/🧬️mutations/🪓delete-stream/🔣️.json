@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteStream",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-stream",
-  "binaryTag": null,
+  "binaryTag": 1,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -1,0 +1,13 @@
+{
+  "mutation": "applyGraph",
+  "payload": {
+    "mutation": {
+      "ChangeNodeLabel": {
+        "id": {
+          "value": "1o$D5QcDP68vy1YIk$DDV$"
+        },
+        "new_label": "F1 mutated label"
+      }
+    }
+  }
+}

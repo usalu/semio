@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateDrawing",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-drawing",
-  "binaryTag": null,
+  "binaryTag": 8,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

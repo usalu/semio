@@ -97,13 +97,23 @@
     },
     "generator-inputs": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "outputs": [
         "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🔏️generator-inputs/📇️registry/🔣️.json"
       ],
       "options": {
         "command": "bun \"./🔏️inputs/📜️script.ts\" registry-catalog"
-      }
+      },
+      "inputs": [
+        "{projectRoot}/🔏️inputs/**/*",
+        "{projectRoot}/🔣️policy.json",
+        "{projectRoot}/📋️project.json",
+        "{workspaceRoot}/bun.lock",
+        "{workspaceRoot}/**/Cargo.toml",
+        "{workspaceRoot}/**/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*"
+      ]
     },
     "toolchain": {
       "executor": "nx:run-commands",

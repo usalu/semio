@@ -12,7 +12,7 @@ Feature: Malformed region markers degrade the same way in every implementation
   @level-fundamental
   @mode-error
   Scenario: An unclosed region ends at the last line of the file instead of failing
-    Given the case source local://❌️unclosed.ts
+    Given the case source shared://💥️malformed-regions/❌️unclosed.ts
     When each implementation parses it
     Then every implementation reports one section ending at the last line, with no error
 
@@ -20,7 +20,7 @@ Feature: Malformed region markers degrade the same way in every implementation
   @level-fundamental
   @mode-error
   Scenario: A closing marker with nothing open is ignored instead of failing
-    Given the case source local://❌️stray-end.ts
+    Given the case source shared://💥️malformed-regions/❌️stray-end.ts
     When each implementation parses it
     Then every implementation reports the sections that were actually opened, with no error
 
@@ -28,6 +28,6 @@ Feature: Malformed region markers degrade the same way in every implementation
   @level-fundamental
   @mode-error
   Scenario: A file whose extension no language claims yields no sections
-    Given the case source local://❌️unclaimed.unknown
+    Given the case source shared://💥️malformed-regions/❌️unclaimed.unknown
     When each implementation parses it by path
     Then every implementation reports no sections, with no error

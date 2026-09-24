@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteEquipmentGain",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-equipment-gain",
-  "binaryTag": null,
+  "binaryTag": 94,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

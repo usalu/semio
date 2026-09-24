@@ -2,6 +2,15 @@
 use super::*;
 
 #[test]
+fn repository_root_is_refused_as_a_workspace_folder() {
+    let root = find_repo_root().expect("repo root");
+    let error = HeadlessWorkspace::reject_repository_root_workspace(&root).expect_err("repository root");
+    assert_eq!(error.code, GatewayErrorCode::InputInvalid);
+    assert!(error.message.contains("events.semio"), "{}", error.message);
+    assert!(HeadlessWorkspace::reject_repository_root_workspace(&std::env::temp_dir()).is_ok());
+}
+
+#[test]
 fn probe_pack_schema_hash_matches_the_cross_process_descriptor_contract() {
     let actual = store::os_pack::schema_hash(&probe_record_spec()).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     assert_eq!(actual, PROBE_PACK_SCHEMA_HASH);
@@ -77,7 +86,12 @@ fn authenticated_hub_workspace_resources_are_snapshot_only_scoped_and_fail_close
     assert!(artifacts_body.contains("\"checkpointResource\":\"semio://workspace/scopes/space-a/shared-doc/checkpoint\""));
     let checkpoint_error = workspace.read_resource("semio://workspace/scopes/space-b/shared-doc/checkpoint").unwrap_err();
     assert_eq!(checkpoint_error.code, GatewayErrorCode::NotFound);
-    for uri in ["semio://artifact/shared-doc", "semio://artifact/shared-doc/schema", "semio://artifact/shared-doc/validation"] {
+    let schema_body = workspace.read_resource("semio://artifact/shared-doc/schema").unwrap()[0].text.clone().unwrap();
+    let schema: serde_json::Value = serde_json::from_str(&schema_body).unwrap();
+    assert_eq!(schema["artifactId"], "shared-doc");
+    assert_eq!(schema["spaceId"], "space-a");
+    assert!(schema["schema"].is_string() && schema["artifactKind"].is_string(), "{schema_body}");
+    for uri in ["semio://artifact/shared-doc", "semio://artifact/shared-doc/validation"] {
         let error = workspace.read_resource(uri).unwrap_err();
         assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
         assert!(error.retryable);
@@ -663,4 +677,19 @@ fn a_bound_document_round_trips_through_the_guest_json_decoder() {
     let spr_text = document.get("spr").and_then(store::DslValue::as_str).expect("spr is a string");
     assert_eq!(crate::shell_channel::decode_base64(pack_text), Some(pack), "the guest decodes the EXACT pack bytes the host bound");
     assert_eq!(crate::shell_channel::decode_base64(spr_text), Some(spr), "…and the exact spr bytes");
+}
+
+/// 🧊️ The isolated compile worker of a unit-test process (see [`ISOLATED_COMPILE_TEST_ENTRY`]): a
+/// no-op in an ordinary test run, the whole worker when its two inputs are set.
+#[test]
+fn isolated_compile_worker_entry() {
+    use std::io::Read as _;
+    let (Some(engine), Some(out)) = (std::env::var_os(ISOLATED_COMPILE_TEST_ENGINE), std::env::var_os(ISOLATED_COMPILE_TEST_OUT)) else { return };
+    let mut bytes = Vec::new();
+    std::io::stdin().read_to_end(&mut bytes).expect("component on stdin");
+    let result = semio_framework_plugin_host::compile_component_isolated(&engine.to_string_lossy(), &bytes, Path::new(&out));
+    if let Err(error) = &result {
+        eprintln!("{error}");
+    }
+    std::process::exit(i32::from(result.is_err()));
 }

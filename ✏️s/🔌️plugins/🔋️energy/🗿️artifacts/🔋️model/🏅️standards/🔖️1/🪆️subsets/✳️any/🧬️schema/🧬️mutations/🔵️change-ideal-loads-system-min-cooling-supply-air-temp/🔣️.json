@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeIdealLoadsSystemMinCoolingSupplyAirTemp",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-ideal-loads-system-min-cooling-supply-air-temp",
-  "binaryTag": null,
+  "binaryTag": 139,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

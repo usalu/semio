@@ -1,6 +1,6 @@
 //! 🔀️ Direct binary identity for `move-page`.
 
-pub const TAG: u8 = 13;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "move-page");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::MovePage;

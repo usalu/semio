@@ -1,6 +1,11 @@
 {
+  "artifact": "s.wfc.bitmap",
   "standard": "1",
   "subsets": {
-    "*": {}
-  }
+    "*": {
+      "name": "Unconstrained wfc bitmap 1"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.wfc.bitmap@1` is one self-contained overlapping-model WaveFunctionCollapse problem document — a palette-indexed input sample, the output extent, the model window, pins and one seed. There is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation reads and writes the SAME value model through the SAME codec and dispatch, so `✳️any` is this artifact's only real scope."
 }

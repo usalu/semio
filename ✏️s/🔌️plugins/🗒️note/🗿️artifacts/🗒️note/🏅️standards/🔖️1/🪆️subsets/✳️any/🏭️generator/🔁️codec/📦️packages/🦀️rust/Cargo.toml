@@ -1,7 +1,7 @@
 # 🧭️ Own workspace root: this crate joins NEITHER the repository's shared root Cargo.toml (a
 # contended, live-edited manifest) NOR the broken `semio-s-plugin-stdio` production crate. It links
 # nothing from this repository — an oracle codec that could reach the subject would stop being
-# independent evidence. Same pattern, same stated reason, as `…✳️cad/🔬️probes/🔮️oracle/📦️packages/🦀️rust/Cargo.toml`
+# independent evidence. Same pattern, same stated reason, as `…✳️cad/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml`
 # and `…📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️bridge/Cargo.toml`.
 [workspace]
 

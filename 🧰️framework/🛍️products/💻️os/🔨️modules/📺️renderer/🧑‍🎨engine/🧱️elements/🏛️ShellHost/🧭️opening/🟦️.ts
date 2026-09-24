@@ -41,6 +41,6 @@ export function resolveDocumentOpeningBindings(
   if (spaceId === undefined) return [];
   if (!context.identity) throw new Error("opening.identity-required");
   if (!context.surface) throw new Error("opening.surface-required");
-  const folder: PersistenceBinding[] = spaceId && context.dataDir ? [{ kind: "folder", path: `${context.dataDir}/spaces/${spaceId}` }] : [];
-  return [{ kind: "hub", baseUrl: context.identity.hubBaseUrl, spaceId, requestedSurfaceId: context.surface }, ...folder];
+  const folder: PersistenceBinding[] = spaceId && context.dataDir ? [{ kind: "folder", dataClass: "persistedLocalOnly", path: `${context.dataDir}/spaces/${spaceId}` }] : [];
+  return [{ kind: "hub", dataClass: "persistedShared", baseUrl: context.identity.hubBaseUrl, spaceId, requestedSurfaceId: context.surface }, ...folder];
 }

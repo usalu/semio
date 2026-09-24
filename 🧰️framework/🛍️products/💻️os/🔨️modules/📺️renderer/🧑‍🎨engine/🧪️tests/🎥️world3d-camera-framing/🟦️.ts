@@ -9,7 +9,7 @@ import { world3dAutoFitKey, world3dAutoFitOwed, world3dBoundsRadius, world3dFram
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️fixtures/🎥️world3d-camera-framing/🔣️.json"), "utf8")) as any;
+const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎥️world3d-camera-framing/🔣️.json"), "utf8")) as any;
 const closeArray = (actual: readonly number[], expected: readonly number[], precision = 5) => actual.forEach((value, index) => expect(value).toBeCloseTo(expected[index]!, precision));
 
 type FixtureCamera = { position: [number, number, number]; target: [number, number, number]; up: [number, number, number]; fov: number; zoom: number; projection: unknown };

@@ -7,11 +7,12 @@
   "aggregateVariant": "ApplyGraph",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": null,
+  "binaryTag": 16,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "applied"
+    "applied",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

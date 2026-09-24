@@ -95,12 +95,14 @@ async fn seed_wal(storage: &MemoryStorage, document: &ArtifactId, count: u64) {
         let envelope = sample_envelope(&format!("op-{i}"), i).await;
         submit_record(storage, &mut wal, command_record(&envelope).await, i).await;
     }
+    wal.close().await.unwrap();
 }
 
 /// @emoji 🧸️ Reopens `document`'s WAL and appends one `SnapshotPub` marker covering `frontier`.
 async fn publish_snapshot_marker(storage: &MemoryStorage, document: &ArtifactId, generation: u64, frontier: Frontier) {
     let (mut wal, _report) = db_actor::block_on(ArtifactWal::open(storage, document.clone(), GroupCommitPolicy::default(), 1000)).unwrap();
     submit_record(storage, &mut wal, WalRecord::SnapshotPub { generation, frontier }, 1000).await;
+    wal.close().await.unwrap();
 }
 //#endregion 🧸️Fixtures
 
@@ -506,6 +508,9 @@ async fn retained_sync_hello_handoff_first_poll_cancel_preserves_exact_owner_and
 
 #[semio_framework_async_macros::async_test]
 async fn retained_sync_hello_max_plus_one_refusal_keeps_storage_document_frontier_session_origin_identity() {
+    if !crate::db_storage::process_isolated_law("db_sync::tests::retained_sync_hello_max_plus_one_refusal_keeps_storage_document_frontier_session_origin_identity") {
+        return;
+    }
     let (pool, held) = held_sync_hello_pool();
     let storage = retained_sync_hello_storage().await;
     let mut futures = Vec::new();
@@ -872,8 +877,8 @@ fn retained_sync_hello_ready_pending_panic_and_repeat_poll_have_typed_terminal_s
 
 #[test]
 fn retained_sync_hello_production_census_has_zero_blocking_waits_and_no_eager_follow_up() {
-    let engine = include_str!("../../../../⚙️engine/🦀️.rs");
-    let production = engine.split("//#region 🧪️Tests").next().unwrap();
+    let engine = include_str!("../../../⚙️engine/🦀️.rs");
+    let production = engine.rsplit_once("\n//#region 🧪️Tests").unwrap().0;
     assert!(!production.contains("db_actor::block_on(db_sync::handle_hello"));
     assert!(production.contains("DatabaseSyncHelloFuture::try_submit"));
     let source = include_str!("../../🦀️.rs");

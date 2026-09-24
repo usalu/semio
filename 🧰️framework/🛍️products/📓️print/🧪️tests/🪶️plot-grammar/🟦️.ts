@@ -12,7 +12,7 @@ import { type ProbeProjection, type ProbeRecord, compileVizProbe, roundProbeNumb
 
 //#region 🔖️Vectors
 const CASE = "plot-grammar";
-const FIXTURE = "local://plot-grammar.tex";
+const FIXTURE = "shared://🪶️plot-grammar/plot-grammar.tex";
 const DECIMALS = 4;
 
 /** 🥒️ The vector table of the running scenario, as one record per row. */

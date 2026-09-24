@@ -7,7 +7,7 @@
   "aggregateVariant": "ResizeTargetRegion",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "resize-target-region",
-  "binaryTag": null,
+  "binaryTag": 29,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

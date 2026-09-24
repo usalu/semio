@@ -1,7 +1,7 @@
 //! 🚪️ IO s.program (1/✳️any) — the artifact declaration owns this composer table.
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"]
+    &["stdio.csv", "stdio.json", "stdio.txt"]
 }
 pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"]
@@ -151,8 +151,6 @@ pub mod derived_composition {
     const DEP_CSV: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-    const DEP_XLSX: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
-    const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
 
     pub struct ProgramComposerComposition;
 
@@ -161,7 +159,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_CSV, DEP_JSON, DEP_TXT, DEP_XLSX, DEP_ZIP]
+            &[DIALECT, DEP_CSV, DEP_JSON, DEP_TXT]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -200,24 +198,6 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = crate::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_XLSX {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::xlsx::v_ecma_376::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_ZIP {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::zip::v2_0::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -329,3 +309,9 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

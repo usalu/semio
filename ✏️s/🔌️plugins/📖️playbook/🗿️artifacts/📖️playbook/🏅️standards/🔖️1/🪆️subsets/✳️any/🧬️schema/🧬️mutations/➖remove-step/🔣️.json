@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveStep",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-step",
-  "binaryTag": null,
+  "binaryTag": 1,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

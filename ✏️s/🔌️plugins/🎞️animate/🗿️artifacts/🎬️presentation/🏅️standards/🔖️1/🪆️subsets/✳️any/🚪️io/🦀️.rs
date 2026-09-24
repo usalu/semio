@@ -31,16 +31,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                 vec![
                     serializer_entry::<PresentationSnapshot, export::json::v_rfc8259::any::PresentationIntoJson>(ANIMATE_DIALECT),
                     deserializer_entry::<PresentationSnapshot, import::json::v_rfc8259::any::JsonIntoPresentation>(ANIMATE_DIALECT),
-                    serializer_entry::<PresentationSnapshot, export::md::v_commonmark::any::PresentationIntoMd>(ANIMATE_DIALECT),
-                    deserializer_entry::<PresentationSnapshot, import::md::v_commonmark::any::MdIntoPresentation>(ANIMATE_DIALECT),
                     serializer_entry::<PresentationSnapshot, export::pdf::v1_4::any::PresentationIntoPdf>(ANIMATE_DIALECT),
                     deserializer_entry::<PresentationSnapshot, import::pdf::v1_4::any::PdfIntoPresentation>(ANIMATE_DIALECT),
-                    serializer_entry::<PresentationSnapshot, export::pptx::v_ecma_376::any::PresentationIntoPptx>(ANIMATE_DIALECT),
-                    deserializer_entry::<PresentationSnapshot, import::pptx::v_ecma_376::any::PptxIntoPresentation>(ANIMATE_DIALECT),
-                    serializer_entry::<PresentationSnapshot, export::svg::v1_1::any::PresentationIntoSvg>(ANIMATE_DIALECT),
-                    deserializer_entry::<PresentationSnapshot, import::svg::v1_1::any::SvgIntoPresentation>(ANIMATE_DIALECT),
-                    serializer_entry::<PresentationSnapshot, export::png::v1_2::any::PresentationIntoPng>(ANIMATE_DIALECT),
-                    deserializer_entry::<PresentationSnapshot, import::png::v1_2::any::PngIntoPresentation>(ANIMATE_DIALECT),
                     serializer_entry::<PresentationSnapshot, export::txt::v_utf_8::any::PresentationIntoTxt>(ANIMATE_DIALECT),
                     deserializer_entry::<PresentationSnapshot, import::txt::v_utf_8::any::TxtIntoPresentation>(ANIMATE_DIALECT),
                 ]

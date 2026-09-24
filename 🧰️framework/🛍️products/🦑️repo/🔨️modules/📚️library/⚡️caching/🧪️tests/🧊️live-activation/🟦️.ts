@@ -5,8 +5,8 @@ import { dirname, join } from "node:path";
 
 /** 🧊️ Runs the actual preparation/activation commands with controlled publishers under native Nx. */
 export async function testWgpuLiveActivation(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8")));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️live-activation/🔣️.json"), "utf8"));
+  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️live-activation/📐️schema/🔣️.json"), "utf8")));
   assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   const activationModule = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts");
   const { developmentRuntimeRoot } = await import(activationModule);
@@ -79,7 +79,7 @@ if (operation === "materialize") {
   for (const profile of fixture.profiles) {
     const moduleRoot = join(repoRoot, "modules", profile);
     put(join(moduleRoot, fixture.plugin, MODULE_BRIDGE_FILE), fixture.payload + " " + profile);
-    put(join(moduleRoot, fixture.plugin, "🔣️.json"), JSON.stringify({ manifest: { pluginId: fixture.plugin } }));
+    put(join(moduleRoot, fixture.plugin, "../../🧫️fixtures/🧊️live-activation/🔣️.json"), JSON.stringify({ manifest: { pluginId: fixture.plugin } }));
     for (const path of [join(fixture.plugin, ".nx-artifact.json"), join(PREVIEW2_VENDOR_RELATIVE, ".nx-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) put(join(moduleRoot, path), "{}");
   }
   for (const variant of fixture.variants) put(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session/🟦️.ts"), "export const PLAYGROUND_SESSION = " + JSON.stringify({ variant, registryPluginId: fixture.plugin, plugins: [{ pluginId: fixture.plugin }] }));

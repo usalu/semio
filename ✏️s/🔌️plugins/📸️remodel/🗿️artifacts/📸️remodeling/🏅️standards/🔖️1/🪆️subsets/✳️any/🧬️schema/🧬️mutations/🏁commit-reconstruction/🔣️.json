@@ -7,7 +7,7 @@
   "aggregateVariant": "CommitReconstruction",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "commit-reconstruction",
-  "binaryTag": null,
+  "binaryTag": 35,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -129,6 +129,17 @@
       ]
     },
     {
+      "id": "s.stdio.json.composer.dialect-s-stdio-json-rfc8259-geojson.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.json@rfc8259/geojson",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.json@rfc8259/geojson"
+        }
+      ]
+    },
+    {
       "id": "s.stdio.json.composer.dialect-s-stdio-json-rfc8259-i-json.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.json@rfc8259/i-json",
@@ -228,6 +239,17 @@
         {
           "namespace": "schema",
           "value": "s.stdio.json"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.json.subset-validator.validated-dialect-s-stdio-json-rfc8259-geojson.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.json@rfc8259/geojson",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.json@rfc8259/geojson"
         }
       ]
     },

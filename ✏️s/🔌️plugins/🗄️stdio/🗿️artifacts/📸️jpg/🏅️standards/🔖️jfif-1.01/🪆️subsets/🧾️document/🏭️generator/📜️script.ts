@@ -35,6 +35,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -234,7 +235,7 @@ async function main(argv: readonly string[]): Promise<number> {
           units: { length: "unitless", angle: "degree" },
           files,
           provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-          generator: { oracle: "libjpeg-jpg-jfif-1-01-marker-cli", packageVersion: "3.2.0", engineFamily: "libjpeg-turbo", engineVersion: "3.2.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts libjpeg", platform: process.platform },
+          generator: { oracle: "libjpeg-jpg-jfif-1-01-marker-cli", packageVersion: "3.2.0", engineFamily: "libjpeg-turbo", engineVersion: "3.2.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts libjpeg", platform: currentPlatform() },
           comparisonProfile: "semantic-jpg-libjpeg-marker-v1",
           reproducible: true,
           family: "mechanical",
@@ -327,7 +328,7 @@ print(kind + ': written')
           units: { length: "unitless", angle: "degree" },
           files,
           provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-          generator: { oracle: "pillow-jpg-jfif-1-01-marker-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts markers", platform: process.platform },
+          generator: { oracle: "pillow-jpg-jfif-1-01-marker-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/📜️script.ts markers", platform: currentPlatform() },
           comparisonProfile: "semantic-jpg-marker-v1",
           reproducible: true,
           family: "mechanical",

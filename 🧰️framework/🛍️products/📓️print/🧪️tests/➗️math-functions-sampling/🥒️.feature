@@ -27,7 +27,7 @@ Feature: Function sampling, adaptive refinement and Riemann sums are computed, n
   @level-quick
   @mode-differential
   Scenario: Uniform sampling puts n+1 points on the domain and evaluates the expression at each
-    Given the committed probe document local://math-functions-sampling.tex and the sampled functions
+    Given the committed probe document shared://➗️math-functions-sampling/math-functions-sampling.tex and the sampled functions
       | key            | expression                 | from | to          | samples |
       | sample/sine    | sin(x)                     | 0    | pi          | 8       |
       | sample/damped  | exp(-x)*cos(4x)            | 0    | 2           | 10      |
@@ -38,7 +38,7 @@ Feature: Function sampling, adaptive refinement and Riemann sums are computed, n
   @level-quick
   @mode-conformance
   Scenario: The four Riemann rules bracket the exact integral the way the rules say they must
-    Given the committed probe document local://math-functions-sampling.tex and the integrals
+    Given the committed probe document shared://➗️math-functions-sampling/math-functions-sampling.tex and the integrals
       | key                  | integrand | from | to | bins | exact                |
       | riemann/square       | x^2       | 0    | 1  | 8    | 0.3333333333333333   |
       | riemann/sine         | sin(x)    | 0    | pi | 12   | 2                    |
@@ -49,7 +49,7 @@ Feature: Function sampling, adaptive refinement and Riemann sums are computed, n
   @level-quick
   @mode-conformance
   Scenario: Refinement inserts a midpoint exactly where the chord sagitta exceeds the tolerance
-    Given the committed probe document local://math-functions-sampling.tex and the refinement budget
+    Given the committed probe document shared://➗️math-functions-sampling/math-functions-sampling.tex and the refinement budget
       | key                     | expression | samples | passes | tolerance |
       | refine/pass-one         | sin(4x)    | 4       | 1      | 0.05      |
       | refine/pass-two-count   | sin(4x)    | 4       | 2      | 0.05      |

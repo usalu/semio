@@ -344,8 +344,8 @@ async fn wasmtime_codec_genesis_answers_the_same_pair_as_the_interpreter() {
 
 
 /// 🧾️ Every package the trusted-catalog bootstrap stages, as
-/// `(package id, component file, artifact kind, document schema, runtime)`. Adding a package is one
-/// row.
+/// `(package id, component file, artifact kind, document schema, runtime, genesis mirror text)`.
+/// Adding a package is one row.
 ///
 /// 🎯️ Membership is EVERY staged package, not only the ones the hub routes through the guest.
 /// `🌎️hub/📦️packages/🦀️rust/📜️script.ts` short-circuits a package carrying a `linkedCodecRegistry`
@@ -363,12 +363,24 @@ async fn wasmtime_codec_genesis_answers_the_same_pair_as_the_interpreter() {
 /// `wasmtime_codec_genesis_answers_the_same_pair_as_the_interpreter` is the standing proof that the
 /// two runtimes agree, so the big two are swept through `GuestRuntimes::Wasmtime` and note through
 /// both. A law nobody can afford to run proves nothing.
-const STAGED_CODEC_COMPONENTS: [(&str, &str, &str, &str, CodecSweepRuntime); 4] = [
-    ("semio:note", "semio_s_plugin_note.wasm", NOTE_ARTIFACT_KIND, NOTE_DOCUMENT_SCHEMA, CodecSweepRuntime::Owned),
-    ("semio:note", "semio_s_plugin_note.wasm", NOTE_ARTIFACT_KIND, NOTE_DOCUMENT_SCHEMA, CodecSweepRuntime::Jit),
-    ("semio:gis", "semio_s_plugin_gis.wasm", "s.gis.gismap", GIS_DOCUMENT_SCHEMA, CodecSweepRuntime::Jit),
-    ("semio:stdio", "semio_s_plugin_stdio.wasm", "s.stdio.txt", STDIO_DOCUMENT_SCHEMA, CodecSweepRuntime::Jit),
+const STAGED_CODEC_COMPONENTS: [(&str, &str, &str, &str, CodecSweepRuntime, GenesisMirrorText); 4] = [
+    ("semio:note", "semio_s_plugin_note.wasm", NOTE_ARTIFACT_KIND, NOTE_DOCUMENT_SCHEMA, CodecSweepRuntime::Owned, GenesisMirrorText::Structured),
+    ("semio:note", "semio_s_plugin_note.wasm", NOTE_ARTIFACT_KIND, NOTE_DOCUMENT_SCHEMA, CodecSweepRuntime::Jit, GenesisMirrorText::Structured),
+    ("semio:gis", "semio_s_plugin_gis.wasm", "s.gis.gismap", GIS_DOCUMENT_SCHEMA, CodecSweepRuntime::Jit, GenesisMirrorText::Structured),
+    ("semio:stdio", "semio_s_plugin_stdio.wasm", "s.stdio.txt", STDIO_DOCUMENT_SCHEMA, CodecSweepRuntime::Jit, GenesisMirrorText::CarrierRaw),
 ];
+
+/// 📝️ What `codec.print-mirror` must print as the text of a genesis document.
+///
+/// 🧬️ A `CARRIER_TEXT` kind's text IS the raw external file, verbatim
+/// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/…/📸️snapshot/🦀️.rs` `impl store::ArtifactDsl for
+/// TxtSnapshot`), so its empty genesis document prints exactly the empty string. Every other kind
+/// prints a structured DSL that is never empty, even for its genesis snapshot.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum GenesisMirrorText {
+    Structured,
+    CarrierRaw,
+}
 
 /// 🏎️ Which guest runtime one sweep row is driven through — see `STAGED_CODEC_COMPONENTS`'s own doc
 /// for why the two biggest staged components are not interpreted.
@@ -385,7 +397,7 @@ const STDIO_DOCUMENT_SCHEMA: &str = "stdio.txt";
 /// 🧹️ Drives ALL FOUR `codec` exports over one staged component, both resolver keys included.
 /// Returns the failure text rather than panicking so the sweep above it can report every component
 /// in one run instead of dying on the first.
-async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, schema: &str, which: CodecSweepRuntime) -> Result<(), String> {
+async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, schema: &str, which: CodecSweepRuntime, text: GenesisMirrorText) -> Result<(), String> {
     let Some(path) = plugin_wasm_in_profiles(file_name, &["wasm-release"]) else { return Err(format!("{file_name} is not built in any target root")) };
     let bytes = std::fs::read(&path).map_err(|error| format!("read {}: {error}", path.display()))?;
     let runtime = match which {
@@ -410,8 +422,10 @@ async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, s
         return Err(format!("codec.genesis({kind}) and codec.genesis({schema}) selected different apps"));
     }
     let mirror = runtime.codec_print_mirror(&compiled, schema, &pair.pack, &pair.spr, &budget).await.map_err(|error| format!("codec.print-mirror({schema}): {error:?}"))?;
-    if mirror.dsl.is_empty() {
-        return Err(format!("codec.print-mirror({schema}) printed no dsl at all"));
+    match text {
+        GenesisMirrorText::Structured if mirror.dsl.is_empty() => return Err(format!("codec.print-mirror({schema}) printed no dsl at all")),
+        GenesisMirrorText::CarrierRaw if !mirror.dsl.is_empty() => return Err(format!("codec.print-mirror({schema}) printed {} bytes for an empty carrier document", mirror.dsl.len())),
+        _ => {}
     }
     if !mirror.ops.contains(MINTED_DOCUMENT_ID) || !mirror.ops.contains(schema) {
         return Err(format!(
@@ -447,13 +461,13 @@ async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, s
 async fn owned_codec_answers_every_call_on_every_staged_component() {
     let mut swept = 0usize;
     let mut failures = Vec::new();
-    for (package, file_name, kind, schema, which) in STAGED_CODEC_COMPONENTS {
+    for (package, file_name, kind, schema, which, text) in STAGED_CODEC_COMPONENTS {
         if plugin_wasm_in_profiles(file_name, &["wasm-release"]).is_none() {
             continue;
         }
         swept += 1;
         let began = std::time::Instant::now();
-        if let Err(detail) = codec_sweep_one_component(package, file_name, kind, schema, which).await {
+        if let Err(detail) = codec_sweep_one_component(package, file_name, kind, schema, which, text).await {
             failures.push(format!("{package} [{which:?}] after {:?}: {detail}", began.elapsed()));
         }
     }

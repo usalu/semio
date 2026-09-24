@@ -18,7 +18,7 @@ use semio_framework_dispatch_macros::dyn_enum_close;
 use protocol::codec::ids::ContentHash;
 use server::authority::{ActorState, Decider, Decision, DecisionContext};
 use server::contract::{ActorKey, CommandEnvelope, CommandReceipt, EventRecord, IdempotencyKey, Principal, QueryConsistency, QueryEnvelope, QueryId, QueryResult, Rejection, Revision, Scope, SessionId, TenantId};
-use server::gateway::{DocumentAuthority, QueryHandler, ServerError};
+use server::gateway::{document_socket_identity, DocumentAuthority, DocumentFrames, DocumentHandshake, DocumentSocketIdentity, QueryHandler, ServerError};
 use server::policy::{Credential, PrincipalResolver, Resolved};
 use server::storage::{AuthorityStore, BlobStore, Lease, OutboxEntry, ProjectionStore, SessionRecord, SessionStore, StorageError};
 use server::{
@@ -157,6 +157,7 @@ impl<const N: u8> PrincipalResolver for Rung<N> {
             session: None,
             device: None,
             via: rung_name::<N>().to_owned(),
+            actor: Some(bearer.to_owned()),
         })
     }
 
@@ -180,12 +181,20 @@ impl<const N: u8> Decider for Rung<N> {
 }
 
 impl<const N: u8> DocumentAuthority for Rung<N> {
-    async fn welcome(&self, _scope: &Scope, _actor: &str, _resume: Option<&str>) -> Result<Vec<u8>, ServerError> {
-        Ok(vec![N])
+    async fn handshake(&self) -> DocumentHandshake {
+        DocumentHandshake::ServerFirst
     }
 
-    async fn submit_frame(&self, _scope: &Scope, _principal: &Principal, frame: &[u8]) -> Result<Vec<Vec<u8>>, ServerError> {
-        Ok(vec![frame.to_vec()])
+    async fn bind_socket(&self, _scope: &Scope, resolved: &Resolved) -> Result<DocumentSocketIdentity, ServerError> {
+        document_socket_identity(resolved)
+    }
+
+    async fn welcome(&self, _scope: &Scope, _actor: &str, _resume: Option<&str>, _hello: Option<&[u8]>) -> Result<Vec<Vec<u8>>, ServerError> {
+        Ok(vec![vec![N]])
+    }
+
+    async fn submit_frame(&self, _scope: &Scope, _actor: &str, _principal: &Principal, frame: &[u8]) -> Result<DocumentFrames, ServerError> {
+        Ok(DocumentFrames::mirrored(vec![frame.to_vec()]))
     }
 }
 
@@ -293,8 +302,8 @@ async fn each_remaining_port_dispatches_to_the_arm_it_was_given() {
     assert_eq!(ClosedResolvers::Second(Rung::<2>).name().await, "rung-2");
     assert_eq!(ClosedDeciders::First(Rung::<1>).actor_kind().await, "rung-1");
     assert_eq!(ClosedDeciders::Second(Rung::<2>).actor_kind().await, "rung-2");
-    assert_eq!(ClosedDocuments::First(Rung::<1>).welcome(&Scope("s".into()), "a", None).await.expect("the first arm answers"), vec![1]);
-    assert_eq!(ClosedDocuments::Second(Rung::<2>).welcome(&Scope("s".into()), "a", None).await.expect("the second arm answers"), vec![2]);
+    assert_eq!(ClosedDocuments::First(Rung::<1>).welcome(&Scope("s".into()), "a", None, None).await.expect("the first arm answers"), vec![vec![1]]);
+    assert_eq!(ClosedDocuments::Second(Rung::<2>).welcome(&Scope("s".into()), "a", None, None).await.expect("the second arm answers"), vec![vec![2]]);
     assert_eq!(ClosedQueries::First(Rung::<1>).kind().await, "rung-1");
     assert_eq!(ClosedQueries::Second(Rung::<2>).kind().await, "rung-2");
 }

@@ -10,6 +10,7 @@
   "taskSlotReleasedWhileResultRetained": true,
   "droppedResultRetirement": "mounted-io-maintenance",
   "retry": { "maximumAttempts": 8, "timerDelayMs": 1, "terminalAfterQueueRelease": true },
+  "walSegment": { "chunkSlots": 64, "creditItems": 1, "chargedOn": "create", "returnedOn": "retirement" },
   "tables": [
     { "name": "wal", "slots": 64 },
     { "name": "snapshots", "slots": 64 },

@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateWeeklySchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-weekly-schedule",
-  "binaryTag": null,
+  "binaryTag": 260,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

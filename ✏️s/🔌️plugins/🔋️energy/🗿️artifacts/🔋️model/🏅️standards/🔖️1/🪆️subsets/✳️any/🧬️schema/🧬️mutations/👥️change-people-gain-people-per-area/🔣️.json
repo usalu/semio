@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePeopleGainPeoplePerArea",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-people-gain-people-per-area",
-  "binaryTag": null,
+  "binaryTag": 81,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

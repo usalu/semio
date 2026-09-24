@@ -33,7 +33,7 @@ func newContext(ctx *host.Context) (*graphql.RecordingContext, error) {
 
 // 📥️ Reads the refusal corpus.
 func readCorpus(ctx *host.Context) ([]refusal, error) {
-	raw, err := ctx.FixtureBytes("local://🔣️refusals.json")
+	raw, err := ctx.FixtureBytes("shared://❌️execution-errors/🔣️refusals.json")
 	if err != nil {
 		return nil, err
 	}

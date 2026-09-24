@@ -535,7 +535,7 @@ function nativeOracle(row: (typeof vectors.glueRoleCases)[number], root: string)
   const extension = row.oracle === "rust-syn" ? "rs" : row.oracle === "go-parser" ? "go" : row.oracle === "python-parser" ? "py" : "c";
   const source = join(root, `source.${extension}`);
   writeFileSync(source, row.content);
-  const oracleRoot = resolve(import.meta.dir, "🔮️oracles");
+  const oracleRoot = resolve(import.meta.dir, "../../🔮️oracles/📦️package-boundary-classification");
   const rustOraclePackageRoot = join(oracleRoot, "📦️packages/🦀️rust");
   const run = row.oracle === "rust-syn"
     ? Bun.spawnSync(["cargo", "run", "--quiet", "--manifest-path", join(rustOraclePackageRoot, "Cargo.toml"), "--", source, String(row.maxDelegationStatements)], { cwd: rustOraclePackageRoot, env: { ...process.env, CARGO_TARGET_DIR: join(root, "target") }, stdout: "pipe", stderr: "pipe" })

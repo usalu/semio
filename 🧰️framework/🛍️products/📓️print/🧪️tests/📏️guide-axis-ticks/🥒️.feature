@@ -23,7 +23,7 @@ Feature: An axis puts its ticks where d3-axis would
   @level-quick
   @mode-differential
   Scenario: Linear tick values agree with d3-array
-    Given the committed probe document local://linear-ticks.tex and the domains
+    Given the committed probe document shared://📏️guide-axis-ticks/linear-ticks.tex and the domains
       | start | stop | count |
       | 0     | 10   | 5     |
       | 0     | 1    | 5     |
@@ -40,7 +40,7 @@ Feature: An axis puts its ticks where d3-axis would
   @level-quick
   @mode-differential
   Scenario: Logarithmic tick values agree with d3-scale
-    Given the committed probe document local://log-ticks.tex and the domains
+    Given the committed probe document shared://📏️guide-axis-ticks/log-ticks.tex and the domains
       | start | stop    | count |
       | 1     | 100     | 10    |
       | 1     | 1000000 | 10    |
@@ -50,7 +50,7 @@ Feature: An axis puts its ticks where d3-axis would
   @level-quick
   @mode-differential
   Scenario: Band tick positions are the band centres d3-scale computes
-    Given the committed probe document local://band-ticks.tex and the band scale
+    Given the committed probe document shared://📏️guide-axis-ticks/band-ticks.tex and the band scale
       | domain    | rangeMin | rangeMax |
       | A,B,C,D,E | 8        | 78       |
     Then the compiled probe and the reference implementation agree on every tick position
@@ -59,7 +59,7 @@ Feature: An axis puts its ticks where d3-axis would
   @level-quick
   @mode-conformance
   Scenario: A bottom axis draws its domain line, ticks and grid on the specified geometry
-    Given the committed probe document local://axis-geometry.tex
+    Given the committed probe document shared://📏️guide-axis-ticks/axis-geometry.tex
     Then the compiled probe reports the specified axis geometry
       | key                 | values             |
       | axis-domain         | 8,8,78,8           |
@@ -70,7 +70,7 @@ Feature: An axis puts its ticks where d3-axis would
   @level-quick
   @mode-differential
   Scenario: Tick labels are formatted by the d3-format grammar in both locales
-    Given the committed probe document local://tick-format-labels.tex and the specifier
+    Given the committed probe document shared://📏️guide-axis-ticks/tick-format-labels.tex and the specifier
       | specifier | start | stop | count | locales |
       | .1f       | 0     | 1    | 5     | en,de   |
     Then the compiled probe and the reference implementation agree on every tick label

@@ -33,7 +33,7 @@ type routeFixture struct {
 
 func loadRouteFixture(ctx *host.Context) (routeFixture, error) {
 	var fixture routeFixture
-	data, err := ctx.FixtureBytes("local://🌐️requests.json")
+	data, err := ctx.FixtureBytes("shared://🌐️http-route-contract/🌐️requests.json")
 	if err != nil {
 		return fixture, err
 	}

@@ -189,6 +189,29 @@ describe("📐️ canonical test layout", () => {
     } finally { rmSync(directory, { recursive: true, force: true }); }
   }, 60_000);
 
+  test("Go in-package test classification agrees with go list", () => {
+    const directory = mkdtempSync(join(tmpdir(), "semio-test-layout-go-"));
+    try {
+      const vector = (vectors.cases as readonly VectorCase[]).find(({ id }) => id === "go-in-package-tests")!;
+      const findings = inspectTestLayoutSources(taxonomy, vector.sources);
+      const packages = [...new Set(vector.sources.map(source => dirname(source.path)))];
+      for (const source of vector.sources) {
+        mkdirSync(dirname(join(directory, source.path)), { recursive: true });
+        writeFileSync(join(directory, source.path), source.source);
+      }
+      const compiledTests = packages.flatMap((path, index) => {
+        writeFileSync(join(directory, path, "go.mod"), `module example.com/layout${index}\n\ngo 1.22\n`);
+        const listed = spawnSync("go", ["list", "-e", "-json", "."], { cwd: join(directory, path), encoding: "utf8", env: { ...process.env, GOWORK: "off", GOFLAGS: "" } });
+        expect(listed.status, listed.stderr).toBe(0);
+        const listing = JSON.parse(listed.stdout) as { GoFiles?: string[]; TestGoFiles?: string[]; XTestGoFiles?: string[] };
+        return (listing.GoFiles ?? []).length === 0 ? [] : [...listing.TestGoFiles ?? [], ...listing.XTestGoFiles ?? []].map(name => `${path}/${name}`);
+      });
+      const canonical = vector.sources.filter(source => source.path.endsWith("_test.go") && !findings.some(finding => finding.path === source.path && finding.code !== "legacy-test-filename")).map(source => source.path);
+      expect(canonical.sort()).toEqual(compiledTests.sort());
+      expect(canonical.length).toBeGreaterThan(0);
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+  }, 60_000);
+
   test("lexical binding classification matches the TypeScript checker", () => {
     const vector = vectors.cases.find(vector => vector.id === "javascript-lexical-bindings")!;
     for (const source of vector.sources.filter(source => !/namespace-shadow|modified-register|require-alias|expect-shadow/u.test(source.path))) {
@@ -239,8 +262,9 @@ describe("📐️ canonical test layout", () => {
   });
 
   test("Nx hashes semantic-owner cases while production excludes them", async () => {
-    const repoRoot = repoRootFromHere(), { cacheInternals } = await import("../../../📚️library/🟨️.mjs");
-    const targetRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust";
+    const repoRoot = repoRootFromHere(), { cacheInternals, libraryBootstrap } = await import("../../../📚️library/🟨️.mjs");
+    await libraryBootstrap;
+    const targetRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript";
     const owner = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine";
     const project = JSON.parse(readFileSync(join(repoRoot, targetRoot, "📋️project.json"), "utf8"));
     const inputs = cacheInternals.projectInputs(project, targetRoot, repoRoot, new Map());
@@ -258,6 +282,7 @@ describe("📐️ canonical test layout", () => {
     const cases = new Map<string, boolean>();
     for (const vector of vectors.cases as readonly VectorCase[]) for (const source of vector.sources) {
       if (!/^.+\/🧪️tests\/[^/]+\/🟦️\.ts$/u.test(source.path)) continue;
+      if (source.path.split("/").at(-2) === taxonomy.testRunnerConfigurationCaseName) continue;
       const accepted = !vector.expected.some(finding => finding.path === source.path && ["test-case-name", "test-owner-delivery-scope", "test-layout-depth"].includes(finding.code));
       cases.set(source.path.replace(/🟦️\.ts$/u, "🥒️.feature"), accepted);
     }

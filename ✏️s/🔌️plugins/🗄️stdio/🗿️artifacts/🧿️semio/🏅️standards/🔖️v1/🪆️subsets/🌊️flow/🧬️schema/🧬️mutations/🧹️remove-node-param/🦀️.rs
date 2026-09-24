@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveNodeParam {
-    pub(crate) id: String,
-    pub(crate) key: String,
+    pub id: String,
+    pub key: String,
 }
 
 impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for RemoveNodeParam {

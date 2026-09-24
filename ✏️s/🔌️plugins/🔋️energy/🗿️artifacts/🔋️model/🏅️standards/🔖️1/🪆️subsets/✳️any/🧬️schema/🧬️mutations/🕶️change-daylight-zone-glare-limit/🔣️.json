@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeDaylightZoneGlareLimit",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-daylight-zone-glare-limit",
-  "binaryTag": null,
+  "binaryTag": 155,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

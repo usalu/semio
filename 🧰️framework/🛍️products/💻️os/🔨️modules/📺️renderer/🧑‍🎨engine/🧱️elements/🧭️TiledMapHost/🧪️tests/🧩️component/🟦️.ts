@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import ts from "typescript";
 import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, MapRenderer, resolveMapInteractionSync } from "../../🟦️.tsx";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
-import repaintFixture from "./🧫️repaint.json";
+import repaintFixture from "../../🧫️fixtures/🔁️repaint/🔣️.json";
 import lifecycleFixture from "../../../../🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json";
 import rendererSource from "../../🟦️.tsx?raw";
 // #endregion 🔌️Adapters

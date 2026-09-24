@@ -3,12 +3,16 @@ use crate::schema::mutations::SvgMutation;
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 pub const BINARY_TAGS: &[(&str, u32)] = &[("set-declaration", 1), ("set-doctype", 2), ("insert-element", 3), ("remove-element", 4), ("set-element-name", 5), ("set-attribute", 6), ("set-text", 7), ("set-view-box", 8), ("set-transform", 9)];
+//#region 🏷️WireTags
+/// 🏷️ `SvgMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
+const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
+//#endregion 🏷️WireTags
+
 impl protocol::OpBinary for SvgMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(pack::to_json_string(self).into_bytes())
+        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|cause| protocol::ProtocolError::Malformed { what: "svg mutation", offset: 0, detail: cause.to_string() })?;
-        pack::from_json_str(text).map_err(|cause| protocol::ProtocolError::Malformed { what: "svg mutation", offset: 0, detail: cause.to_string() })
+        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
     }
 }

@@ -17,7 +17,7 @@ Feature: Substitution tilings and L-systems grow at the rate their own rules dic
   @level-quick
   @mode-conformance
   Scenario: Each substitution step doubles the tile count of the ten-rhomb wheel
-    Given the committed probe document local://geometry-tilings-fractals.tex and the substitution depths
+    Given the committed probe document shared://❄️geometry-tilings-fractals/geometry-tilings-fractals.tex and the substitution depths
       | depth | tiles |
       | 0     | 10    |
       | 1     | 20    |
@@ -29,7 +29,7 @@ Feature: Substitution tilings and L-systems grow at the rate their own rules dic
   @level-quick
   @mode-conformance
   Scenario: Rewriting the axiom grows the word exactly as the productions say
-    Given the committed probe document local://geometry-tilings-fractals.tex and the L-systems
+    Given the committed probe document shared://❄️geometry-tilings-fractals/geometry-tilings-fractals.tex and the L-systems
       | system     | axiom   | production                    | depth | symbols |
       | koch       | F--F--F | F to F+F--F+F                 | 1     | 28      |
       | koch       | F--F--F | F to F+F--F+F                 | 2     | 112     |
@@ -42,7 +42,7 @@ Feature: Substitution tilings and L-systems grow at the rate their own rules dic
   @level-quick
   @mode-conformance
   Scenario: A square tiling puts its cells on the lattice its own packing defines
-    Given the committed probe document local://geometry-tilings-fractals.tex and the lattice
+    Given the committed probe document shared://❄️geometry-tilings-fractals/geometry-tilings-fractals.tex and the lattice
       | kind   | columns | rows | size | spacing     |
       | square | 3       | 3    | 6    | 6 times 1.732 |
     Then the compiled probe and the reference implementation agree on every value

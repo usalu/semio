@@ -47,7 +47,7 @@ func typescriptTopLevelDeclarations(ctx *host.Context) (host.Outcome, error) {
 }
 
 func callableConstIsAFunction(ctx *host.Context) (host.Outcome, error) {
-	projection, err := declarations(ctx, "local://🔤️callables.ts")
+	projection, err := declarations(ctx, "shared://📖️definition-parsing/🔤️callables.ts")
 	if err != nil {
 		return host.Outcome{}, err
 	}

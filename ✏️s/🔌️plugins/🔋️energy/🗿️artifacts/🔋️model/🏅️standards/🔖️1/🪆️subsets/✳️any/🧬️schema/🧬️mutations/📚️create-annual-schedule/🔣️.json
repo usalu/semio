@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateAnnualSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-annual-schedule",
-  "binaryTag": null,
+  "binaryTag": 263,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

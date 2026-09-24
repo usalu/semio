@@ -12,7 +12,7 @@ Feature: The GitHub management provider issues one fixed argv sequence and parse
   @level-fundamental
   @mode-differential
   Scenario: An issue view is parsed into url, state, title, body, milestone and labels
-    Given the recorded gh transcript local://🎞️gh-transcripts.json for this scenario
+    Given the recorded gh transcript shared://🐙️github-management-transcripts/🎞️gh-transcripts.json for this scenario
     When the provider is asked for the details of issue 412
     Then the parsed issue and the issued argv are projected
 
@@ -20,7 +20,7 @@ Feature: The GitHub management provider issues one fixed argv sequence and parse
   @level-fundamental
   @mode-differential
   Scenario: The paginated milestone stream is scanned line by line for one title
-    Given the recorded gh transcript local://🎞️gh-transcripts.json for this scenario
+    Given the recorded gh transcript shared://🐙️github-management-transcripts/🎞️gh-transcripts.json for this scenario
     When the provider is asked to find the milestone titled 26/09
     Then the matched milestone and the issued argv are projected
 
@@ -28,7 +28,7 @@ Feature: The GitHub management provider issues one fixed argv sequence and parse
   @level-fundamental
   @mode-differential
   Scenario: The repository label catalogue is parsed out of the label list
-    Given the recorded gh transcript local://🎞️gh-transcripts.json for this scenario
+    Given the recorded gh transcript shared://🐙️github-management-transcripts/🎞️gh-transcripts.json for this scenario
     When the provider is asked to list the repository labels
     Then the parsed labels and the issued argv are projected
 
@@ -36,7 +36,7 @@ Feature: The GitHub management provider issues one fixed argv sequence and parse
   @level-fundamental
   @mode-differential
   Scenario: Creating an issue resolves the milestone title, extracts the url and follows up
-    Given the recorded gh transcript local://🎞️gh-transcripts.json for this scenario
+    Given the recorded gh transcript shared://🐙️github-management-transcripts/🎞️gh-transcripts.json for this scenario
     When the provider creates a ticket issue against milestone 17
     Then the created url and the whole issued argv sequence are projected
 
@@ -44,6 +44,6 @@ Feature: The GitHub management provider issues one fixed argv sequence and parse
   @level-fundamental
   @mode-error
   Scenario: A non-zero gh exit is reported as a failure carrying the trimmed stderr
-    Given the recorded gh transcript local://🎞️gh-transcripts.json for this scenario
+    Given the recorded gh transcript shared://🐙️github-management-transcripts/🎞️gh-transcripts.json for this scenario
     When the provider is asked for the details of an issue that does not exist
     Then a failure carrying the trimmed stderr is projected instead of an empty record

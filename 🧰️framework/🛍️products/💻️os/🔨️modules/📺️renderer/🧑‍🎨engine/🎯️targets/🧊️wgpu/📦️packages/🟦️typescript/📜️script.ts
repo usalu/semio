@@ -58,10 +58,15 @@ process.exit(keys.some(protectedKey) || process.env.SEMIO_DIRECT_CHILD_BENIGN !=
   console.log("native-environment-check: poisoned ordinary runner sanitized and binary fail-closed guard precedes credential/plugin activation");
 }
 
+/**
+ * 🧪️ The whole crate plus its vitest cases. Floored at `long` for the same reason as
+ * [[WgpuUnitTestScript]]: 1372 laws take ~105 s across seven threads, so the fundamental 15 s budget
+ * killed every invocation with no red test in it.
+ */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     assertRendererOutputOwnership();
-    const { rest } = resolveTestLevel(segments);
+    const { rest } = resolveTestLevel(segments, "long");
     await runCargoTestBudgeted([crateName], this.repoRoot, rest);
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
@@ -70,7 +75,7 @@ class TestScript extends BundleScript {
 /** 🦀️ Runs the existing budgeted Cargo tests without invoking browser tests. */
 class NativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
+    const { rest } = resolveTestLevel(segments, "long");
     await runCargoTestBudgeted([crateName], this.repoRoot, rest);
   }
 }

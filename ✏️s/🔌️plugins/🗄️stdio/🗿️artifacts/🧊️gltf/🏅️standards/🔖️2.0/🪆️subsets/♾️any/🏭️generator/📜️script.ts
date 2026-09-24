@@ -809,8 +809,9 @@ recipe("create-morph-target", "create-morph-target", "structural", "Appends a se
   create(after, ["meshes", 0, "primitives", 0, "targets"], after.meshes[0].primitives[0].targets.length, {});
   return { before, after };
 });
-recipe("delete-morph-target", "delete-morph-target", "structural", "Removes mesh 0 primitive 0's only morph target and its node/mesh-level weight entries so target-count coherence survives — delete-morph-target{mesh,primitive,target}.", (base) => {
+recipe("delete-morph-target", "delete-morph-target", "structural", "Mesh 0 starts without mesh-level default weights (a target may only be deleted while no weight list pins the target count), then its only morph target is removed and every node-level weight entry cleared so target-count coherence survives — delete-morph-target{mesh,primitive,target}.", (base) => {
   const before = clone(base);
+  delete before.meshes[0].weights;
   const after = clone(before);
   del(after, ["meshes", 0, "primitives", 0, "targets"], 0);
   for (const node of after.nodes) if (Array.isArray(node.weights)) node.weights = [];

@@ -353,6 +353,10 @@ impl store::ArtifactPack for Generation3dSnapshot {
         let parsed = <Generation3dSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         generation3d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        <Generation3dSnapshotDsl as store::ArtifactPack>::record_spec()
+    }
 }
 //#endregion 🔖️DslMirror
 

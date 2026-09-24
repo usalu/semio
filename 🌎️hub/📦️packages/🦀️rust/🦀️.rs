@@ -42,7 +42,7 @@ pub mod stores;
 pub(crate) mod test_artifact_root;
 
 #[cfg(test)]
-#[path = "../../🔐️auth/🧪️tests/🧭️credential-source-order/🔮️oracles/🦀️.rs"]
+#[path = "../../🔐️auth/🧪️tests/🧭️credential-source-order/🦀️.rs"]
 mod credential_source_order_oracle;
 
 #[cfg(test)]

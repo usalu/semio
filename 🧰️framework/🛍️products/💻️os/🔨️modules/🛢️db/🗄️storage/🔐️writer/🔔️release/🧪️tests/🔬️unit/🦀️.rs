@@ -27,7 +27,8 @@ fn wal_writer_release_signal_preserves_exact_waits_across_writer_and_backend_reu
     let mut waits = Vec::new();
     for row in expected["writers"].as_array().unwrap() {
         let key = WalWriterKey { backend: DbIoBackendControl::Memory { slot: 0, generation: row["backendGeneration"].as_str().unwrap().parse().unwrap() }, slot: 0, generation: row["writerGeneration"].as_str().unwrap().parse().unwrap() };
-        let required = cell.prepare(key).unwrap();
+        let (required, predecessor) = cell.prepare(key).unwrap();
+        assert!(predecessor.is_none());
         assert!(matches!(cell.prepare(key), Err(DbError::Conflict(_))));
         for (old, epoch) in &waits {
             assert_eq!(cell.request(*old), expected["staleRequestAccepted"]);
@@ -57,4 +58,26 @@ fn wal_writer_release_signal_preserves_exact_waits_across_writer_and_backend_reu
     assert!(cell.waiter.is_none());
     assert_eq!(WAL_WRITER_SIGNAL_BACKING_BYTES, DB_IO_BACKEND_CONTROLS * WAL_WRITER_CAPACITY * size_of::<Mutex<WalWriterSignalCell>>());
     eprintln!("[DEBUG] WAL release cells retained requests, woke once at terminal, rejected stale keys and overflow, and preserved all completion epochs through backend reuse");
+}
+
+#[test]
+fn wal_writer_reacquire_hands_back_undelivered_predecessor_notification() {
+    let counter = Arc::new(Counter(AtomicUsize::new(0)));
+    let waker = Waker::from(counter.clone());
+    let context = &mut Context::from_waker(&waker);
+    let mut cell = WalWriterSignalCell::new();
+    let backend = DbIoBackendControl::Memory { slot: 0, generation: 1 };
+    let first = WalWriterKey { backend, slot: 0, generation: 1 };
+    let second = WalWriterKey { backend, slot: 0, generation: 2 };
+    let (required, _) = cell.prepare(first).unwrap();
+    assert!(cell.request(first));
+    assert!(cell.poll(first, required, context).is_pending());
+    cell.notification = cell.finish(first);
+    assert!(matches!(cell.poll(first, required, context), Poll::Ready(Ok(()))));
+    let (successor, predecessor) = cell.prepare(second).expect("an already-published predecessor epoch never occupies the signal");
+    assert_eq!(successor, required + 1);
+    predecessor.expect("the undelivered predecessor notification is handed back exactly once").wake();
+    assert_eq!(counter.0.load(Ordering::SeqCst), 1);
+    assert!(cell.notification.is_none());
+    assert!(matches!(cell.prepare(second), Err(DbError::Conflict(_))));
 }

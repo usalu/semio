@@ -1,0 +1,54 @@
+# 🧭️ Own workspace root: the repository root manifest is a shared leased file, and a member crate would serialise
+# every concurrent session behind that lease.
+[workspace]
+
+[package]
+name = "semio-stdio-mutation-bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🏭️ Production mutation bridge for 🗄️stdio — answers listMutations from the production dispatch aggregates themselves."
+
+[[bin]]
+name = "semio-stdio-mutation-bridge"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-s-artifact-stdio-avi = { path = "../🗿️artifacts/📼️avi/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-bcf = { path = "../🗿️artifacts/💬️bcf/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-binary = { path = "../🗿️artifacts/💾️binary/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-bmp = { path = "../🗿️artifacts/🪟️bmp/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-csv = { path = "../🗿️artifacts/📊️csv/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-deflate = { path = "../🗿️artifacts/🗜️deflate/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-docx = { path = "../🗿️artifacts/📜️docx/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-dwg = { path = "../🗿️artifacts/🖊️dwg/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-dxf = { path = "../🗿️artifacts/🖋️dxf/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-epw = { path = "../🗿️artifacts/🌦️epw/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gif = { path = "../🗿️artifacts/🎞️gif/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf = { path = "../🗿️artifacts/🧊️gltf/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-html = { path = "../🗿️artifacts/🌐️html/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-ifc = { path = "../🗿️artifacts/🏗️ifc/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-jpg = { path = "../🗿️artifacts/📸️jpg/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-json = { path = "../🗿️artifacts/🧾️json/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-las = { path = "../🗿️artifacts/☁️las/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-md = { path = "../🗿️artifacts/📝️md/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-mp3 = { path = "../🗿️artifacts/🎵️mp3/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-mp4 = { path = "../🗿️artifacts/🎥️mp4/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-obj = { path = "../🗿️artifacts/🗽️obj/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf = { path = "../🗿️artifacts/📖️pdf/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-ply = { path = "../🗿️artifacts/🧱️ply/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-png = { path = "../🗿️artifacts/📷️png/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pptx = { path = "../🗿️artifacts/📽️pptx/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio = { path = "../🗿️artifacts/🧿️semio/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-step = { path = "../🗿️artifacts/📐️step/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-stl = { path = "../🗿️artifacts/🔺️stl/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg = { path = "../🗿️artifacts/🎨️svg/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-tiff = { path = "../🗿️artifacts/🖼️tiff/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-tsv = { path = "../🗿️artifacts/📑️tsv/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-txt = { path = "../🗿️artifacts/🔤️txt/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-wav = { path = "../🗿️artifacts/🔊️wav/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-xlsx = { path = "../🗿️artifacts/📕️xlsx/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-xml = { path = "../🗿️artifacts/📰️xml/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-zip = { path = "../🗿️artifacts/🎒️zip/📦️packages/🦀️rust" }

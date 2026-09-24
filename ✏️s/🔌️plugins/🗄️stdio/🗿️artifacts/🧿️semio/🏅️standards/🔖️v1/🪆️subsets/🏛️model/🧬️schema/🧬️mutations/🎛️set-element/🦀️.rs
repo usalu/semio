@@ -9,17 +9,17 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetElement {
-    pub(crate) id: String,
+    pub id: String,
     #[value(default)]
-    pub(crate) class: Option<ElementClass>,
+    pub class: Option<ElementClass>,
     #[value(default)]
-    pub(crate) placement: Option<SemioTransform>,
+    pub placement: Option<SemioTransform>,
     #[value(default)]
-    pub(crate) geometry: Option<GeometryRef>,
+    pub geometry: Option<GeometryRef>,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
-    pub(crate) spatial_id: Option<Option<String>>,
+    pub spatial_id: Option<Option<String>>,
     #[value(default)]
-    pub(crate) psets: Option<Vec<PropertySet>>,
+    pub psets: Option<Vec<PropertySet>>,
 }
 
 impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for SetElement {

@@ -11,7 +11,7 @@ import (
 
 // region 🔖️Vectors
 
-const vectorsURI = "local://🔣️vectors.json"
+const vectorsURI = "shared://🧬️definition-kind-derivation/🔣️vectors.json"
 
 var declaredKinds = []string{"implementation", "interface", "constant", "test"}
 

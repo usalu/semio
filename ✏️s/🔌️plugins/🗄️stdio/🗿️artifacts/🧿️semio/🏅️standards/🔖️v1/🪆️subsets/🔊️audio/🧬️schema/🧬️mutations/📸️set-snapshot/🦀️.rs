@@ -16,7 +16,7 @@ pub mod inverse;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetSnapshot {
-    pub(crate) snapshot: SemioAudioSnapshot,
+    pub snapshot: SemioAudioSnapshot,
 }
 
 impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetSnapshot {

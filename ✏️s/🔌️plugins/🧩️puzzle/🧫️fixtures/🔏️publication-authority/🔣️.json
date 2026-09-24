@@ -432,12 +432,26 @@
             "window-transient"
           ],
           "routes": [
+            "closeVortexSuggestions",
             "cycleBrushCandidate",
             "cycleBrushCandidateBack",
             "engagementAbort",
             "engagementControlSelect",
             "engagementInput",
-            "engagementRepeatLast"
+            "engagementRepeatLast",
+            "hoverSuggestion",
+            "openVortexSuggestions"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "acceptSuggestion"
           ]
         },
         {

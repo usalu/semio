@@ -7,23 +7,18 @@
 //! `decode_obj`, keep only the first token of `o`) and unique (same-named `o` blocks merge on
 //! read).
 //!
-//! The canonical `.lowpoly` DSL text is ALSO kept, hex-encoded into ONE `unknown_statements`
-//! comment line (`LOWPOLY_DSL_COMMENT_PREFIX`), so lowpoly → obj → lowpoly stays lossless while
-//! any other OBJ reader sees plain geometry.
+//! 🔖 `IoFidelity::Lossy`: geometry and object names survive; paint, materials and the object
+//! transforms (already applied to the positions) do not.
 use crate::io::mesh_geometry::world_parts;
-use crate::schema::snapshot::text::print_dsl;
-use crate::schema::snapshot::{enc_str, LowpolySnapshot};
+use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_obj::engine::encode_obj;
-use semio_s_artifact_stdio_obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjObject, ObjUnknownStatement, ObjVertex};
+use semio_s_artifact_stdio_obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjObject, ObjVertex};
 use semio_s_artifact_stdio_obj::ObjSnapshot;
-
-pub(crate) const LOWPOLY_DSL_COMMENT_PREFIX: &str = "# semio-lowpoly-dsl ";
 
 pub fn register() {}
 
 pub fn serialize(snapshot: &LowpolySnapshot) -> Result<ObjSnapshot, store::TextError> {
-    let hex = enc_str(&print_dsl(snapshot));
-    let mut obj = ObjSnapshot { unknown_statements: vec![ObjUnknownStatement { line_index: 0, raw: format!("{LOWPOLY_DSL_COMMENT_PREFIX}{hex}") }], ..Default::default() };
+    let mut obj = ObjSnapshot::default();
     let mut used_names: std::collections::HashSet<String> = std::collections::HashSet::new();
     for part in world_parts("obj", snapshot)? {
         let base: String = part.name.split_whitespace().collect::<Vec<_>>().join("_");

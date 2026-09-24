@@ -153,6 +153,13 @@ impl SurfaceContexts {
         self.slots.iter().flatten().filter(|binding| matches!(binding.role, SurfaceRole::Panel)).map(|binding| binding.surface.clone()).collect()
     }
 
+    /// 📡️ Every surface bound to the instance — windows, panels and sections. A remote edit merged
+    /// into the document changes what all of them project (the canvas, the inspector, the history
+    /// ledger), so none may keep its pre-merge tree.
+    pub(crate) fn document_surfaces(&self) -> Vec<String> {
+        self.slots.iter().flatten().map(|binding| binding.surface.clone()).collect()
+    }
+
     pub(crate) fn remove(&mut self, surface: &str) {
         if let Some(slot) = self.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|context| context.surface == surface)) {
             *slot = None;

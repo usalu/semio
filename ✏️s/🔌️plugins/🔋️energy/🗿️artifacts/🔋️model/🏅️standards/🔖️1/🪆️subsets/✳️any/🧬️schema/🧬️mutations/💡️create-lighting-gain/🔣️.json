@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateLightingGain",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-lighting-gain",
-  "binaryTag": null,
+  "binaryTag": 85,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

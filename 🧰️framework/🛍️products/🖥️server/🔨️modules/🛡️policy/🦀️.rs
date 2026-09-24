@@ -106,6 +106,7 @@ impl Assignment {
 pub struct PolicyEngine {
     templates: BTreeMap<String, PolicyTemplate>,
     assignments: BTreeMap<String, Vec<Assignment>>,
+    authenticated: Option<String>,
 }
 
 impl PolicyEngine {
@@ -117,6 +118,11 @@ impl PolicyEngine {
     /// 📇️ Register a role definition under its own name, replacing any template of that name.
     pub fn register_template(&mut self, template: PolicyTemplate) {
         self.templates.insert(template.name.clone(), template);
+    }
+
+    /// 📇️ Template auto-applied to every non-anonymous principal (session-authenticated callers).
+    pub fn set_authenticated_template(&mut self, template_name: String) {
+        self.authenticated = Some(template_name);
     }
 
     /// 🎓️ Grant a principal a template everywhere. A principal may hold several templates; their
@@ -170,7 +176,23 @@ impl PolicyEngine {
 
     /// 🔗️ Every grant reachable from the assignments that apply to this key and scope.
     fn applicable_grants<'a>(&'a self, key: &str, scope: Option<&Scope>) -> Vec<&'a PolicyGrant> {
-        self.assignments.get(key).into_iter().flatten().filter(|assignment| assignment.applies(scope)).filter_map(|assignment| self.templates.get(&assignment.template)).flat_map(|template| template.grants.iter()).collect()
+        let mut grants: Vec<&'a PolicyGrant> = self
+            .assignments
+            .get(key)
+            .into_iter()
+            .flatten()
+            .filter(|assignment| assignment.applies(scope))
+            .filter_map(|assignment| self.templates.get(&assignment.template))
+            .flat_map(|template| template.grants.iter())
+            .collect();
+        if key != "anonymous" {
+            if let Some(name) = self.authenticated.as_deref() {
+                if let Some(template) = self.templates.get(name) {
+                    grants.extend(template.grants.iter());
+                }
+            }
+        }
+        grants
     }
 }
 //#endregion 🔖️Engine
@@ -196,6 +218,8 @@ pub struct Resolved {
     pub session: Option<SessionId>,
     pub device: Option<DeviceId>,
     pub via: String,
+    /// Hub-issued document actor id bound to this credential (session-stable), when the rung knows one.
+    pub actor: Option<String>,
 }
 
 /// 🪜️ One rung of the authentication ladder. Returning `None` means "not mine", never "denied":
@@ -260,7 +284,7 @@ impl<R: PrincipalResolver> ResolverChain<R> {
                 return resolved;
             }
         }
-        Resolved { principal: Principal::Anonymous, session: None, device: None, via: "anonymous".to_string() }
+        Resolved { principal: Principal::Anonymous, session: None, device: None, via: "anonymous".to_string(), actor: None }
     }
 }
 //#endregion 🔖️Resolver

@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceReferenceSource",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-reference-source",
-  "binaryTag": null,
+  "binaryTag": 28,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

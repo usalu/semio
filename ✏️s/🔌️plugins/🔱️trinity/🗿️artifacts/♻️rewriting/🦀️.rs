@@ -143,8 +143,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: REWRITE_RULE_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.docx".into(), "stdio.json".into(), "stdio.md".into(), "stdio.pdf".into(), "stdio.txt".into()],
-        import_stdio_kinds: vec!["stdio.docx".into(), "stdio.json".into(), "stdio.md".into(), "stdio.pdf".into(), "stdio.txt".into()],
+        export_stdio_kinds: vec!["stdio.json".into(), "stdio.txt".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.txt".into()],
     }
 }
 //#endregion 🔖️ArtifactKind
@@ -228,9 +228,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.trinity.rewriting.inference.artifact", "inference", "s.trinity.rewriting.inference", &[("schema", "s.trinity.rewriting.inference")], None),
         ("s.trinity.rewriting.composer.native", "composer", "s.trinity.rewriting@1/*", &[("dialect", "s.trinity.rewriting@1/*")], None),
         ("s.trinity.rewriting.composer.format-1", "composer", "s.stdio.txt@utf-8/*", &[("dialect", "s.stdio.txt@utf-8/*")], None),
-        ("s.trinity.rewriting.composer.format-2", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),
-        ("s.trinity.rewriting.composer.format-3", "composer", "s.stdio.docx@ecma-376/*", &[("dialect", "s.stdio.docx@ecma-376/*")], None),
-        ("s.trinity.rewriting.composer.format-4", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
         ("s.trinity.rewriting.composer.format-5", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
         ("s.trinity.rewriting.grammar.1", "grammar", "rewriting.document", &[("grammar", "rewriting.document")], None),
         ("s.trinity.rewriting.grammar.2", "grammar", "rewriting.op", &[("grammar", "rewriting.op")], None),
@@ -490,42 +487,6 @@ pub mod standards {
                                     }
                                 }
                                 #[path = "."]
-                                pub mod pdf {
-                                    #[path = "."]
-                                    pub mod v1_4 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod docx {
-                                    #[path = "."]
-                                    pub mod v_ecma_376 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod md {
-                                    #[path = "."]
-                                    pub mod v_commonmark {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
                                 pub mod json {
                                     #[path = "."]
                                     pub mod v_rfc8259 {
@@ -553,42 +514,6 @@ pub mod standards {
                                         #[path = "."]
                                         pub mod any {
                                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod pdf {
-                                    #[path = "."]
-                                    pub mod v1_4 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod docx {
-                                    #[path = "."]
-                                    pub mod v_ecma_376 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod md {
-                                    #[path = "."]
-                                    pub mod v_commonmark {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }

@@ -163,6 +163,7 @@ struct JobRecord {
     result: Option<serde_json::Value>,
     error: Option<GatewayError>,
     cancel_requested: bool,
+    on_cancel: Option<Box<dyn FnOnce() + Send>>,
 }
 
 /// 📸️ `job_get`/`semio://job/{id}`'s answer shape — real fields only, never fabricated: `progress`/
@@ -230,7 +231,7 @@ impl JobRegistry {
     /// `HandleKind::Job`/`mint_id`, then call this with that exact id.
     pub fn begin_with_id(&self, job_id: impl Into<String>, kind: &str) -> String {
         let job_id = job_id.into();
-        let record = JobRecord { kind: kind.to_string(), status: JobStatus::Pending, progress: None, message: None, result: None, error: None, cancel_requested: false };
+        let record = JobRecord { kind: kind.to_string(), status: JobStatus::Pending, progress: None, message: None, result: None, error: None, cancel_requested: false, on_cancel: None };
         self.jobs.lock().expect("job registry lock poisoned").insert(job_id.clone(), record);
         // 📈️ Every producer in this crate mints through here, so binding the job to the `tools/call`
         // progress token currently active on this thread covers all of them by construction — no
@@ -265,6 +266,7 @@ impl JobRegistry {
         let accepted = match jobs.get_mut(job_id) {
             Some(record) if !record.status.is_terminal() => {
                 record.status = status;
+                record.on_cancel = None;
                 record.result = result;
                 record.error = error;
                 if status == JobStatus::Succeeded {
@@ -306,10 +308,27 @@ impl JobRegistry {
         self.jobs.lock().expect("job registry lock poisoned").get(job_id).map(|record| record.cancel_requested).unwrap_or(false)
     }
 
-    /// 🛑️ `job_cancel`'s real effect: flips the cooperative flag; a still-`Pending` job (nothing
-    /// running yet to interrupt) finishes as `Cancelled` immediately, a `Running` one waits for its
-    /// producer to call [`JobRegistry::mark_cancelled`]. `NOT_FOUND`/`PRECONDITION_FAILED` for an
-    /// unknown or already-terminal id — never a silent no-op.
+    /// 🔗️ Binds the producer's own interrupt to `job_id`: `request_cancel` fires it once, outside the
+    /// registry lock, so a `job_cancel` or `notifications/cancelled` reaches work that is blocked in a
+    /// guest instead of waiting for it to poll. A cancel that already landed fires it immediately.
+    pub fn bind_cancel(&self, job_id: &str, hook: impl FnOnce() + Send + 'static) {
+        let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
+        let Some(record) = jobs.get_mut(job_id) else { return };
+        if record.status.is_terminal() {
+            return;
+        }
+        if !record.cancel_requested {
+            record.on_cancel = Some(Box::new(hook));
+            return;
+        }
+        drop(jobs);
+        hook();
+    }
+
+    /// 🛑️ `job_cancel`'s real effect: flips the cooperative flag and fires the producer's bound
+    /// interrupt; a still-`Pending` job (nothing running yet to interrupt) finishes as `Cancelled`
+    /// immediately, a `Running` one waits for its producer to call [`JobRegistry::mark_cancelled`].
+    /// `NOT_FOUND`/`PRECONDITION_FAILED` for an unknown or already-terminal id — never a silent no-op.
     pub fn request_cancel(&self, job_id: &str) -> Result<JobSnapshot, GatewayError> {
         let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
         let record = jobs.get_mut(job_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such job: {job_id}")))?;
@@ -320,7 +339,13 @@ impl JobRegistry {
         if record.status == JobStatus::Pending {
             record.status = JobStatus::Cancelled;
         }
-        Ok(record_snapshot(job_id, record))
+        let hook = record.on_cancel.take();
+        let snapshot = record_snapshot(job_id, record);
+        drop(jobs);
+        if let Some(hook) = hook {
+            hook();
+        }
+        Ok(snapshot)
     }
 
     pub fn snapshot(&self, job_id: &str) -> Option<JobSnapshot> {

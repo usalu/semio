@@ -99,7 +99,7 @@
     {
       "id": "semantic-spreadsheet-v1",
       "description": "XLSX workbooks compared by their real per-sheet cell grid (sheet name, then every non-empty cell's row/col/resolved value, read independently by `calamine` on both sides) PLUS a caller-tracked `sharedStringCount` field — `calamine` exposes no accessor for the raw shared-string pool size (see this subset's `🦀️.rs` module doc comment), so that one field is supplied by the case adapter rather than derived from the projected bytes: the oracle side by structural arithmetic on the applied kind, the subject side by reading its own real `XlsxWorkbook::shared_strings.len()`. `Number` cells carry a small floating-point tolerance since ECMA-376 stores every number as an IEEE-754 double and two independent writers may round the same value's textual form a few ULPs apart.",
-      "tolerance": 1e-09,
+      "tolerance": 1e-9,
       "ignoreKeys": []
     }
   ],

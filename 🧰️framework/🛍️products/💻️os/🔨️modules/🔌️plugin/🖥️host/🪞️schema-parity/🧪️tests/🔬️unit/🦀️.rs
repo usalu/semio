@@ -224,20 +224,20 @@ mod tests {
         let source = source();
         let actor = named_block(&source, "world", "actor");
         assert_eq!(world_members(actor, "import "), BTreeSet::from(["host-async".to_string(), "pure".to_string()]));
-        assert_eq!(world_members(actor, "export "), ["checkpoint", "describe", "jobs", "reactor"].into_iter().map(String::from).collect());
+        assert_eq!(world_members(actor, "export "), ["checkpoint", "codec", "describe", "jobs", "reactor"].into_iter().map(String::from).collect());
     }
 
     #[test]
     fn every_actor_export_is_async() {
         let source = source();
         let mut seen = BTreeSet::new();
-        for interface_name in ["reactor", "jobs", "checkpoint", "describe"] {
+        for interface_name in ["reactor", "jobs", "checkpoint", "describe", "codec"] {
             for function in functions(named_block(&source, "interface", interface_name)).into_values() {
                 assert!(function.is_async, "{interface_name}.{} must be async", function.name);
                 seen.insert(format!("{interface_name}.{}", function.name));
             }
         }
-        let expected = ["reactor.poll", "jobs.start-job", "jobs.step-job", "jobs.cancel-job", "jobs.take-segmented-download-chunk", "checkpoint.checkpoint", "checkpoint.restore", "describe.describe"].into_iter().map(String::from).collect();
+        let expected = ["reactor.stage-command-page", "reactor.stage-cold-pair-page", "reactor.poll", "jobs.start-job", "jobs.step-job", "jobs.cancel-job", "jobs.take-segmented-download-chunk", "checkpoint.checkpoint", "checkpoint.restore", "describe.describe", "codec.pack-schema-hash", "codec.genesis", "codec.print-mirror", "codec.apply-ops"].into_iter().map(String::from).collect();
         assert_eq!(seen, expected);
         let pure = functions(named_block(&source, "interface", "pure"));
         for name in ["log", "now-ms", "trace-span"] {

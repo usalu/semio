@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceRouteData",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-route-data",
-  "binaryTag": null,
+  "binaryTag": 6,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -21,19 +21,12 @@
 //! |---|---|---|---|
 //! | `s.stdio.txt@utf-8/*` | both | `Exact` | this subset's own `.semio` DSL snapshot text — the exact bytes `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` carries |
 //! | `s.stdio.json@rfc8259/*` | both | `Exact` | the `dsl::ToValue` record tree as compact rfc8259 |
-//! | `s.stdio.csv@rfc4180/*` | both | `Exact` | a real RFC 4180 envelope: header `payload`, one quoted cell carrying the DSL text |
-//! | `s.stdio.md@commonmark/*` | both | `Exact` | a real CommonMark envelope: one fenced code block, info string `fem3d`, carrying the DSL text |
+//! | `s.stdio.csv@rfc4180/*` | export | `Lossy` | the node coordinate table (`id,x,y,z`), written by stdio's own RFC 4180 codec |
 //! | `s.stdio.stl@ascii/*` | export | `Lossy` | REAL geometry — tetrahedralised `FemSolid` extrusions via the meshing kernel |
-//! | `s.stdio.stl@ascii/*` | import | `Lossy` | typed `Err` — a triangle soup carries no material/section/support/load case |
 //! | `s.stdio.obj@3.0/*` | export | `Lossy` | REAL geometry — same kernel, `.obj` grammar |
-//! | `s.stdio.obj@3.0/*` | import | `Lossy` | typed `Err` — same reason as `stl` |
 //!
-//! The two refusing hops stay registered on purpose: an unregistered `(from, into)` yields a bare
-//! "no route" at the router, a registered one at the weakest fidelity (`Lossy`, rank 0, so the
-//! router never prefers it over a real hop) hands the caller the actual reason. They live HERE
-//! rather than under `📥️import/🧩️deserializers/…/{🔺️stl,🧊️obj}` because the crate root mounts no
-//! import leaf for either format — the mount tree is not this packet's file to edit, and an unmounted
-//! leaf would be dead code.
+//! No md, csv-import, stl-import or obj-import hop is declared: an envelope of the DSL in another
+//! format's clothing, or a hop that can only refuse, is a stub — the document travels as txt or json.
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -77,54 +70,14 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🚫️GeometryImport
-/// 🚫️ The import direction of the two geometry hops, which HONESTLY REFUSE. Both live here rather
-/// than in `📥️import/🧩️deserializers/🗿️artifacts/{🔺️stl,🧊️obj}/…` because the crate root's `#[path]`
-/// mount tree declares no import leaf for either format (only the two export leaves), and a file
-/// nothing mounts is dead code.
-pub mod geometry_import {
-    use crate::Fem3dSnapshot;
-    use semio_framework::io::io_mechanism::Deserializer;
-    use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
-    use semio_framework_plugin::{StandardId, SubsetId};
-
-    /// 🎯️ The foreign dialects these leaves would read.
-    pub const STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId::ANY };
-    pub const OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId::ANY };
-
-    const REASON: &str = "a mesh carries triangles only — it has no node/element topology, no FemMaterial, no FemSection, no FemSupport, no FemLoadCase and no analysis settings, so no fem3d model can be reconstructed from it";
-
-    /// 🧩️ `s.stdio.stl@ascii/*` → `s.fem.fem3d@1/*` — always `Err`, see this module's doc.
-    pub struct StlIntoFem3d;
-
-    impl Deserializer<Fem3dSnapshot> for StlIntoFem3d {
-        const FROM: Dialect = STL_DIALECT;
-        const FIDELITY: IoFidelity = IoFidelity::Lossy;
-        async fn deserialize(_payload: &IoPayload) -> IoResult<Fem3dSnapshot> {
-            Err(IoError { message: format!("stl import not supported for a fem3d model: {REASON}"), diagnostics: Vec::new() })
-        }
-    }
-
-    /// 🧩️ `s.stdio.obj@3.0/*` → `s.fem.fem3d@1/*` — always `Err`, see this module's doc.
-    pub struct ObjIntoFem3d;
-
-    impl Deserializer<Fem3dSnapshot> for ObjIntoFem3d {
-        const FROM: Dialect = OBJ_DIALECT;
-        const FIDELITY: IoFidelity = IoFidelity::Lossy;
-        async fn deserialize(_payload: &IoPayload) -> IoResult<Fem3dSnapshot> {
-            Err(IoError { message: format!("obj import not supported for a fem3d model: {REASON}"), diagnostics: Vec::new() })
-        }
-    }
-}
-//#endregion 🚫️GeometryImport
 
 //#region 🔖️IoDeclaration
 /// 🚪️ This subset's complete io declaration — the native `LanguagePair`s and `ArtifactCodec` plus
-/// the twelve typed foreign entries. `pilot_languages()` indices are fixed by that function's own
+/// the seven typed foreign entries. `pilot_languages()` indices are fixed by that function's own
 /// literal `vec![document, op, diff, pack, spr]` order, the same role→slot mapping `🗒️note`'s
 /// `io()` uses.
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::standards::v1::subsets::any::io::geometry_import::{ObjIntoFem3d, StlIntoFem3d};
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::{Fem3dMutation, Fem3dSnapshot, FEM3D_DIALECT, FEM_3D_SCHEMA};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
@@ -143,13 +96,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     serializer_entry::<Fem3dSnapshot, export::json::v_rfc8259::any::Fem3dIntoJson>(FEM3D_DIALECT),
                     deserializer_entry::<Fem3dSnapshot, import::json::v_rfc8259::any::JsonIntoFem3d>(FEM3D_DIALECT),
                     serializer_entry::<Fem3dSnapshot, export::csv::v_rfc4180::any::Fem3dIntoCsv>(FEM3D_DIALECT),
-                    deserializer_entry::<Fem3dSnapshot, import::csv::v_rfc4180::any::CsvIntoFem3d>(FEM3D_DIALECT),
-                    serializer_entry::<Fem3dSnapshot, export::md::v_commonmark::any::Fem3dIntoMd>(FEM3D_DIALECT),
-                    deserializer_entry::<Fem3dSnapshot, import::md::v_commonmark::any::MdIntoFem3d>(FEM3D_DIALECT),
                     serializer_entry::<Fem3dSnapshot, export::stl::v_ascii::any::Fem3dIntoStl>(FEM3D_DIALECT),
-                    deserializer_entry::<Fem3dSnapshot, StlIntoFem3d>(FEM3D_DIALECT),
                     serializer_entry::<Fem3dSnapshot, export::obj::v3_0::any::Fem3dIntoObj>(FEM3D_DIALECT),
-                    deserializer_entry::<Fem3dSnapshot, ObjIntoFem3d>(FEM3D_DIALECT),
                 ]
             })
             .as_slice()

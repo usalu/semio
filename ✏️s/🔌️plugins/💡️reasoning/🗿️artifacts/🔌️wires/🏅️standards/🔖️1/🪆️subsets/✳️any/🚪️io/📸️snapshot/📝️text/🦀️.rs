@@ -21,84 +21,6 @@ use dsl::DslValue;
 /// "metabolism" example call site (`setActiveExample`, `.example` manifest registration, tests).
 pub const REASONING_WIRES_EXAMPLE_METABOLISM_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
-//#region 🔖️TextPrimitives
-/// 🧪️ Real hex-encoded text primitives — one `key=<hex>` line per field (`📓️migration-recipe.md`
-/// §2's convention), duplicated locally rather than imported across facets (keeps this file
-/// independently compilable, matching `✳️graph`'s own `🔖️GraphPrimitives` precedent in stdio).
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-
-/// ⚠️ Serializes/deserializes `DslValue` DIRECTLY through its own `ToValue`/`FromValue` impl
-/// (`dsl::os_pack::json::to_json_string`/`from_json_str::<DslValue>`), never via the
-/// `dsl_to_json`/`serde_json::Value` intermediate `crate::schema`'s
-/// `fixture_json_string`/`dsl_to_json` use elsewhere: `serde_json::Value::Object` used to normalize
-/// key order (alphabetical, no `preserve_order` feature), which silently reordered `wires_fixture`'s
-/// object keys on every round trip and broke `DslValue::Object`'s (order-sensitive, `Vec`-backed)
-/// `PartialEq` — a real bug this pass's round-trip tests caught (not just latent risk).
-/// `dsl::os_pack::json`'s own `Object` is likewise `Vec`-backed and order-preserving end-to-end, so
-/// encoding/decoding through it directly (never `serde_json::Value`) is lossless.
-fn enc_dsl(value: &DslValue) -> String {
-    hex_encode(dsl::os_pack::json::to_json_string(value).as_bytes())
-}
-fn dec_dsl(s: &str) -> Result<DslValue, String> {
-    let bytes = hex_decode(s)?;
-    let text = String::from_utf8(bytes).map_err(|e| e.to_string())?;
-    dsl::os_pack::json::from_json_str::<DslValue>(&text).map_err(|e| e.to_string())
-}
-fn enc_dsl_list(values: &[DslValue]) -> String {
-    hex_encode(dsl::os_pack::json::to_json_string(&values.to_vec()).as_bytes())
-}
-fn dec_dsl_list(s: &str) -> Result<Vec<DslValue>, String> {
-    let bytes = hex_decode(s)?;
-    let text = String::from_utf8(bytes).map_err(|e| e.to_string())?;
-    dsl::os_pack::json::from_json_str::<Vec<DslValue>>(&text).map_err(|e| e.to_string())
-}
-
-fn to_text_error(message: String) -> store::TextError {
-    store::TextError::new(message, dsl::TextSpan::at(1, 1))
-}
-
-/// 📄️ The real structured body: `wires=<hex>` / `nodes=[<hex>...]` / `edges=[<hex>...]` /
-/// `meta=<hex>` — four lines, each independently hex-decodable.
-fn print_wires_snapshot_body(snapshot: &WiresSnapshot) -> String {
-    let scene = wires_working_scene(snapshot);
-    format!("wires={}\nnodes={}\nedges={}\nmeta={}", enc_dsl(&snapshot.wires_fixture), enc_dsl_list(&scene.nodes), enc_dsl_list(&scene.edges), enc_dsl(&snapshot.meta))
-}
-
-fn parse_wires_snapshot_body(body: &str) -> Result<WiresSnapshot, store::TextError> {
-    let mut wires_fixture = None;
-    let mut nodes = Vec::new();
-    let mut edges = Vec::new();
-    let mut meta = None;
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("wires=") {
-            wires_fixture = Some(dec_dsl(rest).map_err(to_text_error)?);
-        } else if let Some(rest) = line.strip_prefix("nodes=") {
-            nodes = dec_dsl_list(rest).map_err(to_text_error)?;
-        } else if let Some(rest) = line.strip_prefix("edges=") {
-            edges = dec_dsl_list(rest).map_err(to_text_error)?;
-        } else if let Some(rest) = line.strip_prefix("meta=") {
-            meta = Some(dec_dsl(rest).map_err(to_text_error)?);
-        } else {
-            return Err(to_text_error(format!("wires snapshot: unknown line {line:?}")));
-        }
-    }
-    let content = crate::wires_content_child_with_owner(nodes, edges);
-    Ok(WiresSnapshot { wires_fixture: wires_fixture.ok_or_else(|| to_text_error("wires snapshot: missing wires line".into()))?, content, meta: meta.unwrap_or(DslValue::Null) })
-}
-//#endregion 🔖️TextPrimitives
-
 //#region 🔖️HandcraftedArtifactDsl
 /// ✉️ P6 handcrafted `ArtifactDsl` (derive no longer emits this trait once `content` drops to a
 /// composed `ArtifactChild` — see this file's module doc).
@@ -112,10 +34,10 @@ impl store::ArtifactDsl for WiresSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_wires_snapshot_body(body)
+        super::binary::parse_pack_record_text(body)
     }
     fn print_dsl(&self) -> String {
-        let body = print_wires_snapshot_body(self);
+        let body = super::binary::print_pack_record_text(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }

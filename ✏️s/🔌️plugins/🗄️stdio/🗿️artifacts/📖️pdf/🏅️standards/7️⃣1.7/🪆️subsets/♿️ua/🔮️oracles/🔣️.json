@@ -515,7 +515,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-ua-v1",
       "reproducible": true,
@@ -564,7 +564,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-ua-v1",
       "reproducible": true,
@@ -613,7 +613,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-ua-v1",
       "reproducible": true,
@@ -662,7 +662,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-ua-v1",
       "reproducible": true,
@@ -711,7 +711,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-ua-v1",
       "reproducible": true,
@@ -760,7 +760,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-ua-v1",
       "reproducible": true,
@@ -809,7 +809,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-ua-v1",
       "reproducible": true,
@@ -858,7 +858,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-ua-v1",
       "reproducible": true,
@@ -907,7 +907,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-ua-v1",
       "reproducible": true,
@@ -956,7 +956,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-ua-v1",
       "reproducible": true,
@@ -1005,7 +1005,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-ua-v1",
       "reproducible": true,

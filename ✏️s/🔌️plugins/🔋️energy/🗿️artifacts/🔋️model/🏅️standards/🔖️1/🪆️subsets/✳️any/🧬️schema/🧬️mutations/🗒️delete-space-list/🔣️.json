@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteSpaceList",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-space-list",
-  "binaryTag": null,
+  "binaryTag": 243,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

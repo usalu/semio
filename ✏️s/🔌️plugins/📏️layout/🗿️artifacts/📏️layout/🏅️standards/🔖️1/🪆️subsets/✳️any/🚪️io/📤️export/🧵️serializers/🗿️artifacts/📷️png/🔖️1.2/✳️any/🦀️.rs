@@ -1,9 +1,14 @@
-//! Serialize layout to stdio.png.
+//! 📏️ layout → png — the pages laid side by side as a drawing (`layout_snapshot_to_semio_drawing`: page
+//! boundaries, frames with their fills and strokes, and any imported background trace) written as
+//! an anti-aliased PNG raster by `s.stdio.semio/v1/drawing`'s own export leaf.
+//!
+//! 🔖 `IoFidelity::Lossy`: a picture of the spreads — story text, styles and links are not drawn.
+use crate::io::layout_snapshot_to_semio_drawing;
 use crate::LayoutSnapshot;
-use semio_s_artifact_stdio_png::PngSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{encode_drawing, SemioDrawingFormat};
 
 pub fn register() {}
 
-pub fn serialize(from: &LayoutSnapshot) -> Result<PngSnapshot, store::PackError> {
-    <PngSnapshot as dsl::FromValue>::from_value(dsl::ToValue::to_value(from)).map_err(|error| store::PackError::Schema(error.to_string()))
+pub fn serialize_bytes(from: &LayoutSnapshot) -> Result<Vec<u8>, store::PackError> {
+    encode_drawing(&layout_snapshot_to_semio_drawing(from), SemioDrawingFormat::Png).map_err(|error| store::PackError::Schema(format!("layout→png: {error}")))
 }

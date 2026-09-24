@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePvSystemModuleEfficiency",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-pv-system-module-efficiency",
-  "binaryTag": null,
+  "binaryTag": 205,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

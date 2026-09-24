@@ -216,6 +216,17 @@ fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, S
     Ok(StlSnapshot { schema, solid_name, triangles })
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `StlMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_SET_SOLID_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-solid-name");
+const TAG_INSERT_TRIANGLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-triangle");
+const TAG_REMOVE_TRIANGLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-triangle");
+const TAG_SET_TRIANGLE_NORMAL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-triangle-normal");
+const TAG_SET_TRIANGLE_VERTICES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-triangle-vertices");
+//#endregion 🏷️WireTags
+
 /// 🧪️ P2-FG1-FIX: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from the prior `print_stl_op(self).into_bytes()` text-as-binary shortcut. `tag` is
@@ -234,30 +245,30 @@ impl OpBinary for StlMutation {
         let tag: u8 = match self {
             StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
                 enc_snapshot_bin(snapshot, &mut out);
-                1
+                TAG_SET_SNAPSHOT
             }
             StlMutation::SetSolidName(set_solid_name::SetSolidName { name }) => {
                 diff::write_str_bin(&mut out, name);
-                2
+                TAG_SET_SOLID_NAME
             }
             StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index, triangle }) => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 diff::enc_triangle_bin(triangle, &mut out);
-                3
+                TAG_INSERT_TRIANGLE
             }
             StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index }) => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
-                4
+                TAG_REMOVE_TRIANGLE
             }
             StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index, normal }) => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 diff::enc_vec3_bin(normal, &mut out);
-                5
+                TAG_SET_TRIANGLE_NORMAL
             }
             StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index, vertices }) => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 diff::enc_vertices_bin(vertices, &mut out);
-                6
+                TAG_SET_TRIANGLE_VERTICES
             }
         };
         out[1] = tag;
@@ -268,29 +279,29 @@ impl OpBinary for StlMutation {
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
         let tag = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: e.to_string() })?;
         match tag {
-            1 => {
+            TAG_SET_SNAPSHOT => {
                 let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op snapshot", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
-            2 => {
+            TAG_SET_SOLID_NAME => {
                 let name = diff::read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op name", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::SetSolidName(set_solid_name::SetSolidName { name }))
             }
-            3 => {
+            TAG_INSERT_TRIANGLE => {
                 let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
                 let triangle = diff::dec_triangle_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op triangle", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index, triangle }))
             }
-            4 => {
+            TAG_REMOVE_TRIANGLE => {
                 let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
                 Ok(StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index }))
             }
-            5 => {
+            TAG_SET_TRIANGLE_NORMAL => {
                 let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
                 let normal = diff::dec_vec3_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op normal", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index, normal }))
             }
-            6 => {
+            TAG_SET_TRIANGLE_VERTICES => {
                 let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
                 let vertices = diff::dec_vertices_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op vertices", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index, vertices }))

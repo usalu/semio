@@ -522,8 +522,8 @@ mod mounted_laws {
             assert!(!mounted_field.contains(forbidden), "mounted P3 envelope authority regained a whole decode edge: {forbidden}");
             assert!(!mounted_mutation.contains(forbidden), "mounted P3 mutation authority regained a whole decode edge: {forbidden}");
         }
-        for required in ["RetainedPackSourceCursor", "RetainedPackAnchorCursor", "RetainedPackSegmentCursor", "RetainedPackCatalogCursor", "RetainedValueCursor"] {
-            assert!(mounted_snapshot.contains(required), "mounted P3 route lost retained canonical layer: {required}");
+        for required in ["mounted::RetainedTypedPackSession<Generation3dMountedTypedSnapshotOwner>", "impl mounted::RetainedTypedPackOwner for Generation3dMountedTypedSnapshotOwner", "GENERATION3D_MOUNTED_PREFIX.to_vec()"] {
+            assert!(mounted_snapshot.contains(required), "mounted P3 route left the framework retained canonical session: {required}");
         }
         assert!(snapshot_source.contains("one scalar byte opportunity"));
         assert!(owner_source.contains("GENERATION3D_RETAINED_STACK_CAPACITY: usize = 64"));

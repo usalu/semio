@@ -55,7 +55,7 @@
     }
   ],
   "testContract": {
-    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧬️schema-oracle/🛂️admission/🟦️.ts",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🔮️oracles/🛂️contract-admission/🟦️.ts",
     "exports": [
       "flowWasmContract"
     ]
@@ -208,7 +208,7 @@
         "🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts",
         "🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
         "🕸️wasm/🧫️fixtures/📝️browser-types/🔣️.json",
-        "../../🕸️wasm/🧪️tests/🧬️schema-oracle/🛂️admission/🟦️.ts"
+        "../../🕸️wasm/🔮️oracles/🛂️contract-admission/🟦️.ts"
       ],
       "forbiddenTokens": [
         "flowBrowserDeclaration(): string",
@@ -219,7 +219,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/⏱️consumed-browser-clock/🟨️.js",
       "tokens": [
-        "../🧬️schema-oracle/🛂️admission/🟦️.ts",
+        "../../🔮️oracles/🛂️contract-admission/🟦️.ts",
         "../../🌐️browser/🏃️runtime/🟨️.js"
       ],
       "forbiddenTokens": [
@@ -231,7 +231,7 @@
       "tokens": [
         "../../🖥️host/🏃️runtime/🟨️.js",
         "../../🌐️browser/🏃️runtime/🟨️.js",
-        "../🧬️schema-oracle/🛂️admission/🟦️.ts"
+        "../../🔮️oracles/🛂️contract-admission/🟦️.ts"
       ]
     },
     {
@@ -251,7 +251,7 @@
       "tokens": [
         "../../🖥️host/🏃️runtime/🟨️.js",
         "../../🧬️schema/📡️abi/🔣️.json",
-        "./🛂️admission/🟦️.ts"
+        "../../🔮️oracles/🛂️contract-admission/🟦️.ts"
       ]
     },
     {
@@ -324,7 +324,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
       "tokens": [
-        "🕸️wasm/🧪️tests/🧬️schema-oracle/🛂️admission/🟦️.ts"
+        "🕸️wasm/🔮️oracles/🛂️contract-admission/🟦️.ts"
       ]
     }
   ],
@@ -337,12 +337,12 @@
       "{workspaceRoot}/bun.lock",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧫️fixtures/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🏷️browser-ownership/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧬️schema-oracle/🛂️admission/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🔮️oracles/🛂️contract-admission/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧫️fixtures/📝️browser-types/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/🤖️generated/🟦️.d.ts",

@@ -1,0 +1,10 @@
+{
+  "law": "A producer's bound cancel hook fires exactly once when its job is cancelled, immediately when bound after the cancel, and never after the job is terminal.",
+  "cases": [
+    { "name": "running job, hook bound then cancelled", "steps": ["begin", "progress", "bind", "cancel", "cancel"], "fired": 1, "status": "RUNNING", "cancelErrors": [] },
+    { "name": "cancel lands before the hook is bound", "steps": ["begin", "progress", "cancel", "bind"], "fired": 1, "status": "RUNNING", "cancelErrors": [] },
+    { "name": "pending job cancelled with hook bound", "steps": ["begin", "bind", "cancel"], "fired": 1, "status": "CANCELLED", "cancelErrors": [] },
+    { "name": "terminal job never fires its hook", "steps": ["begin", "progress", "bind", "succeed", "cancel"], "fired": 0, "status": "SUCCEEDED", "cancelErrors": ["PRECONDITION_FAILED"] },
+    { "name": "hook bound after the job finished is dropped", "steps": ["begin", "progress", "succeed", "bind"], "fired": 0, "status": "SUCCEEDED", "cancelErrors": [] }
+  ]
+}

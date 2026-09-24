@@ -10,6 +10,8 @@ import {
   cleanDiscoverTicketFolders,
   cleanDiscoverTicketRoots,
   cleanGitignoredMapForTicketRoots,
+  cleanOpenTicketOversizedFileRemovals,
+  cleanOversizedIgnoredRemovals,
   cleanPathBytes,
   cleanTicketGeneratedOutputRemovals,
   cleanTicketSizeRemovals,
@@ -28,7 +30,9 @@ import {
 } from "../🛡️protection/🟦️.ts";
 
 export function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[], allowTicketGeneratedOutput = false, allowWindowsIllegal = false): boolean {
-  const allowedOpenTicket = (allowTicketGeneratedOutput ? cleanTicketGeneratedOutputTicketRoot(root, abs) : undefined) ?? (allowWindowsIllegal ? cleanTicketFolderForPath(root, abs) : undefined);
+  const allowedOpenTicket =
+    (allowTicketGeneratedOutput ? cleanTicketGeneratedOutputTicketRoot(root, abs) ?? cleanTicketFolderForPath(root, abs) : undefined) ??
+    (allowWindowsIllegal ? cleanTicketFolderForPath(root, abs) : undefined);
   const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
   if (cleanIntersectsProtected(abs, applicablePrefixes) || (!allowedOpenTicket && cleanRemovalProtection(root, abs, CLEAN_PROTECTION_VIEW, allowedOpenTicket).length !== 0)) return false;
   if (allowedOpenTicket && exactCargoGeneratedOutputHasLiveLease(abs)) return false;
@@ -53,10 +57,14 @@ export function runWorkspaceClean(root: string, dry: boolean): { removals: Clean
   pending.push(...cleanCollectMisplaced(root, protectedPrefixes));
   pending.push(...cleanCollectRootTransient(root, protectedPrefixes));
   pending.push(...cleanCollectWindowsIllegal(root, protectedPrefixes));
+  pending.push(...cleanOversizedIgnoredRemovals(root, protectedPrefixes));
   const gitignoredMap = cleanGitignoredMapForTicketRoots(root, ticketRoots);
   for (const ticketFolder of ticketFolders) {
     pending.push(...cleanTicketGeneratedOutputRemovals(root, ticketFolder, protectedPrefixes));
-    if (cleanIsProtected(ticketFolder, protectedPrefixes) || !cleanTicketManifestIsClosed(ticketFolder, CLEAN_PROTECTION_VIEW)) continue;
+    if (cleanIsProtected(ticketFolder, protectedPrefixes) || !cleanTicketManifestIsClosed(ticketFolder, CLEAN_PROTECTION_VIEW)) {
+      pending.push(...cleanOpenTicketOversizedFileRemovals(root, ticketFolder, protectedPrefixes));
+      continue;
+    }
     const gitignored = gitignoredMap.get(resolve(ticketFolder)) ?? [];
     for (const abs of gitignored) {
       if (!existsSync(abs) || cleanIntersectsProtected(abs, protectedPrefixes)) continue;

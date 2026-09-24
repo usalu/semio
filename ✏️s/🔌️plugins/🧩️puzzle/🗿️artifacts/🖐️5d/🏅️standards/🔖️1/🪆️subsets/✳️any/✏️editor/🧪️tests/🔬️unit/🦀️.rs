@@ -1738,7 +1738,7 @@ async fn transform_gumball_flags_publish_the_window_config() {
 
     let runtime = Puzzle5dRuntime { transform_move: false, transform_rotate: false, ..Puzzle5dRuntime::default() };
     let marked = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: Vec::new() };
-    assert!(!puzzle5d_gumball_active(&runtime, "move", &marked), "an all-off gumball never renders");
+    assert!(!puzzle5d_gumball_active(&runtime, world3d::utilities::transform::UTILITY_ID, &marked), "an all-off gumball never renders");
     close_app(&mut app);
 }
 
@@ -2163,8 +2163,9 @@ fn export_filename_follows_the_document_label() {
     assert_eq!(export_fixture::puzzle5d_export_filename(&empty_document()), "puzzle-5d.json");
 }
 
-/// 📥️ LAW: a chunk that does not CLOSE its run stages and changes nothing — no document edit, no
-/// history row — and the closing chunk lands the whole document as ONE edit.
+/// 📥️ LAW: a chunk that does not CLOSE its run stages changes nothing — no document edit — and the
+/// closing chunk lands the whole document as ONE undoable edit. A staged chunk still logs one
+/// unapplied command row.
 #[semio_framework_async_macros::async_test]
 async fn import_stages_every_chunk_and_only_the_closing_one_edits_the_document() {
     let mut app = app_with_registry();
@@ -2345,12 +2346,18 @@ async fn add_part_dialog_enumerates_live_part_kinds() {
 //#region 🖱️ContextMenuRows
 /// 🖱️ Builds one context-menu request for a surface selection of `(domain, ids)` groups.
 fn context_menu_of(app: &mut Puzzle5dApp, groups: Vec<(&str, Vec<String>)>) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    context_menu_at(app, groups, None)
+}
+
+/// 🖱️ `context_menu_of` with the world host's pointer hit — `(domain, id)` exactly as `world3dContextMenuSurfaceV1`
+/// sends it (`vortex` for a grip marker, `object` for a part instance).
+fn context_menu_at(app: &mut Puzzle5dApp, groups: Vec<(&str, Vec<String>)>, hit: Option<(&str, &str)>) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     let request = ContextMenuRequest {
         menu: UiMenuRef { id: "world3d".into(), args: None },
         surface: Some(ContextMenuSurfaceTarget {
             surface_id: world3d::WINDOW_KIND_ID.into(),
             kind: "world3d".into(),
-            hits: vec![],
+            hits: hit.into_iter().map(|(domain, id)| semio_framework_plugin::ContextMenuHit { domain: domain.into(), id: id.into(), label: None }).collect(),
             selection: groups.into_iter().map(|(domain, ids)| ContextMenuSelectionGroup { domain: domain.into(), ids }).collect(),
             text: None,
         }),
@@ -2446,9 +2453,18 @@ async fn context_menu_rows_follow_the_selected_granularity() {
 
     let grip_rows = context_menu_of(&mut app, vec![(PUZZLE5D_GRANULARITY_GRIP, vec![grip_id.clone()])]);
     let grip = context_menu_actions(&grip_rows);
-    assert!(grip.contains(&"targetBrushSuggestions".to_string()), "one selected grip offers the suggestions entry point, got {grip:?}");
+    assert!(grip.contains(&"openVortexSuggestions".to_string()), "one selected grip offers the suggestions submenu the world host fills live, got {grip:?}");
+    assert!(!grip.contains(&"targetBrushSuggestions".to_string()), "the brush hover verb is no menu row — it only acts while the brush is armed: {grip:?}");
     let suggest = grip_rows.iter().find(|row| row.id == "suggest").expect("the suggest row");
     assert_eq!(suggest.args.as_ref().and_then(|args| args.get("fullId")).and_then(dsl::DslValue::as_str), Some(grip_id.as_str()), "the suggest row names the grip it was opened on");
+
+    // 🎯️ A right-click on the grip of a SELECTED part is that grip's menu — grip markers only draw on marked
+    // parts, so the part being selected is the normal case, not an edge case.
+    let grip_part = grip_id.split(':').next().expect("full grip id").to_string();
+    let on_grip = context_menu_actions(&context_menu_at(&mut app, vec![("object", vec![grip_part.clone()])], Some(("vortex", grip_id.as_str()))));
+    assert!(on_grip.contains(&"openVortexSuggestions".to_string()) && !on_grip.contains(&"duplicateSelection".to_string()), "the grip under the pointer is the subject: {on_grip:?}");
+    let inside = context_menu_actions(&context_menu_at(&mut app, vec![("object", vec![grip_part.clone()])], Some(("object", grip_part.as_str()))));
+    assert!(inside.contains(&"duplicateSelection".to_string()), "a hit inside the selection keeps the whole selection as the subject: {inside:?}");
 
     let fastener_rows = context_menu_of(&mut app, vec![(PUZZLE5D_GRANULARITY_FASTENER, vec![fastener_id.clone()])]);
     let fastener = context_menu_actions(&fastener_rows);

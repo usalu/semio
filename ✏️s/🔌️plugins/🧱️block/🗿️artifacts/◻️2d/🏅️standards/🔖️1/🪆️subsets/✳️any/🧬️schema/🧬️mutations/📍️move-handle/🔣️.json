@@ -7,7 +7,7 @@
   "aggregateVariant": "MoveHandle",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "move-handle",
-  "binaryTag": null,
+  "binaryTag": 15,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

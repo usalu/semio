@@ -6,12 +6,36 @@
   "noOracleDecisions": [
     {
       "id": "gis-gisterrain-config-mutation-semantics",
-      "capabilities": [],
+      "capabilities": [
+        "gis-gisterrain-1-config-mutate"
+      ],
       "rationale": "GisTerrainWindowConfig is one GIS Terrain window's persisted-local viewport camera state, outside document undo history. No third party implements this repository-specific editor state. The test exercises the real Mutation<GisTerrainWindowConfig>/MutationDiff<GisTerrainWindowConfig> trait implementations generated for GisTerrainWindowConfigMutation::SetCamera and verifies its computed inverse restores the pre-mutation record.",
       "substitutes": [
-        "metamorphic-laws",
-        "direct-production-trait-exercise"
-      ]
+        "metamorphic-laws"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "pypi",
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "pydeck",
+            "ecosystem": "pypi",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Holds a deck.gl view state of its own, not this editor window's persisted camera record, so set-camera applied there is a different record."
+          },
+          {
+            "package": "cesium",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "A globe renderer with an imperative camera; it neither reads nor writes GisTerrainWindowConfig."
+          }
+        ],
+        "whyNoneQualifies": "GisTerrainWindowConfig is one editor window's persisted-local camera state that this repository defines; no third party reads or writes it, so no reference can adjudicate set-camera."
+      }
     }
   ],
   "mutationCatalogs": [
@@ -97,7 +121,7 @@
         "platform": "darwin-arm64"
       },
       "provenance": {
-        "source": "handcrafted",
+        "source": "authored",
         "license": "public-domain (synthetic, no third-party content embedded)",
         "attribution": "A minimal deterministic set-camera specification vector over GisTerrainWindowConfig's cameraJson field, asserted against the production Mutation<GisTerrainWindowConfig>/MutationDiff<GisTerrainWindowConfig> trait chain.",
         "security": "scanned-clean",

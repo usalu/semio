@@ -103,8 +103,8 @@
                 },
                 {
                   "type": "array",
-                  "minItems": 16,
-                  "maxItems": 16,
+                  "minItems": 18,
+                  "maxItems": 18,
                   "items": [
                     {
                       "type": "object",
@@ -120,13 +120,15 @@
                           "const": "applyDirectoryEventPage"
                         },
                         "disposition": {
-                          "const": "BatchOnlyPendingRewrite"
+                          "const": "Migrated"
                         },
                         "lanes": {
-                          "const": []
+                          "const": [
+                            "Config"
+                          ]
                         },
                         "blocker": {
-                          "const": "directory page decode, event fold, and projection replacement still execute in one direct handler"
+                          "const": ""
                         }
                       }
                     },
@@ -144,13 +146,15 @@
                           "const": "createStudio"
                         },
                         "disposition": {
-                          "const": "BatchOnlyPendingRewrite"
+                          "const": "Migrated"
                         },
                         "lanes": {
-                          "const": []
+                          "const": [
+                            "Artifact"
+                          ]
                         },
                         "blocker": {
-                          "const": "filesystem or draft allocation and authored document creation still execute in one direct handler"
+                          "const": ""
                         }
                       }
                     },
@@ -451,6 +455,58 @@
                         "lanes": {
                           "const": [
                             "HostOnly"
+                          ]
+                        },
+                        "blocker": {
+                          "const": ""
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "disposition",
+                        "lanes",
+                        "blocker"
+                      ],
+                      "properties": {
+                        "id": {
+                          "const": "promoteToHubSpace"
+                        },
+                        "disposition": {
+                          "const": "Migrated"
+                        },
+                        "lanes": {
+                          "const": [
+                            "HostOnly"
+                          ]
+                        },
+                        "blocker": {
+                          "const": ""
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "disposition",
+                        "lanes",
+                        "blocker"
+                      ],
+                      "properties": {
+                        "id": {
+                          "const": "persistLocally"
+                        },
+                        "disposition": {
+                          "const": "Migrated"
+                        },
+                        "lanes": {
+                          "const": [
+                            "Artifact"
                           ]
                         },
                         "blocker": {

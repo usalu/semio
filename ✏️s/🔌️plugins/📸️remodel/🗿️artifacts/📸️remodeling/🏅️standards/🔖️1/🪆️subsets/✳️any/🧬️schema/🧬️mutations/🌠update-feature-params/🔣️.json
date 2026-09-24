@@ -7,7 +7,7 @@
   "aggregateVariant": "UpdateFeatureParams",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-feature-params",
-  "binaryTag": null,
+  "binaryTag": 19,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

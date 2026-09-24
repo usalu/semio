@@ -15,7 +15,7 @@
 
 #[cfg(test)]
 use crate::actions::MockArtifactChannel;
-use crate::actions::{ActionAdapter, ArtifactChannel, InvokeRequest, PreparedOps, UnboundArtifactChannel};
+use crate::actions::{ActionAdapter, ActivationScope, ArtifactChannel, ActivationPhase, InvokeRequest, PreparedOps, UnboundArtifactChannel, ACTIVATION_CANCELLED_FAULT_CODE};
 use crate::audit::{AuditSinks, ClientInfo, InMemoryAuditSink};
 use crate::handles::{HandleTable, IdempotencyStore, SessionHandle};
 use crate::policy::{AgentPrincipal, AutoApprovePolicy};
@@ -180,7 +180,7 @@ pub fn load_package_descriptor(owner_root: &Path) -> Result<semio_framework::Pac
 /// `os.agent.probe/v1` is namespaced under `os.agent.*` precisely so it can never collide with a real
 /// plugin schema id.
 pub const PROBE_SCHEMA: &str = "os.agent.probe/v1";
-pub const PROBE_PACK_SCHEMA_HASH: &str = "9fab7cb8b71dabede955b4257fa06e2908642e0904f124b6230479f8a153041e";
+pub const PROBE_PACK_SCHEMA_HASH: &str = "0302ac7cf70cd2452759542a24931331935527fb9388bb6967cbc0575ccf728e";
 const PROBE_SURFACE_ID: &str = "os.mcp.probe.editor";
 
 fn probe_record_spec() -> store::os_dsl::RecordSpec {
@@ -559,8 +559,7 @@ pub fn activate_plugin_instance(
     plugin_ordinal: u16,
 ) -> Result<(semio_framework_plugin_host::GuestInstance, PluginActivationOutcome), GatewayError> {
     let wasm_path = resolve_plugin_wasm_path(repo_root, entry)?;
-    let bytes = std::fs::read(&wasm_path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", wasm_path.display())))?;
-    let compiled = shared_compiled_component(runtime, &entry.plugin_id, &bytes)?;
+    let compiled = scoped_compiled_component(runtime, &entry.plugin_id, ComponentBytes::File(&wasm_path), &ActivationScope::detached())?;
 
     let actor = semio_framework::io::resolve_ready(semio_framework_actor::ActorId::new(plugin_ordinal, 0, 1, 0));
     // 🎟️ Every capability the descriptor requests is granted with a zero token/no expiry — the REAL
@@ -892,6 +891,10 @@ const INSTANCE_OPEN_WALL_BUDGET: std::time::Duration = std::time::Duration::from
 /// `Arc<GuestRuntimes>`; the enum delegates every `GuestRuntime` method to the wasmtime arm with no
 /// indirection beyond a match.
 ///
+/// ⛽️ Unmetered: every budget this gateway arms disarms fuel (`u64::MAX`) and bounds a guest call
+/// by its epoch deadline, so metering bought nothing here but instrumented every guest block — see
+/// [`SharedEngineConfig::fuel_metering`] for the measurement.
+///
 /// 🧯️ A failed engine build is cached as a `String` rather than retried per call: it fails for
 /// reasons that do not change inside a process (no virtual address space, an unusable cache root),
 /// and retrying it on every tool call would turn one honest refusal into a stall.
@@ -899,7 +902,7 @@ const INSTANCE_OPEN_WALL_BUDGET: std::time::Duration = std::time::Duration::from
 fn shared_plugin_runtime() -> Result<Arc<GuestRuntimes>, GatewayError> {
     static RUNTIME: std::sync::OnceLock<Result<Arc<GuestRuntimes>, String>> = std::sync::OnceLock::new();
     RUNTIME
-        .get_or_init(|| semio_framework_async::block_on(WasmtimeRuntime::new(SharedEngineConfig::default())).map(|runtime| Arc::new(GuestRuntimes::from(runtime))).map_err(|error| error.to_string()))
+        .get_or_init(|| semio_framework_async::block_on(WasmtimeRuntime::new(SharedEngineConfig { fuel_metering: false, ..SharedEngineConfig::default() })).map(|runtime| Arc::new(GuestRuntimes::from(runtime))).map_err(|error| error.to_string()))
         .clone()
         .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared plugin engine: {error}")))
 }
@@ -916,23 +919,369 @@ fn shared_plugin_runtime() -> Result<Arc<GuestRuntimes>, GatewayError> {
 /// tearing the component DOWN after a successful call, not in bringing it up. Holding the handle
 /// here keeps the refcount above zero, so a channel's own drop releases its `Store` and stops.
 #[cfg(not(target_arch = "wasm32"))]
-fn shared_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, bytes: &[u8]) -> Result<semio_framework_plugin_host::CompiledHandle, GatewayError> {
-    static COMPILED: std::sync::OnceLock<Mutex<HashMap<[u8; 32], semio_framework_plugin_host::CompiledHandle>>> = std::sync::OnceLock::new();
-    // 🔏️ The component's OWN 32-byte digest, not `hash_bytes`' 64-char HEX STRING: that string's
-    // `into_bytes()` is 64 long, so `try_into::<[u8; 32]>()` always failed and every plugin in this
-    // process took a `[0u8; 32]` fallback. Under the interpreter a package hash was inert
-    // bookkeeping; `WasmtimeRuntime::compile` keys its on-disk `.cwasm` cache on it, so the
-    // placeholder made every plugin collide on ONE cache entry and replay whichever component
-    // compiled first. Measured 2026-09-20: a single 130 MB `0000…0000.cwasm`.
-    let package_hash = *framework_hash::hash(bytes).as_bytes();
-    let cache = COMPILED.get_or_init(|| Mutex::new(HashMap::new()));
-    if let Some(compiled) = cache.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&package_hash) {
+fn compiled_components() -> &'static Mutex<HashMap<[u8; 32], semio_framework_plugin_host::CompiledHandle>> {
+    static COMPILED: OnceLock<Mutex<HashMap<[u8; 32], semio_framework_plugin_host::CompiledHandle>>> = OnceLock::new();
+    COMPILED.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// 🪪️ What a staged component file IS without reading it: its path, length and modification time.
+/// A rebuild rewrites the file, so it changes the identity and is read and hashed again.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, PartialEq, Eq, Hash)]
+struct ComponentFileIdentity {
+    path: PathBuf,
+    length: u64,
+    modified_ns: u128,
+}
+
+/// 🔏️ The content hash of every staged component file already read, by file identity — held in this
+/// process and persisted beside the compiled-code cache, so a staged build is read and hashed once
+/// per build rather than once per process.
+///
+/// ⏱️ Every channel open used to read the whole component and hash it before it could ask the
+/// compiled cache anything: measured 2026-09-24 (ticket 26/09/23 slice G6) the 125 MB `🀄️wfc`
+/// build took 8.5–11.5 s to hash in a dev host, once for `artifact_create` and again for the first
+/// `inference_run` binding of the same session, while the compiled-code lookup behind it took 0.3 s.
+#[cfg(not(target_arch = "wasm32"))]
+fn component_file_hashes() -> &'static Mutex<HashMap<ComponentFileIdentity, [u8; 32]>> {
+    static HASHES: OnceLock<Mutex<HashMap<ComponentFileIdentity, [u8; 32]>>> = OnceLock::new();
+    HASHES.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl ComponentFileIdentity {
+    /// 🗂️ Where this identity's content hash is persisted: one 32-byte file under the compiled-code
+    /// cache root, named by the digest of the identity itself.
+    fn persisted_path(&self) -> PathBuf {
+        let key = format!("semio.component-file-identity/v1\0{}\0{}\0{}", self.path.display(), self.length, self.modified_ns);
+        semio_framework_async::block_on(semio_framework_plugin_host::default_compiled_cache_root()).join("component-identities").join(framework_hash::hash_bytes(key.as_bytes()))
+    }
+
+    fn known_hash(&self) -> Option<[u8; 32]> {
+        if let Some(hash) = component_file_hashes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(self).copied() {
+            return Some(hash);
+        }
+        let hash: [u8; 32] = std::fs::read(self.persisted_path()).ok()?.try_into().ok()?;
+        component_file_hashes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(self.clone(), hash);
+        Some(hash)
+    }
+
+    fn remember(&self, hash: [u8; 32]) {
+        component_file_hashes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(self.clone(), hash);
+        let path = self.persisted_path();
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let _ = std::fs::write(path, hash);
+    }
+}
+
+/// 🧩️ Where a component's bytes come from: a staged file this process may already know, or bytes a
+/// caller already holds (a hub-authorized execution target).
+#[cfg(not(target_arch = "wasm32"))]
+enum ComponentBytes<'a> {
+    File(&'a Path),
+    Held(&'a [u8]),
+}
+
+/// 📏️ How much of a component one hashing step covers before it reports progress and checks cancel.
+#[cfg(not(target_arch = "wasm32"))]
+const COMPONENT_HASH_CHUNK_BYTES: usize = 4 << 20;
+
+#[cfg(not(target_arch = "wasm32"))]
+fn activation_fault(fault: Fault) -> GatewayError {
+    if fault.code == ACTIVATION_CANCELLED_FAULT_CODE {
+        return GatewayError::new(GatewayErrorCode::Cancelled, fault.message);
+    }
+    GatewayError::new(GatewayErrorCode::Internal, fault.message)
+}
+
+/// 🔏️ `bytes`' own 32-byte content digest, one chunk per progress report and cancel check.
+///
+/// 🔏️ The component's OWN digest, not `hash_bytes`' 64-char HEX STRING: that string's `into_bytes()`
+/// is 64 long, so `try_into::<[u8; 32]>()` always failed and every plugin in this process took a
+/// `[0u8; 32]` fallback. `WasmtimeRuntime::compile` keys its on-disk `.cwasm` cache on it, so the
+/// placeholder made every plugin collide on ONE cache entry and replay whichever component compiled
+/// first. Measured 2026-09-20: a single 130 MB `0000…0000.cwasm`.
+#[cfg(not(target_arch = "wasm32"))]
+fn scoped_component_hash(bytes: &[u8], scope: &ActivationScope) -> Result<[u8; 32], GatewayError> {
+    let mut hasher = framework_hash::Hasher::new();
+    let mut hashed = 0usize;
+    for chunk in bytes.chunks(COMPONENT_HASH_CHUNK_BYTES) {
+        hasher.update(chunk);
+        hashed += chunk.len();
+        scope.advance(ActivationPhase::HashingComponent, hashed as f64 / bytes.len().max(1) as f64).map_err(activation_fault)?;
+    }
+    Ok(*hasher.finalize().as_bytes())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn read_component(path: &Path, scope: &ActivationScope) -> Result<Vec<u8>, GatewayError> {
+    scope.enter(ActivationPhase::ReadingComponent).map_err(activation_fault)?;
+    std::fs::read(path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", path.display())))
+}
+
+/// 🧩️ The process's compiled handle for one component, reporting each phase it actually runs to
+/// `scope`. A staged file already hashed in this process is neither read nor hashed again; compiled
+/// code already in this process or on disk is loaded, never compiled again, and the component is
+/// read only when it must be compiled. A cold compile runs in an isolated worker process shared by
+/// every requester of the same content hash ([`CompileFlight`]), so a cancel detaches this requester
+/// at once and the last requester's cancel kills the compile.
+#[cfg(not(target_arch = "wasm32"))]
+fn scoped_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, component: ComponentBytes<'_>, scope: &ActivationScope) -> Result<semio_framework_plugin_host::CompiledHandle, GatewayError> {
+    let (package_hash, mut bytes) = match component {
+        ComponentBytes::File(path) => {
+            let metadata = std::fs::metadata(path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", path.display())))?;
+            let identity = ComponentFileIdentity {
+                path: path.to_path_buf(),
+                length: metadata.len(),
+                modified_ns: metadata.modified().ok().and_then(|modified| modified.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |since| since.as_nanos()),
+            };
+            match identity.known_hash() {
+                Some(package_hash) => (package_hash, None),
+                None => {
+                    let bytes = read_component(path, scope)?;
+                    let package_hash = scoped_component_hash(&bytes, scope)?;
+                    identity.remember(package_hash);
+                    (package_hash, Some(std::borrow::Cow::Owned(bytes)))
+                }
+            }
+        }
+        ComponentBytes::Held(bytes) => (scoped_component_hash(bytes, scope)?, Some(std::borrow::Cow::Borrowed(bytes))),
+    };
+    if let Some(compiled) = compiled_components().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&package_hash) {
         return Ok(compiled.clone());
     }
+    scope.enter(ActivationPhase::LoadingCompiledCode).map_err(activation_fault)?;
     let package = semio_framework_plugin_host::PackageRef { package: semio_framework_plugin_host::PackageId(plugin_id.to_string()), hash: semio_framework_plugin_host::PackageHash(package_hash) };
-    let compiled = semio_framework_async::block_on(runtime.compile(&package, bytes)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("compiling `{plugin_id}`: {error}")))?;
-    cache.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(package_hash, compiled.clone());
+    let compiled = match semio_framework_async::block_on(runtime.load_compiled(&package)) {
+        Some(compiled) => compiled,
+        None => {
+            let bytes = match (bytes.take(), component) {
+                (Some(bytes), _) => bytes,
+                (None, ComponentBytes::File(path)) => std::borrow::Cow::Owned(read_component(path, scope)?),
+                (None, ComponentBytes::Held(bytes)) => std::borrow::Cow::Borrowed(bytes),
+            };
+            scope.enter(ActivationPhase::CompilingComponent).map_err(activation_fault)?;
+            match semio_framework_async::block_on(runtime.isolated_compile_target(&package)) {
+                Some(target) => {
+                    CompileFlight::join(package_hash, target, &bytes, scope)?;
+                    semio_framework_async::block_on(runtime.load_compiled(&package)).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("compiling `{plugin_id}`: the isolated compile finished but its compiled code does not load")))?
+                }
+                None => semio_framework_async::block_on(runtime.compile(&package, &bytes)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("compiling `{plugin_id}`: {error}")))?,
+            }
+        }
+    };
+    compiled_components().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(package_hash, compiled.clone());
     Ok(compiled)
+}
+
+//#region 🧊️CompileFlight
+/// 🧊️ The program an isolated compile runs: this process's own executable (`semio-os-mcp
+/// compile-component`) unless a host names another one that answers the same subcommand.
+#[cfg(not(target_arch = "wasm32"))]
+static COMPONENT_COMPILE_WORKER: OnceLock<PathBuf> = OnceLock::new();
+
+/// 🧊️ Names the program isolated compiles run, for a host whose own executable is not
+/// `semio-os-mcp` (a test binary). First call wins.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn set_component_compile_worker(program: PathBuf) {
+    let _ = COMPONENT_COMPILE_WORKER.set(program);
+}
+
+/// 🧪️ A unit-test binary is not `semio-os-mcp` and has no `compile-component` subcommand, so under
+/// `cfg(test)` the worker is this test binary running exactly [`ISOLATED_COMPILE_TEST_ENTRY`], which
+/// reads the same two inputs from its environment.
+#[cfg(test)]
+pub(crate) const ISOLATED_COMPILE_TEST_ENTRY: &str = "workspace::quick::isolated_compile_worker_entry";
+#[cfg(test)]
+pub(crate) const ISOLATED_COMPILE_TEST_ENGINE: &str = "SEMIO_ISOLATED_COMPILE_ENGINE";
+#[cfg(test)]
+pub(crate) const ISOLATED_COMPILE_TEST_OUT: &str = "SEMIO_ISOLATED_COMPILE_OUT";
+
+/// 🔢️ Isolated compile workers this process has started — a shared compile starts exactly one.
+#[cfg(not(target_arch = "wasm32"))]
+static COMPONENT_COMPILE_WORKERS_STARTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn component_compile_workers_started() -> u64 {
+    COMPONENT_COMPILE_WORKERS_STARTED.load(std::sync::atomic::Ordering::Acquire)
+}
+
+/// 🧩️ Brings `bytes` (a component of `plugin_id`) to compiled code in this process under `scope`,
+/// exactly as a plugin session's activation does — for a caller that prepares a component ahead of
+/// opening it.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn prepare_plugin_component(plugin_id: &str, bytes: &[u8], scope: &ActivationScope) -> Result<(), GatewayError> {
+    let runtime = shared_plugin_runtime()?;
+    scoped_compiled_component(runtime.as_ref(), plugin_id, ComponentBytes::Held(bytes), scope).map(drop)
+}
+
+/// 🔎️ Isolated compile workers alive right now — zero once every compile finished or was killed.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn live_component_compile_workers() -> usize {
+    compile_flights().lock().unwrap_or_else(std::sync::PoisonError::into_inner).values().filter(|flight| flight.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).worker.is_some()).count()
+}
+
+/// 🧊️ One cold compile of one component, in an isolated worker process, shared by every requester
+/// of the same content hash while it runs. A requester that cancels detaches and is answered at
+/// once; when the last one detaches the worker is killed, which returns every core and byte the
+/// compile held, and its unfinished output is removed. Nothing completes in the background after
+/// its last requester is gone. Law: `🏠️workspace/🧫️fixtures/⏱️compile-cancellation-law.json`.
+#[cfg(not(target_arch = "wasm32"))]
+struct CompileFlight {
+    cache_path: PathBuf,
+    state: Mutex<CompileFlightState>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct CompileFlightState {
+    requesters: usize,
+    waiters: Vec<semio_framework_async::oneshot::Sender<Result<(), String>>>,
+    worker: Option<std::process::Child>,
+    outcome: Option<Result<(), String>>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn compile_flights() -> &'static Mutex<HashMap<[u8; 32], Arc<CompileFlight>>> {
+    static FLIGHTS: OnceLock<Mutex<HashMap<[u8; 32], Arc<CompileFlight>>>> = OnceLock::new();
+    FLIGHTS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl CompileFlight {
+    /// 🛫️ Joins the running compile of `package_hash`, or starts it, and waits for it or for the
+    /// requester's cancel, whichever comes first.
+    fn join(package_hash: [u8; 32], target: semio_framework_plugin_host::IsolatedCompileTarget, bytes: &[u8], scope: &ActivationScope) -> Result<(), GatewayError> {
+        let (flight, answer) = {
+            let mut flights = compile_flights().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let flight = match flights.get(&package_hash) {
+                Some(flight) => Arc::clone(flight),
+                None => {
+                    let flight = Self::launch(package_hash, target, bytes)?;
+                    flights.insert(package_hash, Arc::clone(&flight));
+                    flight
+                }
+            };
+            let (sender, answer) = semio_framework_async::oneshot::channel();
+            let mut state = flight.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            state.requesters += 1;
+            match &state.outcome {
+                Some(outcome) => drop(sender.send(outcome.clone())),
+                None => state.waiters.push(sender),
+            }
+            drop(state);
+            (flight, answer)
+        };
+        match semio_framework_async::block_on(semio_framework_async::select2(answer, scope.cancel().cancelled())) {
+            semio_framework_async::Either::Left(answer) => {
+                flight.leave();
+                match answer {
+                    Ok(Ok(())) => Ok(()),
+                    Ok(Err(message)) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("isolated component compile failed: {message}"))),
+                    Err(_) => Err(GatewayError::new(GatewayErrorCode::Internal, "the isolated component compile ended without answering")),
+                }
+            }
+            semio_framework_async::Either::Right(()) => {
+                flight.detach(package_hash);
+                Err(GatewayError::new(GatewayErrorCode::Cancelled, "the caller cancelled while its component was compiling"))
+            }
+        }
+    }
+
+    /// 🚀️ Starts the worker and the thread that feeds it the component and observes its exit.
+    fn launch(package_hash: [u8; 32], target: semio_framework_plugin_host::IsolatedCompileTarget, bytes: &[u8]) -> Result<Arc<Self>, GatewayError> {
+        let program = match COMPONENT_COMPILE_WORKER.get() {
+            Some(program) => program.clone(),
+            None => std::env::current_exe().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("locating the compile worker: {error}")))?,
+        };
+        let mut command = std::process::Command::new(&program);
+        command.env_clear();
+        if let Some(system_root) = std::env::var_os("SYSTEMROOT") {
+            command.env("SYSTEMROOT", system_root);
+        }
+        #[cfg(not(test))]
+        command.arg("compile-component").arg("--engine").arg(&target.engine).arg("--out").arg(&target.cache_path);
+        #[cfg(test)]
+        command.args([ISOLATED_COMPILE_TEST_ENTRY, "--exact", "--test-threads=1"]).env(ISOLATED_COMPILE_TEST_ENGINE, &target.engine).env(ISOLATED_COMPILE_TEST_OUT, &target.cache_path);
+        let mut worker = command
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
+            .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("starting the compile worker {}: {error}", program.display())))?;
+        COMPONENT_COMPILE_WORKERS_STARTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        let input = worker.stdin.take().expect("piped compile worker stdin");
+        let report = worker.stderr.take().expect("piped compile worker stderr");
+        let flight = Arc::new(Self { cache_path: target.cache_path, state: Mutex::new(CompileFlightState { requesters: 0, waiters: Vec::new(), worker: Some(worker), outcome: None }) });
+        let observed = Arc::clone(&flight);
+        let bytes = bytes.to_vec();
+        std::thread::Builder::new()
+            .name("semio-compile-flight".to_string())
+            .spawn(move || observed.observe(package_hash, input, report, bytes))
+            .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("observing the compile worker: {error}")))?;
+        Ok(flight)
+    }
+
+    /// 👁️ Feeds the worker its component, waits for it to exit — its report closes when it does —
+    /// and answers every requester. A worker already killed by the last detach answers no one.
+    fn observe(self: Arc<Self>, package_hash: [u8; 32], mut input: std::process::ChildStdin, mut report: std::process::ChildStderr, bytes: Vec<u8>) {
+        use std::io::{Read as _, Write as _};
+        let _ = input.write_all(&bytes);
+        drop(input);
+        drop(bytes);
+        let mut message = String::new();
+        let _ = report.read_to_string(&mut message);
+        let mut flights = compile_flights().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(mut worker) = state.worker.take() else { return };
+        let outcome = match worker.wait() {
+            Ok(status) if status.success() => Ok(()),
+            Ok(status) => Err(format!("{status}: {}", message.trim())),
+            Err(error) => Err(error.to_string()),
+        };
+        if outcome.is_err() {
+            let _ = std::fs::remove_file(semio_framework_plugin_host::compiled_cache_scratch_path(&self.cache_path, worker.id()));
+        }
+        for waiter in state.waiters.drain(..) {
+            let _ = waiter.send(outcome.clone());
+        }
+        state.outcome = Some(outcome);
+        if flights.get(&package_hash).is_some_and(|flight| Arc::ptr_eq(flight, &self)) {
+            flights.remove(&package_hash);
+        }
+    }
+
+    fn leave(&self) {
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.requesters -= 1;
+    }
+
+    /// ✂️ Withdraws one requester; the last one kills the worker and removes its unfinished output.
+    fn detach(self: &Arc<Self>, package_hash: [u8; 32]) {
+        let mut flights = compile_flights().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.requesters -= 1;
+        if state.requesters > 0 || state.outcome.is_some() {
+            return;
+        }
+        if let Some(mut worker) = state.worker.take() {
+            let _ = worker.kill();
+            let _ = worker.wait();
+            let _ = std::fs::remove_file(semio_framework_plugin_host::compiled_cache_scratch_path(&self.cache_path, worker.id()));
+        }
+        state.waiters.clear();
+        state.outcome = Some(Err("every requester cancelled; the compile was killed".to_string()));
+        if flights.get(&package_hash).is_some_and(|flight| Arc::ptr_eq(flight, self)) {
+            flights.remove(&package_hash);
+        }
+    }
+}
+//#endregion 🧊️CompileFlight
+
+#[cfg(not(target_arch = "wasm32"))]
+fn shared_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, bytes: &[u8]) -> Result<semio_framework_plugin_host::CompiledHandle, GatewayError> {
+    scoped_compiled_component(runtime, plugin_id, ComponentBytes::Held(bytes), &ActivationScope::detached())
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -943,8 +1292,9 @@ impl PluginArtifactChannel {
 
     pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Result<Self, GatewayError> {
         let wasm_path = resolve_plugin_wasm_path(&repo_root, &entry)?;
-        let bytes = std::fs::read(&wasm_path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", wasm_path.display())))?;
-        Self::from_component(&bytes, entry.plugin_id, descriptor, app_ref, actor_label)
+        let runtime = shared_plugin_runtime()?;
+        let compiled = scoped_compiled_component(runtime.as_ref(), &entry.plugin_id, ComponentBytes::File(&wasm_path), &ActivationScope::detached())?;
+        Ok(Self::from_compiled(runtime, compiled, entry.plugin_id, descriptor, app_ref, actor_label))
     }
 
     /// 🧩️ Opens a channel over component bytes the caller already holds, whatever their provenance —
@@ -954,7 +1304,12 @@ impl PluginArtifactChannel {
     pub fn from_component(bytes: &[u8], plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Result<Self, GatewayError> {
         let runtime = shared_plugin_runtime()?;
         let compiled = shared_compiled_component(runtime.as_ref(), &plugin_id, bytes)?;
-        Ok(Self {
+        Ok(Self::from_compiled(runtime, compiled, plugin_id, descriptor, app_ref, actor_label))
+    }
+
+    /// 🧩️ A channel over a component this process already compiled — see [`scoped_compiled_component`].
+    fn from_compiled(runtime: Arc<GuestRuntimes>, compiled: semio_framework_plugin_host::CompiledHandle, plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Self {
+        Self {
             runtime,
             compiled,
             plugin_id,
@@ -971,7 +1326,7 @@ impl PluginArtifactChannel {
             backbone_egress: Vec::new(),
             backbone_bindings: std::collections::BTreeSet::new(),
             inference: None,
-        })
+        }
     }
 
     /// 🧵️ Takes every document-backbone message this guest has published since the last drain. The
@@ -1170,7 +1525,7 @@ impl PluginArtifactChannel {
         };
         let request_bytes = serde_json::to_vec(&request).map_err(|error| Self::not_wired("encoding the inference request", error))?;
         let route = self.ensure_inference_route()?;
-        let result_bytes = semio_framework_async::block_on(route.router.infer(&request_bytes)).map_err(|error| Fault { code: "mutation.rejected".to_string(), message: format!("`{}` refused: {error}", request.inference_schema) })?;
+        let result_bytes = semio_framework_async::block_on(route.router.infer(&request_bytes, &command.cancel.0)).map_err(|error| Fault { code: "mutation.rejected".to_string(), message: format!("`{}` refused: {error}", request.inference_schema) })?;
         serde_json::from_slice(&result_bytes).map_err(|error| Self::not_wired("decoding the inference result", error))
     }
 
@@ -1280,9 +1635,16 @@ impl PluginArtifactChannel {
     /// guest saying "I kept my progress, ask me again", so the events it did not consume are
     /// re-offered on the next turn rather than lost.
     fn ensure_instance(&mut self, instance: u32) -> Result<(), Fault> {
+        self.ensure_instance_scoped(instance, &ActivationScope::detached())
+    }
+
+    /// 🎬️ [`Self::ensure_instance`] under a caller's progress and cancel: a cancel observed between
+    /// turns throws the half-open guest away, so the next open starts clean.
+    fn ensure_instance_scoped(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
         if self.instances.contains_key(&instance) {
             return Ok(());
         }
+        scope.enter(ActivationPhase::OpeningGuest)?;
         let actor = semio_framework::io::resolve_ready(semio_framework_actor::ActorId::new((instance as u16).wrapping_add(1), 0, 1, 0));
         let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> = self
             .descriptor
@@ -1330,6 +1692,10 @@ impl PluginArtifactChannel {
                     semio_framework_async::block_on(self.runtime.drop_instance(guest));
                     return Err(Self::not_wired("InstanceOpen", error));
                 }
+            }
+            if let Err(cancelled) = scope.checkpoint() {
+                semio_framework_async::block_on(self.runtime.drop_instance(guest));
+                return Err(cancelled);
             }
             if std::time::Instant::now() >= deadline {
                 semio_framework_async::block_on(self.runtime.drop_instance(guest));
@@ -2144,6 +2510,10 @@ impl ArtifactChannel for PluginArtifactChannel {
         }
         Ok(frames)
     }
+
+    fn activate(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
+        self.ensure_instance_scoped(instance, scope)
+    }
 }
 
 //#region 🔖️Routing
@@ -2209,7 +2579,11 @@ fn resolve_plugin_for_capability_in(catalog: &Catalog, capability_id: &str) -> R
 /// `GatewayErrorCode::PluginUnavailable`).
 #[cfg(not(target_arch = "wasm32"))]
 fn routing_fault(error: GatewayError) -> Fault {
-    let code = if error.code == GatewayErrorCode::NotFound { "capability.not-found" } else { "plugin.unavailable" };
+    let code = match error.code {
+        GatewayErrorCode::NotFound => "capability.not-found",
+        GatewayErrorCode::Cancelled => ACTIVATION_CANCELLED_FAULT_CODE,
+        _ => "plugin.unavailable",
+    };
     Fault { code: code.to_string(), message: error.message }
 }
 
@@ -2219,7 +2593,15 @@ fn routing_fault(error: GatewayError) -> Fault {
 /// differing only in where `repo_root`/`actor_label` come from.
 #[cfg(not(target_arch = "wasm32"))]
 fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_id: &str, actor_label: &str) -> Result<PluginArtifactChannel, GatewayError> {
-    let (bytes, descriptor) = match source.ok_or_else(|| {
+    open_plugin_artifact_channel_scoped(source, plugin_id, actor_label, &ActivationScope::detached())
+}
+
+/// 🔌️ [`open_plugin_artifact_channel`] under a caller's progress and cancel.
+#[cfg(not(target_arch = "wasm32"))]
+fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource>, plugin_id: &str, actor_label: &str, scope: &ActivationScope) -> Result<PluginArtifactChannel, GatewayError> {
+    scope.enter(ActivationPhase::ResolvingComponent).map_err(activation_fault)?;
+    let runtime = shared_plugin_runtime()?;
+    let (compiled, descriptor) = match source.ok_or_else(|| {
         GatewayError::new(GatewayErrorCode::Internal, "this workspace is bound to no plugin component source — neither a repo build tree nor an authenticated hub execution target")
     })? {
         PluginComponentSource::Repo(repo_root) => {
@@ -2227,14 +2609,16 @@ fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_i
             let entry = find_plugin_entry(&registry, plugin_id)?.clone();
             let descriptor = load_package_descriptor(&entry.owner_root)?;
             let wasm_path = resolve_plugin_wasm_path(repo_root, &entry)?;
-            let bytes = std::fs::read(&wasm_path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", wasm_path.display())))?;
-            (bytes, descriptor)
+            (scoped_compiled_component(runtime.as_ref(), plugin_id, ComponentBytes::File(&wasm_path), scope)?, descriptor)
         }
-        PluginComponentSource::Hub(hub) => hub.resolve(plugin_id)?,
+        PluginComponentSource::Hub(hub) => {
+            let (bytes, descriptor) = hub.resolve(plugin_id)?;
+            (scoped_compiled_component(runtime.as_ref(), plugin_id, ComponentBytes::Held(&bytes), scope)?, descriptor)
+        }
     };
     let editor_app = descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?;
     let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: editor_app.id.clone() };
-    PluginArtifactChannel::from_component(&bytes, plugin_id.to_string(), descriptor, app_ref, actor_label.to_string())
+    Ok(PluginArtifactChannel::from_compiled(runtime, compiled, plugin_id.to_string(), descriptor, app_ref, actor_label.to_string()))
 }
 
 //#region 🗂️GuestDocumentCodec
@@ -2638,6 +3022,32 @@ impl ArtifactChannel for RoutingArtifactChannel {
         }
         frames
     }
+
+    /// 🔌️ Everything [`Self::exchange`] would open before its first command, and nothing else: the
+    /// plugin's channel (component resolved, read, hashed, compiled), its guest, and — for a bound
+    /// hub document — that document loaded and its backbone bound, in the same order.
+    fn activate(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
+        let plugin_id = self.plugin_id_for(instance, &[])?;
+        let session_artifact_id = self.session_artifact_for(&plugin_id);
+        let session_document = self.session_document_for(&plugin_id);
+        let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
+        if !channels.contains_key(&plugin_id) {
+            let channel = open_plugin_artifact_channel_scoped(self.components.as_ref(), &plugin_id, &self.actor_label, scope).map_err(routing_fault)?;
+            channels.insert(plugin_id.clone(), channel);
+        }
+        let channel = channels.get_mut(&plugin_id).expect("just inserted above");
+        channel.bind_session_artifact(session_artifact_id);
+        let activated = channel.activate(instance, scope).and_then(|()| match session_document {
+            Some((artifact_id, document)) => channel.load_session_document(instance, &artifact_id, &document.pack, &document.spr).and_then(|()| channel.ensure_document_backbone(instance)),
+            None => Ok(()),
+        });
+        let egress = channel.drain_backbone_egress();
+        drop(channels);
+        if !egress.is_empty() {
+            self.relay_backbone_egress(&plugin_id, egress)?;
+        }
+        activated
+    }
 }
 //#endregion 🔖️Routing
 
@@ -2718,6 +3128,13 @@ impl ArtifactChannel for ShellRoutedArtifactChannel {
                 self.shell.exchange(instance, commands)
             }
             crate::shell_channel::ChannelKind::Headless => self.headless.exchange(instance, commands),
+        }
+    }
+
+    fn activate(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
+        match self.binding.resolve() {
+            crate::shell_channel::ChannelKind::Shell => self.shell.activate(instance, scope),
+            crate::shell_channel::ChannelKind::Headless => self.headless.activate(instance, scope),
         }
     }
 }
@@ -2904,10 +3321,19 @@ impl HeadlessWorkspace {
         }
     }
 
+    /// 🚫 The git repository root is not a workspace folder. Binding it persists `.semio/events.semio` in the tree.
+    pub(crate) fn reject_repository_root_workspace(path: &std::path::Path) -> Result<(), GatewayError> {
+        if path.join("nx.json").is_file() {
+            return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("--folder `{}` is the repository root and would write .semio/events.semio into the git tree; pass a directory that is not the repository root", path.display())));
+        }
+        Ok(())
+    }
+
     pub fn open_folder(path: PathBuf, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Result<Self, GatewayError> {
         if !path.is_dir() {
             std::fs::create_dir_all(&path).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("--folder `{}` does not exist and could not be created: {error}", path.display())))?;
         }
+        Self::reject_repository_root_workspace(&path)?;
         Ok(Self::new(WorkspaceOrigin::Folder { path }, principal, scopes, catalog))
     }
 
@@ -3244,20 +3670,21 @@ impl HeadlessWorkspace {
     /// document owners for one session. They now ask here, so the binding governs every verb.
     #[cfg(not(target_arch = "wasm32"))]
     fn open_session_artifact_channel(&self, plugin_id: &str) -> Result<ArtifactChannels, GatewayError> {
+        self.open_session_artifact_channel_scoped(plugin_id, &ActivationScope::detached())
+    }
+
+    /// 🎚️ [`Self::open_session_artifact_channel`] under a caller's progress and cancel: a headless
+    /// plugin channel resolves, reads, hashes and loads or compiles its component in `scope`.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn open_session_artifact_channel_scoped(&self, plugin_id: &str, scope: &ActivationScope) -> Result<ArtifactChannels, GatewayError> {
         if let Some((binding, catalog)) = self.shell_route.get() {
             if binding.resolve() == crate::shell_channel::ChannelKind::Shell {
                 return Ok(ArtifactChannels::ShellDirect(crate::shell_channel::ShellArtifactChannel::new(Arc::clone(binding), Arc::clone(catalog)).for_plugin(plugin_id)));
             }
         }
-        Ok(ArtifactChannels::Plugin(self.open_artifact_channel(plugin_id)?))
+        Ok(ArtifactChannels::Plugin(open_plugin_artifact_channel_scoped(self.plugin_components().as_ref(), plugin_id, &self.actor_label(), scope)?))
     }
 
-    /// 🔁 The live document bytes behind a session-owned artifact, asked of the SHELL that owns it.
-    /// `Ok(None)` means this session has no shell route (an ordinary headless gateway), which is the
-    /// only case where the persisted folder row is still the truth. A shell that refuses answers by
-    /// name — `SIDE_EFFECT_REJECTED` carrying the shell's own fault text — because a silent fall
-    /// back to the frozen row is exactly the stale answer this lane exists to kill.
-    #[cfg(not(target_arch = "wasm32"))]
     /// 🔌️ Binds the root-owned `ActionAdapter` once, before the server serves. Idempotent: a second
     /// bind is ignored rather than swapping the adapter under an in-flight call.
     #[cfg(not(target_arch = "wasm32"))]
@@ -3273,6 +3700,68 @@ impl HeadlessWorkspace {
         let Some(actions) = self.root_actions.get() else { return Ok(None) };
         let Some(instance) = plugin_instance_slot(&self.catalog, plugin_id) else { return Ok(None) };
         actions.read_session_artifact(instance).map(Some)
+    }
+
+    /// 🔗️ `artifact_id`'s live document for an inference binding, under `scope`. A headless plugin
+    /// session is activated first — component resolved, read, content-hashed and compiled, guest
+    /// opened — reporting each phase it actually runs, and the document is read from it after that.
+    /// Every other lane (an open probe, a shell-owned session, a hub or folder row) only reads.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn bind_artifact_document(&self, artifact_id: &str, scope: &ActivationScope) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
+        if let Some(binding) = self.plugin_artifact_binding(artifact_id) {
+            let shell_owned = self.shell_route.get().is_some_and(|(route, _)| route.resolve() == crate::shell_channel::ChannelKind::Shell);
+            if let (false, Some(actions), Some(instance)) = (shell_owned, self.root_actions.get(), plugin_instance_slot(&self.catalog, &binding.plugin_id)) {
+                actions.activate_session(instance, scope)?;
+            }
+        }
+        scope.enter(ActivationPhase::ReadingDocument).map_err(activation_fault)?;
+        self.read_artifact_bytes(artifact_id)
+    }
+
+    /// ⏳️ [`Self::create_plugin_artifact`] as a job — see [`Self::run_activation_job`].
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn create_plugin_artifact_cancellably(self: &Arc<Self>, artifact_id: &str, kind: &InstalledArtifactKind, scope: ActivationScope) -> Result<(usize, usize), GatewayError> {
+        let artifact_id = artifact_id.to_string();
+        let kind = kind.clone();
+        self.run_activation_job(scope, move |workspace, scope| workspace.create_plugin_artifact(&artifact_id, &kind, scope))
+    }
+
+    /// ⏳️ [`Self::bind_artifact_document`] as a job — see [`Self::run_activation_job`].
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn bind_artifact_document_cancellably(self: &Arc<Self>, artifact_id: &str, scope: ActivationScope) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
+        let artifact_id = artifact_id.to_string();
+        self.run_activation_job(scope, move |workspace, scope| workspace.bind_artifact_document(&artifact_id, scope))
+    }
+
+    /// 🔌️ Activates `plugin_id`'s headless session — the first half of every binding — as a job, so a
+    /// caller can bring a plugin up ahead of its first artifact with the same progress and cancel.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn activate_plugin_session_cancellably(self: &Arc<Self>, plugin_id: &str, scope: ActivationScope) -> Result<(), GatewayError> {
+        let actions = self.root_actions.get().cloned().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "no action adapter is bound to this workspace yet").retryable())?;
+        let instance = plugin_instance_slot(&self.catalog, plugin_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` owns no instance slot in this workspace's catalog")))?;
+        self.run_activation_job(scope, move |_, scope| actions.activate_session(instance, scope))
+    }
+
+    /// ⏳️ Runs `work` on the process pool's I/O lane while the caller waits for its answer or for the
+    /// scope's cancel, whichever comes first, so a cancel is answered the moment it lands rather than
+    /// when the phase in flight ends. The job itself stops at its next interruptible boundary and
+    /// drops whatever it half-opened.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn run_activation_job<T: Send + 'static>(self: &Arc<Self>, scope: ActivationScope, work: impl FnOnce(&HeadlessWorkspace, &ActivationScope) -> Result<T, GatewayError> + Send + 'static) -> Result<T, GatewayError> {
+        let cancel = scope.cancel().clone();
+        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        let workspace = Arc::clone(self);
+        workspace_worker_pool().submit(
+            semio_framework_async::Lane::Io,
+            Box::new(move || {
+                let _ = sender.send(work(&workspace, &scope));
+            }),
+        );
+        match semio_framework_async::block_on(semio_framework_async::select2(receiver, cancel.cancelled())) {
+            semio_framework_async::Either::Left(Ok(answer)) => answer,
+            semio_framework_async::Either::Left(Err(_)) => Err(GatewayError::new(GatewayErrorCode::Internal, "the activation job ended without answering")),
+            semio_framework_async::Either::Right(()) => Err(GatewayError::new(GatewayErrorCode::Cancelled, "the caller cancelled while its plugin session was being activated")),
+        }
     }
 
     fn read_session_artifact_bytes(&self, plugin_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
@@ -3483,19 +3972,25 @@ impl HeadlessWorkspace {
     /// decodes a plugin document, it moves the guest's own pack+spr into the folder event log the
     /// same way `store::sync` does, which is why `kind` can finally mean something without this host
     /// owning a single plugin type.
+    ///
+    /// ⏳️ Every activation phase it runs is reported to `scope`, and a cancel observed at any phase
+    /// boundary — the last one is just before persisting — creates nothing.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn create_plugin_artifact(&self, artifact_id: &str, kind: &InstalledArtifactKind) -> Result<(usize, usize), GatewayError> {
+    pub fn create_plugin_artifact(&self, artifact_id: &str, kind: &InstalledArtifactKind, scope: &ActivationScope) -> Result<(usize, usize), GatewayError> {
         let path = match &self.origin {
             WorkspaceOrigin::Folder { path } => path.clone(),
             WorkspaceOrigin::Hub { .. } => return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "creating a plugin-typed artifact in a hub-bound workspace needs the hub's own document-create authority — bind --folder to create one locally").retryable()),
         };
-        let mut channel = self.open_session_artifact_channel(&kind.plugin_id)?;
+        let mut channel = self.open_session_artifact_channel_scoped(&kind.plugin_id, scope)?;
+        channel.activate(0, scope).map_err(activation_fault)?;
+        scope.enter(ActivationPhase::ReadingDocument).map_err(activation_fault)?;
         let frames = channel.exchange(0, vec![AppCommand::ReadArtifact]).map_err(|fault| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` refused ReadArtifact ({}): {}", kind.plugin_id, fault.code, fault.message)))?;
         let (pack, spr) = match frames.into_iter().next() {
             Some(AppFrame::Artifact { pack, spr }) => (pack, spr),
             Some(AppFrame::Error(fault)) => return Err(GatewayError::new(GatewayErrorCode::SideEffectRejected, format!("`{}` rejected ReadArtifact ({}): {}", kind.plugin_id, fault.code, fault.message))),
             other => return Err(GatewayError::new(GatewayErrorCode::Internal, format!("`{}` answered ReadArtifact with {other:?}", kind.plugin_id))),
         };
+        scope.checkpoint().map_err(activation_fault)?;
         let storage = store::sync::FolderEventLogStorage::new(path);
         semio_framework::io::resolve_ready(storage.write(artifact_id, &kind.schema, &pack, &spr)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("persisting `{artifact_id}`: {error}")))?;
         self.plugin_artifacts

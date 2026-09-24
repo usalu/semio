@@ -3,8 +3,23 @@ protocol stdio.tiff.mutations
 version 1
 schema stdio.tiff.op
 start op
-
-# Direct identities: change-byte-order=2, insert-ifd=3, remove-ifd=4, replace-tag=5, remove-tag=6, replace-pixels=7
 framing record
+
+# Real op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload (its leaf's `💾️binary` codec).
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: every leaf
+# codec derives its tag from its record at compile time (`dsl::protocol_record::tag_u8`).
 header fixed 2
-chain payload bytes
+field format u8
+field tag u8
+record change-byte-order tag=2
+field payload bytes
+record insert-ifd tag=3
+field payload bytes
+record remove-ifd tag=4
+field payload bytes
+record replace-tag tag=5
+field payload bytes
+record remove-tag tag=6
+field payload bytes
+record replace-pixels tag=7
+field payload bytes

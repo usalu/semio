@@ -7,6 +7,16 @@ use crate::os_store::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
+#[tokio::test]
+async fn folder_event_log_refuses_the_repository_root() {
+    let dir = crate::os_store::test_support::tempdir().expect("tempdir");
+    std::fs::write(dir.path().join("nx.json"), "{}\n").expect("marker");
+    let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
+    let error = storage.write("doc", "schema", b"pack", b"spr").await.expect_err("repository root");
+    assert!(error.to_string().contains("repository root"), "{error}");
+    assert!(!dir.path().join(".semio").join("events.semio").exists());
+}
+
 fn test_pool() -> Arc<semio_framework_async::WorkerPool> {
     static POOL: std::sync::OnceLock<Arc<semio_framework_async::WorkerPool>> = std::sync::OnceLock::new();
     POOL.get_or_init(|| Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)))).clone()
@@ -150,7 +160,7 @@ async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_
         views: Vec::new(),
         ui: None,
         tool_run: None,
-        principal_kind: None,
+        principal_kind: None, active_tool: None,
     };
     let nested_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(nested) }).expect("nested message fits");
     let bare_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(bare) }).expect("bare message fits");
@@ -170,7 +180,7 @@ async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_
 // `"demo.demo"` keeps `__DSL_EXTENSION` == "demo", unchanged from the old bare-extension form.
 #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact)]
 #[dsl(id = "demo.demo")]
-struct DemoSnapshot {
+pub(super) struct DemoSnapshot {
     n: i32,
 }
 
@@ -214,7 +224,7 @@ impl ArtifactPack for DemoSnapshot {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-struct DemoDiff {
+pub(crate) struct DemoDiff {
     n: Option<i32>,
 }
 
@@ -233,7 +243,7 @@ impl MutationDiff<DemoSnapshot> for DemoDiff {
 #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslOps)]
 #[serde(tag = "operation")]
 #[value(tag = "operation")]
-enum DemoMutation {
+pub(super) enum DemoMutation {
     #[dsl(key = "set-n")]
     SetN { n: i32 },
 }
@@ -327,7 +337,7 @@ impl Mutation<DemoSnapshot> for DemoMutation {
 /// shared across every test in this binary) — needed by any test exercising `FolderEndpoint`
 /// end-to-end (both `Sqlite` and `Pack` now go through `document_codec` per the pack+spr flip),
 /// mirroring a real app's program-init-time `register_document_codec_for_app` call.
-async fn ensure_demo_codec_registered() {
+pub(super) async fn ensure_demo_codec_registered() {
     static ONCE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
     if !ONCE.swap(true, std::sync::atomic::Ordering::AcqRel) {
         register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec");
@@ -377,7 +387,7 @@ fn bootstrap_frontier_identity_rejects_same_ordinals_with_wrong_authenticated_he
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[semio_framework_async_macros::async_test]
+#[tokio::test]
 async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue() {
     use futures::StreamExt;
     use tokio_tungstenite::tungstenite::Message;
@@ -509,7 +519,7 @@ async fn native_bootstrap_commits_pair_before_failed_local_replay_then_restarts_
     let first = channel.receive().await.expect("baseline queue");
     assert_eq!(first.len(), 1, "failed replay queues only the committed baseline");
     assert!(matches!(&first[0], BackboneMessage::Genesis { pack } if pack == &pair.pack), "the baseline is the hub document's genesis followed by its (here: no) events");
-    let (pack, spr, frontier, pending_required, resume, pending_resume, remote_state, outbox) = actor.bootstrap_test_state();
+    let (pack, spr, frontier, pending_required, resume, pending_resume, remote_state, outbox, _rebootstrap) = actor.bootstrap_test_state();
     assert_eq!(pack.as_deref(), Some(pair.pack.as_slice()));
     assert_eq!(spr.as_deref(), Some(pair.spr.as_slice()));
     assert_eq!(frontier, Some(baseline.clone()));
@@ -541,7 +551,7 @@ async fn native_bootstrap_commits_pair_before_failed_local_replay_then_restarts_
     actor.inject_hub_frame(ServerFrame::Commands { envelopes: Vec::new(), origin: ActorId("actor-bootstrap-test".into()), frontier: wrong }).await;
     assert!(!matches!(actor.bootstrap_test_state().6, RemoteState::Live { .. }), "same ordinals cannot authenticate a different chain");
     actor.inject_hub_frame(ServerFrame::Commands { envelopes: Vec::new(), origin: ActorId("actor-bootstrap-test".into()), frontier: required.clone() }).await;
-    let (_, _, frontier, pending_required, resume, _, remote_state, outbox) = actor.bootstrap_test_state();
+    let (_, _, frontier, pending_required, resume, _, remote_state, outbox, _) = actor.bootstrap_test_state();
     assert_eq!(frontier, Some(required));
     assert_eq!(pending_required, None);
     assert_eq!(resume.as_deref(), Some("resume-bootstrap"));
@@ -607,7 +617,7 @@ async fn native_inline_and_chunked_bootstrap_install_the_same_typed_pair_after_c
     let chunked_messages = chunked_channel.receive().await.expect("chunked messages");
     assert_eq!(chunked_messages, inline_messages, "inline and chunked replace with byte-identical typed pairs");
     chunked_actor.inject_hub_frame(ServerFrame::Commands { envelopes: Vec::new(), origin: ActorId("actor-bootstrap-test".into()), frontier: required.clone() }).await;
-    let (actual_pack, actual_spr, frontier, pending_required, resume, _, remote_state, _) = chunked_actor.bootstrap_test_state();
+    let (actual_pack, actual_spr, frontier, pending_required, resume, _, remote_state, _, _) = chunked_actor.bootstrap_test_state();
     assert_eq!(actual_pack, Some(pair.pack));
     assert_eq!(actual_spr, Some(pair.spr));
     assert_eq!(frontier, Some(required));
@@ -667,7 +677,7 @@ async fn bootstrap_sequence_refuses_a_command_tail_that_arrives_before_the_snaps
     early.inject_hub_frame(welcome).await;
     early.inject_hub_frame(ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index: 0, bytes: crate::os_spr::ArtifactBootstrapChunkBytes::try_from_slice(&chunks[0]).expect("bounded chunk") }).await;
     early.inject_hub_frame(tail()).await;
-    let (early_pack, early_spr, early_frontier, _, _, _, early_remote_state, _) = early.bootstrap_test_state();
+    let (early_pack, early_spr, early_frontier, _, _, _, early_remote_state, _, _) = early.bootstrap_test_state();
     assert_eq!(early_pack, None, "a tail before the snapshot installs nothing");
     assert_eq!(early_spr, None, "a tail before the snapshot installs nothing");
     assert_eq!(early_frontier, None, "and never advances the client's view of the server frontier");
@@ -697,7 +707,7 @@ async fn bootstrap_sequence_refuses_a_command_tail_that_arrives_before_the_snaps
     ordered.inject_hub_frame(ServerFrame::ArtifactBootstrapDone { descriptor_hash, chunk_count: chunks.len() as u32 }).await;
     let _ = ordered_channel.receive().await.expect("installed messages");
     ordered.inject_hub_frame(tail()).await;
-    let (ordered_pack, ordered_spr, ordered_frontier, ordered_pending, _, _, ordered_remote_state, _) = ordered.bootstrap_test_state();
+    let (ordered_pack, ordered_spr, ordered_frontier, ordered_pending, _, _, ordered_remote_state, _, _) = ordered.bootstrap_test_state();
     assert_eq!(ordered_pack, Some(pair.pack), "the same tail AFTER the snapshot is accepted");
     assert_eq!(ordered_spr, Some(pair.spr));
     assert_eq!(ordered_frontier, Some(required));
@@ -736,7 +746,7 @@ async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
     crate::os_store::test_support::close_plain_test_store(&mut session.store);
 }
 
-#[semio_framework_async_macros::async_test]
+#[tokio::test]
 async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
     let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
     let store = crate::os_store::test_support::plain_test_store(envelope).await;
@@ -754,22 +764,22 @@ async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
 //#endregion 🧪️SyncSession
 
 //#region 🧪️Helpers
-#[semio_framework_async_macros::async_test]
+#[tokio::test]
 async fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
-    assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1", None).await, "ws://host:6070/spaces/studio-1/documents/doc-1/socket/v1");
-    assert_eq!(hub_ws_url("https://semio_hub.example.com", "studio-1", "doc-2", None).await, "wss://semio_hub.example.com/spaces/studio-1/documents/doc-2/socket/v1");
-    assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d", None).await, "ws://127.0.0.1:5000/spaces/studio-1/documents/d/socket/v1");
+    assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1", None).await, "ws://host:6070/scopes/studio-1%2Fdoc-1/document/ws");
+    assert_eq!(hub_ws_url("https://semio_hub.example.com", "studio-1", "doc-2", None).await, "wss://semio_hub.example.com/scopes/studio-1%2Fdoc-2/document/ws");
+    assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d", None).await, "ws://127.0.0.1:5000/scopes/studio-1%2Fd/document/ws");
     assert_eq!(
         hub_ws_url("remote://host:6070", "studio /東京?", "doc#ä", Some("s.space.home@1/*#editor")).await,
-        "ws://host:6070/spaces/studio%20%2F%E6%9D%B1%E4%BA%AC%3F/documents/doc%23%C3%A4/socket/v1?surface=s.space.home%401%2F%2A%23editor",
+        "ws://host:6070/scopes/studio%20%2F%E6%9D%B1%E4%BA%AC%3F%2Fdoc%23%C3%A4/document/ws?surface=s.space.home%401%2F%2A%23editor",
         "ticket 26/08/16/HUB-SPACES-…: surface travels out of band as ?surface= on the document WS URL"
     );
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[semio_framework_async_macros::async_test]
+#[tokio::test]
 async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() {
-    use crate::os_directory::client::{DirectoryClientError, DocumentSocketAdmissionV1, DocumentSocketAuthorityV1, HubSocketGrantSource, LocalHubCredential, SocketGrantReceiptV1};
+    use crate::os_directory::client::{DirectoryClientError, DocumentSocketAdmissionV1, DocumentSocketAuthorityV1, DocumentSocketGrantReceiptV1, HubSocketGrantSource, LocalHubCredential};
     use crate::os_directory::{
         DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentScope,
     };
@@ -792,10 +802,9 @@ async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() 
         ) -> Result<DocumentSocketAdmissionV1, DirectoryClientError> {
             self.admissions.fetch_add(1, Ordering::SeqCst);
             Ok(DocumentSocketAdmissionV1 {
-                socket: SocketGrantReceiptV1 {
-                    schema: "semio.hub.socket-grant/v1".into(),
-                    protocol: "semio.socket.v1".into(),
-                    grant: format!("socket.v1.{}.{}", "1".repeat(32), "2".repeat(64)),
+                socket: DocumentSocketGrantReceiptV1 {
+                    schema: "semio.hub.document-socket-grant/v1".into(),
+                    protocol: "semio.session.v1".into(),
                     actor_id: format!("hub.v1.{}", "3".repeat(64)),
                     expires_at_ms: i64::MAX,
                 },
@@ -845,6 +854,7 @@ async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() 
         }
     }
 
+    ensure_demo_codec_registered().await;
     let hostile = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("hostile listener");
     let hostile_origin = format!("http://{}", hostile.local_addr().expect("hostile address"));
     let source = Arc::new(BoundSource { admissions: AtomicUsize::new(0), trusted_origin: "http://127.0.0.1:1".into() });
@@ -897,7 +907,7 @@ async fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
         views: Vec::new(),
         ui: None,
         tool_run: None,
-        principal_kind: None,
+        principal_kind: None, active_tool: None,
     };
     stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor")).await;
     assert_eq!(peer.color, Some(7));
@@ -1064,12 +1074,13 @@ async fn sample_presence_peer_with_interaction() -> PresencePeer {
                 kind: crate::os_spr::PresenceViewKind::Orbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], up: [0.0, 1.0, 0.0], fov: 45.0 },
                 size: [1024.0, 768.0],
                 pointer: Some([0.5, 0.5, 0.5]),
+                ray_origin: Some([1.0, 2.0, 3.0]),
             },
-            crate::os_spr::PresenceWindowView { window_id: "w2".to_string(), space: "canvas".to_string(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 12.5, y: -4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None },
+            crate::os_spr::PresenceWindowView { window_id: "w2".to_string(), space: "canvas".to_string(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 12.5, y: -4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None },
         ],
         ui: Some(crate::os_spr::PresenceUi { hovered_path: Some("row[2]#t1".to_string()), focused_path: None, pressed_path: None }),
         tool_run: None,
-        principal_kind: None,
+        principal_kind: None, active_tool: None,
     }
 }
 //#endregion 🧪️WireBridge
@@ -1085,15 +1096,15 @@ async fn sample_presence_peer_with_interaction() -> PresencePeer {
 async fn presence_heartbeat_producer_publishes_immediately_then_coalesces_to_latest() {
     let mut producer = PresenceHeartbeatProducer::new(100);
     let mut first = sample_presence_peer_with_interaction().await;
-    first.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
+    first.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
     assert_eq!(producer.offer(1_000, first.clone()), Some(first));
 
     let mut intermediate = sample_presence_peer_with_interaction().await;
-    intermediate.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 3.0, y: 4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
+    intermediate.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 3.0, y: 4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
     assert_eq!(producer.offer(1_040, intermediate), None);
 
     let mut latest = sample_presence_peer_with_interaction().await;
-    latest.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 5.0, y: 6.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
+    latest.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 5.0, y: 6.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
     assert_eq!(producer.offer(1_099, latest.clone()), None);
     assert_eq!(producer.pending(), Some(&latest));
     assert_eq!(producer.offer(1_100, latest.clone()), Some(latest));
@@ -1376,7 +1387,6 @@ mod actor_tests {
     struct MockHubSocketGrantSource {
         hub_origin: String,
         actor_id: String,
-        grant_fill: char,
         trace: Arc<std::sync::Mutex<Vec<&'static str>>>,
     }
 
@@ -1393,10 +1403,9 @@ mod actor_tests {
             self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("grant.entered");
             let expires_at_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("system clock after epoch").as_millis().saturating_add(60_000).min(i64::MAX as u128) as i64;
             let admission = crate::os_directory::client::DocumentSocketAdmissionV1 {
-                socket: crate::os_directory::client::SocketGrantReceiptV1 {
-                    schema: "semio.hub.socket-grant/v1".into(),
-                    protocol: "semio.socket.v1".into(),
-                    grant: format!("socket.v1.{}.{}", self.grant_fill.to_string().repeat(32), self.grant_fill.to_string().repeat(64)),
+                socket: crate::os_directory::client::DocumentSocketGrantReceiptV1 {
+                    schema: "semio.hub.document-socket-grant/v1".into(),
+                    protocol: "semio.session.v1".into(),
                     actor_id: self.actor_id.clone(),
                     expires_at_ms,
                 },
@@ -1450,7 +1459,7 @@ mod actor_tests {
 
     fn configure_mock_hub(host: &ArtifactHost, hub_origin: &str, actor_fill: char, hub: &MockHub) {
         host.set_local_hub_credential(Arc::new(crate::os_directory::client::LocalHubCredential::test(hub_origin, &format!("session.v1.{}.{}", actor_fill.to_string().repeat(32), actor_fill.to_string().repeat(64)))));
-        host.set_hub_socket_grant_source(Arc::new(MockHubSocketGrantSource { hub_origin: hub_origin.into(), actor_id: format!("hub.v1.{}", actor_fill.to_string().repeat(64)), grant_fill: actor_fill, trace: hub.trace.clone() }));
+        host.set_hub_socket_grant_source(Arc::new(MockHubSocketGrantSource { hub_origin: hub_origin.into(), actor_id: format!("hub.v1.{}", actor_fill.to_string().repeat(64)), trace: hub.trace.clone() }));
     }
 
     async fn mock_frontier(ordinal: u64) -> RuntimeFrontierSummary {
@@ -1462,6 +1471,7 @@ mod actor_tests {
     }
 
     async fn spawn_mock_hub_with_session_gate(gated: bool) -> (std::net::SocketAddr, Arc<MockHub>) {
+        ensure_demo_codec_registered().await;
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind");
         let addr = listener.local_addr().expect("addr");
         let (broadcast, _rx) = tokio_broadcast::channel(256);
@@ -1473,13 +1483,34 @@ mod actor_tests {
                 let conn_hub = accept_hub.clone();
                 conn_hub.record("tcp.accepted");
                 tokio::spawn(async move {
-                    let actor_fill = if conn_hub.connections.fetch_add(1, Ordering::SeqCst) == 0 { 'a' } else { 'b' };
+                    let socket_actor = std::sync::Arc::new(std::sync::Mutex::new(None::<String>));
+                    let socket_actor_for_hdr = socket_actor.clone();
                     let accepted = tokio_tungstenite::accept_hdr_async(
                         stream,
-                        |_request: &tokio_tungstenite::tungstenite::handshake::server::Request,
+                        move |request: &tokio_tungstenite::tungstenite::handshake::server::Request,
                          mut response: tokio_tungstenite::tungstenite::handshake::server::Response|
                          -> Result<_, tokio_tungstenite::tungstenite::handshake::server::ErrorResponse> {
-                            response.headers_mut().insert("Sec-WebSocket-Protocol", "semio.socket.v1".parse().expect("static protocol header"));
+                            // Framework document WS (C4b): client offers `semio.session.v1, <token>`;
+                            // server selects the protocol token only (mirrors gateway `.protocols([SESSION_PROTOCOL_V1])`).
+                            const SESSION_PROTOCOL_V1: &str = "semio.session.v1";
+                            let offered = request
+                                .headers()
+                                .get("Sec-WebSocket-Protocol")
+                                .and_then(|value| value.to_str().ok())
+                                .unwrap_or("");
+                            let selected = offered.split(',').next().map(str::trim).filter(|token| *token == SESSION_PROTOCOL_V1);
+                            let Some(selected) = selected else {
+                                return Err(tokio_tungstenite::tungstenite::http::Response::builder().status(400).body(None).expect("static refuse"));
+                            };
+                            response.headers_mut().insert("Sec-WebSocket-Protocol", selected.parse().expect("static protocol header"));
+                            // Session actor is derived from the session credential (last segment of
+                            // `session.v1.<selector>.<secret>` → `hub.v1.<secret>`), never from a
+                            // caller-supplied `?actor=` query — mirrors the real hub binding.
+                            let actor = offered.split_once(", ").and_then(|(_, token)| {
+                                let secret = token.rsplit('.').next()?;
+                                (!secret.is_empty()).then(|| format!("hub.v1.{secret}"))
+                            });
+                            *socket_actor_for_hdr.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = actor;
                             Ok(response)
                         },
                     )
@@ -1487,7 +1518,18 @@ mod actor_tests {
                     match accepted {
                         Ok(ws) => {
                             conn_hub.record("websocket.accepted");
-                            mock_hub_connection(ws, conn_hub, format!("hub.v1.{}", actor_fill.to_string().repeat(64))).await;
+                            let actor = match socket_actor.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                                Some(actor) => {
+                                    let _ = conn_hub.connections.fetch_add(1, Ordering::SeqCst);
+                                    actor
+                                }
+                                None => {
+                                    let n = conn_hub.connections.fetch_add(1, Ordering::SeqCst);
+                                    let fill = if n == 0 { 'a' } else { 'b' };
+                                    format!("hub.v1.{}", fill.to_string().repeat(64))
+                                }
+                            };
+                            mock_hub_connection(ws, conn_hub, actor).await;
                         }
                         Err(_) => conn_hub.record("websocket.refused"),
                     }
@@ -1729,10 +1771,11 @@ mod actor_tests {
     // its Welcome backlog carries only the operations it missed.
     #[tokio::test]
     async fn reconnect_since_catch_up_replays_backlog() {
-        let (addr, _hub) = spawn_mock_hub().await;
+        let (addr, hub) = spawn_mock_hub().await;
         let base_url = format!("ws://{addr}");
 
         let host_a = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_a, &base_url, 'a', &hub);
         let channels_a = host_a
             .open(ArtifactActorConfig {
                 document_id: "catchup".into(),
@@ -1742,10 +1785,11 @@ mod actor_tests {
                 actor: "A".into(),
             })
             .await;
+        let mut events_a = host_a.subscribe_key(&channels_a.document_key).await;
         let mut store_a = crate::os_store::test_support::plain_test_store(demo_envelope("catchup").await).await;
         let key_a = channels_a.document_key.clone();
         store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
-        tokio::time::sleep(Duration::from_millis(300)).await;
+        wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
         // A applies two operations while nobody else is connected.
         for n in [3, 4] {
@@ -1756,6 +1800,7 @@ mod actor_tests {
 
         // B connects fresh (since_version 0) and its Welcome backlog replays both operations.
         let host_b = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_b, &base_url, 'b', &hub);
         let channels_b = host_b
             .open(ArtifactActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
             .await;
@@ -1763,6 +1808,7 @@ mod actor_tests {
         let mut events_b = host_b.subscribe_key(&key_b).await;
         let mut store_b = crate::os_store::test_support::plain_test_store(demo_envelope("catchup").await).await;
         store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
+        wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
         let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
         assert_eq!(document_backbone_event_envelopes(&event).expect("exact backlog event").len(), 2, "backlog replays both missed operations");
@@ -1779,11 +1825,12 @@ mod actor_tests {
     // 🔬️ Detach drains the outbox: an operation applied right before close still reaches the semio_hub (and B).
     #[tokio::test]
     async fn detach_drains_pending_outbound_operations() {
-        let (addr, _hub) = spawn_mock_hub().await;
+        let (addr, hub) = spawn_mock_hub().await;
         let base_url = format!("ws://{addr}");
 
         // Observer B stays connected to witness A's last operation.
         let host_b = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_b, &base_url, 'b', &hub);
         let channels_b = host_b
             .open(ArtifactActorConfig {
                 document_id: "drain".into(),
@@ -1797,14 +1844,17 @@ mod actor_tests {
         let mut events_b = host_b.subscribe_key(&key_b).await;
         let mut store_b = crate::os_store::test_support::plain_test_store(demo_envelope("drain").await).await;
         store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
+        wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
         let host_a = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_a, &base_url, 'a', &hub);
         let channels_a =
             host_a.open(ArtifactActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
+        let mut events_a = host_a.subscribe_key(&channels_a.document_key).await;
         let mut store_a = crate::os_store::test_support::plain_test_store(demo_envelope("drain").await).await;
         let key_a = channels_a.document_key.clone();
         store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
-        tokio::time::sleep(Duration::from_millis(300)).await;
+        wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
         store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).await.expect("apply on a");
         // Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
@@ -1823,16 +1873,17 @@ mod actor_tests {
     // `ArtifactEvent::CommandOutcome` wiring actually fires (not just that it compiles).
     #[tokio::test]
     async fn command_outcome_accepted_fires_after_hub_ack() {
-        let (addr, _hub) = spawn_mock_hub().await;
+        let (addr, hub) = spawn_mock_hub().await;
         let base_url = format!("ws://{addr}");
         let host = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host, &base_url, 'a', &hub);
         let channels =
             host.open(ArtifactActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
         let key = channels.document_key.clone();
         let mut events = host.subscribe_key(&key).await;
         let mut store = crate::os_store::test_support::plain_test_store(demo_envelope("outcome").await).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
-        tokio::time::sleep(Duration::from_millis(300)).await;
+        wait_for_mock_hub_event("A Session", &hub, &mut events, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply");
         channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
@@ -1850,10 +1901,11 @@ mod actor_tests {
     // preview-lane fan-out -> `ServerFrame::Preview` -> `ArtifactEvent::Preview` on another peer.
     #[tokio::test]
     async fn publish_preview_round_trips_through_hub() {
-        let (addr, _hub) = spawn_mock_hub().await;
+        let (addr, hub) = spawn_mock_hub().await;
         let base_url = format!("ws://{addr}");
 
         let host_a = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_a, &base_url, 'a', &hub);
         let channels_a = host_a
             .open(ArtifactActorConfig {
                 document_id: "preview".into(),
@@ -1863,15 +1915,18 @@ mod actor_tests {
                 actor: "A".into(),
             })
             .await;
+        let mut events_a = host_a.subscribe_key(&channels_a.document_key).await;
 
         let host_b = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_b, &base_url, 'b', &hub);
         let channels_b = host_b
             .open(ArtifactActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
             .await;
         let key_a = channels_a.document_key.clone();
         let key_b = channels_b.document_key.clone();
         let mut events_b = host_b.subscribe_key(&key_b).await;
-        tokio::time::sleep(Duration::from_millis(300)).await;
+        wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
+        wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
         channels_a.cmd_tx.send(ArtifactActorMsg::PublishPreview { key: "cursor".into(), seq: 1, payload: vec![1, 2, 3] }).expect("publish preview");
 
@@ -1892,7 +1947,7 @@ mod actor_tests {
     // sequence and final timeline. The same fixtures drive WS-E's vitest harness against the TS twin.
     #[tokio::test]
     async fn fixtures_replay_matches_expected_events() {
-        let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("🧫️fixtures");
+        let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🔨️modules/🏪️store/🔄️sync/🧫️fixtures");
         let fixtures = load_fixtures(&fixtures_dir).await;
         assert!(!fixtures.is_empty(), "expected fixtures in {fixtures_dir:?}");
         for fixture in fixtures {
@@ -2172,6 +2227,7 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     let reloaded = storage.read("demo", "demo").await.expect("read").expect("some");
     let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops).await.unwrap_or_else(|error| panic!("parse: {error}"));
     assert_eq!(parsed.snapshot.n, 2, "write + append reconstructs every edit in order");
+    let _ = parsed.into_snapshot();
 
     assert_eq!(storage.document_ids("demo").await.expect("document ids"), vec!["demo".to_string()]);
     crate::os_store::test_support::close_plain_test_store(&mut seed);
@@ -2212,12 +2268,14 @@ async fn folder_text_storage_round_trips_pack() {
     let reloaded_text = storage.read("demo", "demo").await.expect("read text").expect("some text");
     let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).await.unwrap_or_else(|error| panic!("parse text: {error}"));
     assert_eq!(parsed_text.snapshot.n, 2, "the .ops text mirror reflects every appended edit");
+    let _ = parsed_text.into_snapshot();
 
     // pack+spr are unaffected by ops-text-only appends — still the zero-edit snapshot from
     // the initial write_pack, proving read_pack/parse_document_pack never reads .ops.
     let reloaded_pack = storage.read_pack("demo", "demo").await.expect("read pack").expect("some pack");
     let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).await.unwrap_or_else(|error| panic!("parse pack: {error}"));
     assert_eq!(parsed_pack.snapshot.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
+    let _ = parsed_pack.into_snapshot();
 
     // A fresh whole-file write_pack (the actual cold-path persistence flow) brings pack+spr
     // current with the live store.
@@ -2227,9 +2285,11 @@ async fn folder_text_storage_round_trips_pack() {
     let reloaded_pack2 = storage.read_pack("demo", "demo").await.expect("read pack 2").expect("some pack 2");
     let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).await.unwrap_or_else(|error| panic!("parse pack 2: {error}"));
     assert_eq!(parsed_pack2.snapshot.n, 2, "a fresh write_pack brings pack+spr current with the live store");
+    let _ = parsed_pack2.into_snapshot();
 
     // The always-written DSL mirror must also be on disk and agree with the initial-snapshot.
-    let mirror = std::fs::read_to_string(storage.pack_path("demo", "demo").await.with_extension("")).expect("dsl mirror on disk");
+    let mirror_path = dir.path().join(crate::os_store::semio_format::semio_filename("demo", "demo", crate::os_store::semio_format::Component::Dsl));
+    let mirror = std::fs::read_to_string(&mirror_path).expect("dsl mirror on disk");
     assert_eq!(DemoSnapshot::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial snapshot, not later edits");
     crate::os_store::test_support::close_plain_test_store(&mut seed);
     crate::os_store::test_support::close_plain_test_store(&mut store);
@@ -2279,3 +2339,7 @@ async fn folder_event_log_ignores_an_incomplete_tail_and_coordinates_handles() {
     assert_eq!(first.read("doc-a").await.expect("read a").expect("doc a"), (b"pack-a".to_vec(), b"spr-a".to_vec()));
     assert_eq!(second.read("doc-b").await.expect("read b").expect("doc b"), (b"pack-b".to_vec(), b"spr-b".to_vec()));
 }
+
+
+#[path = "../🔬️backbone-parity/🦀️.rs"]
+mod backbone_parity;

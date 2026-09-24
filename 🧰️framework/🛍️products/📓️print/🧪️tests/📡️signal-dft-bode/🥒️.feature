@@ -23,7 +23,7 @@ Feature: The discrete Fourier transform, the transfer function and the root find
   @level-quick
   @mode-differential
   Scenario: A tone at a bin centre transforms to exactly its own amplitude in that bin
-    Given the committed probe document local://signal-dft-bode.tex and the sampled signals
+    Given the committed probe document shared://📡️signal-dft-bode/signal-dft-bode.tex and the sampled signals
       | key               | signal                          | samples | rate | expectation                    |
       | dft/two-tones     | sin(2 pi 3 t) + 0.5 sin(2 pi 7t)| 32      | 32   | 1 in bin 3, 0.5 in bin 7, else 0 |
       | dft/constant      | 1                               | 16      | 16   | 2 in bin 0, else 0             |
@@ -34,7 +34,7 @@ Feature: The discrete Fourier transform, the transfer function and the root find
   @level-quick
   @mode-conformance
   Scenario: The transfer function on the imaginary axis matches its closed-form magnitude and phase
-    Given the committed probe document local://signal-dft-bode.tex and the transfer functions
+    Given the committed probe document shared://📡️signal-dft-bode/signal-dft-bode.tex and the transfer functions
       | key                 | numerator | denominator | frequencies              |
       | bode/second-order   | 1         | 1, 0.4, 1   | 0.1, 0.5, 1, 2, 10       |
       | bode/bandpass       | 1, 0      | 1, 3, 2     | 1, 4                     |
@@ -44,7 +44,7 @@ Feature: The discrete Fourier transform, the transfer function and the root find
   @level-quick
   @mode-conformance
   Scenario: Durand–Kerner finds the roots of polynomials whose roots are known
-    Given the committed probe document local://signal-dft-bode.tex and the polynomials
+    Given the committed probe document shared://📡️signal-dft-bode/signal-dft-bode.tex and the polynomials
       | key               | coefficients | roots                       |
       | roots/cubic       | 1,-6,11,-6   | 1, 2, 3                     |
       | roots/quadratic   | 1,0.4,1      | -0.2 ± 0.9797958971132712 i |

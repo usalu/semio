@@ -37,6 +37,7 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 import JSZip from "jszip";
 import { DOMImplementation, XMLSerializer } from "@xmldom/xmldom";
 import { toMarkdown } from "mdast-util-to-markdown";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -556,11 +557,11 @@ async function main(argv: readonly string[]): Promise<number> {
         units: { length: "unitless", angle: "radian" },
         files,
         provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-        generator: { oracle: "serde-json-semio-document-carrier-reader", packageVersion: "1", engineFamily: "serde-json", engineVersion: "1", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier", platform: process.platform },
+        generator: { oracle: "json-rust-semio-document-carrier-reader", packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier", platform: currentPlatform() },
         comparisonProfile: "semantic-semio-document-carrier-v1",
         reproducible: true,
         family: "mechanical",
-        notes: `A deterministic two-image document with the ${kind} mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
+        notes: `A deterministic two-image document with the ${kind} mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
       });
     }
     if (command === "carrier-manifests") process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);

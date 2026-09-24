@@ -4,8 +4,9 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/**/*.rs"
-    , "{workspaceRoot}/🌎️hub/🧪️tests/🎚️config/🟦️.ts"]
+      "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/**/*.rs",
+      "{workspaceRoot}/🌎️hub/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "typecheck": {
@@ -59,6 +60,17 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "two-client-e2e": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts two-client-e2e",
         "forwardAllArgs": true
       },
       "outputs": []

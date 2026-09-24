@@ -8,14 +8,17 @@
 //! Populates the shared logical DWG snapshot directly; native bytes are materialized only by the
 //! DWG serializer.
 //!
+//! A path in the two-arc circle normal form under a similarity transform is written as a real
+//! `Circle` entity (the import leaf reads it back to the same form). `Group` transforms are applied
+//! to child geometry — points are mapped and arcs become cubics under a general affine map.
+//!
 //! Honest lossy points (documented, never fabricated): `Image` nodes and per-node `style` have no
 //! DWG entity/attribute equivalent and are dropped (matches the dxf↔drawing bridge's own
-//! block/insert-less architectural boundary); `Group` transforms are NOT applied to child
-//! geometry (flattened by walk order only, not by matrix) — same simplification the dxf↔drawing
-//! bridge's own entity walk makes.
+//! block/insert-less architectural boundary).
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
+use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{circle_normal_form, compose_affine, semio_transform_affine, similarity_scale, transformed_segments};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_dwg::schema::snapshot::DwgLogicalDrawing;
 use semio_s_artifact_stdio_dwg::{paths_to_dwg_drawing, DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgPathSegment, DwgSnapshot};
@@ -43,19 +46,22 @@ fn path_segment_to_dwg(segment: &PathSegment) -> DwgPathSegment {
 
 //#region 🔖️Walk
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn collect_node(node: &DrawNode, paths: &mut Vec<Vec<DwgPathSegment>>, texts: &mut Vec<(SemioPoint2, String)>) {
+fn collect_node(node: &DrawNode, matrix: &[f64; 6], paths: &mut Vec<Vec<DwgPathSegment>>, circles: &mut Vec<([f64; 2], f64)>, texts: &mut Vec<(SemioPoint2, String)>) {
     match node {
-        DrawNode::Group { children, .. } => {
+        DrawNode::Group { transform, children } => {
+            let inner = compose_affine(matrix, &semio_transform_affine(transform));
             for child in children {
-                collect_node(child, paths, texts);
+                collect_node(child, &inner, paths, circles, texts);
             }
         }
         DrawNode::Path { segments, .. } => {
-            if !segments.is_empty() {
-                paths.push(segments.iter().map(path_segment_to_dwg).collect());
+            if let (Some((centre, radius)), Some(scale)) = (circle_normal_form(segments), similarity_scale(matrix)) {
+                circles.push(([matrix[0] * centre[0] + matrix[2] * centre[1] + matrix[4], matrix[1] * centre[0] + matrix[3] * centre[1] + matrix[5]], radius * scale));
+            } else if !segments.is_empty() {
+                paths.push(transformed_segments(segments, matrix).iter().map(path_segment_to_dwg).collect());
             }
         }
-        DrawNode::Text { value, at, .. } => texts.push((*at, value.clone())),
+        DrawNode::Text { value, at, .. } => texts.push((SemioPoint2 { x: matrix[0] * at.x + matrix[2] * at.y + matrix[4], y: matrix[1] * at.x + matrix[3] * at.y + matrix[5] }, value.clone())),
         DrawNode::Image { .. } => {}
     }
 }
@@ -75,13 +81,17 @@ impl ArtifactSerializer for SemioDrawingToDwg {
         for layer in &from.layers {
             let layer_index = drawing.ensure_layer(&layer.name);
             let mut paths = Vec::new();
+            let mut circles = Vec::new();
             let mut texts = Vec::new();
-            collect_node(&layer.root, &mut paths, &mut texts);
+            collect_node(&layer.root, &[1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &mut paths, &mut circles, &mut texts);
 
             let sub = paths_to_dwg_drawing(&paths);
             for mut entity in sub.entities {
                 entity.layer = layer_index;
                 drawing.entities.push(entity);
+            }
+            for (centre, radius) in circles {
+                drawing.entities.push(DwgEntity { layer: layer_index, color: DwgColor::ByLayer, geometry: DwgGeometry::Circle { center: [centre[0], centre[1], 0.0], radius, normal: [0.0, 0.0, 1.0] } });
             }
             for (at, content) in texts {
                 drawing.entities.push(DwgEntity { layer: layer_index, color: DwgColor::ByLayer, geometry: DwgGeometry::Text { at: [at.x, at.y, 0.0], height: 1.0, rotation: 0.0, content } });

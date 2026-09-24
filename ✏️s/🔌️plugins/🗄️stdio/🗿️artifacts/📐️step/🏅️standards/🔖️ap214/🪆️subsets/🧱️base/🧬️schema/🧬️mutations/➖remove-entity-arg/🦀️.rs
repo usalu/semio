@@ -9,8 +9,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveEntityArg {
-    pub(crate) id: u64,
-    pub(crate) arg_index: usize,
+    pub id: u64,
+    pub arg_index: usize,
 }
 
 impl protocol::MutationKind<StepSnapshot, StepMutation> for RemoveEntityArg {

@@ -1,0 +1,533 @@
+{
+  "version": 1,
+  "scenarios": [
+    {
+      "id": "fresh-connect",
+      "title": "Fresh Connect Welcome And Session",
+      "documentId": "parity-doc",
+      "spaceId": "parity-space",
+      "actor": "local-actor",
+      "steps": [
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "installSocketActor",
+            "actor": "hub.v1.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "welcome",
+            "sessionId": "s1",
+            "resumeToken": "resume-fresh",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 0,
+              "headEditId": "genesis",
+              "lastCommitSeq": 0,
+              "chainHashByte": 1
+            },
+            "bootstrap": "none"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "session",
+            "actor": "hub.v1.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "color": 3
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "resumeToken": "resume-fresh",
+            "frontierEditId": "genesis",
+            "remoteKind": "live",
+            "peerCount": 0,
+            "outboxMutationIds": [],
+            "pendingBatchCount": 0,
+            "socketActorConfirmed": true,
+            "rebootstrapRequired": false,
+            "eventKinds": [
+              "status",
+              "session"
+            ],
+            "outgoingClientFrameKinds": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "resume-flush-once",
+      "title": "Resume After Outage Flushes Queued Commands Exactly Once",
+      "documentId": "parity-doc",
+      "spaceId": "parity-space",
+      "actor": "local-actor",
+      "steps": [
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "queueMutation",
+            "mutationId": "queued-1",
+            "n": 1
+          }
+        },
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "connectSocket",
+            "actor": "hub.v1.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "welcome",
+            "sessionId": "s2",
+            "resumeToken": "resume-2",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 0,
+              "headEditId": "genesis",
+              "lastCommitSeq": 0,
+              "chainHashByte": 1
+            },
+            "bootstrap": "none"
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "resumeToken": "resume-2",
+            "outboxMutationIds": [
+              "queued-1"
+            ],
+            "pendingBatchCount": 0,
+            "socketActorConfirmed": false,
+            "outgoingClientFrameKinds": [
+              "socketHelloV1"
+            ]
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "session",
+            "actor": "hub.v1.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "color": 4
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "outboxMutationIds": [],
+            "pendingBatchCount": 1,
+            "socketActorConfirmed": true,
+            "outgoingClientFrameKinds": [
+              "socketHelloV1",
+              "commands"
+            ]
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "ack",
+            "batchId": 0,
+            "outcome": "accepted",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 1,
+              "headEditId": "queued-1",
+              "lastCommitSeq": 1,
+              "chainHashByte": 2
+            }
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "pendingBatchCount": 0,
+            "frontierEditId": "queued-1",
+            "commandOutcome": "accepted",
+            "outgoingClientFrameKinds": [
+              "socketHelloV1",
+              "commands"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "remote-commands-order",
+      "title": "Remote Commands Ingested In Order",
+      "documentId": "parity-doc",
+      "spaceId": "parity-space",
+      "actor": "local-actor",
+      "steps": [
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "installSocketActor",
+            "actor": "hub.v1.cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "welcome",
+            "sessionId": "s3",
+            "resumeToken": "resume-3",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 0,
+              "headEditId": "genesis",
+              "lastCommitSeq": 0,
+              "chainHashByte": 1
+            },
+            "bootstrap": "none"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "session",
+            "actor": "hub.v1.cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "color": 5
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "commands",
+            "origin": "peer-a",
+            "envelopes": [
+              {
+                "mutationId": "remote-1",
+                "n": 1
+              },
+              {
+                "mutationId": "remote-2",
+                "n": 2
+              }
+            ],
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 2,
+              "headEditId": "remote-2",
+              "lastCommitSeq": 2,
+              "chainHashByte": 3
+            }
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "frontierEditId": "remote-2",
+            "ingestedMutationIds": [
+              "remote-1",
+              "remote-2"
+            ],
+            "eventKinds": [
+              "status",
+              "session",
+              "documentBackbone"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ack-rejected",
+      "title": "Rejected Batch Rolls Back Speculative Head",
+      "documentId": "parity-doc",
+      "spaceId": "parity-space",
+      "actor": "local-actor",
+      "steps": [
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "queueMutation",
+            "mutationId": "reject-1",
+            "n": 9
+          }
+        },
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "connectSocket",
+            "actor": "hub.v1.dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "welcome",
+            "sessionId": "s4",
+            "resumeToken": "resume-4",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 0,
+              "headEditId": "genesis",
+              "lastCommitSeq": 0,
+              "chainHashByte": 1
+            },
+            "bootstrap": "none"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "session",
+            "actor": "hub.v1.dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "color": 6
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "ack",
+            "batchId": 0,
+            "outcome": "rejected",
+            "rejectReason": "merge-conflict",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 0,
+              "headEditId": "genesis",
+              "lastCommitSeq": 0,
+              "chainHashByte": 1
+            }
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "pendingBatchCount": 0,
+            "commandOutcome": "rejected",
+            "frontierEditId": "genesis"
+          }
+        }
+      ]
+    },
+    {
+      "id": "rebootstrap-required",
+      "title": "RebootstrapRequired Clears Resume And Frontier",
+      "documentId": "parity-doc",
+      "spaceId": "parity-space",
+      "actor": "local-actor",
+      "steps": [
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "installSocketActor",
+            "actor": "hub.v1.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "welcome",
+            "sessionId": "s5",
+            "resumeToken": "resume-5",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 4,
+              "headEditId": "edit-4",
+              "lastCommitSeq": 4,
+              "chainHashByte": 5
+            },
+            "bootstrap": "none"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "session",
+            "actor": "hub.v1.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "color": 7
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "rebootstrapRequired",
+            "spaceId": "parity-space",
+            "documentId": "parity-doc",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 4,
+              "headEditId": "edit-4",
+              "lastCommitSeq": 4,
+              "chainHashByte": 5
+            }
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "resumeToken": null,
+            "frontierEditId": null,
+            "remoteKind": "connecting",
+            "rebootstrapRequired": true,
+            "outboxMutationIds": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicate-commands-idempotent",
+      "title": "Replayed Remote Commands Are Idempotent",
+      "documentId": "parity-doc",
+      "spaceId": "parity-space",
+      "actor": "local-actor",
+      "steps": [
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "installSocketActor",
+            "actor": "hub.v1.ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "welcome",
+            "sessionId": "s6",
+            "resumeToken": "resume-6",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 0,
+              "headEditId": "genesis",
+              "lastCommitSeq": 0,
+              "chainHashByte": 1
+            },
+            "bootstrap": "none"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "session",
+            "actor": "hub.v1.ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "color": 8
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "commands",
+            "origin": "peer-b",
+            "envelopes": [
+              {
+                "mutationId": "dup-1",
+                "n": 3
+              }
+            ],
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 1,
+              "headEditId": "dup-1",
+              "lastCommitSeq": 1,
+              "chainHashByte": 2
+            }
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "commands",
+            "origin": "peer-b",
+            "envelopes": [
+              {
+                "mutationId": "dup-1",
+                "n": 3
+              }
+            ],
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 1,
+              "headEditId": "dup-1",
+              "lastCommitSeq": 1,
+              "chainHashByte": 2
+            }
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "frontierEditId": "dup-1",
+            "ingestedMutationIds": [
+              "dup-1"
+            ],
+            "eventKinds": [
+              "status",
+              "session",
+              "documentBackbone"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "presence-passthrough",
+      "title": "Presence Passthrough Updates Live Peer Count",
+      "documentId": "parity-doc",
+      "spaceId": "parity-space",
+      "actor": "local-actor",
+      "steps": [
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "installSocketActor",
+            "actor": "hub.v1.gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "welcome",
+            "sessionId": "s7",
+            "resumeToken": "resume-7",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 0,
+              "headEditId": "genesis",
+              "lastCommitSeq": 0,
+              "chainHashByte": 1
+            },
+            "bootstrap": "none"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "session",
+            "actor": "hub.v1.gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+            "color": 9
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "presence",
+            "peerCount": 2
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "remoteKind": "live",
+            "peerCount": 2,
+            "eventKinds": [
+              "status",
+              "session",
+              "presence"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

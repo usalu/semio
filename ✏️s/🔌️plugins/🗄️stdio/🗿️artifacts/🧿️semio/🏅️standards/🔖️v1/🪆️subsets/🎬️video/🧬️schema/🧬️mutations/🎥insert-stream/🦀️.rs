@@ -10,8 +10,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct InsertStream {
-    pub(crate) index: usize,
-    pub(crate) stream: SemioVideoStream,
+    pub index: usize,
+    pub stream: SemioVideoStream,
 }
 
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for InsertStream {

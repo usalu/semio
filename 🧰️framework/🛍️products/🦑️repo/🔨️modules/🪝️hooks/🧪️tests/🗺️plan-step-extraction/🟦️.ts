@@ -117,7 +117,7 @@ type Merge = { id: string; second: string; existing: RecordedStep[]; incoming: P
 type Vectors = { payloads: Payload[]; merges: Merge[] };
 
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(readFileSync(ctx.fixture("local://🗺️plans.json"), "utf8")) as Vectors;
+  return JSON.parse(readFileSync(ctx.fixture("shared://🗺️plan-step-extraction/🗺️plans.json"), "utf8")) as Vectors;
 }
 
 function sameRecord(left: readonly RecordedStep[], right: readonly RecordedStep[]): boolean {

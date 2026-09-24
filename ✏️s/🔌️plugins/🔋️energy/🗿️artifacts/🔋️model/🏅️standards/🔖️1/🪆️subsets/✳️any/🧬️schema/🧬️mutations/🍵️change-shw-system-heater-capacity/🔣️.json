@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeShwSystemHeaterCapacity",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-shw-system-heater-capacity",
-  "binaryTag": null,
+  "binaryTag": 215,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

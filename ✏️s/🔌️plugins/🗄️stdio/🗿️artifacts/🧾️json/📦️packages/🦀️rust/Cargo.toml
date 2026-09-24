@@ -31,5 +31,7 @@ semio-s-artifact-stdio-txt = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+# 🔮 Test-only GeoJSON ORACLE: the third-party `geojson` crate reads what the rfc8259/geojson writer emits and writes what its reader must accept.
+geojson = { version = "1.0.0", default-features = false }
 semio-framework-async-macros = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

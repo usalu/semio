@@ -30,13 +30,14 @@
 //! `DurabilityClass` (see `sync`'s doc below) — unlike a file-backed backend, this one never has an
 //! unflushed OS buffer to force out.
 //!
-//! 🚧️ Extension seam (documented, not a TODO): read-modify-write operations (`append`,
-//! `truncate_tail`, lease `acquire`/`renew`/`release`) run inside a single Neo4j transaction, which
-//! gives them write-lock isolation against OTHER concurrent transactions touching the same node
-//! (Neo4j takes a write lock on first touch, held to commit) — but two `Neo4jStorage` handles in
-//! different OS processes still race exactly like `FsStorage`'s documented `cas_root`/lease caveat
-//! (see `db_storage`'s `fs_storage` module doc): full cross-process mutual exclusion beyond
-//! Neo4j's own lock semantics is `db_cluster`'s ownership-lease concern, not this crate's.
+//! 🔐️ WAL writer fence: Neo4j has no session-scoped lock, so a document's writer is a
+//! `(:WalWriter {document})` lease node (unique per document) carrying the holder, a monotonic
+//! fencing `token` and a server-clock expiry. Acquisition claims an absent or expired lease and
+//! advances the token; the permit renews it on the driver runtime every `renewEveryMs`; and every
+//! WAL mutation runs in one transaction that first write-locks the lease node and proves
+//! `holder + token + unexpired` before touching a segment, so a writer whose lease lapsed (paused,
+//! partitioned or crashed) is fenced by the storage itself, never by its own belief. A crashed
+//! holder's lease frees itself after `leaseTtlMs`. Contract: `🔐️writer/🧫️fixtures/🌐️remote-guard`.
 
 use crate::db_durability::{DurabilityClass, EpochFence};
 use crate::db_ids::{check_len, ArtifactId, DbError};
@@ -58,6 +59,9 @@ macro_rules! with_admitted_artifact {
         terminal
     }};
 }
+use crate::db_storage::writer::{release, WalWriterGuard, WalWriterTable};
+use crate::db_storage::DbIoWriterReleaseStep;
+use crate::db_storage_driver_runtime::DbIoDriverPeriodic;
 use neo4rs::{query, BoltBytes, Graph, Query, Txn};
 use pack::{ByteRange, ContentHash};
 use semio_framework_async::WorkerPool;
@@ -211,6 +215,7 @@ const SCHEMA_STATEMENTS: &[&str] = &[
     "CREATE CONSTRAINT db_payload_hash IF NOT EXISTS FOR (p:Payload) REQUIRE p.hash IS UNIQUE",
     "CREATE CONSTRAINT db_lease_resource IF NOT EXISTS FOR (l:Lease) REQUIRE l.resource IS UNIQUE",
     "CREATE CONSTRAINT db_catalog_root_id IF NOT EXISTS FOR (c:CatalogRoot) REQUIRE c.id IS UNIQUE",
+    "CREATE CONSTRAINT db_wal_writer_document IF NOT EXISTS FOR (w:WalWriter) REQUIRE w.document IS UNIQUE",
     "CREATE INDEX db_wal_segment_lookup IF NOT EXISTS FOR (n:WalSegment) ON (n.document, n.segIndex)",
     "CREATE INDEX db_snapshot_generation_lookup IF NOT EXISTS FOR (n:SnapshotGeneration) ON (n.document, n.generation)",
     "CREATE INDEX db_index_run_lookup IF NOT EXISTS FOR (n:IndexRun) ON (n.document, n.runId)",
@@ -219,7 +224,7 @@ const SCHEMA_STATEMENTS: &[&str] = &[
 //#region 🔖️WalCypher
 const CYPHER_WAL_CREATE_SEGMENT: &str = "
     MERGE (n:WalSegment {document: $document, segIndex: $index})
-    ON CREATE SET n.bytes = '', n.sealed = false, n.len = 0, n.fresh = true
+    ON CREATE SET n.bytes = $empty, n.sealed = false, n.len = 0, n.fresh = true
     ON MATCH SET n.fresh = false
     RETURN n.fresh AS fresh";
 
@@ -339,6 +344,46 @@ const CYPHER_INDEX_DELETE: &str = "
     DETACH DELETE n";
 //#endregion 🔖️IndexCypher
 
+//#region 🔖️WalWriterCypher
+/// @emoji 🔐️ Claims the document's writer lease. The first `SET` write-locks the lease node before
+/// anything is read, so two contenders serialize on it and the second sees the first's commit; only
+/// an absent or expired lease is claimed, and every claim advances the fencing token.
+const CYPHER_WAL_WRITER_ACQUIRE: &str = "
+    MERGE (w:WalWriter {document: $document})
+    ON CREATE SET w.token = 0, w.expiresAtMs = 0
+    SET w.contendedAtMs = timestamp()
+    WITH w
+    WHERE w.holder IS NULL OR w.expiresAtMs <= timestamp()
+    SET w.holder = $holder, w.token = w.token + 1, w.expiresAtMs = timestamp() + $ttlMs
+    RETURN w.token AS token";
+
+/// @emoji 💓 Extends a still-owned lease; no row means the lease was lost.
+const CYPHER_WAL_WRITER_RENEW: &str = "
+    MATCH (w:WalWriter {document: $document})
+    SET w.renewedAtMs = timestamp()
+    WITH w
+    WHERE w.holder = $holder AND w.token = $token AND w.expiresAtMs > timestamp()
+    SET w.expiresAtMs = timestamp() + $ttlMs
+    RETURN w.token AS token";
+
+/// @emoji 🛡️ The first statement of every WAL mutation transaction: write-locks the lease node and
+/// proves ownership (renewing it) before any segment is touched.
+const CYPHER_WAL_WRITER_FENCE: &str = "
+    MATCH (w:WalWriter {document: $document})
+    SET w.fencedAtMs = timestamp()
+    WITH w, (w.holder = $holder AND w.token = $token AND w.expiresAtMs > timestamp()) AS owned
+    SET w.expiresAtMs = CASE WHEN owned THEN timestamp() + $ttlMs ELSE w.expiresAtMs END
+    RETURN owned, w.token AS token";
+
+/// @emoji 🕊️ Frees an owned lease; the node and its token stay so the next claim advances it.
+const CYPHER_WAL_WRITER_RELEASE: &str = "
+    MATCH (w:WalWriter {document: $document})
+    SET w.releasedAtMs = timestamp()
+    WITH w
+    WHERE w.holder = $holder AND w.token = $token
+    SET w.holder = null, w.expiresAtMs = 0";
+//#endregion 🔖️WalWriterCypher
+
 //#region 🔖️LeaseCypher
 const CYPHER_LEASE_READ: &str = "
     MATCH (l:Lease {resource: $resource})
@@ -354,20 +399,142 @@ const CYPHER_LEASE_DELETE: &str = "
 //#endregion 🔖️LeaseCypher
 //#endregion 🔖️Cypher
 
+//#region 🔖️WriterFence
+/// @emoji ⏳️ Lease lifetime on the server clock — contract `neo4j.leaseTtlMs`.
+const WAL_WRITER_LEASE_TTL_MS: i64 = 15_000;
+
+/// @emoji 💓 Renewal period of a held lease — contract `neo4j.renewEveryMs`.
+const WAL_WRITER_RENEW_EVERY_MS: u64 = 5_000;
+
+/// @emoji 🎫️ One claimed lease: the holder identity and the fencing token its claim produced.
+#[derive(Clone)]
+struct Neo4jWalWriterLease {
+    holder: String,
+    token: i64,
+}
+
+impl Neo4jWalWriterLease {
+    fn holder() -> String {
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+        let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_nanos());
+        format!("{}:{nanos}:{}", std::process::id(), NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed))
+    }
+
+    fn query(&self, cypher: &'static str, document: &str) -> Query {
+        query(cypher).param("document", document.to_string()).param("holder", self.holder.clone()).param("token", self.token).param("ttlMs", WAL_WRITER_LEASE_TTL_MS)
+    }
+
+    async fn claim(graph: &Graph, document: &str) -> Result<Self, DbError> {
+        let holder = Self::holder();
+        let mut stream = graph.execute(query(CYPHER_WAL_WRITER_ACQUIRE).param("document", document.to_string()).param("holder", holder.clone()).param("ttlMs", WAL_WRITER_LEASE_TTL_MS)).await.map_err(map_neo4rs_error)?;
+        let row = stream.next().await.map_err(map_neo4rs_error)?;
+        while stream.next().await.map_err(map_neo4rs_error)?.is_some() {}
+        let token: i64 = row.ok_or_else(|| DbError::Conflict("WAL document already has a live Neo4j writer lease".to_string()))?.get("token").map_err(map_de_error)?;
+        Ok(Self { holder, token })
+    }
+
+    fn renew_periodically(&self, graph: Graph, document: String) -> DbIoDriverPeriodic {
+        let lease = self.clone();
+        crate::db_storage_driver_runtime::detach_periodic(std::time::Duration::from_millis(WAL_WRITER_RENEW_EVERY_MS), move || {
+            let graph = graph.clone();
+            let renew = lease.query(CYPHER_WAL_WRITER_RENEW, &document);
+            Box::pin(async move {
+                let Ok(mut stream) = graph.execute(renew).await else { return true };
+                let owned = match stream.next().await {
+                    Ok(row) => row.is_some(),
+                    Err(_) => return true,
+                };
+                while let Ok(Some(_)) = stream.next().await {}
+                owned
+            })
+        })
+    }
+}
+
+/// @emoji 🔔 Completion witness of a detached lease release; wakes the release controller and a parked backend close.
+struct Neo4jWalWriterUnlock {
+    done: std::sync::atomic::AtomicBool,
+    waker: std::sync::Mutex<Option<std::task::Waker>>,
+}
+
+/// @emoji 🔐️ One document's cross-process writer fence: a renewed lease, then an in-flight release, then terminal.
+enum Neo4jWalWriterGuard {
+    Held { lease: Neo4jWalWriterLease, graph: Graph, document: String, backend: DbIoBackendControl, renewal: DbIoDriverPeriodic },
+    Unlocking(Arc<Neo4jWalWriterUnlock>),
+    Terminal,
+}
+
+impl WalWriterGuard for Neo4jWalWriterGuard {
+    fn close_step(&mut self) -> Result<bool, DbError> {
+        match std::mem::replace(self, Self::Terminal) {
+            Self::Held { lease, graph, document, backend, renewal } => {
+                drop(renewal);
+                let unlock = Arc::new(Neo4jWalWriterUnlock { done: std::sync::atomic::AtomicBool::new(false), waker: std::sync::Mutex::new(None) });
+                let signal = unlock.clone();
+                drop(crate::db_storage_driver_runtime::detach_unit(Box::pin(async move {
+                    let _ = graph.run(lease.query(CYPHER_WAL_WRITER_RELEASE, &document)).await;
+                    signal.done.store(true, std::sync::atomic::Ordering::Release);
+                    if let Some(waker) = signal.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                        waker.wake();
+                    }
+                    release::request_controller(backend);
+                })));
+                *self = Self::Unlocking(unlock);
+                Ok(true)
+            }
+            Self::Unlocking(unlock) if !unlock.done.load(std::sync::atomic::Ordering::Acquire) => {
+                *self = Self::Unlocking(unlock);
+                Ok(true)
+            }
+            Self::Unlocking(_) | Self::Terminal => Ok(false),
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        matches!(self, Self::Terminal)
+    }
+
+    fn awaiting_wake(&self) -> bool {
+        matches!(self, Self::Unlocking(unlock) if !unlock.done.load(std::sync::atomic::Ordering::Acquire))
+    }
+
+    fn register_wake(&self, waker: &std::task::Waker) {
+        if let Self::Unlocking(unlock) = self {
+            *unlock.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(waker.clone());
+            if unlock.done.load(std::sync::atomic::Ordering::Acquire) {
+                waker.wake_by_ref();
+            }
+        }
+    }
+}
+//#endregion 🔖️WriterFence
+
 //#region 🔖️Neo4jStorage
 /// @emoji 🕸️ `DbStorage` over a live Neo4j server — see module doc for the schema shape, the
-/// async-first `DbFuture` boundary, and the documented cross-process concurrency extension seam.
+/// async-first `DbFuture` boundary, and the lease-node WAL writer fence.
 struct Neo4jDbIoExecutor {
     graph: Option<Graph>,
     config: Option<neo4rs::Config>,
     uri: DbIoText,
+    writers: std::sync::Mutex<Option<Box<WalWriterTable<Neo4jWalWriterGuard>>>>,
     backend_terminal: std::sync::atomic::AtomicBool,
     active_operation: u64,
 }
 
 impl Neo4jDbIoExecutor {
     fn new(config: neo4rs::Config, uri: DbIoText) -> Self {
-        Self { graph: None, config: Some(config), uri, backend_terminal: std::sync::atomic::AtomicBool::new(false), active_operation: 0 }
+        Self {
+            graph: None,
+            config: Some(config),
+            uri,
+            writers: std::sync::Mutex::new(Some(Box::new(WalWriterTable::unbound()))),
+            backend_terminal: std::sync::atomic::AtomicBool::new(false),
+            active_operation: 0,
+        }
+    }
+
+    fn writer_table(&mut self) -> Result<&mut WalWriterTable<Neo4jWalWriterGuard>, DbError> {
+        self.writers.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut().ok_or(DbError::Closed)
     }
 
     fn graph(&self) -> Result<&Graph, DbError> {
@@ -401,11 +568,24 @@ impl Neo4jDbIoExecutor {
 
 //#region 🔖️WalStorage
 impl Neo4jDbIoExecutor {
-    async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+    /// @emoji 🛡️ Proves, inside the mutation's own transaction, that `lease` still owns the document.
+    async fn prove_lease(txn: &mut Txn, lease: &Neo4jWalWriterLease, document: &str, generation: u64) -> Result<(), DbError> {
+        let mut stream = txn.execute(lease.query(CYPHER_WAL_WRITER_FENCE, document)).await.map_err(map_neo4rs_error)?;
+        let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
+        while stream.next(txn.handle()).await.map_err(map_neo4rs_error)?.is_some() {}
+        let Some(row) = row else { return Err(DbError::Fenced { expected: 0, actual: generation }) };
+        if row.get::<bool>("owned").map_err(map_de_error)? {
+            return Ok(());
+        }
+        let token: i64 = row.get("token").map_err(map_de_error)?;
+        Err(DbError::Fenced { expected: i64_to_u64(token, "wal writer token")?, actual: i64_to_u64(lease.token, "wal writer token")? })
+    }
+
+    async fn create_segment(txn: &mut Txn, document: &str, index: u64) -> Result<(), DbError> {
         let idx = u64_to_i64(index, "wal segment index")?;
-        let row = self.fetch_one(query(CYPHER_WAL_CREATE_SEGMENT).param("document", document.0.clone()).param("index", idx)).await?;
-        // 🎯️ `MERGE` always yields exactly one row; an empty stream here means the driver
-        // silently dropped the result, which is this process's bug, not the caller's.
+        let mut stream = txn.execute(query(CYPHER_WAL_CREATE_SEGMENT).param("document", document.to_string()).param("index", idx).param("empty", Vec::<u8>::new())).await.map_err(map_neo4rs_error)?;
+        let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
+        while stream.next(txn.handle()).await.map_err(map_neo4rs_error)?.is_some() {}
         let fresh: bool = row.ok_or_else(|| DbError::Internal("wal create_segment returned no row".to_string()))?.get("fresh").map_err(map_de_error)?;
         if !fresh {
             return Err(DbError::AlreadyExists(format!("wal segment {index} for {document} already exists")));
@@ -413,13 +593,12 @@ impl Neo4jDbIoExecutor {
         Ok(())
     }
 
-    async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
+    async fn append(&self, txn: &mut Txn, document: &str, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
         check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "wal_storage::append")?;
         let prepared = db_io_prepare_platform(&bytes)?.await?;
         let idx = u64_to_i64(index, "wal segment index")?;
         let mut current_reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
-        let mut txn = self.graph()?.start_txn().await.map_err(map_neo4rs_error)?;
-        let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await.map_err(map_neo4rs_error)?;
+        let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.to_string()).param("index", idx)).await.map_err(map_neo4rs_error)?;
         let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
         let Some(row) = row else {
             return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
@@ -437,7 +616,7 @@ impl Neo4jDbIoExecutor {
         check_len(new_len as u64, DB_IO_MAX_READ_BYTES, "wal_storage::append result")?;
         let combined = db_io_prepare_platform_slices(self.active_operation, current.as_slice()?, prepared.as_slice()).await?;
         let write = txn
-            .run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", combined.as_static_driver_slice().to_vec()).param("len", u64_to_i64(new_len as u64, "wal segment length")?))
+            .run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.to_string()).param("index", idx).param("bytes", combined.as_static_driver_slice().to_vec()).param("len", u64_to_i64(new_len as u64, "wal segment length")?))
             .await
             .map_err(map_neo4rs_error);
         while !current.terminal_is_empty() {
@@ -448,21 +627,14 @@ impl Neo4jDbIoExecutor {
         db_io_close_platform(combined).await?;
         db_io_close_platform(prepared).await?;
         write?;
-        txn.commit().await.map_err(map_neo4rs_error)?;
         Ok(new_len as u64)
     }
 
-    async fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
-        // 🎯️ See module doc's "Durability" section: every prior `append`/`seal` already committed
-        // server-side, so there is nothing left to force for any `DurabilityClass`.
-        {
-            Ok(())
-        }
-    }
-
-    async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+    async fn seal(txn: &mut Txn, document: &str, index: u64) -> Result<(), DbError> {
         let idx = u64_to_i64(index, "wal segment index")?;
-        let row = self.fetch_one(query(CYPHER_WAL_SEAL).param("document", document.0.clone()).param("index", idx)).await?;
+        let mut stream = txn.execute(query(CYPHER_WAL_SEAL).param("document", document.to_string()).param("index", idx)).await.map_err(map_neo4rs_error)?;
+        let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
+        while stream.next(txn.handle()).await.map_err(map_neo4rs_error)?.is_some() {}
         row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         Ok(())
     }
@@ -504,11 +676,10 @@ impl Neo4jDbIoExecutor {
         Ok(out)
     }
 
-    async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
+    async fn truncate_tail(&self, txn: &mut Txn, document: &str, index: u64, new_len: u64) -> Result<(), DbError> {
         let idx = u64_to_i64(index, "wal segment index")?;
         let mut current_reservation = self.reserve_driver_read(DB_IO_MAX_READ_BYTES)?;
-        let mut txn = self.graph()?.start_txn().await.map_err(map_neo4rs_error)?;
-        let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await.map_err(map_neo4rs_error)?;
+        let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.to_string()).param("index", idx)).await.map_err(map_neo4rs_error)?;
         let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
         let Some(row) = row else {
             return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
@@ -527,7 +698,7 @@ impl Neo4jDbIoExecutor {
         }
         let truncated = db_io_prepare_platform_slices(self.active_operation, &current.as_slice()?[..new_len as usize], &[]).await?;
         let write = txn
-            .run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", truncated.as_static_driver_slice().to_vec()).param("len", u64_to_i64(new_len, "wal segment length")?))
+            .run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.to_string()).param("index", idx).param("bytes", truncated.as_static_driver_slice().to_vec()).param("len", u64_to_i64(new_len, "wal segment length")?))
             .await
             .map_err(map_neo4rs_error);
         while !current.terminal_is_empty() {
@@ -536,20 +707,59 @@ impl Neo4jDbIoExecutor {
         }
         current_reservation.close_step()?;
         db_io_close_platform(truncated).await?;
-        write?;
-        txn.commit().await.map_err(map_neo4rs_error)?;
-        Ok(())
+        write
     }
 
-    async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+    async fn delete_segment(txn: &mut Txn, document: &str, index: u64) -> Result<(), DbError> {
         let idx = u64_to_i64(index, "wal segment index")?;
-        self.run(query(CYPHER_WAL_DELETE_SEGMENT).param("document", document.0.clone()).param("index", idx)).await
+        txn.run(query(CYPHER_WAL_DELETE_SEGMENT).param("document", document.to_string()).param("index", idx)).await.map_err(map_neo4rs_error)
+    }
+
+    /// @emoji 🔐️ Runs one pinned WAL mutation (sync included, as the ownership barrier) in a
+    /// transaction whose first statement proves the permit's lease; any failure rolls it back.
+    async fn fenced_wal_mutation(&mut self, operation: u64, task: &mut DbIoTask) -> Result<DbIoResult, DbError> {
+        let (key, backend, document) = task.writer_stamp().map(|(key, backend, document)| (key, backend, document.clone())).ok_or_else(|| DbError::Internal("Neo4j WAL mutation lost its writer stamp".to_string()))?;
+        let lease = match self.writer_table()?.pinned_guard_mut(key, backend, &document, operation)? {
+            Neo4jWalWriterGuard::Held { lease, .. } => lease.clone(),
+            _ => return Err(DbError::Closed),
+        };
+        let mut txn = self.graph()?.start_txn().await.map_err(map_neo4rs_error)?;
+        let document = document.as_str();
+        let result = match Self::prove_lease(&mut txn, &lease, document, key.generation()).await {
+            Err(error) => Err(error),
+            Ok(()) => match task {
+                DbIoTask::WalCreate { index, .. } => Self::create_segment(&mut txn, document, *index).await.map(|()| DbIoResult::Unit),
+                DbIoTask::WalAppend { index, input, .. } => {
+                    let input = input.take_for_async_driver();
+                    self.append(&mut txn, document, *index, input).await.map(DbIoResult::Length)
+                }
+                DbIoTask::WalSync { .. } => Ok(DbIoResult::Unit),
+                DbIoTask::WalSeal { index, .. } => Self::seal(&mut txn, document, *index).await.map(|()| DbIoResult::Unit),
+                DbIoTask::WalTruncate { index, new_len, .. } => self.truncate_tail(&mut txn, document, *index, *new_len).await.map(|()| DbIoResult::Unit),
+                DbIoTask::WalDelete { index, .. } => Self::delete_segment(&mut txn, document, *index).await.map(|()| DbIoResult::Unit),
+                _ => Err(DbError::Internal("Neo4j fenced WAL mutation taxonomy".to_string())),
+            },
+        };
+        match result {
+            Ok(value) => {
+                txn.commit().await.map_err(map_neo4rs_error)?;
+                Ok(value)
+            }
+            Err(error) => {
+                let _ = txn.rollback().await;
+                Err(error)
+            }
+        }
     }
 }
 //#endregion 🔖️WalStorage
 
 //#region 🔖️SnapshotStorage
 impl SnapshotStorage for Neo4jDbIoExecutor {
+    fn publication_scope(&self) -> usize {
+        std::ptr::from_ref(self).addr()
+    }
+
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         check_len(bytes.len() as u64, DB_IO_MAX_READ_BYTES, "snapshot_storage::write_generation")?;
         let generation_param = u64_to_i64(generation, "snapshot generation")?;
@@ -858,7 +1068,15 @@ impl Neo4jDbIoExecutor {
     async fn drive_task(&mut self, operation: u64, task: &mut DbIoTask) -> Result<DbIoResult, DbError> {
         self.active_operation = operation;
         match task {
-            DbIoTask::WalWriterAcquire { .. } => Err(DbError::Unavailable("Neo4j has no mounted session-scoped WAL writer fence".to_string())),
+            DbIoTask::WalWriterAcquire { backend, document } => {
+                let graph = self.graph()?.clone();
+                let lease = Neo4jWalWriterLease::claim(&graph, document.as_str()).await?;
+                let renewal = lease.renew_periodically(graph.clone(), document.as_str().to_string());
+                let backend = *backend;
+                let held = Neo4jWalWriterGuard::Held { lease, graph, document: document.as_str().to_string(), backend, renewal };
+                let permit = self.writer_table()?.acquire_with(document, move || Ok(held))?;
+                Ok(DbIoResult::WalWriter(permit))
+            }
             DbIoTask::BackendOpen { path, .. } => {
                 if path.as_str() != self.uri.as_str() {
                     return Err(DbError::InvalidArgument("Neo4j URI authority mismatch".to_string()));
@@ -868,9 +1086,7 @@ impl Neo4jDbIoExecutor {
                 self.bootstrap_schema().await?;
                 Ok(DbIoResult::Unit)
             }
-            DbIoTask::WalCreate { .. } | DbIoTask::WalAppend { .. } | DbIoTask::WalSync { .. } | DbIoTask::WalSeal { .. } | DbIoTask::WalTruncate { .. } | DbIoTask::WalDelete { .. } => {
-                Err(DbError::Unavailable("remote WAL mutation requires a mounted session-scoped writer fence".to_string()))
-            }
+            DbIoTask::WalCreate { .. } | DbIoTask::WalAppend { .. } | DbIoTask::WalSync { .. } | DbIoTask::WalSeal { .. } | DbIoTask::WalTruncate { .. } | DbIoTask::WalDelete { .. } => self.fenced_wal_mutation(operation, task).await,
             DbIoTask::WalRead { document, index, range, output, .. } => Ok(DbIoResult::Pages(self.wal_read_into(document.as_str(), *index, *range, output).await?)),
             DbIoTask::WalLength { document, index, .. } => Ok(DbIoResult::Length(with_admitted_artifact!(operation, document, artifact, self.segment_len(artifact, *index))?)),
             DbIoTask::WalState { document, index, .. } => Ok(DbIoResult::WalSegmentState(with_admitted_artifact!(operation, document, artifact, self.segment_state(artifact, *index))?)),
@@ -942,6 +1158,29 @@ impl Neo4jDbIoExecutor {
 }
 
 impl DbIoTaskExecutor for Neo4jDbIoExecutor {
+    fn supports_writer_authority(&self) -> bool {
+        true
+    }
+    fn bind_writer_control(&mut self, control: DbIoBackendControl) -> Result<(), DbError> {
+        self.writer_table()?.bind(control)
+    }
+    fn writer_release_step(&self, _context: &mut std::task::Context<'_>) -> Result<DbIoWriterReleaseStep, DbError> {
+        self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut().map_or(Ok(DbIoWriterReleaseStep::Idle), WalWriterTable::release_requested_step)
+    }
+    fn pin_writer_operation(&self, operation: u64, task: &DbIoTask) -> Result<(), DbError> {
+        let Some((key, backend, document)) = task.writer_stamp() else { return Ok(()) };
+        self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut().ok_or(DbError::Closed)?.pin_operation(key, backend, document, operation).map(|_| ())
+    }
+    fn finish_writer_operation(&self, operation: u64, task: &DbIoTask) -> Result<(), DbError> {
+        let Some((key, backend, document)) = task.writer_stamp() else { return Ok(()) };
+        if let Some(table) = self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut() {
+            table.finish_operation_if_pinned(key, backend, document, operation)?;
+        }
+        Ok(())
+    }
+    fn owner_backing_bytes(&self) -> u64 {
+        (size_of::<Self>() + size_of::<WalWriterTable<Neo4jWalWriterGuard>>()) as u64
+    }
     fn mode(&self) -> DbIoExecutorMode {
         DbIoExecutorMode::AsyncNative
     }
@@ -966,7 +1205,21 @@ impl DbIoTaskExecutor for Neo4jDbIoExecutor {
     fn close_operation_step(&self, _operation: u64, _task: &DbIoTask) -> Result<bool, DbError> {
         Ok(true)
     }
-    fn close_backend_step(&mut self, _context: &mut std::task::Context<'_>) -> Result<bool, DbError> {
+    fn close_backend_step(&mut self, context: &mut std::task::Context<'_>) -> Result<bool, DbError> {
+        {
+            let mut owner = self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(table) = owner.as_deref_mut() {
+                table.register_wake(context.waker());
+                if table.close_step()? {
+                    return Ok(false);
+                }
+                if !table.terminal_is_empty() {
+                    return Err(DbError::Internal("Neo4j WAL writer table returned a false terminal witness".to_string()));
+                }
+                owner.take();
+                return Ok(false);
+            }
+        }
         if self.graph.take().is_some() {
             return Ok(false);
         }
@@ -975,7 +1228,7 @@ impl DbIoTaskExecutor for Neo4jDbIoExecutor {
         Ok(true)
     }
     fn backend_terminal_is_empty(&self) -> bool {
-        self.backend_terminal.load(std::sync::atomic::Ordering::Acquire) && self.graph.is_none() && self.config.is_none()
+        self.backend_terminal.load(std::sync::atomic::Ordering::Acquire) && self.graph.is_none() && self.config.is_none() && self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
     }
 }
 //#endregion 🔖️TypedExecutor
@@ -1115,6 +1368,10 @@ impl WalStorage for Neo4jStorage {
 }
 
 impl SnapshotStorage for Neo4jStorage {
+    fn publication_scope(&self) -> usize {
+        std::ptr::from_ref(self).addr()
+    }
+
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         neo4j_unit(self.execute(DbIoTask::SnapshotWrite { backend: self.control, document: neo4j_document(document)?, generation, input: bytes }).await?)
     }

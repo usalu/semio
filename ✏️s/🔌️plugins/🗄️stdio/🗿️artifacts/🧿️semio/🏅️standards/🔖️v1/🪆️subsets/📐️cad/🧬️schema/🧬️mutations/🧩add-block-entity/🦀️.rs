@@ -9,8 +9,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct AddBlockEntity {
-    pub(crate) block_name: String,
-    pub(crate) entity: CadEntityRecord,
+    pub block_name: String,
+    pub entity: CadEntityRecord,
 }
 
 impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for AddBlockEntity {

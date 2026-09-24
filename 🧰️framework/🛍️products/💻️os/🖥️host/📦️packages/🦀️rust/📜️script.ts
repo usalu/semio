@@ -1129,7 +1129,7 @@ class CheckScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
+    const { rest } = resolveTestLevel(segments, "quick");
     if (rest[0] === "rust") {
       runCargo(["test", "--manifest-path", "Cargo.toml", ...rest.slice(1)], this.root);
       return;

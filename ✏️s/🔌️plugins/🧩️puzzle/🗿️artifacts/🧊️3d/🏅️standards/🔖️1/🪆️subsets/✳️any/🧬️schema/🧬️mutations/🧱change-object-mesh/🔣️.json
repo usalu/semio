@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeObjectMesh",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-object-mesh",
-  "binaryTag": null,
+  "binaryTag": 5,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -11,7 +11,7 @@ identifier, and a total counted before truncation.
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
-`🧪️test` harness; no third-party engine implements this ranking function, so `🔮️oracle/🔣️.json`
+`🧪️test` harness; no third-party engine implements this ranking function, so `🔮️oracles/🔣️.json`
 registers a TypeScript reference implementation alongside the recorded no-oracle decision.
 
 `🔍️ranked-search`.

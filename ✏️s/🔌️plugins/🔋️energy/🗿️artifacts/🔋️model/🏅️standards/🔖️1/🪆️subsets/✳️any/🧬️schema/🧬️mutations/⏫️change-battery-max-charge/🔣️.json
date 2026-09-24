@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeBatteryMaxCharge",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-battery-max-charge",
-  "binaryTag": null,
+  "binaryTag": 210,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

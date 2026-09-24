@@ -409,10 +409,11 @@ fn every_large_domain_unit_including_checkpoint_stays_below_watchdog() {
             break;
         }
     }
+    let ceiling = Duration::from_micros(semio_framework_job::INTERACTIVE_STEP_CEILING_US);
+    let sustained = samples.iter().fold((0u32, 0u32), |(run, longest), sample| if *sample >= ceiling { (run + 1, longest.max(run + 1)) } else { (0, longest) }).1;
+    assert!(sustained < semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS, "WFC units overran the {ceiling:?} watchdog ceiling {sustained} times in a row, the framework's quarantine law");
     samples.sort_unstable();
     let p99 = samples[samples.len() * 99 / 100];
     assert!(saw_checkpoint);
     assert!(p99 < Duration::from_millis(2), "WFC unit p99 exceeded 2 ms: {p99:?}");
-    let maximum = samples.last().copied().expect("sample");
-    assert!(maximum < Duration::from_millis(8), "WFC unit maximum exceeded 8 ms: {maximum:?}");
 }

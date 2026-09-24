@@ -281,18 +281,6 @@ pub mod standards {
                                         }
                                     }
                                 }
-                                #[path = "."]
-                                pub mod xml {
-                                    #[path = "."]
-                                    pub mod v1_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰️xml/🔖️1.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
                             }
                         }
                     }
@@ -309,18 +297,6 @@ pub mod standards {
                                         #[path = "."]
                                         pub mod any {
                                             #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod xml {
-                                    #[path = "."]
-                                    pub mod v1_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰️xml/🔖️1.0/✳️any/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }

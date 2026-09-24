@@ -7,7 +7,7 @@
   "aggregateVariant": "MoveBlock",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "move-block",
-  "binaryTag": null,
+  "binaryTag": 5,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

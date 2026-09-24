@@ -5,14 +5,31 @@ schema s.stdio.semio.graph
 start body
 framing record
 
-# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM graph wave: real binary op frame. `format u8`
-# (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioGraphMutation` variant ordinal,
-# `../💾️binary/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`, 0-10 matching
-# `parse_graph_mutation`'s keyword match) as two REAL fixed fields, then the variant's own argument
-# payload as one opaque trailing `bytes` chain — the same honest boundary the sibling
-# `../../🔺️diff/💾️binary/📡️.protocol.semio` uses.
+# Real `SemioGraphMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record create-node tag=0
+field payload bytes
+record delete-node tag=1
+field payload bytes
+record change-node-kind tag=2
+field payload bytes
+record change-node-label tag=3
+field payload bytes
+record move-node tag=4
+field payload bytes
+record add-node-port tag=5
+field payload bytes
+record remove-node-port tag=6
+field payload bytes
+record add-node-property tag=7
+field payload bytes
+record remove-node-property tag=8
+field payload bytes
+record create-edge tag=9
+field payload bytes
+record delete-edge tag=10
+field payload bytes

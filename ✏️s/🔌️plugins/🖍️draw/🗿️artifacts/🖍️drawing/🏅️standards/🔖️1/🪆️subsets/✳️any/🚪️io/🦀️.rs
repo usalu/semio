@@ -199,17 +199,12 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             .get_or_init(|| {
                 vec![
                     serializer_entry::<DrawingSnapshot, export::svg::v1_1::any::DrawingIntoSvg>(DRAWING_DIALECT),
-                    deserializer_entry::<DrawingSnapshot, import::svg::v1_1::any::SvgIntoDraw>(DRAWING_DIALECT),
                     serializer_entry::<DrawingSnapshot, export::pdf::v1_4::any::DrawingIntoPdf>(DRAWING_DIALECT),
-                    deserializer_entry::<DrawingSnapshot, import::pdf::v1_4::any::PdfIntoDraw>(DRAWING_DIALECT),
                     serializer_entry::<DrawingSnapshot, export::png::v1_2::any::DrawingIntoPng>(DRAWING_DIALECT),
-                    deserializer_entry::<DrawingSnapshot, import::png::v1_2::any::PngIntoDraw>(DRAWING_DIALECT),
                     serializer_entry::<DrawingSnapshot, export::json::v_rfc8259::any::DrawingIntoJson>(DRAWING_DIALECT),
                     deserializer_entry::<DrawingSnapshot, import::json::v_rfc8259::any::JsonIntoDraw>(DRAWING_DIALECT),
                     serializer_entry::<DrawingSnapshot, export::dwg::v_ac1018::any::DrawingIntoDwg>(DRAWING_DIALECT),
-                    deserializer_entry::<DrawingSnapshot, import::dwg::v_ac1018::any::DwgIntoDraw>(DRAWING_DIALECT),
                     serializer_entry::<DrawingSnapshot, export::dxf::v_r12::any::DrawingIntoDxf>(DRAWING_DIALECT),
-                    deserializer_entry::<DrawingSnapshot, import::dxf::v_r12::any::DxfIntoDraw>(DRAWING_DIALECT),
                 ]
             })
             .as_slice()

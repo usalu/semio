@@ -7,7 +7,7 @@
   "aggregateVariant": "ConnectHandles",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "connect-handles",
-  "binaryTag": null,
+  "binaryTag": 15,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -22,6 +22,7 @@
 use super::command_registry_tests::test_app;
 use super::*;
 use semio_framework::manifest::Keybinding;
+use ui_wgpu::wgpu::InputState;
 
 //#region ⌨️InertProbeChords
 
@@ -236,7 +237,7 @@ fn picking_an_example_row_selects_it_and_dispatches_set_active_example() {
     let mut shell = shell_with_keybindings(Vec::new());
     shell.overlay_state = OverlayState::Dropdown("example".into());
     let row = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some("shell.example.nakagin".into()), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None };
-    let dispatched = semio_framework_async::block_on(shell.handle_shell_hit(&row));
+    let dispatched = semio_framework_async::block_on(shell.handle_shell_hit(&row, &InputState::<ActionDescriptor>::default()));
     assert_eq!(dispatched.err().as_deref(), Some(NO_PROGRAM), "the row dispatched `setActiveExample` all the way to the guest hop this fixture has no program for");
     assert_eq!(shell.active_example_id.as_deref(), Some("nakagin"), "the picker's own selection follows the click");
     assert_eq!(shell.overlay_state, OverlayState::None, "…and the dropdown closes behind it");

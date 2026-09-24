@@ -26,7 +26,7 @@ Feature: Quadrant matrices and viz tables place their cells by the rules their p
   @level-long
   @mode-differential
   Scenario: A two-by-two matrix is an unpadded band scale per axis
-    Given the committed probe document local://quadrant.tex and the frame
+    Given the committed probe document shared://🔲️charts-quadrant-table/quadrant.tex and the frame
       | width | height | cells |
       | 40    | 40     | 2     |
     Then the compiled probe and the reference implementation agree on every quadrant rectangle
@@ -35,7 +35,7 @@ Feature: Quadrant matrices and viz tables place their cells by the rules their p
   @level-long
   @mode-differential
   Scenario: The cells key turns the same matrix into a nine-box risk grid
-    Given the committed probe document local://risk.tex and the frame
+    Given the committed probe document shared://🔲️charts-quadrant-table/risk.tex and the frame
       | width | height | cells |
       | 45    | 45     | 3     |
     Then the compiled probe and the reference implementation agree on every quadrant rectangle
@@ -44,7 +44,7 @@ Feature: Quadrant matrices and viz tables place their cells by the rules their p
   @level-long
   @mode-conformance
   Scenario: A plain table stacks its header, rule and body rows by the row height
-    Given the committed probe document local://table.tex
+    Given the committed probe document shared://🔲️charts-quadrant-table/table.tex
     Then the compiled probe reports the specified anchors
       | key        | x    | y    |
       | header-1   | 0    | 40   |
@@ -63,7 +63,7 @@ Feature: Quadrant matrices and viz tables place their cells by the rules their p
   @level-long
   @mode-conformance
   Scenario: An in-cell bar is the value's share of its own column range
-    Given the committed probe document local://table-bars.tex
+    Given the committed probe document shared://🔲️charts-quadrant-table/table-bars.tex
     Then the compiled probe reports the specified bars
       | x  | y    | w       | h   |
       | 20 | 31.1 | 6.2     | 2.2 |

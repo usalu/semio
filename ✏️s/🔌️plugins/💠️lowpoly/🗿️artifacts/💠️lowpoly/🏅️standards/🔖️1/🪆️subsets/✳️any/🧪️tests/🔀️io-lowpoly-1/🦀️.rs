@@ -10,15 +10,9 @@
 //! this subset's own plugin crate directly (it must, to reach `serialize_bytes`/`deserialize_bytes`),
 //! unlike `💠️mutate-lowpoly-1`, which replays committed vectors without linking it.
 //!
-//! Four of the eight declared formats — `dwg`, `gltf`, `las`, `stl` — are committed, HONEST stubs:
-//! `LowpolyObject.mesh` is a content-addressed handle
-//! (`store::ArtifactChild<SemioMeshSnapshot>`), never embedded geometry, so a synchronous
-//! `&LowpolySnapshot -> …` serializer genuinely cannot reach real mesh vertices for those four
-//! formats. Their own leaf doc comments (`../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/…`) name the
-//! exact reason, and the production crate's own `unimplemented_geometry_formats_error_honestly_instead_of_lying`
-//! unit test (`../../🚪️io/🦀️.rs`) already asserts `serialize_bytes` returns `Err` for all four —
-//! this case asserts that SAME explicit error rather than a round trip for those four rows; the other
-//! four (`json`, `obj`, `ply`, `txt`) still exercise the real round trip.
+//! All eight declared non-PNG formats round-trip the committed document unchanged. Mesh-bearing
+//! formats (`dwg`, `gltf`, `las`, `stl`, `obj`, `ply`) resolve `mesh_content` through
+//! `io::mesh_geometry` and embed the canonical DSL for lossless re-import.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
@@ -27,11 +21,8 @@ use semio_repo_test_host::{Adapter, Context, Outcome};
 /// `📷️io-lowpoly-png-1` Pillow case.
 const FORMATS: &[&str] = &["dwg", "gltf", "json", "las", "obj", "ply", "stl", "txt"];
 
-/// 🚫️ The four formats whose exporter is a committed, HONEST stub: `LowpolyObject.mesh` is a
-/// content-addressed handle, never embedded geometry, so `serialize_bytes` unconditionally returns
-/// `Err` for these — see the module doc comment and each leaf's own doc comment.
-const STUB_FORMATS: &[&str] = &["dwg", "gltf", "las", "stl"];
-//#endregion 🔖️Vocabulary
+const STUB_FORMATS: &[&str] = &[];
+//#endregion Vocabulary
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]

@@ -17,7 +17,7 @@ Feature: The bin transform lays out the bins d3-array's bin lays out
   @level-quick
   @mode-differential
   Scenario: Without a threshold option the bin count follows Sturges' rule
-    Given the committed probe document local://transform-bin.tex and the sample
+    Given the committed probe document shared://🪣️transform-bin/transform-bin.tex and the sample
       | table             | column | thresholds |
       | demo-distribution | value  | sturges    |
     Then the compiled probe and the reference implementation agree on every edge and count
@@ -26,7 +26,7 @@ Feature: The bin transform lays out the bins d3-array's bin lays out
   @level-quick
   @mode-differential
   Scenario: A requested count of five produces the niced bins d3 produces
-    Given the committed probe document local://transform-bin.tex and the sample
+    Given the committed probe document shared://🪣️transform-bin/transform-bin.tex and the sample
       | table             | column | thresholds |
       | demo-distribution | value  | count:5    |
     Then the compiled probe and the reference implementation agree on every edge and count
@@ -35,7 +35,7 @@ Feature: The bin transform lays out the bins d3-array's bin lays out
   @level-quick
   @mode-differential
   Scenario: A requested count of twenty produces half-unit bins
-    Given the committed probe document local://transform-bin.tex and the sample
+    Given the committed probe document shared://🪣️transform-bin/transform-bin.tex and the sample
       | table             | column | thresholds |
       | demo-distribution | value  | count:20   |
     Then the compiled probe and the reference implementation agree on every edge and count
@@ -44,7 +44,7 @@ Feature: The bin transform lays out the bins d3-array's bin lays out
   @level-quick
   @mode-differential
   Scenario: An explicit threshold list keeps the data extent as the outer edges
-    Given the committed probe document local://transform-bin.tex and the sample
+    Given the committed probe document shared://🪣️transform-bin/transform-bin.tex and the sample
       | table             | column | thresholds |
       | demo-distribution | value  | 4;6;8      |
     Then the compiled probe and the reference implementation agree on every edge and count

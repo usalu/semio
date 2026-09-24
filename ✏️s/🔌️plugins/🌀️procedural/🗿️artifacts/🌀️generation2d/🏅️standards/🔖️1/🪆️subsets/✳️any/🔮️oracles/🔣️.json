@@ -202,9 +202,9 @@
           ]
         },
         {
-          "mutationId": "set-camera",
-          "sourceMutationDirectoryName": "🎛️set-camera",
-          "mutationDirectoryName": "🎛️set-camera",
+          "mutationId": "update-camera",
+          "sourceMutationDirectoryName": "🎛️update-camera",
+          "mutationDirectoryName": "🎛️update-camera",
           "scenarios": [
             {
               "id": "pans-and-zooms-the-graph-camera",
@@ -565,7 +565,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "generation2d-carrier",
-      "notes": "Copied verbatim from this subset's own already-committed, already-correct physical vector at 🧬️mutations/🎛️set-camera/🧪️tests/pans-and-zooms-the-graph-camera (a real pan+zoom of the graph camera) — that vector's own registered mutationId is a pre-existing naming bug (\"set-camera\", copied from the directory's descriptive slug) that does not match the manifest's real semanticKind/mutation id \"update-camera\" (UpdateCamera in the aggregate enum), so mutationFixtureBreaches's capability+id lookup never found it. Registering this v2 FixtureManifest under the correct mutation id closes the gap without touching the pre-existing v1 vector's physical directory (renaming it would also require rewriting 4 #[path] mounts in the shared plugin crate — out of this shard's fixture-evidence remit; flagged in the shard report instead)."
+      "notes": "Copied verbatim from this subset's own committed physical vector at 🧬️mutations/🎛️update-camera/🧪️tests/pans-and-zooms-the-graph-camera (a real pan+zoom of the graph camera)."
     }
   ]
 }

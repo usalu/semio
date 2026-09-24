@@ -216,6 +216,60 @@ fn fixture_transition(json: &serde_json::Value) -> HistoryTransition {
     }
 }
 
+/// ♻️ Language-agnostic durable collaborative redo: two authors interleave, each undoes/redoes only
+/// their own mutations, and reload/`hub-restart` steps re-fold the same event set to the same
+/// applied/redo projection (pure durability proof shared with the TypeScript runner).
+#[test]
+fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json")).expect("durable collaborative redo fixture parses");
+    assert_eq!(fixture["schema"].as_str(), Some("semio.history.durable-collaborative-redo.v1"));
+    let edits: Vec<FoldEdit> = fixture["edits"]
+        .as_array()
+        .expect("edits")
+        .iter()
+        .map(|row| FoldEdit {
+            id: row["id"].as_str().expect("edit id").into(),
+            actor: Some(row["actor"].as_str().expect("actor").into()),
+            timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().expect("logicalMs"), logical: 0 },
+            mutation_ids: row["mutationIds"].as_array().expect("mutationIds").iter().map(|id| MutationId(id.as_str().expect("mutation id").into())).collect(),
+        })
+        .collect();
+    let mut transitions: Vec<crate::causal::MutationEnvelope> = Vec::new();
+    let document = ArtifactId(fixture["documentId"].as_str().expect("documentId").into());
+    let none = none();
+    for step in fixture["steps"].as_array().expect("steps") {
+        match step["kind"].as_str().expect("kind") {
+            "revert" | "reinstate" => {
+                let mutation_ids = step["mutationIds"].as_array().expect("mutationIds").iter().map(|id| MutationId(id.as_str().expect("id").into())).collect::<Vec<_>>();
+                let transition = if step["kind"] == "revert" { HistoryTransition::Revert { mutation_ids } } else { HistoryTransition::Reinstate { mutation_ids } };
+                let actor = ActorId(step["actor"].as_str().expect("actor").into());
+                let clock = HybridLogicalTimestamp { actor: 0, physical_ms: step["logicalMs"].as_u64().expect("logicalMs"), logical: 0 };
+                let mut envelope = history_transition_envelope(&transition, &document, &actor, Vec::new(), clock);
+                if let Some(id) = step["id"].as_str() {
+                    envelope.mutation_id = MutationId(id.into());
+                }
+                transitions.push(envelope);
+            }
+            "expect" => {
+                let fold = fold_history(&edits, &transitions, &none).unwrap_or_else(|error| panic!("{}: {error:?}", step["label"].as_str().unwrap_or("expect")));
+                let applied: Vec<String> = step["expect"]["applied"].as_array().expect("applied").iter().map(|id| id.as_str().expect("id").into()).collect();
+                let redo: Vec<String> = step["expect"]["redo"].as_array().expect("redo").iter().map(|id| id.as_str().expect("id").into()).collect();
+                assert_eq!(fold.applied, applied, "{}", step["label"].as_str().unwrap_or("applied"));
+                assert_eq!(fold.redo, redo, "{}", step["label"].as_str().unwrap_or("redo"));
+            }
+            "reload" | "hub-restart" => {
+                let first = fold_history(&edits, &transitions, &none).expect("fold before restart");
+                let second = fold_history(&edits, &transitions, &none).expect("fold after restart");
+                assert_eq!(first, second, "{} must be a pure re-fold of the same event set", step["label"].as_str().unwrap_or("restart"));
+            }
+            other => panic!("unknown step kind {other}"),
+        }
+    }
+    let observations: Vec<&str> = fixture["observations"].as_array().expect("observations").iter().map(|row| row.as_str().expect("obs")).collect();
+    assert!(observations.contains(&"durable-collaborative-redo"));
+    assert!(observations.contains(&"survives-hub-restart"));
+}
+
 #[test]
 fn the_language_agnostic_fixture_matches_the_codec_byte_for_byte() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔀️history-transition-v1/🔣️.json")).expect("history transition fixture parses");

@@ -24,7 +24,7 @@ Feature: The partition layout bands and the sunburst angles follow d3-hierarchy
   @level-quick
   @mode-differential
   Scenario: Partition bands, padded bands and rounded bands match d3 partition
-    Given the committed probe document local://hierarchy-partition.tex and the partitions
+    Given the committed probe document shared://🧱️hierarchy-partition/hierarchy-partition.tex and the partitions
       | key     | width | height | padding | round |
       | plain   | 100   | 60     |         | false |
       | padded  | 100   | 60     | 1.5     | false |
@@ -35,7 +35,7 @@ Feature: The partition layout bands and the sunburst angles follow d3-hierarchy
   @level-quick
   @mode-differential
   Scenario: A partition over a full turn gives the sunburst angles and radii of d3
-    Given the committed probe document local://hierarchy-partition.tex and the polar extent
+    Given the committed probe document shared://🧱️hierarchy-partition/hierarchy-partition.tex and the polar extent
       | turn             | radius |
       | 6.28318530717958 | 24     |
     Then the compiled probe and the reference implementation agree on every value
@@ -44,7 +44,7 @@ Feature: The partition layout bands and the sunburst angles follow d3-hierarchy
   @level-quick
   @mode-differential
   Scenario: An unbalanced hierarchy gets its row count from the root height, as d3 does
-    Given the committed probe document local://hierarchy-partition.tex and the partitions
+    Given the committed probe document shared://🧱️hierarchy-partition/hierarchy-partition.tex and the partitions
       | key   | width | height |
       | plain | 80    | 50     |
     Then the compiled probe and the reference implementation agree on every value

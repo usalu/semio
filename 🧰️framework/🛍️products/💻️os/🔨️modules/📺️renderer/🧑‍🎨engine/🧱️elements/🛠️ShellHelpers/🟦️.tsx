@@ -642,10 +642,29 @@ export const PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS = 2000;
  * is precisely what the hub publishes for a lapsed lease. A rejection is the same answer as a
  * timeout: presence is not the place to surface a document fault. */
 export async function presenceEphemeralSnapshotWithinBoundV1(
-  plugin: { readonly ephemeralSnapshot?: (instanceId: number) => Promise<{ readonly presence: readonly number[] } | null> },
+  plugin: {
+    readonly ephemeralSnapshot?: (
+      instanceId: number,
+    ) => Promise<{
+      readonly presence: readonly number[];
+      readonly interaction?: readonly number[];
+      readonly activeTool?: string;
+      readonly presenceGeneration?: number;
+      readonly transientGeneration?: number;
+    } | null>;
+  },
   instanceId: number,
   deadlineMs: number = PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS,
-): Promise<{ readonly presence: readonly number[] } | undefined> {
+): Promise<
+  | {
+      readonly presence: readonly number[];
+      readonly interaction?: readonly number[];
+      readonly activeTool?: string;
+      readonly presenceGeneration?: number;
+      readonly transientGeneration?: number;
+    }
+  | undefined
+> {
   if (plugin.ephemeralSnapshot === undefined) return undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const bound = new Promise<undefined>((resolve) => {

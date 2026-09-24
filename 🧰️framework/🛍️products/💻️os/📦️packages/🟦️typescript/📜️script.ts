@@ -7,7 +7,7 @@ import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/�
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
+    const { rest } = resolveTestLevel(segments, "quick");
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }

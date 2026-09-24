@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePlantLoopSupplyTemperature",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-plant-loop-supply-temperature",
-  "binaryTag": null,
+  "binaryTag": 182,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

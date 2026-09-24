@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeFaultType",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fault-type",
-  "binaryTag": null,
+  "binaryTag": 239,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

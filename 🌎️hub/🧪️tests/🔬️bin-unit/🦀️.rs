@@ -755,6 +755,7 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
         presence_clock: None,
         session_colors: Arc::new(ShardedMap::new()),
         session_kicks: Arc::new(ShardedMap::new()),
+        socket_drain: Arc::new(HubSocketDrainV1::default()),
         socket_grants: Arc::new(SocketGrantLedgerV1::default()),
         document_open_plans: Arc::new(DocumentOpenPlanLedgerV1::default()),
         socket_binding_gates: {
@@ -841,6 +842,7 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
         presence_clock: None,
         session_colors: Arc::new(ShardedMap::new()),
         session_kicks: Arc::new(ShardedMap::new()),
+        socket_drain: Arc::new(HubSocketDrainV1::default()),
         socket_grants: Arc::new(SocketGrantLedgerV1::default()),
         document_open_plans: Arc::new(DocumentOpenPlanLedgerV1::default()),
         socket_binding_gates: {
@@ -2329,6 +2331,13 @@ fn socket_request(url: &str, grant: &str) -> tokio_tungstenite::tungstenite::htt
     request
 }
 
+fn document_socket_request(url: &str, session: &str) -> tokio_tungstenite::tungstenite::http::Request<()> {
+    let mut request = url.into_client_request().expect("document socket request");
+    request.headers_mut().insert(tokio_tungstenite::tungstenite::http::header::SEC_WEBSOCKET_PROTOCOL, format!("{SESSION_PROTOCOL_V1}, {session}").parse().expect("session protocol"));
+    request
+}
+
+
 struct TestIssuedSession {
     token: String,
     user_id: String,
@@ -2542,7 +2551,7 @@ async fn document_open_plan_authority_for_session(state: &HubState, fixture: &Do
     authority
 }
 
-async fn issue_and_exchange_document_open_plan_for_test(state: &HubState, token: &str, scope: &DocumentScope, client_instance_id: &str) -> (DocumentOpenPlanV1, SocketGrantReceiptV1) {
+async fn issue_and_exchange_document_open_plan_for_test(state: &HubState, token: &str, scope: &DocumentScope, client_instance_id: &str) -> (DocumentOpenPlanV1, DocumentSocketGrantReceiptV1) {
     let mut headers = bearer_headers(token);
     headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
     let intent = DocumentOpenIntentV1 { schema: "semio.hub.document-open-intent/v1".into(), version: 1, scope: scope.clone(), requested_surface_id: Some("surface.test.editor".into()), client_instance_id: client_instance_id.into() };
@@ -2682,7 +2691,7 @@ fn document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_r
 }
 
 #[test]
-fn document_open_plan_receipt_exchange_mints_one_exact_bounded_socket_grant() {
+fn document_open_plan_receipt_exchange_admits_one_exact_bounded_secret_free_socket_grant() {
     let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
     let authority = document_open_plan_test_authority(&fixture);
     let plans = Arc::new(DocumentOpenPlanLedgerV1::default());
@@ -2708,19 +2717,21 @@ fn document_open_plan_receipt_exchange_mints_one_exact_bounded_socket_grant() {
     assert_eq!(outcomes.iter().filter(|outcome| outcome.is_ok()).count(), 1);
     assert_eq!(outcomes.iter().filter(|outcome| matches!(outcome, Err(DocumentOpenPlanErrorCodeV1::AlreadyConsumed))).count(), 7);
     let response = outcomes.into_iter().find_map(Result::ok).expect("one socket grant response");
-    assert_eq!(response.schema, "semio.hub.socket-grant/v1");
-    assert_eq!(response.protocol, SOCKET_PROTOCOL_V1);
+    assert_eq!(response.schema, "semio.hub.document-socket-grant/v1");
+    assert_eq!(response.protocol, SESSION_PROTOCOL_V1);
     assert_eq!(response.actor_id, authority.server_actor_id);
     assert_eq!(response.expires_at_ms, i64::try_from(fixture.now_ms + 100).expect("fixture expiry"));
     let encoded_response = serde_json::to_string(&response).expect("socket grant response encodes");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded_response).expect("receipt json").as_object().expect("receipt object").keys().cloned().collect::<Vec<_>>(), ["actorId", "expiresAtMs", "protocol", "schema"]);
     assert!(!encoded_response.contains(&public.receipt));
     assert!(!encoded_response.contains(&authority.descriptor_digest_v1));
     assert!(!encoded_response.contains(&authority.package.component_sha256));
     assert!(!encoded_response.contains(&authority.scope.document_id));
     assert!(!encoded_response.contains("receipt"));
-    let socket_capability = SocketGrantCapability::parse(&response.grant).expect("socket grant parses");
+    assert!(!encoded_response.contains("socket.v1."), "a document socket grant carries no capability");
     let audience = SocketAudienceV1::Document(authority.scope.clone());
-    let pending = sockets.pending(&socket_capability, &audience, i64::try_from(fixture.now_ms + 2).expect("fixture time")).expect("exact pending document grant");
+    let pending = sockets.pending_document_binding(&audience, &authority.subject.binding(), i64::try_from(fixture.now_ms + 2).expect("fixture time")).expect("exact pending document grant");
+    assert_eq!(pending.key, SocketGrantKeyV1::CredentialBinding);
     assert_eq!(pending.actor_id, authority.server_actor_id);
     assert_eq!(pending.subject, authority.subject);
     assert_eq!(pending.document_plan.as_deref(), Some(&authority));
@@ -2729,24 +2740,29 @@ fn document_open_plan_receipt_exchange_mints_one_exact_bounded_socket_grant() {
     let plan_digest = DocumentOpenPlanCapabilityV1::parse(&public.receipt).expect("plan receipt parses").digest();
     let plan_record = plans.inner.lock().expect("plan ledger").records.get(&plan_digest).expect("plan record").clone();
     assert_eq!(plan_record.state, DocumentOpenPlanStateV1::Consumed);
-    assert_eq!(plan_record.socket_grant_selector.as_deref(), Some(socket_capability.selector()));
+    assert_eq!(plan_record.socket_grant_selector.as_deref(), Some(pending.selector.as_str()));
 
     let capacity_plans = DocumentOpenPlanLedgerV1::default();
     let capacity_sockets = SocketGrantLedgerV1::default();
     let capacity_plan = capacity_plans.issue_with_capability(authority.clone(), fixture.now_ms, fixture.now_ms + 100, DocumentOpenPlanCapabilityV1::from_secret(document_open_plan_secret(31))).expect("capacity plan");
     for _ in 0..SOCKET_GRANT_BINDING_PENDING_CAPACITY {
-        let capability = SocketGrantCapability::mint().expect("capacity socket grant");
         capacity_sockets
-            .issue(
-                &capability,
+            .admit_document(
                 SocketAudienceV1::Document(authority.scope.clone()),
                 authority.server_actor_id.clone(),
                 authority.subject.clone(),
                 i64::try_from(fixture.now_ms).expect("fixture time"),
                 i64::try_from(fixture.now_ms + 1_000).expect("fixture expiry"),
+                Arc::new(authority.clone()),
             )
             .expect("fill per-binding socket grant capacity");
     }
+    let refused_capability = SocketGrantCapability::mint().expect("refused document capability");
+    assert_eq!(
+        SocketGrantLedgerV1::default().issue(&refused_capability, SocketAudienceV1::Document(authority.scope.clone()), authority.server_actor_id.clone(), authority.subject.clone(), 1, 1_000),
+        Err(SocketGrantLedgerErrorV1::Rejected),
+        "a document audience never answers to a capability"
+    );
     assert!(matches!(capacity_plans.exchange_to_socket_grant(&capacity_plan.receipt, &authority, fixture.now_ms + 1, &capacity_sockets), Err(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)));
     let capacity_digest = DocumentOpenPlanCapabilityV1::parse(&capacity_plan.receipt).expect("capacity receipt parses").digest();
     let capacity_record = capacity_plans.inner.lock().expect("capacity plan ledger").records.get(&capacity_digest).expect("capacity plan remains").clone();
@@ -3052,7 +3068,8 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     let exchange = raw_http_request(addr, "POST", &grant_route, &headers, grant_body(&plan.receipt).as_bytes()).await;
     assert_eq!(exchange.status, 200);
     let exchange_json: serde_json::Value = serde_json::from_slice(&exchange.body).expect("exchange JSON");
-    assert_eq!(exchange_json["schema"], "semio.hub.socket-grant/v1");
+    assert_eq!(exchange_json["schema"], "semio.hub.document-socket-grant/v1");
+    assert!(exchange_json.get("grant").is_none(), "a document socket grant carries no capability");
     assert!(!String::from_utf8(exchange.body).expect("exchange UTF-8").contains(&plan.receipt));
 
     let foreign_surface = raw_http_request(addr, "POST", &plan_route, &headers, intent_body("surface.foreign", "client:foreign").as_bytes()).await;
@@ -3161,33 +3178,25 @@ async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalo
     state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
     state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
 
-    let (_, surface_grant) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:surface").await;
-    let surface_capability = SocketGrantCapability::parse(&surface_grant.grant).expect("surface grant");
-    let mut surface_headers = HeaderMap::new();
-    surface_headers.insert(axum::http::header::SEC_WEBSOCKET_PROTOCOL, format!("{SOCKET_PROTOCOL_V1}, {}", surface_grant.grant).parse().expect("surface protocol"));
-    assert!(matches!(consume_socket_grant(&state, &surface_headers, SocketAudienceV1::Document(scope.clone()), Some("surface.test.viewer")).await, Err(StatusCode::UNAUTHORIZED)));
-    assert!(state.socket_grants.pending(&surface_capability, &SocketAudienceV1::Document(scope.clone()), now_ms()).is_err(), "surface substitution terminally rejects the pending grant");
+    let (subject, _) = authenticate_document_credential(&state, &scope, &token).await.expect("document credential");
+    let audience = SocketAudienceV1::Document(scope.clone());
+    issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:surface").await;
+    assert!(matches!(consume_document_socket_grant(&state, &subject, audience.clone(), Some("surface.test.viewer")).await, Err((StatusCode::UNAUTHORIZED, _))));
+    assert!(state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).is_err(), "surface substitution terminally rejects the pending grant");
 
-    let (_, checkpoint_grant) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:checkpoint").await;
-    let checkpoint_capability = SocketGrantCapability::parse(&checkpoint_grant.grant).expect("checkpoint grant");
-    let mut checkpoint_headers = HeaderMap::new();
-    checkpoint_headers.insert(axum::http::header::SEC_WEBSOCKET_PROTOCOL, format!("{SOCKET_PROTOCOL_V1}, {}", checkpoint_grant.grant).parse().expect("checkpoint protocol"));
+    issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:checkpoint").await;
     publish_checkpoint_for_test(&state, STUDIO, &document_id).await;
-    assert!(matches!(consume_socket_grant(&state, &checkpoint_headers, SocketAudienceV1::Document(scope.clone()), Some("surface.test.editor")).await, Err(StatusCode::UNAUTHORIZED)));
-    assert!(state.socket_grants.pending(&checkpoint_capability, &SocketAudienceV1::Document(scope.clone()), now_ms()).is_err(), "revision/checkpoint change terminally rejects the pending grant");
+    assert!(matches!(consume_document_socket_grant(&state, &subject, audience.clone(), Some("surface.test.editor")).await, Err((StatusCode::UNAUTHORIZED, _))));
+    assert!(state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).is_err(), "revision/checkpoint change terminally rejects the pending grant");
 
-    let (_, catalog_grant) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:catalog").await;
-    let catalog_capability = SocketGrantCapability::parse(&catalog_grant.grant).expect("catalog grant");
-    let mut catalog_headers = HeaderMap::new();
-    catalog_headers.insert(axum::http::header::SEC_WEBSOCKET_PROTOCOL, format!("{SOCKET_PROTOCOL_V1}, {}", catalog_grant.grant).parse().expect("catalog protocol"));
+    issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:catalog").await;
     state.openable_catalog = Some(document_open_catalog_for_descriptor_with_generation(&descriptor, "77".repeat(32)));
-    assert!(matches!(consume_socket_grant(&state, &catalog_headers, SocketAudienceV1::Document(scope.clone()), Some("surface.test.editor")).await, Err(StatusCode::UNAUTHORIZED)));
-    assert!(state.socket_grants.pending(&catalog_capability, &SocketAudienceV1::Document(scope.clone()), now_ms()).is_err(), "catalog change terminally rejects the pending grant");
+    assert!(matches!(consume_document_socket_grant(&state, &subject, audience.clone(), Some("surface.test.editor")).await, Err((StatusCode::UNAUTHORIZED, _))));
+    assert!(state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).is_err(), "catalog change terminally rejects the pending grant");
 
     state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-    let (_, exact_grant) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:exact").await;
-    let exact_capability = SocketGrantCapability::parse(&exact_grant.grant).expect("exact grant");
-    let pending = state.socket_grants.pending(&exact_capability, &SocketAudienceV1::Document(scope.clone()), now_ms()).expect("exact pending grant");
+    issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:exact").await;
+    let pending = state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).expect("exact pending grant");
     let authority = pending.document_plan.as_ref().expect("retained plan authority");
     let mut hostile_descriptor = pending.clone();
     Arc::make_mut(hostile_descriptor.document_plan.as_mut().expect("descriptor authority")).descriptor_digest_v1 = "00".repeat(32);
@@ -3210,9 +3219,7 @@ async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalo
         assert_eq!(document_plan_socket_validity(&state, &hostile, Some("surface.test.editor")).await, SocketBindingValidityV1::Unauthorized, "foreign parent {field}");
     }
     assert_eq!(authority.scope, scope);
-    let mut exact_headers = HeaderMap::new();
-    exact_headers.insert(axum::http::header::SEC_WEBSOCKET_PROTOCOL, format!("{SOCKET_PROTOCOL_V1}, {}", exact_grant.grant).parse().expect("exact protocol"));
-    let admission = consume_socket_grant(&state, &exact_headers, SocketAudienceV1::Document(scope), Some("surface.test.editor")).await.expect("exact current authority consumes");
+    let admission = consume_document_socket_grant(&state, &subject, audience, Some("surface.test.editor")).await.expect("exact current authority consumes");
     assert_eq!(admission.record.document_plan.as_deref(), Some(authority.as_ref()));
     eprintln!("[DEBUG] open-plan socket full parent dialect:3 substitutions denied; exact sealed selection retained");
 }
@@ -3255,11 +3262,11 @@ async fn document_open_plan_exchange_route_is_authenticated_exact_hostile_and_si
         assert!(!encoded_success.contains(user_id));
     }
     let success_json: serde_json::Value = serde_json::from_slice(&success.body).expect("socket grant JSON");
-    assert_eq!(success_json["schema"], "semio.hub.socket-grant/v1");
-    assert_eq!(success_json["protocol"], SOCKET_PROTOCOL_V1);
+    assert_eq!(success_json["schema"], "semio.hub.document-socket-grant/v1");
+    assert_eq!(success_json["protocol"], SESSION_PROTOCOL_V1);
     assert_eq!(success_json["actorId"], authority.server_actor_id);
-    let socket_capability = SocketGrantCapability::parse(success_json["grant"].as_str().expect("socket grant")).expect("socket grant grammar");
-    let pending = state.socket_grants.pending(&socket_capability, &SocketAudienceV1::Document(scope.clone()), now_ms()).expect("route-bound pending grant");
+    assert!(success_json.get("grant").is_none(), "a document socket grant carries no capability");
+    let pending = state.socket_grants.pending_document_binding(&SocketAudienceV1::Document(scope.clone()), &authority.subject.binding(), now_ms()).expect("route-bound pending grant");
     assert_eq!(pending.subject, authority.subject);
     assert_eq!(pending.document_plan.as_deref(), Some(&authority));
 
@@ -3329,8 +3336,8 @@ async fn document_open_plan_exchange_route_is_authenticated_exact_hostile_and_si
     assert_eq!(share_response.status, 200);
     let share_json: serde_json::Value = serde_json::from_slice(&share_response.body).expect("share socket grant JSON");
     assert_eq!(share_json["actorId"], share_authority.server_actor_id);
-    let share_socket = SocketGrantCapability::parse(share_json["grant"].as_str().expect("share grant")).expect("share grant grammar");
-    let share_pending = state.socket_grants.pending(&share_socket, &SocketAudienceV1::Document(scope), now_ms()).expect("share pending grant");
+    assert!(share_json.get("grant").is_none());
+    let share_pending = state.socket_grants.pending_document_binding(&SocketAudienceV1::Document(scope), &share_authority.subject.binding(), now_ms()).expect("share pending grant");
     assert_eq!(share_pending.document_plan.as_deref(), Some(&share_authority));
     assert!(!share_pending.document_plan.as_ref().expect("share plan").grant.write);
 
@@ -3440,26 +3447,22 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
         assert_eq!(unauthorized_existing, Some(StatusCode::UNAUTHORIZED));
         assert_eq!(unauthorized_missing, unauthorized_existing, "unauthorized callers cannot enumerate descriptor existence");
         let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-a".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue document socket grant").0;
-        assert_eq!(receipt.schema, "semio.hub.socket-grant/v1");
-        assert_eq!(receipt.protocol, SOCKET_PROTOCOL_V1);
-        assert_eq!(receipt.grant.len(), 107);
-        assert!(receipt.grant.starts_with("socket.v1."));
+        assert_eq!(receipt.schema, "semio.hub.document-socket-grant/v1");
+        assert_eq!(receipt.protocol, SESSION_PROTOCOL_V1);
         assert!(receipt.actor_id.starts_with("hub.v1."));
-        assert!(!receipt.actor_id.contains(receipt.grant.rsplit('.').next().expect("secret")));
 
         let addr = spawn_server(state.clone()).await;
-        let rejected = connect_async(socket_request(&format!("ws://{addr}/spaces/{STUDIO}/documents/socket-b/socket/v1"), &receipt.grant)).await.expect_err("cross-document grant rejected");
+        let rejected = connect_async(document_socket_request(&format!("ws://{addr}/scopes/{STUDIO}%2Fsocket-b/document/ws"), &token)).await.expect_err("cross-document grant rejected");
         assert!(matches!(rejected, tokio_tungstenite::tungstenite::Error::Http(response) if response.status().as_u16() == 401));
 
-        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-a/socket/v1");
-        let (mut socket, response) = connect_async(socket_request(&url, &receipt.grant)).await.expect("upgrade socket grant");
-        assert_eq!(response.headers().get(tokio_tungstenite::tungstenite::http::header::SEC_WEBSOCKET_PROTOCOL).and_then(|value| value.to_str().ok()), Some(SOCKET_PROTOCOL_V1));
+        let url = format!("ws://{addr}/scopes/{STUDIO}%2Fsocket-a/document/ws");
+        let (mut socket, response) = connect_async(document_socket_request(&url, &token)).await.expect("upgrade socket grant");
+        assert_eq!(response.headers().get(tokio_tungstenite::tungstenite::http::header::SEC_WEBSOCKET_PROTOCOL).and_then(|value| value.to_str().ok()), Some(SESSION_PROTOCOL_V1));
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
         assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { actor, .. } if actor == receipt.actor_id));
 
-        let document = db_artifact_id(&DocumentScope::new(STUDIO, "socket-a"));
-        let mut forged = sample_envelope("forged-actor", &document).await;
+        let mut forged = sample_envelope("forged-actor", &WireArtifactId("socket-a".into())).await;
         forged.actor = ActorId("client-selected-forgery".into());
         socket.send(client_binary(&ClientFrame::Commands { batch_id: 77, envelopes: vec![forged] }, Lane::Command).await).await.expect("forged command");
         match next_server_frame(&mut socket).await {
@@ -3467,7 +3470,6 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
                 AckStage::Applied { outcome } => match outcome.as_ref() {
                     ApplyOutcome::Rejected { reason, .. } => {
                         assert_eq!(reason, "socket subject actor mismatch");
-                        assert!(!reason.contains(&receipt.grant));
                     }
                     other => panic!("forged actor was not rejected: {other:?}"),
                 },
@@ -3476,22 +3478,46 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
             other => panic!("expected forged actor ack, got {other:?}"),
         }
 
+        let mut committed = sample_envelope("committed-once", &WireArtifactId("socket-a".into())).await;
+        committed.actor = ActorId(receipt.actor_id.clone());
+        let accepted = |frame: &ServerFrame, batch: u64| matches!(frame, ServerFrame::Ack { batch_id, stages, .. } if *batch_id == batch && matches!(stages.last(), Some(AckStage::Applied { outcome }) if matches!(outcome.as_ref(), ApplyOutcome::Accepted)));
+        socket.send(client_binary(&ClientFrame::Commands { batch_id: 78, envelopes: vec![committed.clone()] }, Lane::Command).await).await.expect("first commit");
+        let ack = next_server_frame(&mut socket).await;
+        assert!(accepted(&ack, 78), "{ack:?}");
+        assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Commands { envelopes, .. } if envelopes[0].mutation_id == committed.mutation_id), "a first commit is relayed");
+        let resend_receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-a".to_string())), bearer_headers(&token), State(state.clone())).await.expect("resend grant").0;
+        assert_eq!(resend_receipt.actor_id, receipt.actor_id);
+        let (mut resend, _) = connect_async(document_socket_request(&url, &token)).await.expect("resend socket");
+        resend.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("resend hello");
+        assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Commands { envelopes, .. } if envelopes[0].mutation_id == committed.mutation_id), "the reconnect is caught up with the committed edit");
+        assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Session { .. }));
+        resend.send(client_binary(&ClientFrame::Commands { batch_id: 79, envelopes: vec![committed.clone()] }, Lane::Command).await).await.expect("resend after reconnect");
+        let ack = next_server_frame(&mut resend).await;
+        assert!(accepted(&ack, 79), "an idempotent resend after reconnect is acknowledged: {ack:?}");
+        resend.send(client_binary(&ClientFrame::PreviewPublish { key: "relay-fence".into(), seq: 79, payload: vec![] }, Lane::Preview).await).await.expect("relay fence");
+        assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Preview { key, seq: 79, .. } if key == "relay-fence"), "an idempotent resend is never relayed to peers as a new commit");
+        let committed_frontier = state.db.document(&db_artifact_id(&DocumentScope::new(STUDIO, "socket-a"))).await.expect("document handle").frontier().await.expect("frontier");
+        assert_eq!(committed_frontier.commit_seq, 1, "the resend did not commit twice");
+        resend.close(None).await.expect("close resend socket");
+
         let legacy_receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-a".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue legacy-carrier rejection grant").0;
-        let (mut legacy, _) = connect_async(socket_request(&url, &legacy_receipt.grant)).await.expect("legacy rejection socket");
+        let (mut legacy, _) = connect_async(document_socket_request(&url, &token)).await.expect("legacy rejection socket");
         legacy.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("initial socket hello");
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Commands { .. }), "a joiner behind the head is caught up before Session");
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Session { .. }));
         legacy.send(WsMessage::Binary(vec![0, 0].into())).await.expect("legacy tag-zero frame");
         assert_eq!(next_close_code(&mut legacy, false).await, 4401, "v1 rejects the legacy actor/token carrier after upgrade");
 
-        let replay = connect_async(socket_request(&url, &receipt.grant)).await.expect_err("consumed grant replay rejected");
+        let replay = connect_async(document_socket_request(&url, &token)).await.expect_err("consumed grant replay rejected");
         assert!(matches!(replay, tokio_tungstenite::tungstenite::Error::Http(response) if response.status().as_u16() == 401));
         let pending = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-a".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue pending grant").0;
         assert_eq!(pending.actor_id, receipt.actor_id, "session-derived actor is stable across grants");
 
         assert_eq!(delete_session_me(bearer_headers(&token), State(state.clone())).await, StatusCode::NO_CONTENT);
         assert_eq!(next_close_code(&mut socket, false).await, 4401, "successful durable revoke immediately invalidates a live socket");
-        let revoked_pending = connect_async(socket_request(&url, &pending.grant)).await.expect_err("pending grant invalidated by revoke");
+        let revoked_pending = connect_async(document_socket_request(&url, &token)).await.expect_err("pending grant invalidated by revoke");
         assert!(matches!(revoked_pending, tokio_tungstenite::tungstenite::Error::Http(response) if response.status().as_u16() == 401));
     });
 }
@@ -3506,8 +3532,8 @@ fn socket_grant_revoke_and_welcome_have_a_bounded_binding_linearization() {
         announce_document_for_test(&state, STUDIO, "socket-linearized").await;
         let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-linearized".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue socket grant").0;
         let addr = spawn_server(state.clone()).await;
-        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-linearized/socket/v1");
-        let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("socket upgrade");
+        let url = format!("ws://{addr}/scopes/{STUDIO}%2Fsocket-linearized/document/ws");
+        let (mut socket, _) = connect_async(document_socket_request(&url, &token)).await.expect("socket upgrade");
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
         tokio::time::timeout(std::time::Duration::from_secs(2), gate.socket_before_welcome.acquire()).await.expect("pre-welcome gate deadline").expect("pre-welcome gate");
         let mut revoke = tokio::spawn({
@@ -3535,8 +3561,8 @@ fn socket_grant_revoke_before_lag_authorization_reads_no_private_control() {
         announce_document_for_test(&state, STUDIO, "socket-lag-revoke").await;
         let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-lag-revoke".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue socket grant").0;
         let addr = spawn_server(state.clone()).await;
-        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-lag-revoke/socket/v1");
-        let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("socket upgrade");
+        let url = format!("ws://{addr}/scopes/{STUDIO}%2Fsocket-lag-revoke/document/ws");
+        let (mut socket, _) = connect_async(document_socket_request(&url, &token)).await.expect("socket upgrade");
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
         tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_before_welcome.acquire()).await.expect("pre-Welcome deadline").expect("pre-Welcome");
         live_gate.socket_welcome_release.add_permits(1);
@@ -3568,8 +3594,8 @@ fn socket_grant_revoke_before_broadcast_authorization_suppresses_frame() {
         announce_document_for_test(&state, STUDIO, "socket-broadcast-revoke").await;
         let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-broadcast-revoke".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue socket grant").0;
         let addr = spawn_server(state.clone()).await;
-        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-broadcast-revoke/socket/v1");
-        let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("socket upgrade");
+        let url = format!("ws://{addr}/scopes/{STUDIO}%2Fsocket-broadcast-revoke/document/ws");
+        let (mut socket, _) = connect_async(document_socket_request(&url, &token)).await.expect("socket upgrade");
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
         tokio::time::timeout(std::time::Duration::from_secs(2), live_gate.socket_before_welcome.acquire()).await.expect("pre-Welcome deadline").expect("pre-Welcome");
         live_gate.socket_welcome_release.add_permits(1);
@@ -3826,9 +3852,14 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
         assert_eq!(plan_b.surface.surface_id, plan_c.surface.surface_id);
         let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
         let root = format!("/spaces/{}/documents/{}", scope.space_id, scope.document_id);
-        let url = format!("ws://{addr}{root}/socket/v1?surface={}", plan_b.surface.surface_id);
-        let (mut b, _) = connect_async(socket_request(&url, &grant_b.grant)).await.expect("member document socket");
-        let (mut c, _) = connect_async(socket_request(&url, &grant_c.grant)).await.expect("observer document socket");
+        let url =         format!(
+            "ws://{addr}/scopes/{}%2F{}/document/ws?surface={}",
+            scope.space_id,
+            scope.document_id,
+            plan_b.surface.surface_id
+        );
+        let (mut b, _) = connect_async(document_socket_request(&url, &removed.token)).await.expect("member document socket");
+        let (mut c, _) = connect_async(document_socket_request(&url, &observer.token)).await.expect("observer document socket");
         b.send(client_binary(&socket_hello(), Lane::Command).await).await.unwrap();
         c.send(client_binary(&socket_hello(), Lane::Command).await).await.unwrap();
         let welcome_b = match tokio::time::timeout(SOCKET_RENDEZVOUS_HANG_GUARD, b.next()).await {
@@ -3878,8 +3909,8 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
         let exchange = directory::os_pack::json::to_json_string(&DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: plan_b.receipt.clone() });
         let denied = raw_http_request(addr, "POST", &format!("{root}/socket-grants"), &headers_b, exchange.as_bytes()).await;
         assert_recovery_denied(denied, expected);
-        assert!(connect_async(socket_request(&url, &grant_b.grant)).await.is_err(), "removed member cannot reuse its consumed grant");
-        assert!(connect_async(socket_request(&url, &pending_b.grant)).await.is_err(), "removal invalidates a previously unused member grant");
+        assert!(connect_async(document_socket_request(&url, &removed.token)).await.is_err(), "removed member cannot reuse its consumed grant");
+        assert!(connect_async(document_socket_request(&url, &removed.token)).await.is_err(), "removal invalidates a previously unused member grant");
         for route in ["execution-target/manifest", "execution-target/component", "execution-target/descriptor", "open-plan"] {
             let denied = raw_http_request(addr, "POST", &format!("{root}/{route}"), &headers_b, intent.as_bytes()).await;
             assert_recovery_denied(denied, expected);
@@ -4321,7 +4352,7 @@ async fn socket_directory_visibility_requires_membership_even_for_public_spaces(
     let audience = SocketAudienceV1::Directory { auth_session_id: session.id.clone(), authorization_generation: session.authorization_generation };
     let record = SocketGrantRecordV1 {
         selector: "visibility".into(),
-        secret_digest: [0; 32],
+        key: SocketGrantKeyV1::Capability([0; 32]),
         audience,
         actor_id: "hub.v1.visibility".into(),
         subject: SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: None, expires_at_ms: session.expires_at, session_kind: session.session_kind, device_instance_id: session.device_instance_id },
@@ -4995,8 +5026,8 @@ fn presence_normalization_socket_overwrites_identity_and_rejects_without_refresh
         let user = state.directory.get_user(&session.user_id).await.expect("user lookup").expect("user");
         let started = now_ms();
         let addr = spawn_server(state.clone()).await;
-        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/{document_id}/socket/v1?surface={}", plan.surface.surface_id);
-        let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("admitted socket");
+        let url = format!("ws://{addr}/scopes/{STUDIO}%2F{document_id}/document/ws?surface={}", plan.surface.surface_id);
+        let (mut socket, _) = connect_async(document_socket_request(&url, &token)).await.expect("admitted socket");
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("hello");
         assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
         let ServerFrame::Session { actor, color } = next_server_frame(&mut socket).await else { panic!("session frame") };
@@ -5075,16 +5106,18 @@ fn presence_lease_reconnect_rejects_old_live_refresh_and_close() {
         let (plan, first) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:presence-first").await;
         let (_, second) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:presence-second").await;
         let (_, observer_grant) = issue_and_exchange_document_open_plan_for_test(&state, &observer_token, &scope, "client:presence-observer").await;
-        let first_record = state.socket_grants.pending(&SocketGrantCapability::parse(&first.grant).expect("first capability"), &SocketAudienceV1::Document(scope.clone()), now_ms()).expect("first pending record");
+        let (first_subject, _) = authenticate_document_credential(&state, &scope, &token).await.expect("first credential");
+        let first_record = state.socket_grants.pending_document_binding(&SocketAudienceV1::Document(scope.clone()), &first_subject.binding(), now_ms()).expect("first pending record");
+        assert_eq!(first_record.actor_id, first.actor_id);
         assert_eq!(first.actor_id, second.actor_id);
         assert_ne!(first.actor_id, observer_grant.actor_id);
         let addr = spawn_server(state.clone()).await;
-        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/{document_id}/socket/v1?surface={}", plan.surface.surface_id);
-        let (mut observer, _) = connect_async(socket_request(&url, &observer_grant.grant)).await.expect("observer socket");
+        let url = format!("ws://{addr}/scopes/{STUDIO}%2F{document_id}/document/ws?surface={}", plan.surface.surface_id);
+        let (mut observer, _) = connect_async(document_socket_request(&url, &observer_token)).await.expect("observer socket");
         observer.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("observer hello");
         assert!(matches!(next_server_frame(&mut observer).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut observer).await, ServerFrame::Session { .. }));
-        let (mut socket_a, _) = connect_async(socket_request(&url, &first.grant)).await.expect("first socket");
+        let (mut socket_a, _) = connect_async(document_socket_request(&url, &token)).await.expect("first socket");
         socket_a.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("first hello");
         assert!(matches!(next_server_frame(&mut socket_a).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut socket_a).await, ServerFrame::Session { actor, .. } if actor == first.actor_id));
@@ -5094,7 +5127,7 @@ fn presence_lease_reconnect_rejects_old_live_refresh_and_close() {
         let key = document_scope_key_v1(&scope);
         let first_live = state.presence.with(&(key.clone(), first.actor_id.clone()), |slot| slot.expect("first slot").socket_live_id.clone());
 
-        let (mut socket_b, _) = connect_async(socket_request(&url, &second.grant)).await.expect("replacement socket");
+        let (mut socket_b, _) = connect_async(document_socket_request(&url, &token)).await.expect("replacement socket");
         socket_b.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("replacement hello");
         assert!(matches!(next_server_frame(&mut socket_b).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut socket_b).await, ServerFrame::Session { actor, .. } if actor == second.actor_id));
@@ -5140,8 +5173,8 @@ fn presence_lease_expires_server_clocked_visibility_without_socket_close() {
         announce_document_for_test(&state, STUDIO, document_id).await;
         let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), document_id.to_string())), bearer_headers(&token), State(state.clone())).await.expect("socket grant").0;
         let addr = spawn_server(state.clone()).await;
-        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/{document_id}/socket/v1");
-        let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("presence socket");
+        let url = format!("ws://{addr}/scopes/{STUDIO}%2F{document_id}/document/ws");
+        let (mut socket, _) = connect_async(document_socket_request(&url, &token)).await.expect("presence socket");
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
         assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
         let ServerFrame::Session { actor, color } = next_server_frame(&mut socket).await else { panic!("session frame") };
@@ -5202,8 +5235,8 @@ fn presence_join_replays_the_settled_roster_and_close_removes_exactly_one_row() 
         let (_, joiner_grant) = issue_and_exchange_document_open_plan_for_test(&state, &joiner_token, &scope, "client:presence-joiner").await;
         assert_ne!(settled_grant.actor_id, joiner_grant.actor_id, "two humans, two admitted actors");
         let addr = spawn_server(state.clone()).await;
-        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/{document_id}/socket/v1?surface={}", plan.surface.surface_id);
-        let (mut settled, _) = connect_async(socket_request(&url, &settled_grant.grant)).await.expect("settled socket");
+        let url = format!("ws://{addr}/scopes/{STUDIO}%2F{document_id}/document/ws?surface={}", plan.surface.surface_id);
+        let (mut settled, _) = connect_async(document_socket_request(&url, &token)).await.expect("settled socket");
         settled.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("settled hello");
         assert!(matches!(next_server_frame(&mut settled).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut settled).await, ServerFrame::Session { .. }));
@@ -5215,7 +5248,7 @@ fn presence_join_replays_the_settled_roster_and_close_removes_exactly_one_row() 
         // measured on this exact handler in `🗑️generated/pr1-before-hub-socket.txt` run A as
         // `user2:n=0 frames=0` two seconds after its socket opened, while `user1` already listed a
         // peer. That is C3 §3.4's asymmetry, read from the hub's own side.
-        let (mut joining, _) = connect_async(socket_request(&url, &joiner_grant.grant)).await.expect("joining socket");
+        let (mut joining, _) = connect_async(document_socket_request(&url, &joiner_token)).await.expect("joining socket");
         joining.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("joining hello");
         assert!(matches!(next_server_frame(&mut joining).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut joining).await, ServerFrame::Session { .. }));
@@ -5759,6 +5792,17 @@ async fn directory_command_authority_demotion_invalidates_only_affected_scope_on
     let space = create_space_for_test(&state, &owner.user_id, "Authority Bindings", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
     let other = create_space_for_test(&state, &author.user_id, "Other Bindings", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
     upsert_member_for_test(&state, &space, "authority-author@example.com", DirectorySpaceRole::Author).await;
+    let plan_fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
+    let plan = Arc::new(document_open_plan_test_authority(&plan_fixture));
+    let issue_pending = |audience: &SocketAudienceV1, actor_id: String, subject: SocketSubjectV1| -> String {
+        if matches!(audience, SocketAudienceV1::Document(_)) {
+            return state.socket_grants.admit_document(audience.clone(), actor_id, subject, now_ms(), now_ms() + 30_000, plan.clone()).unwrap();
+        }
+        let capability = SocketGrantCapability::mint().unwrap();
+        state.socket_grants.issue(&capability, audience.clone(), actor_id, subject, now_ms(), now_ms() + 30_000).unwrap();
+        capability.selector().to_string()
+    };
+    let still_pending = |selector: &str| state.socket_grants.inner.lock().unwrap().records.get(selector).is_some_and(|record| record.state == SocketGrantStateV1::Pending);
     let mut records = Vec::new();
     for row in fixture["bindings"].as_array().unwrap() {
         let user = if row["user"] == "author" { &author } else { &owner };
@@ -5771,12 +5815,10 @@ async fn directory_command_authority_demotion_invalidates_only_affected_scope_on
             "global" => SocketAudienceV1::Directory { auth_session_id: session.id, authorization_generation: session.authorization_generation },
             _ => unreachable!(),
         };
-        let pending = SocketGrantCapability::mint().unwrap();
-        let live = SocketGrantCapability::mint().unwrap();
-        for capability in [&pending, &live] {
-            state.socket_grants.issue(capability, audience.clone(), format!("hub.v1.{}", row["id"].as_str().unwrap()), subject.clone(), now_ms(), now_ms() + 30_000).unwrap();
-        }
-        let record = state.socket_grants.pending(&live, &audience, now_ms()).unwrap();
+        let actor_id = format!("hub.v1.{}", row["id"].as_str().unwrap());
+        let live = issue_pending(&audience, actor_id.clone(), subject.clone());
+        let pending = issue_pending(&audience, actor_id, subject.clone());
+        let record = state.socket_grants.inner.lock().unwrap().records.get(&live).cloned().unwrap();
         let record = state.socket_grants.consume(&record, now_ms()).unwrap();
         let (live_id, notify) = state.socket_grants.register_live(&record).unwrap();
         records.push((row, pending, record, live_id, notify));
@@ -5787,18 +5829,17 @@ async fn directory_command_authority_demotion_invalidates_only_affected_scope_on
     assert_eq!(post_directory_command_for_test(addr, &owner.token, request_id, command.clone()).await.status, 202);
     for (row, pending, record, live_id, notify) in &records {
         let invalidated = row["invalidated"].as_bool().unwrap();
-        assert_eq!(state.socket_grants.pending(pending, &record.audience, now_ms()).is_err(), invalidated, "pending {}", row["id"]);
+        assert_eq!(!still_pending(pending), invalidated, "pending {}", row["id"]);
         assert_eq!(!state.socket_grants.is_live(record, live_id), invalidated, "live {}", row["id"]);
         if invalidated {
             tokio::time::timeout(std::time::Duration::from_secs(1), notify.notified()).await.unwrap();
-            let fresh = SocketGrantCapability::mint().unwrap();
             let mut subject = record.subject.clone();
             if let SocketSubjectV1::Session { role, .. } = &mut subject {
                 *role = Some(SpaceRole::Spectator);
             }
-            state.socket_grants.issue(&fresh, record.audience.clone(), record.actor_id.clone(), subject, now_ms(), now_ms() + 30_000).unwrap();
+            let fresh = issue_pending(&record.audience, record.actor_id.clone(), subject);
             assert_eq!(post_directory_command_for_test(addr, &owner.token, request_id, command.clone()).await.status, 202);
-            assert!(state.socket_grants.pending(&fresh, &record.audience, now_ms()).is_ok(), "receipt replay must not invalidate fresh admission");
+            assert!(still_pending(&fresh), "receipt replay must not invalidate fresh admission");
         }
         eprintln!("[DEBUG] directory authority binding={} invalidated={} replay-preserved=1", row["id"], invalidated);
     }
@@ -6419,12 +6460,43 @@ fn an_unauthenticated_document_route_is_refused() {
         let session = issue_test_session(&state, "anonymous@example.com").await;
         announce_document_for_test(&state, STUDIO, "socket-unauthenticated").await;
         let addr = spawn_server(state.clone()).await;
-        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-unauthenticated/socket/v1");
+        let url = format!("ws://{addr}/scopes/{STUDIO}%2Fsocket-unauthenticated/document/ws");
         let anonymous = connect_async(url.clone().into_client_request().expect("socket request")).await.expect_err("an ungranted socket is refused");
         assert!(matches!(anonymous, tokio_tungstenite::tungstenite::Error::Http(ref response) if response.status().as_u16() == 401), "{anonymous}");
         let bearer_instead_of_grant = connect_async(socket_request(&url, &session.token)).await.expect_err("a session bearer is not a socket grant");
         assert!(matches!(bearer_instead_of_grant, tokio_tungstenite::tungstenite::Error::Http(ref response) if response.status().as_u16() == 401), "{bearer_instead_of_grant}");
+        let ungranted_session = connect_async(document_socket_request(&url, &session.token)).await.expect_err("a session without a pending plan grant is refused");
+        assert!(matches!(ungranted_session, tokio_tungstenite::tungstenite::Error::Http(ref response) if response.status().as_u16() == 401), "{ungranted_session}");
+        let named_actor = connect_async(document_socket_request(&format!("{url}?actor=hub.v1.forged"), &session.token)).await.expect_err("a caller-named actor is refused");
+        assert!(matches!(named_actor, tokio_tungstenite::tungstenite::Error::Http(ref response) if response.status().as_u16() == 400), "{named_actor}");
         assert_eq!(raw_http_get(addr, &format!("/spaces/{STUDIO}/documents/socket-unauthenticated"), &[]).await.status, 401);
+    });
+}
+
+#[test]
+fn a_share_holder_document_socket_is_bound_to_its_granted_actor_and_read_only() {
+    run_socket_test(|| async {
+        let state = test_state().await;
+        announce_document_for_test(&state, STUDIO, "socket-share").await;
+        let scope = DocumentScope::new(STUDIO, "socket-share");
+        let share = state.directory.issue_share_token(&scope, 60, "socket-share").await.expect("share issue").capability.expose_once();
+        let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-share".to_string())), bearer_headers(&share), State(state.clone())).await.expect("share socket grant").0;
+        let addr = spawn_server(state.clone()).await;
+        let url = format!("ws://{addr}/scopes/{STUDIO}%2Fsocket-share/document/ws");
+        let (mut socket, response) = connect_async(document_socket_request(&url, &share)).await.expect("share socket");
+        assert_eq!(response.headers().get(tokio_tungstenite::tungstenite::http::header::SEC_WEBSOCKET_PROTOCOL).and_then(|value| value.to_str().ok()), Some(SESSION_PROTOCOL_V1));
+        socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("share hello");
+        assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { actor, .. } if actor == receipt.actor_id));
+        let mut write = sample_envelope("share-write", &WireArtifactId("socket-share".into())).await;
+        write.actor = ActorId(receipt.actor_id.clone());
+        socket.send(client_binary(&ClientFrame::Commands { batch_id: 9, envelopes: vec![write] }, Lane::Command).await).await.expect("share write");
+        match next_server_frame(&mut socket).await {
+            ServerFrame::Ack { batch_id: 9, stages, .. } => assert!(matches!(&stages[0], AckStage::Applied { outcome } if matches!(outcome.as_ref(), ApplyOutcome::Rejected { .. })), "a share holder is a spectator: {stages:?}"),
+            other => panic!("expected share write ack, got {other:?}"),
+        }
+        let replay = connect_async(document_socket_request(&url, &share)).await.expect_err("a consumed share grant is not replayable");
+        assert!(matches!(replay, tokio_tungstenite::tungstenite::Error::Http(ref response) if response.status().as_u16() == 401), "{replay}");
     });
 }
 //#region 🔖️AgentDelegation
@@ -6871,8 +6943,8 @@ mod quick {
             announce_document_for_test(&state, STUDIO, "socket-command-revoke").await;
             let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-command-revoke".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue socket grant").0;
             let addr = spawn_server(state.clone()).await;
-            let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-command-revoke/socket/v1");
-            let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("socket upgrade");
+            let url = format!("ws://{addr}/scopes/{STUDIO}%2Fsocket-command-revoke/document/ws");
+            let (mut socket, _) = connect_async(document_socket_request(&url, &token)).await.expect("socket upgrade");
             socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
             tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_before_welcome.acquire()).await.expect("pre-Welcome deadline").expect("pre-Welcome");
             live_gate.socket_welcome_release.add_permits(1);
@@ -6884,17 +6956,18 @@ mod quick {
             live_gate.document_release.add_permits(1);
 
             let document = db_artifact_id(&DocumentScope::new(STUDIO, "socket-command-revoke"));
-            let mut accepted = sample_envelope("accepted-op", &document).await;
+            let wire_document = WireArtifactId("socket-command-revoke".into());
+            let mut accepted = sample_envelope("accepted-op", &wire_document).await;
             accepted.actor = ActorId(receipt.actor_id.clone());
             socket.send(client_binary(&ClientFrame::Commands { batch_id: 90, envelopes: vec![accepted] }, Lane::Command).await).await.expect("control command received by server");
             tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_command_received.acquire()).await.expect("control command boundary deadline").expect("control command boundary").forget();
             live_gate.socket_command_release.add_permits(1);
             assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Ack { batch_id: 90, .. }));
-            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Commands { .. }), "the authorized batch's own relay is delivered before any revoke");
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Commands { envelopes, .. } if envelopes.iter().all(|envelope| envelope.document_id == wire_document)), "the authorized batch's own relay is delivered before any revoke, on the wire document id");
             let accepted_frontier = state.db.document(&document).await.expect("document handle").frontier().await.expect("accepted frontier");
             assert_eq!(accepted_frontier.head_seq, 1, "an actor-matching command persists while authorized");
 
-            let mut revoked = sample_envelope("revoked-op", &document).await;
+            let mut revoked = sample_envelope("revoked-op", &wire_document).await;
             revoked.actor = ActorId(receipt.actor_id.clone());
             socket.send(client_binary(&ClientFrame::Commands { batch_id: 91, envelopes: vec![revoked] }, Lane::Command).await).await.expect("revoked command received by server");
             tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_command_received.acquire()).await.expect("command boundary deadline").expect("command boundary").forget();
@@ -7466,11 +7539,11 @@ mod long {
     #[tokio::test]
     async fn socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe() {
         let ledger = Arc::new(SocketGrantLedgerV1::default());
-        let audience = SocketAudienceV1::Document(DocumentScope::new("space-a", "document-a"));
+        let audience = SocketAudienceV1::DirectoryScoped(DocumentScope::new("space-a", "document-a"));
         let subject = SocketSubjectV1::Session { session_id: "session-a".into(), user_id: "user-a".into(), authorization_generation: 7, role: Some(SpaceRole::Author), expires_at_ms: 10_000, session_kind: AuthSessionKind::External, device_instance_id: "device-a".into() };
         let capability = SocketGrantCapability::mint().expect("socket grant");
         ledger.issue(&capability, audience.clone(), "hub.v1.actor".into(), subject.clone(), 1, 9_000).expect("issue grant");
-        assert!(ledger.pending(&capability, &SocketAudienceV1::Document(DocumentScope::new("space-a", "document-b")), 2).is_err(), "audience mismatch never consumes");
+        assert!(ledger.pending(&capability, &SocketAudienceV1::DirectoryScoped(DocumentScope::new("space-a", "document-b")), 2).is_err(), "audience mismatch never consumes");
         let candidate = ledger.pending(&capability, &audience, 2).expect("pending grant");
         let barrier = Arc::new(std::sync::Barrier::new(3));
         let attempts = (0..2)
@@ -7531,7 +7604,34 @@ mod long {
         let overflow = SocketGrantCapability::mint().expect("overflow grant");
         assert_eq!(bounded.issue(&overflow, audience, "hub.v1.overflow".into(), subject.clone(), 1, 9_000), Err(SocketGrantLedgerErrorV1::Capacity));
         bounded.invalidate_binding(subject.binding());
-        assert!(bounded.issue(&overflow, SocketAudienceV1::Document(DocumentScope::new("space-a", "document-a")), "hub.v1.after-revoke".into(), subject, 2, 9_000).is_ok());
+        assert!(bounded.issue(&overflow, SocketAudienceV1::DirectoryScoped(DocumentScope::new("space-a", "document-a")), "hub.v1.after-revoke".into(), subject, 2, 9_000).is_ok());
+    }
+
+    #[tokio::test]
+    async fn document_socket_grants_are_credential_bound_secret_free_oldest_first_and_single_consume() {
+        let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
+        let plan = Arc::new(document_open_plan_test_authority(&fixture));
+        let ledger = SocketGrantLedgerV1::default();
+        let audience = SocketAudienceV1::Document(DocumentScope::new("space-a", "document-a"));
+        let subject = SocketSubjectV1::Session { session_id: "session-a".into(), user_id: "user-a".into(), authorization_generation: 7, role: Some(SpaceRole::Author), expires_at_ms: 10_000, session_kind: AuthSessionKind::External, device_instance_id: "device-a".into() };
+        let other = SocketSubjectV1::Session { session_id: "session-b".into(), user_id: "user-a".into(), authorization_generation: 7, role: Some(SpaceRole::Author), expires_at_ms: 10_000, session_kind: AuthSessionKind::External, device_instance_id: "device-b".into() };
+        assert_eq!(ledger.issue(&SocketGrantCapability::mint().expect("capability"), audience.clone(), "hub.v1.capability".into(), subject.clone(), 1, 9_000), Err(SocketGrantLedgerErrorV1::Rejected), "document audiences never answer to a capability");
+        assert_eq!(ledger.admit_document(SocketAudienceV1::DirectoryScoped(DocumentScope::new("space-a", "document-a")), "hub.v1.scoped".into(), subject.clone(), 1, 9_000, plan.clone()), Err(SocketGrantLedgerErrorV1::Rejected), "only document audiences are credential-bound");
+        let older = ledger.admit_document(audience.clone(), "hub.v1.older".into(), subject.clone(), 1, 9_000, plan.clone()).expect("older admission");
+        let newer = ledger.admit_document(audience.clone(), "hub.v1.newer".into(), subject.clone(), 2, 9_000, plan.clone()).expect("newer admission");
+        assert_ne!(older, newer);
+        assert!(ledger.pending_document_binding(&audience, &other.binding(), 3).is_err(), "another credential never consumes this binding's grant");
+        assert!(ledger.pending_document_binding(&SocketAudienceV1::Document(DocumentScope::new("space-a", "document-b")), &subject.binding(), 3).is_err(), "audience is exact");
+        let first = ledger.pending_document_binding(&audience, &subject.binding(), 3).expect("oldest pending");
+        assert_eq!((first.selector.as_str(), first.actor_id.as_str(), first.key), (older.as_str(), "hub.v1.older", SocketGrantKeyV1::CredentialBinding));
+        ledger.consume(&first, 4).expect("single consume");
+        assert!(ledger.consume(&first, 5).is_err(), "consumed admissions never replay");
+        let second = ledger.pending_document_binding(&audience, &subject.binding(), 5).expect("next pending");
+        assert_eq!(second.selector, newer);
+        ledger.invalidate_binding(subject.binding());
+        assert!(ledger.pending_document_binding(&audience, &subject.binding(), 6).is_err(), "revoke drops pending admissions");
+        assert!(ledger.admit_document(audience.clone(), "hub.v1.expired".into(), subject.clone(), 7, 8, plan).is_ok());
+        assert!(ledger.pending_document_binding(&audience, &subject.binding(), 9).is_err(), "expired admissions never consume");
     }
 
     #[tokio::test]

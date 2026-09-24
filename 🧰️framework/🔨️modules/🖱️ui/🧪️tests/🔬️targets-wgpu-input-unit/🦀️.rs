@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn a_reopened_text_owner_drains_the_prior_projection_before_projecting_its_current_value() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/⌨️text-owner-lifecycle/🔣️.json")).expect("text owner lifecycle fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️text-owner-lifecycle/🔣️.json")).expect("text owner lifecycle fixture");
     assert_eq!(fixture["sequence"], serde_json::json!(["focus", "advance-to-projection", "blur", "refocus", "drain"]));
     let owner = fixture["owner"].as_str().expect("owner").to_string();
     let value = fixture["value"].as_str().expect("value").to_string();

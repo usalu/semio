@@ -364,6 +364,8 @@ fn document_authority_json_integer_tokens_never_coerce() {
         if let (Ok(grant), Ok(expiry)) = (grant, expiry) {
             assert_eq!(grant.expires_at_ms, expiry, "socket expiry exact {raw}");
         }
+        let document_grant = crate::os_pack::json::from_json_str::<crate::os_directory::client::DocumentSocketGrantReceiptV1>(&format!(r#"{{"schema":"fixture","protocol":"fixture","actorId":"fixture","expiresAtMs":{raw}}}"#));
+        assert_eq!(document_grant.as_ref().map(|grant| grant.expires_at_ms).ok(), serde_json::from_str::<i64>(raw).ok(), "document socket expiry exact {raw}");
     }
 }
 

@@ -157,14 +157,16 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
             const name = (library ? library.replace(/\.rlib$/, ".rmeta") : file).split(/[\\/]/).at(-1)!;
             const key = primary ? name : /\.(rlib|rmeta|so|dylib|dll|lib)$/.test(file) ? `deps/${name}` : undefined;
             if (!key) continue;
+            if (!primary) {
+              dependencies.set(key, file);
+              continue;
+            }
             const captured = join(capture, key);
             mkdirSync(dirname(captured), { recursive: true });
             copyFileSync(file, captured);
             chmodSync(captured, lstatSync(file).mode & 0o777);
-            if (primary) {
-              files.set(key, captured);
-              hasLibrary ||= file.endsWith(".rlib");
-            } else dependencies.set(key, captured);
+            files.set(key, captured);
+            hasLibrary ||= file.endsWith(".rlib");
           }
         }
       } catch (error) {
@@ -180,7 +182,14 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
       process.removeListener("SIGTERM", cancel);
     }
     if (files.size === 0) throw new Error(`Cargo emitted no final artifacts for ${owner}`);
-    if (hasLibrary) for (const [name, file] of dependencies) files.set(name, file);
+    if (hasLibrary)
+      for (const [name, file] of dependencies) {
+        const captured = join(capture, name);
+        mkdirSync(dirname(captured), { recursive: true });
+        copyFileSync(file, captured);
+        chmodSync(captured, lstatSync(file).mode & 0o777);
+        files.set(name, captured);
+      }
     options.validate?.(files);
     await stageArtifacts(staging, owner, files);
     console.log(`[nx-native] staged ${files.size} deliverables in ${relative(repoRoot, staging).split(sep).join("/")}`);

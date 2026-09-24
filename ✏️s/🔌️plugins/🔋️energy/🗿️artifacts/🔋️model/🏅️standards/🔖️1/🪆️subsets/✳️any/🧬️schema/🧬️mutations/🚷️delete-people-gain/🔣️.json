@@ -7,7 +7,7 @@
   "aggregateVariant": "DeletePeopleGain",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-people-gain",
-  "binaryTag": null,
+  "binaryTag": 77,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

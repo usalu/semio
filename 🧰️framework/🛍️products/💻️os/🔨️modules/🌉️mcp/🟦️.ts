@@ -6,10 +6,11 @@
  * module only ever crosses the process boundary over real stdio, exactly like a real IDE client.
  */
 
-import { type ChildProcessByStdio, spawn } from "node:child_process";
+import { type ChildProcessByStdio, spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { accessSync, constants as fsConstants, readFileSync, statSync } from "node:fs";
-import { posix, win32 } from "node:path";
+import { accessSync, chmodSync, constants as fsConstants, copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, posix, relative, win32 } from "node:path";
 import { createInterface } from "node:readline";
 import type { Readable, Writable } from "node:stream";
 import { cargoTargetDirectory } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
@@ -51,6 +52,102 @@ export function resolveMcpBinaryPath(repoRoot: string, env: NodeJS.ProcessEnv = 
   return override ? pathApi(platform).resolve(repoRoot, override) : pathApi(platform).resolve(repoRoot, MCP_ARTIFACT_REL, platform === "win32" ? `${MCP_BINARY_NAME}.exe` : MCP_BINARY_NAME);
 }
 
+/** 🎯 The single Nx target that stages the debug `semio-os-mcp` every `.mcp.json` / `dev mcp` route reads. */
+export const MCP_BINARY_TARGET = "@semio-tech/framework-os-mcp-rs:build";
+
+/** 🏷️ Stamp written next to the staged binary so a content-hash match skips a cold rebuild. */
+export function resolveMcpBinaryContentHashPath(binary: string): string {
+  return `${binary}.content-hash`;
+}
+
+/** 🏗️ Injectable staging boundary: one attempt that returns the exit status of the Nx build target. */
+export type McpBinaryStaging = Readonly<{ stage: (progress: (line: string) => void) => number }>;
+
+const nativeMcpBinaryStagingFor = (repoRoot: string): McpBinaryStaging => ({
+  stage: (progress) => {
+    // Prefer the package verb directly: under fleet load the Nx daemon HASH_TASKS / socket path
+    // stalls for minutes, while `bun ./📜️script.ts build` is the same deliverable.
+    const packageRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust");
+    progress(`[semio-os-mcp] staging via bun ./📜️script.ts build (cwd=${packageRoot})`);
+    const child = spawnSync("bun", ["./📜️script.ts", "build"], {
+      cwd: packageRoot,
+      encoding: "utf8",
+      maxBuffer: 16 * 1024 * 1024,
+      shell: false,
+      env: { ...process.env, CARGO_INCREMENTAL: process.env.CARGO_INCREMENTAL ?? "0" },
+    });
+    const combined = `${child.stdout ?? ""}${child.stderr ?? ""}`;
+    for (const line of combined.split(/\r?\n/)) {
+      if (line.trim()) progress(line);
+    }
+    if ((child.status ?? -1) === 0) return 0;
+    progress(`[semio-os-mcp] package verb failed (status ${child.status}); falling back to bun nx run ${MCP_BINARY_TARGET}`);
+    const nx = spawnSync("bun", ["nx", "run", MCP_BINARY_TARGET, "--output-style=stream"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      maxBuffer: 16 * 1024 * 1024,
+      shell: false,
+      env: { ...process.env, CARGO_INCREMENTAL: process.env.CARGO_INCREMENTAL ?? "0" },
+    });
+    const nxOut = `${nx.stdout ?? ""}${nx.stderr ?? ""}`;
+    for (const line of nxOut.split(/\r?\n/)) {
+      if (line.trim()) progress(line);
+    }
+    return nx.status ?? -1;
+  },
+});
+
+/** 📁 Relative source roots whose bytes decide whether the staged binary is still fresh. */
+const MCP_SOURCE_REL_ROOTS = [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp",
+] as const;
+
+/** 🔏️ Walks one tree for content-hash inputs (Rust sources + cargo manifests + binary gate). */
+function collectMcpSourceFiles(repoRoot: string, relativeRoot: string): string[] {
+  const absolute = join(repoRoot, relativeRoot);
+  if (!existsSync(absolute)) return [];
+  const out: string[] = [];
+  const stack = [absolute];
+  while (stack.length) {
+    const current = stack.pop()!;
+    let entries;
+    try {
+      entries = readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const path = join(current, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === "node_modules" || entry.name === "target" || entry.name === "dist" || entry.name === "generated") continue;
+        stack.push(path);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const isSchemaJson = entry.name.endsWith(".json") && (entry.name.includes("binary-gate") || path.includes("🧬️schema"));
+      if (entry.name.endsWith(".rs") || entry.name === "Cargo.toml" || isSchemaJson) {
+        out.push(path);
+      }
+    }
+  }
+  return out.sort();
+}
+
+/** 🔐 Content hash of the MCP package sources the staged binary is built from (blake2 not required — sha256 of sorted path+bytes). */
+export function mcpSourceContentHash(repoRoot: string): string {
+  const hash = createHash("sha256");
+  hash.update("semio-os-mcp-source-v1\n");
+  for (const relativeRoot of MCP_SOURCE_REL_ROOTS) {
+    for (const file of collectMcpSourceFiles(repoRoot, relativeRoot)) {
+      hash.update(relative(repoRoot, file).split("\\").join("/"));
+      hash.update("\0");
+      hash.update(readFileSync(file));
+      hash.update("\0");
+    }
+  }
+  return hash.digest("hex");
+}
+
 /** 🛡️ Resolves and verifies the real executable so a missing black-box subject cannot skip green. */
 export function requireMcpBinary(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): string {
   const binary = resolveMcpBinaryPath(repoRoot, env, platform);
@@ -63,6 +160,42 @@ export function requireMcpBinary(repoRoot: string, env: NodeJS.ProcessEnv = proc
   }
   return binary;
 }
+
+/** 📦️ Stages `semio-os-mcp` when missing or content-hash-stale, reports progress on stderr, returns the verified path.
+ *
+ * Explicit `SEMIO_OS_MCP_BIN` overrides skip staging (tests inject a subject). Freshness is a
+ * content hash of the MCP module's Rust sources + cargo manifests + binary-gate / schema JSON —
+ * never mtime — so a warm tree answers in milliseconds and a cold tree rebuilds exactly once.
+ * `workspace:setup` / `bun ./📜️script.ts setup` calls this so `.mcp.json`'s handshake never waits
+ * on a first-ever compile past the client's initialize timeout. */
+export function ensureMcpBinary(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform, staging: McpBinaryStaging = nativeMcpBinaryStagingFor(repoRoot)): string {
+  if (env.SEMIO_OS_MCP_BIN) return requireMcpBinary(repoRoot, env, platform);
+  const binary = resolveMcpBinaryPath(repoRoot, env, platform);
+  const stamp = resolveMcpBinaryContentHashPath(binary);
+  const hash = mcpSourceContentHash(repoRoot);
+  const progress = (line: string): void => {
+    console.error(line);
+  };
+  let fresh = false;
+  try {
+    if (statSync(binary).isFile() && existsSync(stamp) && readFileSync(stamp, "utf8").trim() === hash) {
+      if (platform === "win32" || (() => { try { accessSync(binary, fsConstants.X_OK); return true; } catch { return false; } })()) fresh = true;
+    }
+  } catch {
+    fresh = false;
+  }
+  if (fresh) {
+    progress(`[semio-os-mcp] staged binary is fresh (content-hash ${hash.slice(0, 12)}…)`);
+    return requireMcpBinary(repoRoot, env, platform);
+  }
+  progress(`[semio-os-mcp] staging binary (content-hash ${hash.slice(0, 12)}…) — progress on stderr; initialize waits for this stage so run \`bun ./📜️script.ts setup\` once for a zero-touch cold start`);
+  const status = staging.stage(progress);
+  if (status !== 0) throw new Error(`semio-os-mcp staging via ${MCP_BINARY_TARGET} exited with status ${status}`);
+  mkdirSync(dirname(binary), { recursive: true });
+  writeFileSync(stamp, `${hash}\n`);
+  progress(`[semio-os-mcp] staged ${binary}`);
+  return requireMcpBinary(repoRoot, env, platform);
+}
 //#endregion 🔖️BinaryPath
 
 //#region 🔖️RawJsonRpc
@@ -73,7 +206,7 @@ export type RawMcpProcess = {
   readonly stdoutLines: () => readonly string[];
   readonly stderrText: () => string;
   readonly pid: number | undefined;
-  request(method: string, params?: unknown): Promise<RawJsonRpcResponse>;
+  request(method: string, params?: unknown, timeoutMs?: number): Promise<RawJsonRpcResponse>;
   writeRaw(line: string): void;
   nextLine(timeoutMs?: number): Promise<string>;
   waitForExit(timeoutMs?: number): Promise<number | null>;
@@ -136,11 +269,19 @@ export function spawnRawMcp(bin: string, args: readonly string[] = ["stdio"]): R
   };
 
   let nextId = 1;
-  const request = async (method: string, params?: unknown): Promise<RawJsonRpcResponse> => {
+  const request = async (method: string, params?: unknown, timeoutMs = 120_000): Promise<RawJsonRpcResponse> => {
     const id = nextId++;
     writeRaw(JSON.stringify({ jsonrpc: "2.0", id, method, params }));
-    const line = await nextLine();
-    return JSON.parse(line) as RawJsonRpcResponse;
+    const deadline = Date.now() + timeoutMs;
+    while (true) {
+      const remaining = Math.max(1, deadline - Date.now());
+      const line = await nextLine(remaining);
+      const parsed = JSON.parse(line) as RawJsonRpcResponse & { readonly method?: string };
+      // Server→client notifications (progress, resources/updated, …) share stdout; skip until the matching id.
+      if (parsed.id === id) return parsed;
+      if (typeof parsed.method === "string" && (parsed.id === undefined || parsed.id === null)) continue;
+      throw new Error(`spawnRawMcp: expected response id ${id} for ${method}, got ${line.slice(0, 240)}`);
+    }
   };
 
   const waitForExit = (timeoutMs = 5_000): Promise<number | null> => {
@@ -412,7 +553,7 @@ function announce(steps: McpClientStep[], step: McpClientStep): void {
  * `#[dsl(block)]` payload like `setFrame.frame` publishes its own `required` list, and an empty `{}`
  * would be refused by the guest that decodes it). The catalog types action inputs per capability,
  * so an e2e that hardcoded one plugin's argument names would only ever exercise that plugin. */
-function minimalInputForSchema(schema: any): Record<string, unknown> {
+export function minimalInputForSchema(schema: any): Record<string, unknown> {
   const properties = (schema?.properties ?? {}) as Record<string, any>;
   const required = (schema?.required ?? []) as string[];
   const input: Record<string, unknown> = {};
@@ -807,6 +948,26 @@ export async function runMcpClientEndToEnd(repoRoot: string, folder: string): Pr
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️resolvemcpbinarypath/🟦️.ts");
-  await registerTests1(import.meta.vitest, { readFileSync, requireMcpBinary, resolveBuiltMcpBinaryPath, resolveMcpBinaryPath }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(
+    import.meta.vitest,
+    {
+      chmodSync,
+      copyFileSync,
+      ensureMcpBinary,
+      join,
+      mcpSourceContentHash,
+      mkdirSync,
+      mkdtempSync,
+      readFileSync,
+      requireMcpBinary,
+      resolveBuiltMcpBinaryPath,
+      resolveMcpBinaryContentHashPath,
+      resolveMcpBinaryPath,
+      rmSync,
+      tmpdir,
+      writeFileSync,
+    },
+    { directory: import.meta.dir, url: import.meta.url },
+  );
 }
 //#endregion 🧪️Tests

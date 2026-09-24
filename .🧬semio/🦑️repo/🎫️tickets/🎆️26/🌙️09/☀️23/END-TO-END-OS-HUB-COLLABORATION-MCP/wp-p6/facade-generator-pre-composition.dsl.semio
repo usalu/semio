@@ -1,0 +1,81 @@
+semio playbook.playbook.dsl v1
+schema=playbook.program id=facade-generator version="1" title="Facade Panel Generator" steps=[ id=basics title="Project Basics" blocks=[ id=project-name label="Project Name" kind=text required=true placeholder="e.g. Riverside Tower"
+condition {
+}
+id=project-description label=Description kind=longText description="Shown on the cover page." required=false placeholder="One paragraph project summary" default="A mixed-use tower with a responsive facade."
+condition {
+}
+id=panel-count label="Panel Count" kind=number required=true min=4 max=64 step=1 unit=panels default=12
+condition {
+}
+id=panel-width label="Panel Width" kind=slider min=0.4 max=2.4 step=0.1 unit=m default=1.2
+condition {
+}
+id=mirror-layout label="Mirror Layout" kind=boolean default=false
+condition {
+}
+id=material label=Material kind=single required=true default="aluminum" options=[ value=aluminum label=Aluminum value=timber label=Timber value=terracotta label=Terracotta ]
+condition {
+}
+id=finishes label=Finishes kind=multi default=[ "anodized" ] options=[ value=anodized label=Anodized value=powder-coated label="Powder Coated" value=raw label=Raw ]
+condition {
+}
+] id=schedule title="Schedule & Look" description="Timing and finish details reviewers check before sign-off." blocks=[ id=install-date label="Install Date" kind=date default="2027-03-01"
+condition {
+}
+id=accent-color label="Accent Color" kind=color default="#2f6fed"
+condition {
+}
+id=panel-offset label="Panel Offset" kind=vector unit=m fields=[ key=x label=X value=0 key=y label=Y value=0.15 key=z label=Z value=0 ]
+condition {
+}
+id=notes-intro label="Reviewer Notes" kind=note text="Confirm structural clearances before approving the pattern below."
+condition {
+}
+id=reference-photo label="Reference Photo" kind=image src="https://example.test/facade-reference.jpg" accept="image/*"
+condition {
+}
+id=cad-upload label="CAD Reference" kind=file schema=cad.reference.v1 accept=".dwg,.ifc"
+condition {
+}
+] id=pattern title="Pattern Logic" blocks=[ id=pattern-rule label="Pattern Rule" kind=generative.pattern description="Contributed by the procedural extension module." fixture-slug=voronoi-facade params={
+  algorithm="voronoi" density=0.6 seed=7
+}
+condition {
+  and
+  items {
+    eq
+    left {
+      var name=material
+    }
+    right {
+      const value="aluminum"
+    }
+    truthy
+    expr {
+      var name=mirror-layout
+    }
+  }
+}
+id=fallback-material label="Fallback Material" kind=single options=[ value=aluminum label="Aluminum (fallback)" ]
+condition {
+  or
+  items {
+    eq
+    left {
+      var name=material
+    }
+    right {
+      const value="timber"
+    }
+    eq
+    left {
+      var name=material
+    }
+    right {
+      const value="terracotta"
+    }
+  }
+}
+] ]
+

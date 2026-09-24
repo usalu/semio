@@ -7,7 +7,7 @@
   "aggregateVariant": "AddConstructionLayer",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-construction-layer",
-  "binaryTag": null,
+  "binaryTag": 73,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

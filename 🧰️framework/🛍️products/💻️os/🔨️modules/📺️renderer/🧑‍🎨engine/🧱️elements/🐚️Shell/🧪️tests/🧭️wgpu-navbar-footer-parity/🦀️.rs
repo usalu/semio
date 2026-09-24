@@ -8,6 +8,7 @@
 //! `🛠️ShellHelpers/🟦️.tsx`/`🏛️ShellHost/🟦️.tsx` sources, and the puzzle plugin's authored descriptor.
 
 use super::*;
+use ui_wgpu::wgpu::InputState;
 
 /// 🌳️ `…/🧑‍🎨engine` — the same derivation `🌓️appearance-tour-and-footer-pills/🦀️.rs` uses.
 fn engine_root() -> std::path::PathBuf {
@@ -93,7 +94,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
     let mut shell = world_pane_shell();
     let press = |shell: &mut ShellState, control_id: String| {
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id), kind: HitKind::Toggle, drag_axis: None, drag_data: None };
-        assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit)).expect("a projection press never errors"), "🔀️ the shell claims its own projection chip");
+        assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a projection press never errors"), "🔀️ the shell claims its own projection chip");
     };
     assert!(shell.projection_pane_folded("pane-top"), "🔀️ React's pane starts folded");
     assert_eq!(WindowPaneChip::Projection.control_id("pane-top", true), WindowPaneChip::Projection.control_id("pane-top", false), "🔀️ React derives ONE toggle id, never a fold-direction pair");

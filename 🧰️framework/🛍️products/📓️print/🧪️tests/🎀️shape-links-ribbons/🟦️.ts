@@ -12,7 +12,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "shape-links-ribbons";
-const FIXTURE = "local://shape-links-ribbons.tex";
+const FIXTURE = "shared://🎀️shape-links-ribbons/shape-links-ribbons.tex";
 
 const DECIMALS = 6;
 

@@ -22,15 +22,7 @@
   },
   "$defs": {
     "SemioTopology": {
-      "type": "string",
-      "enum": [
-        "points",
-        "lines",
-        "lineStrip",
-        "triangles",
-        "triangleStrip",
-        "triangleFan"
-      ]
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/snapshot.json#/definitions/SemioTopology"
     }
   }
 }

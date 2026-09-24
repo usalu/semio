@@ -13,49 +13,49 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepVertex"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/BrepVertex"
       }
     },
     "edges": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepEdge"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/BrepEdge"
       }
     },
     "loops": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepLoop"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/BrepLoop"
       }
     },
     "faces": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepFace"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/BrepFace"
       }
     },
     "shells": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepShell"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/BrepShell"
       }
     },
     "solids": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepSolid"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/BrepSolid"
       }
     },
     "coedges": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepCoedge"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/BrepCoedge"
       }
     },
     "nextLabel": {

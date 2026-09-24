@@ -22,7 +22,7 @@ Feature: Every coordinate system maps its two data channels onto the page as spe
   @level-quick
   @mode-conformance
   Scenario: The cartesian system honours origin, domain and the flipped y axis
-    Given the committed probe document local://coordinate-polar-ternary.tex and the points
+    Given the committed probe document shared://🧭️coordinate-polar-ternary/coordinate-polar-ternary.tex and the points
       | tag               | x   | y    | expected  |
       | cartesian-origin  | 0   | 0    | 0,0       |
       | cartesian-middle  | 0.5 | 0.25 | 40,10     |
@@ -35,7 +35,7 @@ Feature: Every coordinate system maps its two data channels onto the page as spe
   @level-quick
   @mode-conformance
   Scenario: The polar and log-polar systems place angle and radius as specified
-    Given the committed probe document local://coordinate-polar-ternary.tex and the points
+    Given the committed probe document shared://🧭️coordinate-polar-ternary/coordinate-polar-ternary.tex and the points
       | tag           | angle | radius | expected |
       | polar-quarter | 0.25  | 1      | 20,0     |
       | polar-noon    | 0     | 1      | 0,20     |
@@ -49,7 +49,7 @@ Feature: Every coordinate system maps its two data channels onto the page as spe
   @level-quick
   @mode-conformance
   Scenario: The ternary system puts each pure share on its own corner
-    Given the committed probe document local://coordinate-polar-ternary.tex and the points
+    Given the committed probe document shared://🧭️coordinate-polar-ternary/coordinate-polar-ternary.tex and the points
       | tag         | a   | b    | expected     |
       | ternary-a   | 1   | 0    | 30,51.961    |
       | ternary-b   | 0   | 1    | 60,0         |
@@ -61,7 +61,7 @@ Feature: Every coordinate system maps its two data channels onto the page as spe
   @level-quick
   @mode-conformance
   Scenario: Parallel coordinates space their axes evenly across the frame
-    Given the committed probe document local://coordinate-polar-ternary.tex and the points
+    Given the committed probe document shared://🧭️coordinate-polar-ternary/coordinate-polar-ternary.tex and the points
       | tag            | axis | value | expected |
       | parallel-first | 1    | 0     | 0,0      |
       | parallel-third | 3    | 0.5   | 60,25    |
@@ -72,7 +72,7 @@ Feature: Every coordinate system maps its two data channels onto the page as spe
   @level-quick
   @mode-conformance
   Scenario: The geographic hook falls back to an equirectangular mapping
-    Given the committed probe document local://coordinate-polar-ternary.tex and the points
+    Given the committed probe document shared://🧭️coordinate-polar-ternary/coordinate-polar-ternary.tex and the points
       | tag                     | lon  | lat   | expected      |
       | geographic-null         | 0    | 0     | 180,90        |
       | geographic-hannover     | 9.72 | 52.37 | 189.72,142.37 |

@@ -47,7 +47,8 @@ export type ToolRunTrace2dPaintReport = { readonly fills: ReadonlyMap<string, nu
 
 /** 🖌️ Paints every visible placement batch with one fill style per `(shape, verdict)`. Each record is
  * one path fill at its placement transform, faded by age down to the floor token; the newest `testing`
- * record is stroked in the highlight token, pulsing unless `still`. */
+ * record is stroked in the highlight token, pulsing unless `still`. A `focus` key paints that ONE record
+ * alone, opaque and outlined — the hovered row of a suggestion menu — and nothing else. */
 export function paintToolRunTrace2d(
   ctx: ToolRunTrace2dContext,
   store: ToolRunTraceRecordStore,
@@ -57,6 +58,7 @@ export function paintToolRunTrace2d(
   palette: ToolRunTrace2dPalette,
   visibility: ToolRunTraceVisibility = TOOL_RUN_TRACE_VISIBLE_ALL,
   pulse = 1,
+  focus: bigint | null = null,
 ): ToolRunTrace2dPaintReport {
   const fills = new Map<string, number>();
   const newestKey = store.newestTesting;
@@ -66,18 +68,19 @@ export function paintToolRunTrace2d(
   let highlighted = false;
   ctx.save();
   for (const batch of store.batches()) {
-    if (batch.family !== "placement2d" || !toolRunTraceShows(visibility, batch.verdict)) continue;
+    if (batch.family !== "placement2d" || (focus === null && !toolRunTraceShows(visibility, batch.verdict))) continue;
     const path = pathForShape(batch.index);
     if (!path) continue;
     const paint = TOOL_RUN_TRACE_VERDICT_PAINT[batch.verdict];
     ctx.fillStyle = palette.fill[batch.verdict];
     let drawn = 0;
     for (let at = 0; at < batch.count; at += 1) {
+      if (focus !== null && batch.keys[at] !== focus) continue;
       const m = batch.matrices;
       const o = at * 16;
       ctx.setTransform(ratio * zoom * m[o]!, ratio * zoom * m[o + 1]!, ratio * zoom * m[o + 4]!, ratio * zoom * m[o + 5]!, ratio * ((m[o + 12]! - camera.x) * zoom + viewport.width / 2), ratio * ((m[o + 13]! - camera.y) * zoom + viewport.height / 2));
-      const newest = batch.keys[at] === newestKey;
-      ctx.globalAlpha = paint.opacity * (newest ? 1 : toolRunTraceFade(newestStamp - batch.stamps[at]!));
+      const newest = focus !== null || batch.keys[at] === newestKey;
+      ctx.globalAlpha = focus !== null ? 1 : paint.opacity * (newest ? 1 : toolRunTraceFade(newestStamp - batch.stamps[at]!));
       ctx.fill(path);
       drawn += 1;
       if (newest) {
@@ -105,10 +108,12 @@ export type ToolRunTrace2dLayerProps = {
   readonly visibility?: ToolRunTraceVisibility;
   readonly reducedMotion?: boolean;
   readonly onCursor?: (cursor: ToolRunTraceCursor) => void;
+  /** 🔦️ When set, only this record paints — see {@link paintToolRunTrace2d}. */
+  readonly focus?: bigint | null;
 };
 
 /** 🧩️ An overlay canvas over the host's canvas-2d surface. Carries the `data-tool-run-*` probe counters. */
-export function ToolRunTrace2dLayer({ lane, camera, pathForShape, visibility = TOOL_RUN_TRACE_VISIBLE_ALL, reducedMotion, onCursor }: ToolRunTrace2dLayerProps) {
+export function ToolRunTrace2dLayer({ lane, camera, pathForShape, visibility = TOOL_RUN_TRACE_VISIBLE_ALL, reducedMotion, onCursor, focus = null }: ToolRunTrace2dLayerProps) {
   const { store, version } = useToolRunTraceStore(lane, onCursor);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const prefersReduced = usePrefersReducedMotion();
@@ -130,12 +135,12 @@ export function ToolRunTrace2dLayer({ lane, camera, pathForShape, visibility = T
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const pulse = still ? 1 : 0.6 + 0.4 * Math.abs(Math.sin((time * Math.PI) / TOOL_RUN_TRACE_METRICS.testingPulseMs));
-      paintToolRunTrace2d(ctx, store, camera, { width, height, pixelRatio }, pathForShape, palette, visibility, pulse);
-      if (!still && store.newestTesting !== null) frame = requestAnimationFrame(paint);
+      paintToolRunTrace2d(ctx, store, camera, { width, height, pixelRatio }, pathForShape, palette, visibility, pulse, focus);
+      if (!still && (focus !== null || store.newestTesting !== null)) frame = requestAnimationFrame(paint);
     };
     frame = requestAnimationFrame(paint);
     return () => cancelAnimationFrame(frame);
-  }, [store, version, camera.x, camera.y, camera.zoom, pathForShape, palette, visibility, still]);
+  }, [store, version, camera.x, camera.y, camera.zoom, pathForShape, palette, visibility, still, focus]);
   return <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" data-slot="tool-run-trace-2d" {...toolRunTraceDataAttributes(store)} />;
 }
 //#endregion 🧩️Layer

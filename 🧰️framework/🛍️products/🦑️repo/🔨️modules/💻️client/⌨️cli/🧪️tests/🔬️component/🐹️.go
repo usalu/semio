@@ -2331,8 +2331,8 @@ func TestFixApplyAutofixes(t *testing.T) {
 	rootDir = findTestRepoRoot(cwd)
 	defer func() { rootDir = oldRoot }()
 
-	fixtureSrc := "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-fixable/🟦️.tsx"
-	expectedSrc := "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-fixable-expected/🟦️.tsx"
+	fixtureSrc := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-fixable/🟦️.tsx"
+	expectedSrc := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-fixable-expected/🟦️.tsx"
 
 	srcAbs := filepath.Join(rootDir, fixtureSrc)
 	expectedAbs := filepath.Join(rootDir, expectedSrc)
@@ -3507,7 +3507,7 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 
 	bundles := LoadBundles()
-	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
+	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
 	breachs, err := CheckPoliciesWithContext(ctx, nil)
@@ -4322,7 +4322,7 @@ func TestExhaustivePolicyBreachListCommand(t *testing.T) {
 }
 
 func TestFixtureBreachsGroupedInline(t *testing.T) {
-	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
+	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
 	if _, err := os.Stat(filepath.Join(GetRootDir(), path)); err != nil {
 		t.Fatalf("fixture input does not resolve: %v", err)
 	}
@@ -4358,15 +4358,15 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		requiredKinds []Statute
 	}{
 		{
-			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-invalid/🐍️.py",
+			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🐍️.py",
 			requiredKinds: []Statute{BreachCodeDefMissingSummary},
 		},
 		{
-			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-invalid/🔷️.cs",
+			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🔷️.cs",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 		{
-			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-invalid/🐹️.go",
+			path:          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🐹️.go",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 	}
@@ -4391,10 +4391,10 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		}
 	}
 	clean := []string{
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-fixed/🟦️.tsx",
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-fixed/🐍️.py",
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-fixed/🔷️.cs",
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-fixed/🐹️.go",
+		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🟦️.tsx",
+		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🐍️.py",
+		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🔷️.cs",
+		"🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🐹️.go",
 	}
 	for _, path := range clean {
 		scope := Scope{Kind: ScopeFile, FilePath: path}
@@ -8457,7 +8457,7 @@ func TestExhaustiveGraphQLAnalyzeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow analyze query test in short mode")
 	}
-	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file-fixed/🐹️.go") { metrics { total } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🐹️.go") { metrics { total } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL analyze returned error: %v", err)
 	}
@@ -22586,7 +22586,7 @@ func TestIsHeaderMetaLine(t *testing.T) {
 	if !isHeaderMetaLine("2025 Ueli Saluz <ueli@semio-tech.com>") {
 		t.Error("should detect contributor line starting with year")
 	}
-	if !isHeaderMetaLine("💻️🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file/🐍️.py") {
+	if !isHeaderMetaLine("💻️🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file/🐍️.py") {
 		t.Error("should detect file ID emoji prefix")
 	}
 	if isHeaderMetaLine("This function handles parsing.") {
@@ -22615,7 +22615,7 @@ func TestExtractMarkdownSection(t *testing.T) {
 }
 
 func TestExtractFileHeaderSummary(t *testing.T) {
-	summary := ExtractFileHeaderSummary("🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🟦️.tsx")
+	summary := ExtractFileHeaderSummary("🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🟦️.tsx")
 	if strings.Contains(summary, "GNU") || strings.Contains(summary, "license") || strings.Contains(summary, "redistribute") {
 		t.Errorf("should not contain license text, got: %q", summary)
 	}
@@ -22625,14 +22625,14 @@ func TestExtractFileHeaderSummary(t *testing.T) {
 }
 
 func TestExtractFileHeaderSummaryReturnsActualSummary(t *testing.T) {
-	summary := ExtractFileHeaderSummary("🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🟦️.tsx")
+	summary := ExtractFileHeaderSummary("🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🟦️.tsx")
 	if strings.Contains(summary, "free software") {
 		t.Errorf("should not return license as summary, got: %q", summary)
 	}
 }
 
 func TestExtractFileHeaderRequirementsNoLicense(t *testing.T) {
-	requirements := ExtractFileHeaderRequirements("🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some/📁️folder/🧪️file/🐍️.py")
+	requirements := ExtractFileHeaderRequirements("🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some/📁️folder/🧪️file/🐍️.py")
 	if strings.Contains(requirements, "GNU") || strings.Contains(requirements, "license") || strings.Contains(requirements, "redistribute") {
 		t.Errorf("should not contain license text, got: %q", requirements)
 	}

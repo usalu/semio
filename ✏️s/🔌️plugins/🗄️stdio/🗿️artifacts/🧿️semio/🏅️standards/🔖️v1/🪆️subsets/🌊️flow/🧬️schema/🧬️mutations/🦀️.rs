@@ -90,7 +90,7 @@ pub enum SemioFlowMutation {
 
 /// 🏷️ The declared mutation vocabulary of `s.stdio.semio.flow`, in `SemioFlowMutation`'s own
 /// declaration order and kebab-case spelling — the single source of truth for the binary op frame's
-/// `tag` ordinal (see [`variant_ordinal`]), for `parse_flow_mutation`'s keyword match, and for the
+/// `tag` ordinal (see [`wire_tag`]), for `parse_flow_mutation`'s keyword match, and for the
 /// `semio-v1-flow` catalog in `../../🔣️oracle.json`. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
 pub const KINDS: &[&str] = &["set-snapshot", "insert-node", "remove-node", "set-node-kind", "set-node-label", "set-node-position", "set-node-param", "remove-node-param", "insert-edge", "remove-edge", "set-edge-endpoints", "set-edge-kind"];
@@ -284,21 +284,38 @@ impl OpText for SemioFlowMutation {
     }
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioFlowMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_INSERT_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-node");
+const TAG_REMOVE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-node");
+const TAG_SET_NODE_KIND: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-node-kind");
+const TAG_SET_NODE_LABEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-node-label");
+const TAG_SET_NODE_POSITION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-node-position");
+const TAG_SET_NODE_PARAM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-node-param");
+const TAG_REMOVE_NODE_PARAM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-node-param");
+const TAG_INSERT_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-edge");
+const TAG_REMOVE_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-edge");
+const TAG_SET_EDGE_ENDPOINTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-edge-endpoints");
+const TAG_SET_EDGE_KIND: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-edge-kind");
+//#endregion 🏷️WireTags
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioFlowMutation) -> u8 {
+fn wire_tag(m: &SemioFlowMutation) -> u8 {
     match m {
-        SemioFlowMutation::SetSnapshot(_) => 0,
-        SemioFlowMutation::InsertNode(_) => 1,
-        SemioFlowMutation::RemoveNode(_) => 2,
-        SemioFlowMutation::SetNodeKind(_) => 3,
-        SemioFlowMutation::SetNodeLabel(_) => 4,
-        SemioFlowMutation::SetNodePosition(_) => 5,
-        SemioFlowMutation::SetNodeParam(_) => 6,
-        SemioFlowMutation::RemoveNodeParam(_) => 7,
-        SemioFlowMutation::InsertEdge(_) => 8,
-        SemioFlowMutation::RemoveEdge(_) => 9,
-        SemioFlowMutation::SetEdgeEndpoints(_) => 10,
-        SemioFlowMutation::SetEdgeKind(_) => 11,
+        SemioFlowMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioFlowMutation::InsertNode(_) => TAG_INSERT_NODE,
+        SemioFlowMutation::RemoveNode(_) => TAG_REMOVE_NODE,
+        SemioFlowMutation::SetNodeKind(_) => TAG_SET_NODE_KIND,
+        SemioFlowMutation::SetNodeLabel(_) => TAG_SET_NODE_LABEL,
+        SemioFlowMutation::SetNodePosition(_) => TAG_SET_NODE_POSITION,
+        SemioFlowMutation::SetNodeParam(_) => TAG_SET_NODE_PARAM,
+        SemioFlowMutation::RemoveNodeParam(_) => TAG_REMOVE_NODE_PARAM,
+        SemioFlowMutation::InsertEdge(_) => TAG_INSERT_EDGE,
+        SemioFlowMutation::RemoveEdge(_) => TAG_REMOVE_EDGE,
+        SemioFlowMutation::SetEdgeEndpoints(_) => TAG_SET_EDGE_ENDPOINTS,
+        SemioFlowMutation::SetEdgeKind(_) => TAG_SET_EDGE_KIND,
     }
 }
 /// ✂️ Just the `key=value ...` argument tail of `print_flow_mutation` — the binary frame's `tag`
@@ -320,7 +337,7 @@ fn print_flow_mutation_args(m: &SemioFlowMutation) -> String {
 impl OpBinary for SemioFlowMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_flow_mutation_args(self).as_bytes());
         Ok(out)
     }
@@ -333,7 +350,7 @@ impl OpBinary for SemioFlowMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = KINDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", KINDS.len()) })?;
+        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })

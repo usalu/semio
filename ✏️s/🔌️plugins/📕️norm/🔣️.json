@@ -1312,7 +1312,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -1323,7 +1323,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -3820,7 +3820,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -3831,7 +3831,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -6328,7 +6328,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -6339,7 +6339,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -8836,7 +8836,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -8847,7 +8847,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -11344,7 +11344,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -11355,7 +11355,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -13852,7 +13852,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -13863,7 +13863,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -16360,7 +16360,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -16371,7 +16371,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -18868,7 +18868,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -18879,7 +18879,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -21376,7 +21376,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -21387,7 +21387,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -23884,7 +23884,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -23895,7 +23895,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -26392,7 +26392,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -26403,7 +26403,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -28900,7 +28900,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -28911,7 +28911,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -31408,7 +31408,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -31419,7 +31419,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -33916,7 +33916,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -33927,7 +33927,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -36424,7 +36424,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 42,
                 "children": [
                   {
                     "kind": "window",
@@ -36435,7 +36435,7 @@
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 58,
                 "children": [
                   {
                     "kind": "window",
@@ -37628,7 +37628,308 @@
         }
       }
     ],
-    "examples": [],
+    "examples": [
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.din16798.dsl v1\nannex=de occupancy=residential comfort-category=II t-op-c=22 rh-percent=50pct air-speed-m-s=0.1m/s theta-rm-c=15 co2-ppm=800 df-percent=2.5pct l-aeq-db=24 persons=10 ida-class=\"2\" ventilation-m3-h=280 floor-area-m2=90m2 bedrooms=3 dwelling-ventilation-m3-h=63 occupants=3 residential-ventilation-m3-h=80 sfp-w-m3-s=1500 sfp-required-class=4 heat-recovery-eta=0.75 heat-recovery-eta-min=0.7 system-type=central_mech years-since-inspection=1 humidification-required-kg-h=2 humidification-provided-kg-h=2 fan-q-v-m3-s=1 fan-t-run-h=8h fan-energy-reference-kwh=15 night-setback-k=3.5K hr-m-dot-kg-s=0.5 hr-cp-j-kgk=1005 hr-delta-t-c=15 hr-t-h=10h hr-savings-reference-kwh=50 n50-h-inv=1.5 volume-m3=500m3 infiltration-allowance-m3-h=45 cellar-area-m2=50m2 cellar-ventilation-m3-h=15 h-tr-w-k=200 h-ve-w-k=100 theta-e-c=32 theta-set-c=26 cooling-delta-t-h=10 cooling-gains-kwh=5 cooling-utilization-factor=0.8 cooling-reference-kwh=20 chiller-type=air_cooled eer-actual=3 q-c-kwh=1000 generation-reference-kwh=400 data-center-supply-c=22 h-st-w-k=5 theta-st-c=60 theta-amb-c=20 storage-t-h=24h storage-allowance-kwh=6 dhw-delivery-c=58 duct-class=C duct-test-pressure-pa=400Pa duct-leakage-m3-s-m2=0.1\n",
+        "dialect": {
+          "artifactKind": "s.norm.din16798",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.din18599.dsl v1\nuseClass=residential\nheatedAreaM2=100\noccupants=4\nhT=92.12124613902822\nhV=40.800000000000004\nclimate=[64696e31383539392d636c696d6174652d39643538303136343463666132653435,64696e31383539392d636c696d6174652d3964353830313634346366613265343521732e737464696f2e73656d696f4076312f7461626c65]\ninternalGainsWM2=3.5\nsolarGainsKwh=84\nsystemLossesKwh=800\nrenewableKwh=1500\nannualLimitKwh=7500\nenergyCarrier=6e61747572616c5f676173\nreferenceQPKwh=10000\n",
+        "dialect": {
+          "artifactKind": "s.norm.din18599",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.din4108.dsl v1\ncategory=residential climate=zone2 airtightness-n50=2.5 psi-times-l-sum=0.02 rh-int=0.5 catalog-id=AW-01 material-id=mineral_wool airtightness-class=class2 t-int-c=20 solar-absorptance=0.6 irradiance-w-m2=600 moisture-mu-exterior=15 moisture-mu-interior=1.3 envelope-area-m2=100m2 bb2-details-conform=true application-type=DEO declared-application-class=dk\nlayers [thickness-m:QTY lambda-w-mk:NUM] {\n  0.24m 0.81\n  0.14m 0.035\n}\n",
+        "dialect": {
+          "artifactKind": "s.norm.din4108",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "high-consequence-office",
+        "label": {
+          "native": {
+            "en": "High Consequence Office",
+            "de": "High Consequence Office"
+          },
+          "reuse": {
+            "en": "High Consequence Office",
+            "de": "High Consequence Office"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.en1990.dsl v1\ngK=250\nqK=[656e313939302d716b2d65316535333637653130343739316435,656e313939302d716b2d6531653533363765313034373931643521732e737464696f2e73656d696f4076312f7461626c65]\nresistanceKn=420\nconsequenceClass=3\nannex=en\nseismicAEdKn=0\n",
+        "dialect": {
+          "artifactKind": "s.norm.en1990",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "retail-hydrocarbon-fire",
+        "label": {
+          "native": {
+            "en": "Retail Hydrocarbon Fire",
+            "de": "Retail Hydrocarbon Fire"
+          },
+          "reuse": {
+            "en": "Retail Hydrocarbon Fire",
+            "de": "Retail Hydrocarbon Fire"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.en1991.dsl v1\narea-m2=80 category=d annex=en self-weight-material=timber_frame self-weight-thickness-m=0.24 assumed-g-k-kn-m2=3.2 fire-curve=hydrocarbon fire-resistance-min=60 fire-member-capacity-c=750 snow-zone=3 snow-altitude-m=420 en-s-k-kn-m2=1.4 wind-zone=3 en-v-b-m-s=28 delta-t-k=25 construction-activity=formwork_striking accidental-mass-t=15t accidental-speed-km-h=50 bridge-lane=2 bridge-span-m=35 bridge-lane-width-m=3.5 bridge-moment-resistance-knm=4200 crane-class=HC3 hoist-class=HC3 hoisting-speed-m-s=0.8 silo-bulk-density-kn-m3=9.5 silo-height-m=15 silo-hydraulic-radius-m=1.8 silo-mu=0.35 silo-k=0.5 c-s=1.05 c-d=0.95\n",
+        "dialect": {
+          "artifactKind": "s.norm.en1991",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "liquid-retaining-fem-anchor",
+        "label": {
+          "native": {
+            "en": "Liquid Retaining Fem Anchor",
+            "de": "Liquid Retaining Fem Anchor"
+          },
+          "reuse": {
+            "en": "Liquid Retaining Fem Anchor",
+            "de": "Liquid Retaining Fem Anchor"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.en1992.dsl v1\nannex=en m-ed-knm=185 v-ed-kn=95 f-ck=35 b-mm=350 d-mm=500 a-s-mm2=1450 f-yk=500 rho-l=0.012 n-ed-kn=50 p-kn=300 a-c-mm2=175000 use-fem=true span-m=7.5 udl-kn-m=24 fire-rating=r90 provided-axis-distance-mm=40 bridge-sigma-c-mpa=14.5 bridge-delta-sigma-s-mpa=120 tightness-class=tc2 hd-over-h=8 liquid-sigma-s-mpa=180 liquid-rho-p-eff=0.014 liquid-f-ct-eff-mpa=3.2 liquid-e-s-mpa=200000 liquid-s-r-max-mm=220 anchor-h-ef-mm=100 anchor-cracked=true anchor-f-uk-mpa=900 anchor-f-yk-mpa=720 anchor-a-s-mm2=115 anchor-d-mm=14 anchor-c1-mm=120 anchor-n-ed-kn=14 anchor-v-ed-kn=8\n",
+        "dialect": {
+          "artifactKind": "s.norm.en1992",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "high-strength-connection",
+        "label": {
+          "native": {
+            "en": "High Strength Connection",
+            "de": "High Strength Connection"
+          },
+          "reuse": {
+            "en": "High Strength Connection",
+            "de": "High Strength Connection"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.en1993.dsl v1\nannex=en n-ed-kn=850 m-ed-knm=220 v-ed-kn=140 a-mm2=7500 a-v-mm2=3600 w-pl-mm3=750000 f-y-mpa=460 f-u-mpa=550 chi=0.68 a-net-mm2=6800 tension-n-ed-kn=600 fire-thickness-mm=15 fire-rating=r30 fire-massivity=180 fire-mu-0=0.6 fire-design-temperature-c=620 cf-b-bar-mm=110 cf-t-mm=3 cf-k-sigma=6 cf-psi=0.5 cf-n-ed-kn=35 cf-gross-resistance-kn=80 stainless-m-ed-knm=55 stainless-w-pl-mm3=350000 stainless-f-y-mpa=240 plated-lambda-p=1.1 plated-sigma-ed-mpa=240 silo-t-mm=10 silo-r-mm=4000 shell-sigma-x-ed-mpa=180 silo-k=0.5 silo-gamma-kn-m3=20 silo-depth-m=8 bolt-f-ed-kn=150 bolt-n-bolts=4 bolt-a-s-mm2=353 bolt-e1-mm=50 bolt-e2-mm=50 bolt-d0-mm=26 bolt-d-mm=24 bolt-t-mm=12 bolt-f-u-mpa=550 bolt-f-ub-mpa=1000 weld-a-mm=6 weld-l-mm=150 weld-f-u-mpa=550 weld-steel-grade=S460 weld-f-ed-kn=130 delta-sigma-mpa=71 fatigue-category=90 fatigue-method=safe_life t10-steel-subgrade=K2 t10-actual-thickness-mm=35 t10-t-ed-c=-10 tension-component-f-uk-kn=650 tension-component-f-k-kn=480 tension-component-n-ed-kn=320 hss-w-el-mm3=550000 hss-f-y-mpa=420 hss-section-class=3 hss-m-ed-knm=140 bridge-lambda=1.15 bridge-phi-2=1.4 bridge-delta-sigma-p-mpa=45 tower-wind-factor=1.25 tower-n-ed-kn=480 pile-sigma-mpa=310 pile-k-red=0.75 pile-n-ed-kn=520 crane-f-z-ed-kn=65 crane-wheel-contact-length-mm=120 crane-dispersion-mm=60 crane-t-w-mm=12\n",
+        "dialect": {
+          "artifactKind": "s.norm.en1993",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "composite-bridge-girder",
+        "label": {
+          "native": {
+            "en": "Composite Bridge Girder",
+            "de": "Composite Bridge Girder"
+          },
+          "reuse": {
+            "en": "Composite Bridge Girder",
+            "de": "Composite Bridge Girder"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.en1994.dsl v1\nannex=en m-ed-knm=330 v-ed-kn=180 m-pla=120 m-pl-rd=380 eta=0.9 v-l-rd=220 insulation-thickness-mm=32 fire-rating=r90 deck-type=re-entrant delta-sigma-mpa=60 fatigue-detail=shear_connector d-mm=22 h-sc-mm=100 f-ck-mpa=35 f-u-mpa=450 e-cm-mpa=34000 v-ed-per-stud-kn=45 span-m=20 f-y-mpa=355 n-cycles-stud=2000000 delta-tau-stud-mpa=50\n",
+        "dialect": {
+          "artifactKind": "s.norm.en1994",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "glulam-footbridge",
+        "label": {
+          "native": {
+            "en": "Glulam Footbridge",
+            "de": "Glulam Footbridge"
+          },
+          "reuse": {
+            "en": "Glulam Footbridge",
+            "de": "Glulam Footbridge"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.en1995.dsl v1\nannex=en m-ed-knm=45 n-ed-kn=30 v-ed-kn=22 w-mm3=5333333 a-mm2=80000 b-mm=200 h-mm=400 f-m-k=28 f-c-0-k=24 service-class=sc2 load-duration=long m-crit-knm=150 f-ed-kn=25 a-ef-mm2=15000 f-v-k=3.5 fire-duration-min=60 section-depth-mm=400 a-vert-m-s2=0.5 n-cycles-bridge=3000000\n",
+        "dialect": {
+          "artifactKind": "s.norm.en1995",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "loadbearing-wall",
+        "label": {
+          "native": {
+            "en": "Loadbearing Wall",
+            "de": "Loadbearing Wall"
+          },
+          "reuse": {
+            "en": "Loadbearing Wall",
+            "de": "Loadbearing Wall"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.en1996.dsl v1\nm-ed-knm=12.5 n-ed-kn=350 v-ed-kn=42 h-ed-kn=18 z-mm3=12000000 area-mm2=600000 shear-area-mm2=360000 f-k-mpa=6.4 f-vk-mpa=0.2 annex=en masonry-class=class2 design-situation=transient mu=0.35 wall-thickness-mm=300 fire-resistance-min=90 unit=calcium-silicate exposure=mx3 mortar=m10 bed-joint-thickness-mm=10 storeys=4 h-ef-mm=3200 t-ef-mm=300\n",
+        "dialect": {
+          "artifactKind": "s.norm.en1996",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.en1997.dsl v1\nv-ed-kn=500 h-ed-kn=80 footing-area-m2=2 phi-deg=30 c-kpa=0 gamma-kn-m3=18 b-m=2 d-f-m=1.5 e-s-mpa=30000 nu=0.3 design-approach=da1str annex=de settlement-limit-mm=25 n-pile-ed-kn=800 alpha-s=0.7 pile-d-m=0.6 q-s-kpa=80 pile-l-m=12 q-b-kpa=2500 pile-base-area-m2=0.28 pile-n-profiles=1 z-investigated-m=8\n",
+        "dialect": {
+          "artifactKind": "s.norm.en1997",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "seismic-rc-frame",
+        "label": {
+          "native": {
+            "en": "Seismic Rc Frame",
+            "de": "Seismic Rc Frame"
+          },
+          "reuse": {
+            "en": "Seismic Rc Frame",
+            "de": "Seismic Rc Frame"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.en1998.dsl v1\nseismic-zone=3 ground-type=d importance-class=cc3 structural-system=dual_system t1-s=0.3 mass-t=500 v-rd-kn=800 drift-mm=20 height-m=12 multiple-resisting-systems=false annex=en en-a-gr=0.15 en-ground-type=b en-spectrum-type=type2 period-ratio=2 bridge-v-rd-kn=600 bearing-d-ed-mm=120 bearing-d-rd-mm=250 retrofit-knowledge-level=kl2 retrofit-limit-state=near_collapse retrofit-e-d-kn=250 retrofit-r-k-kn=400 retrofit-gamma-el=1 silo-height-m=10 silo-radius-m=5 silo-n-rd-kn=500 silo-v-ed-kn=180 silo-v-rd-kn=300 silo-q-nominal=2 tank-height-m=8 tank-radius-m=4 tank-mass-t=300 tank-v-rd-kn=400 tower-m-ed-knm=1200 tower-m-rd-knm=2500 tower-is-chimney=false tower-q-nominal=2.5 tower-mass-t=80 foundation-area-m2=100 foundation-p-rd-kpa=500 foundation-h-ed-kn=150 foundation-h-rd-kn=400 k-foundation=500000 k-soil=200000 wall-height-m=4 wall-phi-deg=30 wall-soil-gamma-kn-m3=18 wall-r=1.5 wall-h-rd-kn=150\n",
+        "dialect": {
+          "artifactKind": "s.norm.en1998",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "aluminium-roof-purlin",
+        "label": {
+          "native": {
+            "en": "Aluminium Roof Purlin",
+            "de": "Aluminium Roof Purlin"
+          },
+          "reuse": {
+            "en": "Aluminium Roof Purlin",
+            "de": "Aluminium Roof Purlin"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.en1999.dsl v1\nn-ed-kn=150 m-ed-knm=9.5 a-mm2=1850 w-el-mm3=42000 alloy=aw6082t6 chi=0.78 i-t-mm4=8200 l-cr-mm=4000 theta-c=230 delta-sigma-ed=50 delta-sigma-c=90 fatigue-m=5 n-cycles=1200000 v-weld-ed-kn=35 weld-throat-mm=5 weld-length-mm=150 beta-w=0.7 sheet-b-mm=250 sheet-t-mm=2.5 sheet-k-sigma=4 sheet-w-el-mm3=10000 sheet-m-ed-knm=0.8 shell-t-mm=5 shell-r-mm=600 sigma-ed-shell-mpa=180 annex=en\n",
+        "dialect": {
+          "artifactKind": "s.norm.en1999",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.iso16757.dsl v1\nexchange-process=determineProduct catalogue=id=cat.demo metadata=edition-profile=fullPublished names=short-name=Demo preferred=locale=en text=\"Demo HVAC catalogue\"\nalternatives [locale:TEXT text:TEXT] {\n}\nlifecycle=revision=\"1\" status=published manufacturer=id=mfg.demo names=preferred=locale=en text=\"Demo Manufacturer\"\nalternatives [locale:TEXT text:TEXT] {\n  de \"Demo Hersteller\"\n}\ndictionary=id=hvac-dict version=\"2025-01\" accessories={\n}\ncompositions={\n}\nextensions=fields={\n}\nproduct-groups [id:TEXT names:REC dictionary-subject-id:TEXT] {\n  group.valves {preferred=locale=en text=Valves\n  alternatives [locale:TEXT text:TEXT] {\n  }\n  } subject.valve\n}\nproduct-classes [id:TEXT group-id:TEXT parent-id:TEXT names:REC required-property-ids:LIST optional-property-ids:LIST] {\n  class.valve group.valves _ {preferred=locale=en text=\"Control valve\"\n  alternatives [locale:TEXT text:TEXT] {\n  }\n  } [ prop.dn ] [ ]\n}\nproduct-series [id:TEXT class-id:TEXT names:REC shared-property-values:MAP geometry-id:TEXT] {\n  series.cv class.valve {preferred=locale=en text=\"CV series\"\n  alternatives [locale:TEXT text:TEXT] {\n  }\n  } {\n  }\n  geom.valve.50\n}\nproducts [id:TEXT series-id:TEXT names:REC parameter-domains:LIST variants:LIST static-properties:LIST] {\n  product.cv series.cv {preferred=locale=en text=CV-50\n  alternatives [locale:TEXT text:TEXT] {\n  }\n  } [ parameter-id=dn allowed-values=[ {\n    kind=\"decimal\" value=50\n  }\n  ] default-value={\n    kind=\"decimal\" value=50\n  }\n  ] [ id=variant.50 article-number=CV-50 geometry-id=geom.valve.50 parameter-values={\n    dn={\n      kind=\"decimal\" value=50\n    }\n  }\n  property-values=[ definition-id=prop.dn value={\n    kind=\"decimal\" value=50\n  }\n  ] ] [ ]\n}\nproduct-indexes [id:TEXT product-id:TEXT variant-id:TEXT search-tags:LIST] {\n  index.cv50 product.cv variant.50 [ valve dn50 ]\n}\nproperty-definitions [id:TEXT names:REC data-type:TEXT unit:REC cardinality:REC kind:ENUM dictionary-property-id:TEXT] {\n  prop.dn {preferred=locale=en text=\"Nominal diameter\"\n  alternatives [locale:TEXT text:TEXT] {\n  }\n  } decimal {symbol=mm si-factor=0.001 dimension=length=1 mass=0 time=0 temperature=0} {min=1 max=1} static prop.dn\n}\ndescriptive-objects [id:TEXT media-type:TEXT uri:TEXT language:TEXT checksum:TEXT] {\n}\ndictionary=reference=id=hvac-dict version=\"2025-01\"\nsubjects [id:TEXT kind:ENUM names:REC definition:REC parent-id:TEXT] {\n  subject.valve productClass {short-name=Valve preferred=locale=en text=\"Control valve\"\n  alternatives [locale:TEXT text:TEXT] {\n    de Regelventil\n    fr \"Vanne de régulation\"\n  }\n  } {locale=en text=\"Flow control valve\"} _\n}\nrelationships [id:TEXT kind:ENUM source-id:TEXT target-id:TEXT cardinality:REC] {\n}\nproperties [id:TEXT names:REC kind:ENUM data-type:TEXT unit:REC applicable-subject-ids:LIST value-constraints:LIST] {\n  prop.dn {preferred=locale=en text=\"Nominal diameter\"\n  alternatives [locale:TEXT text:TEXT] {\n  }\n  } static decimal {symbol=mm si-factor=0.001 dimension=length=1 mass=0 time=0 temperature=0} [ subject.valve ] [ min=15 max=300 allowed-values=[ ] ]\n}\ncontrolled-lists [id:TEXT values:LIST context-subject-ids:LIST] {\n  dn.list [ \"50\" \"80\" \"100\" ] [ subject.valve ]\n}\nmeta-subjects [id:TEXT kind:ENUM names:REC definition:REC parent-id:TEXT] {\n}\ngeometry=objects={\n  geom.valve.50=id=geom.valve.50\n  shape {\n    primitive kind=box parameters={\n      depth=0.1 height=0.2 width=0.15\n    }\n  }\n  symbolic {\n  }\n  spaces=[ kind=installation bounds=min=0,0,0 max=0.3,0.3,0.3 ] surfaces=[ ] ports=[ id=port.in medium=water position=0,0.1,0.05 direction=1,0,0 port-type=inlet ] parameter-bindings={\n    width=prop.dn\n  }\n}\nprimitive-registry [id:TEXT parameters:LIST] {\n  box [ width height depth ]\n  cylinder [ radius height ]\n  sphere [ radius ]\n}\nselection=class-id=class.valve series-id=series.cv constraints=[ property-id=prop.dn operator=equal value={\n  kind=\"decimal\" value=50\n}\n] part-number-rule={\n  function_id=\"partno\" kind=\"script\" source=\"dn * 10 + 50\"\n}\npart-number-inputs={\n  dn={\n    kind=\"decimal\" value=50\n  }\n}\nscript-limits=max-steps=10000 max-recursion=64 timeout-ms=50\n",
+        "dialect": {
+          "artifactKind": "s.norm.iso16757",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio norm.vdi3805.dsl v1\nstrict-mode=false manufacturer-file=header-version=\"3805\" manufacturer=DEMO created=\"2026-07-22\" charset=UTF-8 record-count=3 building-system-number=system-code=\"420\" subsystem=\"10\" sequence=1 extensions=fields={\n}\ncatalog=file=header-version=\"3805\" manufacturer=DEMO created=\"2026-07-22\" charset=UTF-8 record-count=3 building-system-number=system-code=\"420\" subsystem=\"10\" sequence=1 extensions=fields={\n}\nextensions=fields={\n}\nproducts [identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {\n  {manufacturer-code=DEMO product-group=HV article-number=VLV-50-001} [ {locale=de text=\"Stellventil DN50\"} {locale=en text=\"Control valve DN50\"} ] 2 [ {family=\"100\" fields=[ \"100\" DEMO HV VLV-50-001 \"2\" ] extensions=fields={\n  }\n  } {family=\"200\" fields=[ \"200\" dn \"50\" ] extensions=fields={\n  }\n  } ] {id=cfg.VLV-50-001 geometry-ref=geom.valve.50 parameters={\n    dn={\n      kind=\"integer\" value=50\n    }\n    kvs={\n      kind=\"decimal\" unit={\n        delta=false kind=\"Volume\" si_factor=1 symbol=\"m3/h\"\n      }\n      value=4.5\n    }\n  }\n  function-refs=[ curve.kvs ]} [ ] [ ] {fields={\n  }\n  }\n}\nedition-profile={\n}\ncorrection-as-of=year=2024 month=1 index=\nentries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {\n  VLV-50-001 2 [ \"Stellventil DN50\" \"Control valve DN50\" ] 50\n}\ngeometry={\n  geom.valve.50=id=geom.valve.50 bbox=min-x=0 min-y=0 min-z=0 max-x=0.15 max-y=0.2 max-z=0.1 parameters={\n    scale=1\n  }\n  connections [id:TEXT medium:TEXT position:TUPLE direction:TUPLE diameter-mm:QTY] {\n    in water 0,0.1,0.05 -1,0,0 50mm\n    out water 0.15,0.1,0.05 1,0,0 50mm\n  }\n}\ncurves={\n  curve.kvs=id=curve.kvs x-unit=symbol=\"%\" kind=dimensionless delta=true si-factor=0.01 y-unit=symbol=m3/h kind=volume delta=false si-factor=1\n  points [x:NUM y:NUM] {\n    0 0\n    100 4.5\n  }\n}\nlimits=max-file-bytes=16777216 max-records=100000 max-field-length=8192 max-nesting-depth=32",
+        "dialect": {
+          "artifactKind": "s.norm.vdi3805",
+          "standard": "1",
+          "subset": "*"
+        }
+      }
+    ],
     "capabilities": [
       {
         "artifact": "document",
@@ -39576,6 +39877,6 @@
   "hashes": {
     "wasmSha256": "d6f5e31e2c1e4d1befc57db422279c0cdf38665271e6bab2454a52a9b857c30b",
     "coreWasmSha256": "446496bcd81b40700be8bb7a707cacdf7280912899b509041c818978f0a4d8b3",
-    "descriptorSha256": "e9fe017e3736faf5991d831e0203cd1251bc89937092665dea312cbc8c92bc73"
+    "descriptorSha256": "ef9fef22be17d5f23424297f07caf1bbfd6ac0072006e7629ba2a6d542f80c91"
   }
 }

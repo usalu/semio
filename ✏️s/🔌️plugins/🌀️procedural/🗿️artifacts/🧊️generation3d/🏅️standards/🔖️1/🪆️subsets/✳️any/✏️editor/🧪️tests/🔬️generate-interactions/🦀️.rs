@@ -72,12 +72,11 @@ struct RenameCommitArgument {
     guest_reads: Vec<String>,
 }
 
-/// 📇️ Every action id the app declares. `AppDefinition` has no app-level `actions` list — an action a
-/// window does not own is COPIED onto every window by `build_definition`
-/// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`), so the union over the window kinds is the
-/// roster, and an app-scoped verb like `reorganize` appears on all of them.
+/// 📇️ Every action id the app declares: each window kind's own roster plus the app-level
+/// `AppDefinition::actions` roster, which `semio_framework::window_kind_actions` offers to every window
+/// that does not claim the id itself (an app-scoped verb like `reorganize` lives there).
 fn declared_action_ids(definition: &semio_framework_plugin::AppDefinition) -> std::collections::BTreeSet<&str> {
-    definition.window_kinds.iter().flat_map(|kind| kind.actions.iter()).map(|action| action.id.as_str()).collect()
+    definition.window_kinds.iter().flat_map(|kind| kind.actions.iter()).chain(definition.actions.iter()).map(|action| action.id.as_str()).collect()
 }
 
 fn generate_interactions_fixture() -> GenerateInteractionsFixture {

@@ -11,7 +11,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "transform-bin";
-const FIXTURE = "local://transform-bin.tex";
+const FIXTURE = "shared://🪣️transform-bin/transform-bin.tex";
 const DECIMALS = 6;
 
 /** 🧫️ The `value` column of the shipped `demo-distribution` table. */

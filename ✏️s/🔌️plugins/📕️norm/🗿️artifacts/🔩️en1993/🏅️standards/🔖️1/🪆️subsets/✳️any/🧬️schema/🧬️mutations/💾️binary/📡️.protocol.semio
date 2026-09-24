@@ -3,14 +3,45 @@ protocol en1993.mutations
 version 1
 schema norm.en1993.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real `En1993Mutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records at compile time (`dsl::protocol_record::tag_u8`).
+header fixed 2
+field format u8
+field tag u8
+record change-annex tag=0
+field payload bytes
+record update-member-properties tag=1
+field payload bytes
+record update-fire-inputs tag=2
+field payload bytes
+record update-cold-formed-inputs tag=3
+field payload bytes
+record update-stainless-inputs tag=4
+field payload bytes
+record update-plated-inputs tag=5
+field payload bytes
+record update-silo-shell-inputs tag=6
+field payload bytes
+record update-bolt-inputs tag=7
+field payload bytes
+record update-weld-inputs tag=8
+field payload bytes
+record update-fatigue-inputs tag=9
+field payload bytes
+record update-through-thickness-inputs tag=10
+field payload bytes
+record update-tension-component-inputs tag=11
+field payload bytes
+record update-hss-inputs tag=12
+field payload bytes
+record update-bridge-inputs tag=13
+field payload bytes
+record update-tower-inputs tag=14
+field payload bytes
+record update-pile-inputs tag=15
+field payload bytes
+record update-crane-inputs tag=16
+field payload bytes

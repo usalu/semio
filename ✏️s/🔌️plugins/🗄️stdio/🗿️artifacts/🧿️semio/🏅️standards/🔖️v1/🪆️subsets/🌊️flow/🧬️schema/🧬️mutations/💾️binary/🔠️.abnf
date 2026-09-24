@@ -2,5 +2,5 @@
 ; authoritative `📡️.protocol.semio` for the conformance-tested version.
 document = format tag payload
 format   = %x01                  ; OP_BINARY_FORMAT
-tag      = OCTET                 ; SemioFlowMutation variant ordinal, see OP_KEYWORDS
+tag      = OCTET                 ; the kind's record tag in 📡️.protocol.semio
 payload  = *OCTET                ; opaque "key=value ..." UTF-8 argument tail, see component.rs

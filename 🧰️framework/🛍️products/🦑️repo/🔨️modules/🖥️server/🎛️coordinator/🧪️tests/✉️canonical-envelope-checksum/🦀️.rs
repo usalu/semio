@@ -29,9 +29,9 @@ fn json_of(value: &SerdeJson) -> Json {
 fn golden_line_is_canonical(ctx: &Context) -> Result<Outcome, String> {
     let (event, line) = golden_event(ctx)?;
     let encoded = coordinator::encode_event(&event).trim_end_matches('\n').to_string();
-    let schema_bytes = ctx.fixture_bytes("shared://🧬️g3-event-schema.json")?;
+    let schema_bytes = ctx.fixture_bytes("schema://repo.server.coordinator/G3EventLogContract")?;
     let declared: SerdeJson = serde_json::from_slice(&schema_bytes).map_err(|error| error.to_string())?;
-    let declared_of = |key: &str| declared.get(key).map_or(Json::Null, json_of);
+    let declared_of = |key: &str| declared.pointer(&format!("/$defs/G3EventLogContract/properties/{key}/const")).map_or(Json::Null, json_of);
     Ok(Outcome::projection(Json::Object(vec![
         ("line".to_string(), Json::String(encoded.clone())),
         ("reproduced".to_string(), Json::Bool(encoded == line)),

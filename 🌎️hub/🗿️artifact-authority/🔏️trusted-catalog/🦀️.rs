@@ -288,6 +288,7 @@ impl GuestArtifactCodecBinding {
         let pair = self
             .component
             .runtime
+            .as_ref()
             .codec_genesis_observed(compiled, &self.artifact_schema, document_id, GUEST_CODEC_BUDGET, |_fuel, _elapsed| {
                 let _ = context.checkpoint();
             })
@@ -744,11 +745,17 @@ impl TrustedCatalogLoader {
                     // COMPONENT's own answer instead — the component bytes are already hash-verified
                     // above, so this binds the schema identity to those exact bytes.
                     None => {
+                        context.checkpoint()?;
                         let compiled = component.compiled().await.map_err(|error| catalog_error(format!("{}: {error}", expected.artifact_schema)))?;
+                        context.checkpoint()?;
                         let observed = guest_runtime
-                            .codec_pack_schema_hash(compiled, &expected.artifact_schema, GUEST_CODEC_BUDGET)
+                            .as_ref()
+                            .codec_pack_schema_hash_observed(compiled, &expected.artifact_schema, GUEST_CODEC_BUDGET, |_fuel, _elapsed| {
+                                let _ = context.checkpoint();
+                            })
                             .await
                             .map_err(|error| catalog_error(format!("{}: {error}", expected.artifact_schema)))?;
+                        context.checkpoint()?;
                         if observed != expected_hash {
                             return Err(catalog("guest artifact codec schema hash differs from its trust record"));
                         }
@@ -1387,10 +1394,23 @@ fn validate_descriptor(record: &TrustedBundlePackageV1, descriptor: &PackageDesc
 async fn dual_hash(bytes: &[u8], context: &OperationContext<'_>) -> Result<([u8; 32], [u8; 32]), AuthorityError> {
     let mut sha256 = Sha256::new();
     let mut blake3 = Hasher::new();
+    let total_units = u64::try_from(bytes.len().max(1)).map_err(catalog_error)?;
+    let mut completed_units = 0u64;
+    let mut last_report_ms = 0u64;
     for chunk in bytes.chunks(64 * 1024) {
         context.checkpoint()?;
         sha256.update(chunk);
         blake3.update(chunk);
+        completed_units = completed_units.saturating_add(u64::try_from(chunk.len()).map_err(catalog_error)?);
+        let now_ms = context.now_ms();
+        if now_ms.saturating_sub(last_report_ms) >= 1_000 {
+            last_report_ms = now_ms;
+            context.report(AuthorityProgress {
+                stage: AuthorityProgressStage::CatalogLoading,
+                completed_units: completed_units.min(total_units),
+                total_units,
+            })?;
+        }
         semio_framework_async::yield_once().await;
     }
     context.checkpoint()?;
@@ -1399,9 +1419,22 @@ async fn dual_hash(bytes: &[u8], context: &OperationContext<'_>) -> Result<([u8;
 
 async fn sha256(bytes: &[u8], context: &OperationContext<'_>) -> Result<[u8; 32], AuthorityError> {
     let mut hash = Sha256::new();
+    let total_units = u64::try_from(bytes.len().max(1)).map_err(catalog_error)?;
+    let mut completed_units = 0u64;
+    let mut last_report_ms = 0u64;
     for chunk in bytes.chunks(64 * 1024) {
         context.checkpoint()?;
         hash.update(chunk);
+        completed_units = completed_units.saturating_add(u64::try_from(chunk.len()).map_err(catalog_error)?);
+        let now_ms = context.now_ms();
+        if now_ms.saturating_sub(last_report_ms) >= 1_000 {
+            last_report_ms = now_ms;
+            context.report(AuthorityProgress {
+                stage: AuthorityProgressStage::CatalogLoading,
+                completed_units: completed_units.min(total_units),
+                total_units,
+            })?;
+        }
         semio_framework_async::yield_once().await;
     }
     context.checkpoint()?;

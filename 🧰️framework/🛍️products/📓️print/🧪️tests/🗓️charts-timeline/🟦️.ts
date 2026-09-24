@@ -27,7 +27,7 @@ const grid = (value: number): number => {
 
 /** 🎯️ The bars one compiled fixture drew, flattened in row order. */
 async function bars(ctx: AdapterContext, fixture: string): Promise<number[]> {
-  const parsed = await compileVizProbe(ctx.fixture(`local://${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const parsed = await compileVizProbe(ctx.fixture(`shared://🗓️charts-timeline/${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   return roundProbeNumbers(parsed, DECIMALS)
     .filter((record) => record.key === "geometry/rect")
     .flatMap((record) => record.values.map(Number));

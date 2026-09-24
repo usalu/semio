@@ -1,6 +1,6 @@
 //! 🗂️ Direct binary identity for `set-catalog-entry`.
 
-pub const TAG: u8 = 58;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-catalog-entry");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetCatalogEntry;

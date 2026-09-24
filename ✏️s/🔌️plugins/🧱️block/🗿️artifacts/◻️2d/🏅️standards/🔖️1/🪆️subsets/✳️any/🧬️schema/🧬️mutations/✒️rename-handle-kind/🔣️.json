@@ -7,7 +7,7 @@
   "aggregateVariant": "RenameHandleKind",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-handle-kind",
-  "binaryTag": null,
+  "binaryTag": 9,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

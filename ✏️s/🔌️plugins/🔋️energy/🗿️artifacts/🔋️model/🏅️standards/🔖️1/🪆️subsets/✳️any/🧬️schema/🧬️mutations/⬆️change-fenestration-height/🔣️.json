@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeFenestrationHeight",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-height",
-  "binaryTag": null,
+  "binaryTag": 54,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

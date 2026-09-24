@@ -404,6 +404,18 @@ impl Drop for SocketGrantReceiptV1 {
     }
 }
 
+/// 📝️ The answer to a document open-plan exchange (`os.directory#/$defs/DocumentSocketGrantReceiptV1`):
+/// the actor the next `semio.session.v1` upgrade of the same credential is admitted as, and until
+/// when. It carries no secret — the upgrade presents the credential itself.
+#[derive(FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentSocketGrantReceiptV1 {
+    pub schema: String,
+    pub protocol: String,
+    pub actor_id: String,
+    pub expires_at_ms: i64,
+}
+
 /// 🔐 Receipt-free server-selected authority retained by a native document connection.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DocumentSocketAuthorityV1 {
@@ -492,9 +504,9 @@ impl DocumentSocketAuthorityV1 {
     }
 }
 
-/// 🎫 One exchanged socket grant and its receipt-free open authority.
+/// 🎫 One exchanged document socket grant and its receipt-free open authority.
 pub struct DocumentSocketAdmissionV1 {
-    pub socket: SocketGrantReceiptV1,
+    pub socket: DocumentSocketGrantReceiptV1,
     pub authority: DocumentSocketAuthorityV1,
 }
 
@@ -595,6 +607,20 @@ fn emit_socket_grant_probe(path: &str, grant: &str) {
 
 #[cfg(target_arch = "wasm32")]
 fn emit_socket_grant_probe(_path: &str, _grant: &str) {}
+
+/// 🔢 Direct-child probe: the process-local ordinal of every document socket grant exchanged, so a
+/// harness can prove a reconnect ran a fresh open-plan exchange.
+#[cfg(not(target_arch = "wasm32"))]
+fn emit_document_socket_grant_probe(path: &str) {
+    static EXCHANGES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    if std::env::var("SEMIO_DIRECT_CHILD_PROBE").ok().as_deref() != Some("1") {
+        return;
+    }
+    eprintln!("[semio-directory-client] document-socket-grant {path} {}", EXCHANGES.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1);
+}
+
+#[cfg(target_arch = "wasm32")]
+fn emit_document_socket_grant_probe(_path: &str) {}
 
 #[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
 fn wall_now_ms() -> i64 {
@@ -1315,6 +1341,16 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         emit_socket_grant_probe(path, &receipt.grant);
         Ok(receipt)
     }
+
+    fn issue_document_socket_grant(&self, ctx: &OperationContext, path: &str, body: &[u8], timeout_ms: u64) -> Result<DocumentSocketGrantReceiptV1, DirectoryClientError> {
+        let response_body = self.protected_post(ctx, path, body, timeout_ms)?;
+        let receipt: DocumentSocketGrantReceiptV1 = decode_json_bytes(&response_body.bytes).map_err(|_| DirectoryClientError::Decode("document socket grant receipt invalid".into()))?;
+        if receipt.schema != "semio.hub.document-socket-grant/v1" || receipt.protocol != "semio.session.v1" || !valid_socket_actor(&receipt.actor_id) || receipt.expires_at_ms <= wall_now_ms() {
+            return Err(DirectoryClientError::Decode("document socket grant receipt binding invalid".into()));
+        }
+        emit_document_socket_grant_probe(path);
+        Ok(receipt)
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1348,7 +1384,7 @@ impl<T: DirectoryTransport + Send + Sync> HubSocketGrantSource for DirectoryClie
         let authority = DocumentSocketAuthorityV1::from_plan(credential_origin.to_string(), &plan, expectation, now_ms).map_err(|_| DirectoryClientError::Decode("document open authority invalid".into()))?;
         let exchange = WipeDocumentPlanSocketGrantIntent(DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: std::mem::take(&mut plan.receipt) });
         let exchange_body = WipeBytes { bytes: crate::os_pack::json::to_json_string(&exchange.0).into_bytes(), observer: None };
-        let socket = self.issue_socket_grant(ctx, &format!("{prefix}/socket-grants"), &exchange_body.bytes, timeout_ms)?;
+        let socket = self.issue_document_socket_grant(ctx, &format!("{prefix}/socket-grants"), &exchange_body.bytes, timeout_ms)?;
         if ctx.cancel.is_cancelled_now() {
             return Err(DirectoryClientError::Cancelled);
         }

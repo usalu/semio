@@ -7,7 +7,7 @@
   "aggregateVariant": "UpdateSfmParams",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-sfm-params",
-  "binaryTag": null,
+  "binaryTag": 21,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

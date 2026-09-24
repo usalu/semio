@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePart2dLocked",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-part2d-locked",
-  "binaryTag": null,
+  "binaryTag": 7,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeNodeKindDescription",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-node-kind-description",
-  "binaryTag": null,
+  "binaryTag": 3,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

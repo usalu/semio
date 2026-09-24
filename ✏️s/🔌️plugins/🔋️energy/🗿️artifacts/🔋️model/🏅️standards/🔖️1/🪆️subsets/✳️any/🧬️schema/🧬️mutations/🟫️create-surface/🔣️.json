@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateSurface",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-surface",
-  "binaryTag": null,
+  "binaryTag": 24,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

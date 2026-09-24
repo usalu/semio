@@ -344,19 +344,63 @@ fn artifact_create_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
                     .with_details(serde_json::json!({ "requestedKind": kind, "installedKinds": known })),
             );
         };
-        return match workspace.create_plugin_artifact(&artifact_id, declared) {
-            Ok((pack_bytes, spr_bytes)) => CallToolResult::ok(
-                vec![ContentBlock::Text { text: format!("created {artifact_id} as {kind}") }],
-                Some(serde_json::json!({ "artifactId": artifact_id, "kind": kind, "pluginId": declared.plugin_id, "appId": declared.app_id, "sizeBytes": pack_bytes + spr_bytes, "revision": resolve_artifact_revision(workspace, &artifact_id) })),
-            ),
-            Err(error) => CallToolResult::tool_error(&error),
+        let jobs = crate::ui::job_registry();
+        let job_id = jobs.begin("artifact.create");
+        let cancel = semio_framework_async::CancelToken::root_now();
+        let hook = cancel.clone();
+        jobs.bind_cancel(&job_id, move || hook.cancel_now());
+        let base = serde_json::json!({ "jobId": job_id, "artifactId": artifact_id, "kind": kind, "pluginId": declared.plugin_id, "appId": declared.app_id });
+        let reporter = job_id.clone();
+        let scope = crate::actions::ActivationScope::new(cancel, move |phase, fraction| {
+            crate::ui::job_registry().report_progress(&reporter, ARTIFACT_CREATE_ACTIVATION_START + ARTIFACT_CREATE_ACTIVATION_SPAN * phase.at(fraction), Some(format!("creating: {}", phase.id())));
+        });
+        return match workspace.create_plugin_artifact_cancellably(&artifact_id, declared, scope) {
+            Err(_) if jobs.is_cancel_requested(&job_id) => {
+                jobs.mark_cancelled(&job_id);
+                CallToolResult::ok(vec![ContentBlock::Text { text: format!("artifact_create job {job_id} was cancelled") }], Some(merge_fields(base, serde_json::json!({ "status": "CANCELLED" }))))
+            }
+            Ok((pack_bytes, spr_bytes)) => {
+                let structured = merge_fields(base, serde_json::json!({ "status": "SUCCEEDED", "sizeBytes": pack_bytes + spr_bytes, "revision": resolve_artifact_revision(workspace, &artifact_id) }));
+                jobs.succeed(&job_id, structured.clone());
+                CallToolResult::ok(vec![ContentBlock::Text { text: format!("created {artifact_id} as {kind}") }], Some(structured))
+            }
+            Err(error) => {
+                let error = error.with_details(base);
+                jobs.fail(&job_id, error.clone());
+                CallToolResult::tool_error(&error)
+            }
         };
     }
     let initial = arguments.get("initial").cloned().unwrap_or_else(|| serde_json::json!({}));
+    let jobs = crate::ui::job_registry();
+    let job_id = jobs.begin("artifact.create");
     match semio_framework::io::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, initial)) {
-        Ok(revision) => CallToolResult::ok(vec![ContentBlock::Text { text: format!("created {artifact_id}") }], Some(serde_json::json!({ "artifactId": artifact_id, "kind": kind, "revision": revision }))),
-        Err(error) => CallToolResult::tool_error(&error),
+        Ok(revision) => {
+            let structured = serde_json::json!({ "jobId": job_id, "status": "SUCCEEDED", "artifactId": artifact_id, "kind": kind, "revision": revision });
+            jobs.succeed(&job_id, structured.clone());
+            CallToolResult::ok(vec![ContentBlock::Text { text: format!("created {artifact_id}") }], Some(structured))
+        }
+        Err(error) => {
+            jobs.fail(&job_id, error.clone());
+            CallToolResult::tool_error(&error)
+        }
     }
+}
+
+/// 📈️ The span of `artifact_create`'s job progress the plugin session's activation reports into;
+/// reading the guest's genesis document is its last phase, persisting follows.
+const ARTIFACT_CREATE_ACTIVATION_START: f64 = 0.05;
+const ARTIFACT_CREATE_ACTIVATION_SPAN: f64 = 0.9;
+
+/// 🧩️ Folds the terminal fields onto the invariant ones, so the tool reply and the job registry's
+/// retained result are the same value.
+fn merge_fields(mut base: serde_json::Value, extra: serde_json::Value) -> serde_json::Value {
+    if let (Some(base_map), Some(extra_map)) = (base.as_object_mut(), extra.as_object()) {
+        for (key, value) in extra_map {
+            base_map.insert(key.clone(), value.clone());
+        }
+    }
+    base
 }
 
 fn artifact_validate_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: serde_json::Value) -> CallToolResult {

@@ -301,6 +301,8 @@ pub struct QueryDescriptor {
 #[serde(rename_all = "camelCase")]
 pub struct PolicyTemplate {
     pub name: String,
+    #[serde(default)]
+    pub auto_apply: bool,
     pub grants: Vec<PolicyGrant>,
 }
 

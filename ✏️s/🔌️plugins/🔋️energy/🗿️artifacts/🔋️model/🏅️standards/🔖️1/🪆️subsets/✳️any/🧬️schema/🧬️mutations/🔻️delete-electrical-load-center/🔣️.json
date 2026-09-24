@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteElectricalLoadCenter",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-electrical-load-center",
-  "binaryTag": null,
+  "binaryTag": 193,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

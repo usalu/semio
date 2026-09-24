@@ -390,8 +390,10 @@ impl CompactionRetainedPages {
         }
         let index = self.len() - 1;
         let page = self.pages[index].as_mut().ok_or_else(|| DbError::Internal("compaction close lost retained page".to_string()))?;
-        if page.close_step()?.is_some() {
-            self.credits[index] = self.credits[index].checked_sub(1).ok_or_else(|| DbError::Internal("compaction page credit returned twice".to_string()))?;
+        if let Some(returned) = page.close_step()? {
+            if returned != 0 {
+                self.credits[index] = self.credits[index].checked_sub(1).ok_or_else(|| DbError::Internal("compaction page credit returned twice".to_string()))?;
+            }
             return Ok(true);
         }
         if self.credits[index] != 0 || !page.terminal_is_empty() {

@@ -13,6 +13,6 @@ export type SemioImageMutation =
   | { mutation: "removeFrame"; index: number }
   | { mutation: "moveFrame"; from: number; to: number }
   | { mutation: "setFrameDelay"; index: number; delayMs: number }
-  | { mutation: "setFramePixels"; index: number; rgba8: string }
+  | { mutation: "setFramePixels"; index: number; rgba8: number[] }
   | { mutation: "setMetadataEntry"; key: string; value: string }
   | { mutation: "removeMetadataEntry"; key: string };

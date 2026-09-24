@@ -1,6 +1,6 @@
 //! 📑️ Direct binary identity for `set-outlines`.
 
-pub const TAG: u8 = 42;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-outlines");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetOutlines;

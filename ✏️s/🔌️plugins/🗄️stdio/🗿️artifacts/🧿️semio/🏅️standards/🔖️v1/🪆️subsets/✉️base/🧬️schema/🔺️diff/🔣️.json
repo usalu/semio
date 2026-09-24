@@ -5,7 +5,7 @@
   "description": "The envelope union's own diff — real mirror of the Rust `SemioDiff`. `NoChange`, 13 same-kind wrappers each nesting that subset's own REAL diff schema (cross-file $ref, never redeclared), and `Replace` (cross-kind change or explicit SetSnapshot — no sparse representation exists for a subset-kind change). Tag key is `kind` (distinct from the snapshot facet's `subset` tag key).",
   "oneOf": [
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind"
       ],
@@ -16,7 +16,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "brep"
@@ -32,7 +32,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "mesh"
@@ -48,7 +48,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "model"
@@ -64,7 +64,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "value"
@@ -80,7 +80,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "document"
@@ -96,7 +96,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "cad"
@@ -112,7 +112,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "drawing"
@@ -128,7 +128,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "image"
@@ -144,7 +144,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "video"
@@ -160,7 +160,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "audio"
@@ -176,7 +176,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "animation"
@@ -192,7 +192,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "presentation"
@@ -202,13 +202,13 @@
           "const": "presentation"
         },
         "presentation": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s.stdio.semio.presentation/diff.json",
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/presentation/diff.json",
           "description": "SemioPresentationDiff (presentation subset's own diff schema)"
         }
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "flow"
@@ -224,7 +224,7 @@
       }
     },
     {
-      "type": "value",
+      "type": "object",
       "required": [
         "kind",
         "snapshot"

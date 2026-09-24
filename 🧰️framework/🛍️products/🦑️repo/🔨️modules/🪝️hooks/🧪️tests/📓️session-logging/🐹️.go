@@ -13,7 +13,7 @@ import (
 
 // region 🔖️Vectors
 
-const sessionVectors = "local://📓️sessions.json"
+const sessionVectors = "shared://📓️session-logging/📓️sessions.json"
 
 type sessionInvocation struct {
 	Event    string          `json:"event"`

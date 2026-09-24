@@ -2,17 +2,52 @@ dialect protocol
 protocol stdio.semio.mutations
 version 1
 schema stdio.semio
-start body
+start record
 framing record
 
-# W-S closer (`any`): REAL binary op frame, replacing the old whole-enum `serde_json` shortcut.
-# `format u8` + `tag u8` (real mutation-variant ordinal, `🧬️mutations/🦀️.rs`'s
-# `mutation_tag`) are genuinely, individually protocol-walkable fixed header fields — matches the
-# recipe's own §2.5 op-binary shape exactly (json's mutations protocol). Past the header, `payload`
-# is the WRAPPED subset's own real `OpBinary::encode_op()` bytes (or, for `setSnapshot`, the
-# wrapped snapshot's own real `ArtifactPack::encode_pack()` bytes) — one opaque trailing chain.
+# Real binary op frame of the envelope vocabulary. `format u8` + `tag u8` (the `SemioMutation` variant
+# ordinal, `🧬️mutations/🦀️.rs`'s `mutation_tag`) are the fixed, protocol-walkable header; each record
+# below is one kind of that vocabulary at its own tag. Past the header, `payload` is the wrapped arm's own
+# `OpBinary::encode_op()` bytes, or for `set-snapshot` the replacement envelope's own
+# `ArtifactPack::encode_pack()` bytes — opaque to the envelope, which routes and never re-encodes an arm.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record set-snapshot tag=0
+field payload bytes
+record apply-brep tag=1
+field payload bytes
+record apply-mesh tag=2
+field payload bytes
+record apply-model tag=3
+field payload bytes
+record apply-value tag=4
+field payload bytes
+record apply-document tag=5
+field payload bytes
+record apply-cad tag=6
+field payload bytes
+record apply-drawing tag=7
+field payload bytes
+record apply-image tag=8
+field payload bytes
+record apply-video tag=9
+field payload bytes
+record apply-audio tag=10
+field payload bytes
+record apply-animation tag=11
+field payload bytes
+record apply-presentation tag=12
+field payload bytes
+record apply-flow tag=13
+field payload bytes
+record apply-text tag=14
+field payload bytes
+record apply-table tag=15
+field payload bytes
+record apply-graph tag=16
+field payload bytes
+record apply-object tag=17
+field payload bytes
+record apply-kit tag=18
+field payload bytes

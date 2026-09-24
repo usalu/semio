@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeHumidistatHumidifyingThrottleRange",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-humidistat-humidifying-throttle-range",
-  "binaryTag": null,
+  "binaryTag": 133,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

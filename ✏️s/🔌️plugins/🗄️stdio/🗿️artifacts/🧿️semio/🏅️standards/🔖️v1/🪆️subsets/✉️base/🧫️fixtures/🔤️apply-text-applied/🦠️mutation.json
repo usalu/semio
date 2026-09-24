@@ -1,0 +1,11 @@
+{
+  "mutation": "applyText",
+  "payload": {
+    "mutation": {
+      "EditRun": {
+        "index": 0,
+        "new_content": "F1 mutated run content"
+      }
+    }
+  }
+}

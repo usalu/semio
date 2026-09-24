@@ -14,8 +14,9 @@
  * involved anywhere; no WGPU or browser rendering is implicated; no two-user process journey is run
  * here; and nothing here asserts that a live hub inference job ran — with no trusted GIS Map
  * binding a hub answers `503 inference.unavailable`, and that is the honest end of the chain. */
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { INFERENCE_JOB_TOOLS, approvalRequestSchema, proveMcpInferenceBridgeFixture, proveOsMirrorsHubApprovalAuthority } from "../../💡️inference-bridge/🟦️.ts";
 import { isValidJsonSchema2020_12 } from "../../🧬️schema-validation/🟦️.ts";
@@ -130,7 +131,8 @@ describe("gis map inference bridge — the real semio-os-mcp binary", () => {
   });
 
   it("a folder-bound workspace still has no inference authority and says so instead of inventing one", async () => {
-    const proc = await spawn(["stdio", "--scopes", "inference.execute", "--folder", repoRoot]);
+    const folder = mkdtempSync(join(tmpdir(), "semio-mcp-inference-folder-"));
+    const proc = await spawn(["stdio", "--scopes", "inference.execute", "--folder", folder]);
     const result = (await proc.request("tools/call", { name: "inference_submit", arguments: { documentId: "doc-alpha" } })).result as CallToolResult;
     expect(result.isError).toBe(true);
     expect(result.structuredContent?.["code"]).toBe("PLUGIN_UNAVAILABLE");

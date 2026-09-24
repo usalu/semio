@@ -10,7 +10,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "physics-projectile-rk4";
-const FIXTURE = "local://physics-projectile-rk4.tex";
+const FIXTURE = "shared://🏹️physics-projectile-rk4/physics-projectile-rk4.tex";
 const DECIMALS = 5;
 const WIDTH = 60;
 const HEIGHT = 40;

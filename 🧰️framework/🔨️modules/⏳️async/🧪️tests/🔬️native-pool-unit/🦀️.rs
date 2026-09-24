@@ -355,4 +355,71 @@ mod tests {
         assert!(name.is_some_and(|name| name.starts_with("semio-pool-worker-")), "🪜️ the probe must have run on a pool worker, not inline");
         let _ = pool.shutdown();
     }
+
+    fn worker_parking_fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!("../../🔔️worker-parking/🧫️fixtures/🔣️.json")).expect("strict worker-parking fixture")
+    }
+
+    #[test]
+    fn an_idle_native_pool_sleeps_without_a_poll_interval() {
+        let idle = &worker_parking_fixture()["idle"];
+        let workers = idle["workers"].as_u64().unwrap() as usize;
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, workers));
+        let (done_tx, done_rx) = std::sync::mpsc::sync_channel(workers);
+        for _ in 0..workers {
+            let done = done_tx.clone();
+            pool.submit(Lane::Background, Box::new(move || done.send(()).unwrap()));
+        }
+        for _ in 0..workers {
+            done_rx.recv_timeout(Duration::from_secs(30)).expect("every submitted job runs on a woken worker");
+        }
+        thread::sleep(Duration::from_millis(idle["settleMs"].as_u64().unwrap()));
+        let settled = pool.inner.parking.sleeps();
+        thread::sleep(Duration::from_millis(idle["quietWindowMs"].as_u64().unwrap()));
+        let quiet = pool.inner.parking.sleeps() - settled;
+        assert!(quiet <= idle["maximumSleepsInQuietWindow"].as_u64().unwrap(), "an idle pool re-parked {quiet} time(s) with no work and no timer");
+        pool.shutdown().unwrap();
+    }
+
+    #[test]
+    fn a_timer_deadline_wakes_exactly_the_parked_keeper() {
+        let timer = &worker_parking_fixture()["timer"];
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 2));
+        thread::sleep(Duration::from_millis(20));
+        let (fired_tx, fired_rx) = std::sync::mpsc::sync_channel(1);
+        let started = Instant::now();
+        pool.callback_at(pool.now_ms() + timer["deadlineMs"].as_u64().unwrap(), move || fired_tx.send(Instant::now()).unwrap());
+        let fired = fired_rx.recv_timeout(Duration::from_secs(10)).expect("a parked keeper fires the deadline with no other ingress");
+        let waited = fired.duration_since(started).as_millis() as u64;
+        assert!(waited + 1 >= timer["deadlineMs"].as_u64().unwrap(), "fired early after {waited} ms");
+        assert!(waited <= timer["deadlineMs"].as_u64().unwrap() + timer["toleranceMs"].as_u64().unwrap(), "fired late after {waited} ms");
+        pool.shutdown().unwrap();
+    }
+
+    #[test]
+    fn a_timer_re_armed_from_its_own_callback_wakes_only_the_keeper() {
+        let periodic = &worker_parking_fixture()["periodicTimer"];
+        let ticks = periodic["ticks"].as_u64().unwrap();
+        let interval = periodic["intervalMs"].as_u64().unwrap();
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, periodic["workers"].as_u64().unwrap() as usize));
+        thread::sleep(Duration::from_millis(20));
+        let before = pool.inner.parking.sleeps();
+        let (done_tx, done_rx) = std::sync::mpsc::sync_channel(1);
+        fn arm(pool: WorkerPool, remaining: u64, interval: u64, done: std::sync::mpsc::SyncSender<()>) {
+            let next = pool.clone();
+            pool.callback_at(pool.now_ms() + interval, move || {
+                if remaining == 0 {
+                    done.send(()).unwrap();
+                } else {
+                    arm(next, remaining - 1, interval, done);
+                }
+            });
+        }
+        arm(pool.clone(), ticks, interval, done_tx);
+        done_rx.recv_timeout(Duration::from_secs(30)).expect("the periodic chain completes");
+        let sleeps = pool.inner.parking.sleeps() - before;
+        let ceiling = (ticks + 1) * periodic["maximumSleepsPerTick"].as_u64().unwrap() + periodic["startupSleeps"].as_u64().unwrap();
+        assert!(sleeps <= ceiling, "{ticks} re-armed ticks cost {sleeps} worker sleeps (ceiling {ceiling})");
+        pool.shutdown().unwrap();
+    }
 }

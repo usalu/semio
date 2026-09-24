@@ -84,7 +84,7 @@
         use crate::editor::puzzle3d::precompute::brush::{BrushSuggestionVerdict, BrushSuggestionsFound};
         use crate::standards::v1::subsets::any::schema::BrushPreviewState;
         let session = Puzzle3dPrecomputeSession::new();
-        let runtime = Puzzle3dRuntime { suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 1.0, y: 2.0, window_id: WINDOW_KIND_ID.into(), vortex_full_id: "seed-left-001:v0".into() }), ..Puzzle3dRuntime::default() };
+        let runtime = Puzzle3dRuntime { suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 1.0, y: 2.0, window_id: WINDOW_KIND_ID.into(), vortex_full_id: "seed-left-001:v0".into(), submenu: false }), ..Puzzle3dRuntime::default() };
         let envelope = Puzzle3dScene { fixture: forest_store(), runtime, active_utility: "select".into() };
         let preview = |kind: &str, source: usize| Some(BrushPreviewState { target_vortex_full_id: "seed-left-001:v0".into(), object_kind_id: kind.into(), source_vortex_index: source, mesh_url: "/box.glb".into(), origin: [0.0; 3], orientation: [0.0, 0.0, 0.0, 1.0], scale: None });
         let menu = |found: Option<&BrushSuggestionsFound>| serde_json::from_str::<Value>(&world_interaction_json(&envelope, &session, &Puzzle3dInteractionSnapshot::default(), found)).expect("interactionJson")["suggestionMenu"].clone();
@@ -94,13 +94,14 @@
         let listed = menu(Some(&found));
         assert_eq!(listed["pending"], json!(false), "a free candidate is listed the moment it is known");
         assert_eq!(listed["candidates"].as_array().map(|rows| rows.iter().map(|row| row["objectLabel"].clone()).collect::<Vec<_>>()), Some(vec![json!("B")]));
+        assert_eq!(listed["candidates"][0]["key"], json!(1), "a row carries its candidate's trace key, not its position in the free list");
         found.verdicts[2] = BrushSuggestionVerdict::Free;
         found.done = true;
         assert_eq!(menu(Some(&found))["candidates"].as_array().map(Vec::len), Some(2));
         let other = BrushSuggestionsFound { target: "seed-left-001:v1".into(), ..found.clone() };
         assert_eq!(menu(Some(&other))["candidates"], json!([]), "another vortex's candidates never reach this popup");
         assert_eq!(menu(None)["pending"], json!(true), "a popup whose run has not published yet is pending");
-        assert_eq!(menu(Some(&BrushSuggestionsFound { verdicts: vec![BrushSuggestionVerdict::Collision; 3], ..found })), json!({ "open": true, "x": 1.0, "y": 2.0, "windowId": WINDOW_KIND_ID, "vortexFullId": "seed-left-001:v0", "pending": false, "candidates": [] }), "a finished search with nothing free is an empty, settled popup");
+        assert_eq!(menu(Some(&BrushSuggestionsFound { verdicts: vec![BrushSuggestionVerdict::Collision; 3], ..found })), json!({ "open": true, "x": 1.0, "y": 2.0, "windowId": WINDOW_KIND_ID, "vortexFullId": "seed-left-001:v0", "submenu": false, "pending": false, "candidates": [] }), "a finished search with nothing free is an empty, settled popup");
     }
 
     #[test]

@@ -1,0 +1,167 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/persistence-data-class/v1.json",
+  "title": "Persistence Data Class V1",
+  "description": "Four mutually exclusive durability/sharing classes for persistence bindings and replication lanes. Preview/presence state is always ephemeralShared and must never be treated as durable.",
+  "$defs": {
+    "PersistenceDataClass": {
+      "type": "string",
+      "enum": [
+        "persistedLocalOnly",
+        "persistedShared",
+        "ephemeralLocalOnly",
+        "ephemeralShared"
+      ]
+    },
+    "ClassifiedPersistenceBinding": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "dataClass",
+            "path"
+          ],
+          "properties": {
+            "kind": {
+              "const": "folder"
+            },
+            "dataClass": {
+              "const": "persistedLocalOnly"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "dataClass",
+            "baseUrl",
+            "spaceId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "hub"
+            },
+            "dataClass": {
+              "const": "persistedShared"
+            },
+            "baseUrl": {
+              "type": "string",
+              "minLength": 1
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "requestedSurfaceId": {
+              "type": "string"
+            },
+            "surface": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "dataClass"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ephemeral"
+            },
+            "dataClass": {
+              "const": "ephemeralLocalOnly"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "dataClass"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ephemeral"
+            },
+            "dataClass": {
+              "const": "ephemeralShared"
+            },
+            "lane": {
+              "enum": [
+                "preview",
+                "presence"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "ClassifiedWireLane": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lane",
+            "dataClass"
+          ],
+          "properties": {
+            "lane": {
+              "const": "command"
+            },
+            "dataClass": {
+              "enum": [
+                "persistedLocalOnly",
+                "persistedShared"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lane",
+            "dataClass"
+          ],
+          "properties": {
+            "lane": {
+              "const": "preview"
+            },
+            "dataClass": {
+              "const": "ephemeralShared"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lane",
+            "dataClass"
+          ],
+          "properties": {
+            "lane": {
+              "const": "presence"
+            },
+            "dataClass": {
+              "const": "ephemeralShared"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

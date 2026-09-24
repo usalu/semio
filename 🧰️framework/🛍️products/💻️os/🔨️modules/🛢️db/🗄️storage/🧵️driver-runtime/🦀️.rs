@@ -128,44 +128,42 @@ pub fn detach_unit(future: Pin<Box<dyn Future<Output = ()> + Send + 'static>>) -
     receiver
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// @emoji 🚪 Runs `build` inside the driver runtime's context — for driver constructors that spawn
+/// their own maintenance tasks (`sqlx`'s pool reaper) and would otherwise abort a caller that has no
+/// runtime of its own.
+pub fn within<T>(build: impl FnOnce() -> T) -> T {
+    let _context = runtime().runtime.enter();
+    build()
+}
 
-    /// 🧵️ The whole point of this module, as a law: work handed to [`detach_unit`] runs on a thread
-    /// this runtime owns — never the caller's — and sees a Tokio context there, while the caller
-    /// learns the outcome through the repo-owned rendezvous without ever entering one itself.
-    #[test]
-    fn detached_work_runs_on_a_driver_thread_inside_a_tokio_context() {
-        let caller = std::thread::current().id();
-        let observed: std::sync::Arc<std::sync::Mutex<Option<(std::thread::ThreadId, Option<String>, bool)>>> = std::sync::Arc::new(std::sync::Mutex::new(None));
-        let sink = observed.clone();
-        let mut receiver = detach_unit(Box::pin(async move {
-            let current = std::thread::current();
-            let name = current.name().map(str::to_owned);
-            *sink.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((current.id(), name, tokio::runtime::Handle::try_current().is_ok()));
-        }));
-        assert!(tokio::runtime::Handle::try_current().is_err(), "the calling thread must have no runtime context of its own");
-        loop {
-            match receiver.try_recv() {
-                Ok(()) => break,
-                Err(oneshot::TryRecvError::Empty) => std::thread::yield_now(),
-                Err(oneshot::TryRecvError::Closed) => panic!("the driver runtime dropped the rendezvous without completing"),
-            }
-        }
-        let (thread, name, in_context) = observed.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("the detached body must have run");
-        assert_ne!(thread, caller, "a driver future must never be polled on the thread that submitted it");
-        assert!(name.is_some_and(|name| name.starts_with("semio-db-io-driver")), "the detached body must run on a named driver thread");
-        assert!(in_context, "the detached body must see the runtime context its driver requires");
-    }
+/// @emoji 💓 A periodic driver turn owned by its handle — a remote lease renews itself on the
+/// driver runtime while its owner holds the handle, and dropping the handle stops it at once.
+pub struct DbIoDriverPeriodic {
+    task: tokio::task::JoinHandle<()>,
+}
 
-    /// 📐️ The thread budget is bounded on purpose: a typo in the environment cannot spawn a fleet,
-    /// and it can never fall to zero.
-    #[test]
-    fn driver_thread_count_stays_inside_its_band() {
-        assert_eq!(driver_threads().clamp(1, 8), driver_threads());
-        assert!(driver_threads() >= 1);
+impl Drop for DbIoDriverPeriodic {
+    fn drop(&mut self) {
+        self.task.abort();
     }
 }
+
+/// @emoji 💓 Runs `step` every `period` on the driver runtime until it answers `false` or the
+/// returned handle is dropped.
+pub fn detach_periodic(period: std::time::Duration, mut step: impl FnMut() -> Pin<Box<dyn Future<Output = bool> + Send>> + Send + 'static) -> DbIoDriverPeriodic {
+    let task = runtime().runtime.spawn(async move {
+        loop {
+            tokio::time::sleep(period).await;
+            if !step().await {
+                return;
+            }
+        }
+    });
+    DbIoDriverPeriodic { task }
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

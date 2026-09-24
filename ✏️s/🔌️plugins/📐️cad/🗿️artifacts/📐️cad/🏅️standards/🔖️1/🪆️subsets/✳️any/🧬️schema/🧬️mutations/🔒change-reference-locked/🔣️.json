@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeReferenceLocked",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-reference-locked",
-  "binaryTag": null,
+  "binaryTag": 14,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

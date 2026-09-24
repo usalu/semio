@@ -10,10 +10,10 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetKeyframeValue {
-    pub(crate) timeline_index: usize,
-    pub(crate) channel_index: usize,
-    pub(crate) index: usize,
-    pub(crate) value: AnimValue,
+    pub timeline_index: usize,
+    pub channel_index: usize,
+    pub index: usize,
+    pub value: AnimValue,
 }
 
 impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for SetKeyframeValue {

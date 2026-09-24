@@ -5,7 +5,7 @@
 //! half only — registering an oracle handler here as well would put this repository's answer on both
 //! sides of the comparison.
 //!
-//! **What this file puts under test.** `crate::fem3d_engine::fem3d_solve_all` — the frozen entry
+//! **What this file puts under test.** `semio_s_artifact_fem_3d::fem3d_engine::fem3d_solve_all` — the frozen entry
 //! point the plugin's own results window calls — on real structures, and on the model each typed
 //! mutation produces. The mutation itself goes through PRODUCTION dispatch
 //! (`fem3d_mutation_report_json`) and the applied model is held to the committed after-model before
@@ -259,9 +259,9 @@ mod decode {
 mod subject {
     use super::{decode, number, numbers, significant, significant_relative, DOFS, STATIC_TOLERANCE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use crate::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
+    use semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
     use crate::Fem3dSnapshot;
-    use crate::model::{Dof, StaticResult};
+    use semio_s_artifact_fem_3d::model::{Dof, StaticResult};
     use semio_s_plugin_stdio_test_oracle::law;
     use std::collections::BTreeMap;
 
@@ -312,7 +312,7 @@ mod subject {
         for case in &mut projected.load_cases {
             case.loads.retain(|load| !matches!(load, crate::FemLoad::Area { .. }));
         }
-        let solved = crate::fem3d_engine::fem3d_solve_all(&projected).map_err(|error| error.to_string())?;
+        let solved = semio_s_artifact_fem_3d::fem3d_engine::fem3d_solve_all(&projected).map_err(|error| error.to_string())?;
         Ok(solved.into_iter().collect())
     }
 
@@ -323,7 +323,7 @@ mod subject {
         for (name, answer) in answers {
             let mut squared = 0.0;
             let (mut translation, mut rotation, mut axial) = (0.0f64, 0.0f64, 0.0f64);
-            let mut ordered: Vec<&crate::model::NodeDisplacement> = answer.displacements.iter().collect();
+            let mut ordered: Vec<&semio_s_artifact_fem_3d::model::NodeDisplacement> = answer.displacements.iter().collect();
             ordered.sort_by(|left, right| left.node_id.cmp(&right.node_id));
             for entry in ordered {
                 for (index, value) in entry.values.iter().enumerate() {
@@ -342,7 +342,7 @@ mod subject {
                 }
             }
             for (_, element) in &answer.elements {
-                if let crate::model::ElementResult::Bar { n } = element {
+                if let semio_s_artifact_fem_3d::model::ElementResult::Bar { n } = element {
                     axial = axial.max(n.abs());
                 }
             }
@@ -404,7 +404,7 @@ mod subject {
             let axial = expected.get("axial").cloned().unwrap_or(Json::Object(Vec::new()));
             let axial_scale = member_scale(&axial).max(1e-9);
             for (id, element) in &answer.elements {
-                if let crate::model::ElementResult::Bar { n } = element {
+                if let semio_s_artifact_fem_3d::model::ElementResult::Bar { n } = element {
                     let target = number(&axial, id);
                     if axial.get(id).is_none() {
                         return Err(format!("{scenario}: case {name} reports a bar force for {id} the reference does not"));

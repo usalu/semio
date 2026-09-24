@@ -129,7 +129,7 @@
             {
               "capability": "drawing-1-mutate-carrier",
               "qualifyingKind": "third-party-library",
-              "oracle": "serde-json-drawing-carrier-reader"
+              "oracle": "json-rust-drawing-carrier-reader"
             }
           ],
           "invariants": {
@@ -392,15 +392,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🌓️set-layer-blend-mode/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:6e0009dfe92f8c2d48f91ca7f2344770f011c300ea404a36169434a4c4411096",
-          "bytes": 1123
+          "sha256": "sha256:504ab20b625032da52d55f34278a21b59d71ee729ed44792839aa244f1643982",
+          "bytes": 1105
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🌓️set-layer-blend-mode/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3f66b61ec3e80a3213da2b213f4e40c87b177ed4e5c517610667a0127ae6288a",
-          "bytes": 1123
+          "sha256": "sha256:3601524dae7c89cf251816047b742a56df2cf1252dcaf17f82b679d6eba51977",
+          "bytes": 1105
         }
       ],
       "provenance": {
@@ -408,17 +408,17 @@
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
-        "oracle": "serde-json-drawing-carrier-reader",
-        "packageVersion": "1",
-        "engineFamily": "serde-json",
-        "engineVersion": "1",
-        "command": "bun ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "oracle": "json-rust-drawing-carrier-reader",
+        "packageVersion": "0.12",
+        "engineFamily": "json-rust",
+        "engineVersion": "0.12",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-drawing-carrier-v1",
       "reproducible": true,
       "family": "mechanical",
-      "notes": "A deterministic two-layer drawing document with the set-layer-blend-mode mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. SVG, which this subset's other reader judges, has no representation for this field. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "notes": "A deterministic two-layer drawing document with the set-layer-blend-mode mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. SVG, which this subset's other reader judges, has no representation for this field. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
       "comparisonPipeline": "drawing-1-carrier-compare-v1"
     }
   ]

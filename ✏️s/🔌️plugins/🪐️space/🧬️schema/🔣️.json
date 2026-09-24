@@ -353,6 +353,25 @@
                   ],
                   "properties": {
                     "toolId": {
+                      "const": "deleteSelection"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact",
+                        "Config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
                       "const": "openSpace"
                     },
                     "lanes": {
@@ -419,8 +438,8 @@
                 }
               ],
               "additionalItems": false,
-              "minItems": 15,
-              "maxItems": 15
+              "minItems": 16,
+              "maxItems": 16
             },
             "routes": {
               "allOf": [

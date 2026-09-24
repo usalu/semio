@@ -3,8 +3,41 @@ protocol stdio.png.mutations
 version 1
 schema stdio.png.op
 start op
-
-# Direct identities: change-header=2, replace-palette=3, change-transparency=4, change-gamma=5, change-chromaticities=6, change-srgb-intent=7, change-physical-dims=8, change-timestamp=9, change-background=10, insert-text-chunk=11, remove-text-chunk=12, replace-text-chunk=13, replace-pixels=14, insert-unknown-chunk=15, remove-unknown-chunk=16
 framing record
+
+# Real op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload (its leaf's `💾️binary` codec).
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: every leaf
+# codec derives its tag from its record at compile time (`dsl::protocol_record::tag_u8`).
 header fixed 2
-chain payload bytes
+field format u8
+field tag u8
+record change-header tag=2
+field payload bytes
+record replace-palette tag=3
+field payload bytes
+record change-transparency tag=4
+field payload bytes
+record change-gamma tag=5
+field payload bytes
+record change-chromaticities tag=6
+field payload bytes
+record change-srgb-intent tag=7
+field payload bytes
+record change-physical-dims tag=8
+field payload bytes
+record change-timestamp tag=9
+field payload bytes
+record change-background tag=10
+field payload bytes
+record insert-text-chunk tag=11
+field payload bytes
+record remove-text-chunk tag=12
+field payload bytes
+record replace-text-chunk tag=13
+field payload bytes
+record replace-pixels tag=14
+field payload bytes
+record insert-unknown-chunk tag=15
+field payload bytes
+record remove-unknown-chunk tag=16
+field payload bytes

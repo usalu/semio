@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeThermostatHeatingSetpointSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-thermostat-heating-setpoint-schedule",
-  "binaryTag": null,
+  "binaryTag": 124,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

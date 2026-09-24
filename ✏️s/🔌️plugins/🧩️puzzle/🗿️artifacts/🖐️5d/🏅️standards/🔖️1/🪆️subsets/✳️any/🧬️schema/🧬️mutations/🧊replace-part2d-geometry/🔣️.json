@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplacePart2dGeometry",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-part2d-geometry",
-  "binaryTag": null,
+  "binaryTag": 3,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

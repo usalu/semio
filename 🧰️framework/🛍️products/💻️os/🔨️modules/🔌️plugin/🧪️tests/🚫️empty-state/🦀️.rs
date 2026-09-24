@@ -2,7 +2,7 @@ fn verify_empty_state<T>()
 where
     T: dsl::FromValue + store::ArtifactDsl + store::ArtifactPack + Default + PartialEq + std::fmt::Debug,
 {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("empty-state fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚫️empty-state/🔣️.json")).expect("empty-state fixture");
     for row in fixture["json"].as_array().expect("JSON vectors") {
         assert_eq!(dsl::json::from_json_str::<T>(&row["value"].to_string()).is_ok(), row["accepted"].as_bool().expect("acceptance"), "{}: JSON {}", std::any::type_name::<T>(), row["value"]);
     }

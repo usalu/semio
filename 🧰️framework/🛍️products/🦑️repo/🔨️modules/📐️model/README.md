@@ -14,7 +14,7 @@ a definition kind from a raw declaration keyword.
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
 `🧪️test` harness; `ajv` judges every golden document against `🧬️schema/🔣️.json` with a real JSON
-Schema draft 2020-12 implementation in `🔮️oracle/🔣️.json`, and the slug vocabulary and the definition
+Schema draft 2020-12 implementation in `🔮️oracles/🔣️.json`, and the slug vocabulary and the definition
 kind taxonomy rest on recorded no-oracle decisions.
 
 `🔣️json-encoding-conformance`, `🔤️slug-normalisation`, `🧬️definition-kind-derivation`.

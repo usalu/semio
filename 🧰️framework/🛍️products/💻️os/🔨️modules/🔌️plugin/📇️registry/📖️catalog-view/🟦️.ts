@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { type PluginRegistryEntry, resolveRegistryPluginIdsForFilter } from "../🔎️discovery/🟦️.ts";
+import { createRequire } from "node:module";
+import type { PluginRegistryEntry } from "../🔎️discovery/🟦️.ts";
 import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
 
 export type GeneratedCatalogProjection = { readonly entries: readonly PluginRegistryEntry[]; readonly playgrounds: readonly PlaygroundEntry[] };
@@ -34,6 +35,13 @@ export function projectedHostPluginFilter(projection: GeneratedCatalogProjection
 export function filterProjectedPluginRegistry(projection: GeneratedCatalogProjection, filterPlaygroundPlugin?: string): PluginRegistryEntry[] {
   const entries = [...projection.entries].sort((a, b) => a.pluginId.localeCompare(b.pluginId));
   if (!filterPlaygroundPlugin || projectedHostPluginFilter(projection, filterPlaygroundPlugin)) return entries;
+  const { resolveRegistryPluginIdsForFilter } = loadDiscovery();
   const ids = new Set(resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin, projection.entries, projection.playgrounds));
   return entries.filter((entry) => ids.has(entry.pluginId));
 }
+
+const requireDiscovery = createRequire(import.meta.url);
+function loadDiscovery(): { resolveRegistryPluginIdsForFilter: (filter: string, entries: readonly PluginRegistryEntry[], playgrounds: GeneratedCatalogProjection["playgrounds"]) => readonly string[] } {
+  return requireDiscovery('../🔎️discovery/🟦️.ts');
+}
+

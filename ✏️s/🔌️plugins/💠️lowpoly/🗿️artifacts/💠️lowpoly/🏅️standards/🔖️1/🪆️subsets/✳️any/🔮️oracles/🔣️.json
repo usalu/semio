@@ -65,7 +65,7 @@
       "rationale": "Pillow 12.2.0 is already importable from this repository's `.venv` as a transitive dependency of the declared development dependency `matplotlib`; this third-party-library oracle therefore adds no dependency. It serves exactly `roundtrip-png` in `../🧪️tests/io-lowpoly-png-1`: the Rust subject first calls the real `serialize_bytes()` and hands its exact PNG byte stream to the Python adapter. `PIL.Image.open` independently decodes that subject artifact and verifies PNG identity, width, height, RGBA pixel format and byte length, decoded RGBA pixels, and the `semio-lowpoly-dsl` `tEXt` keyword. It neither constructs a substitute PNG nor derives or compares lowpoly's DSL text. The fixture exercises the documented 1×1 opaque-white fallback because its first paint layer is only eight bytes; the document itself remains losslessly retained in PNG metadata. The other eight stdio formats remain covered by the `lowpoly-io-native-round-trip` no-oracle decision.",
       "kind": "third-party-library",
       "engine": {
-        "family": "Pillow",
+        "family": "pillow",
         "implementation": "PIL.Image / PIL.PngImagePlugin",
         "version": "12.2.0"
       },

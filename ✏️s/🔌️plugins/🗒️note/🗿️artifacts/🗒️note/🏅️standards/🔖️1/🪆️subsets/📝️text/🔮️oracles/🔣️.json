@@ -128,7 +128,7 @@
       },
       "comparisonProfile": "semantic-note-pdf-text-v1",
       "reproducible": true,
-      "family": "pdf+svg",
+      "family": "pdf-svg",
       "notes": "Witnesses edit-block-text via the pdf+svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     }
   ]

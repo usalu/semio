@@ -1,0 +1,10 @@
+semio-s-artifact-layout-layout
+semio-s-artifact-draw-drawing
+semio-s-artifact-vcs-vcs
+semio-s-artifact-stdio-docx
+semio-s-artifact-stdio-xlsx
+semio-s-artifact-stdio-pptx
+semio-s-artifact-stdio-bcf
+semio-s-artifact-architect-program
+semio-s-artifact-raster-raster
+semio-s-artifact-sourcing-curation

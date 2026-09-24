@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceSparse",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-sparse",
-  "binaryTag": null,
+  "binaryTag": 26,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

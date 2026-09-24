@@ -194,7 +194,7 @@ use infinite_world::world::{
     begin_world3d_dynamic_retirement, close_world3d_draw_rebuild_step, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset,
     seal_world3d_asset_response, step_world3d_camera_fit, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, take_next_completed_world3d_asset_step,
     take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSceneBridgeStep, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId,
-    WorldAssetRequestKind, WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
+    WorldAssetRequestKind, WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_REQUEST_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
 use infinite_world::world::{world3d_hover_clear_is_owed, world3d_hover_is_published};
 use program_bridge::filter_plugins;
@@ -285,6 +285,17 @@ fn close_renderer_asset_step() -> bool {
     let Ok(mut authority) = renderer_asset_io().lock() else { return false };
     authority.begin_close();
     authority.close_step() && authority.terminal_is_empty()
+}
+
+/// 🗺️ Returns every pending `MapTile` claim for one closed engine surface to the shared lane.
+pub(crate) fn cancel_renderer_map_tile_assets(surface: &str) {
+    let Ok(mut authority) = renderer_asset_io().lock() else { return };
+    authority.cancel_map_tiles_for_surface(surface);
+    for _ in 0..WORLD_ASSET_REQUEST_CAPACITY {
+        if !authority.retire_cancelled_step() {
+            break;
+        }
+    }
 }
 
 pub(crate) enum RendererAssetFetchOwner {

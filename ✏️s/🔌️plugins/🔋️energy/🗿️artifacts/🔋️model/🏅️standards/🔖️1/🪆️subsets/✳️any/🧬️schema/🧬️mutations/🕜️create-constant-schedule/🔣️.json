@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateConstantSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-constant-schedule",
-  "binaryTag": null,
+  "binaryTag": 252,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -74,7 +74,7 @@ pub enum SemioCadMutation {
 
 /// 🏷️ The declared mutation vocabulary of `s.stdio.semio.cad`, in `SemioCadMutation`'s own
 /// declaration order and kebab-case spelling — the single source of truth for the binary op frame's
-/// `tag` ordinal (see [`variant_ordinal`]), for `parse_cad_mutation`'s keyword match, and for the
+/// `tag` ordinal (see [`wire_tag`]), for `parse_cad_mutation`'s keyword match, and for the
 /// `semio-v1-cad` catalog in `../../🔣️oracle.json`. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
 pub const KINDS: &[&str] = &[
@@ -312,24 +312,44 @@ impl OpText for SemioCadMutation {
     }
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioCadMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_ADD_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "add-layer");
+const TAG_REMOVE_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-layer");
+const TAG_SET_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-layer");
+const TAG_ADD_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "add-block");
+const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
+const TAG_SET_BLOCK_BASE_POINT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-block-base-point");
+const TAG_ADD_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "add-entity");
+const TAG_REMOVE_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-entity");
+const TAG_SET_ENTITY_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-entity-layer");
+const TAG_SET_ENTITY_GEOMETRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-entity-geometry");
+const TAG_ADD_BLOCK_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "add-block-entity");
+const TAG_REMOVE_BLOCK_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block-entity");
+const TAG_SET_BLOCK_ENTITY_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-block-entity-layer");
+const TAG_SET_BLOCK_ENTITY_GEOMETRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-block-entity-geometry");
+//#endregion 🏷️WireTags
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioCadMutation) -> u8 {
+fn wire_tag(m: &SemioCadMutation) -> u8 {
     match m {
-        SemioCadMutation::SetSnapshot(_) => 0,
-        SemioCadMutation::AddLayer(_) => 1,
-        SemioCadMutation::RemoveLayer(_) => 2,
-        SemioCadMutation::SetLayer(_) => 3,
-        SemioCadMutation::AddBlock(_) => 4,
-        SemioCadMutation::RemoveBlock(_) => 5,
-        SemioCadMutation::SetBlockBasePoint(_) => 6,
-        SemioCadMutation::AddEntity(_) => 7,
-        SemioCadMutation::RemoveEntity(_) => 8,
-        SemioCadMutation::SetEntityLayer(_) => 9,
-        SemioCadMutation::SetEntityGeometry(_) => 10,
-        SemioCadMutation::AddBlockEntity(_) => 11,
-        SemioCadMutation::RemoveBlockEntity(_) => 12,
-        SemioCadMutation::SetBlockEntityLayer(_) => 13,
-        SemioCadMutation::SetBlockEntityGeometry(_) => 14,
+        SemioCadMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioCadMutation::AddLayer(_) => TAG_ADD_LAYER,
+        SemioCadMutation::RemoveLayer(_) => TAG_REMOVE_LAYER,
+        SemioCadMutation::SetLayer(_) => TAG_SET_LAYER,
+        SemioCadMutation::AddBlock(_) => TAG_ADD_BLOCK,
+        SemioCadMutation::RemoveBlock(_) => TAG_REMOVE_BLOCK,
+        SemioCadMutation::SetBlockBasePoint(_) => TAG_SET_BLOCK_BASE_POINT,
+        SemioCadMutation::AddEntity(_) => TAG_ADD_ENTITY,
+        SemioCadMutation::RemoveEntity(_) => TAG_REMOVE_ENTITY,
+        SemioCadMutation::SetEntityLayer(_) => TAG_SET_ENTITY_LAYER,
+        SemioCadMutation::SetEntityGeometry(_) => TAG_SET_ENTITY_GEOMETRY,
+        SemioCadMutation::AddBlockEntity(_) => TAG_ADD_BLOCK_ENTITY,
+        SemioCadMutation::RemoveBlockEntity(_) => TAG_REMOVE_BLOCK_ENTITY,
+        SemioCadMutation::SetBlockEntityLayer(_) => TAG_SET_BLOCK_ENTITY_LAYER,
+        SemioCadMutation::SetBlockEntityGeometry(_) => TAG_SET_BLOCK_ENTITY_GEOMETRY,
     }
 }
 /// ✂️ Just the `key=value ...` argument tail of `print_cad_mutation` — the binary frame's `tag`
@@ -351,7 +371,7 @@ fn print_cad_mutation_args(m: &SemioCadMutation) -> String {
 impl OpBinary for SemioCadMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_cad_mutation_args(self).as_bytes());
         Ok(out)
     }
@@ -364,7 +384,7 @@ impl OpBinary for SemioCadMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = KINDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", KINDS.len()) })?;
+        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })

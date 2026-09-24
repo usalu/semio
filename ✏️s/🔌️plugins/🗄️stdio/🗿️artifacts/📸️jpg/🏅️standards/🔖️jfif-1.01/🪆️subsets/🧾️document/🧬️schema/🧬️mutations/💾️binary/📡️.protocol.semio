@@ -3,8 +3,31 @@ protocol stdio.jpg.mutations
 version 1
 schema stdio.jpg.op
 start op
-
-# Direct identities: change-jfif-header=2, replace-quant-table=3, remove-quant-table=4, replace-huffman-table=5, remove-huffman-table=6, change-restart-interval=7, insert-other-segment=8, remove-other-segment=9, replace-pixels=10, change-re-encode-quality=11
 framing record
+
+# Real op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload (its leaf's `💾️binary` codec).
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: every leaf
+# codec derives its tag from its record at compile time (`dsl::protocol_record::tag_u8`).
 header fixed 2
-chain payload bytes
+field format u8
+field tag u8
+record change-jfif-header tag=2
+field payload bytes
+record replace-quant-table tag=3
+field payload bytes
+record remove-quant-table tag=4
+field payload bytes
+record replace-huffman-table tag=5
+field payload bytes
+record remove-huffman-table tag=6
+field payload bytes
+record change-restart-interval tag=7
+field payload bytes
+record insert-other-segment tag=8
+field payload bytes
+record remove-other-segment tag=9
+field payload bytes
+record replace-pixels tag=10
+field payload bytes
+record change-re-encode-quality tag=11
+field payload bytes

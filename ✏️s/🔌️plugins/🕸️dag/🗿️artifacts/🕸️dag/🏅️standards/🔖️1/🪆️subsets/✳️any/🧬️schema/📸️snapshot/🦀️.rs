@@ -19,10 +19,9 @@
 //! peers replaying the same bytes converge); `print_dsl`/`encode_pack` read the current owned scene
 //! back out via `dag_working_scene`.
 //!
-//! 🚪️ The hand-rolled `impl store::ArtifactDsl`/`impl store::ArtifactPack for DagSnapshot` (the
-//! codecs implementing the reasoning above) moved to `🚪️io/📸️snapshot/{📝️text,💾️binary}`
-//! (design.md §1 CORRECTION) — this file keeps only the struct, its pure defaults, and the
-//! framework bridge; no codec logic remains here.
+//! 🚪️ `impl store::ArtifactDsl`/`impl store::ArtifactPack for DagSnapshot` live in
+//! `🚪️io/📸️snapshot/{📝️text,💾️binary}` and both route through the framework `DagSnapshot` record;
+//! this file keeps only the struct, its pure defaults, and the framework bridge.
 
 use crate::{DagContentChild, DagHostSnapshotEdge, DagNodeSpec};
 use framework_schema::ArtifactSchema;

@@ -3,8 +3,21 @@ protocol json.mutations
 version 1
 schema stdio.json
 start record
-
-# Direct descriptor identities and tags: set-member=1, remove-member=2, insert-array-element=3, remove-array-element=4, set-scalar=5.
 framing record
-header fixed 0
-chain payload bytes
+
+# Real `JsonMutation` op frame (`dsl::tagged_value_binary`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`, then
+# the variant's `ToValue` tree without its variant name, as one framework wire value (`pack_rt::encode_wire_value`).
+# Each record is one mutation kind at its wire tag; this file is the only source of those tags.
+header fixed 2
+field format u8
+field tag varint
+record set-member tag=1
+field payload bytes
+record remove-member tag=2
+field payload bytes
+record insert-array-element tag=3
+field payload bytes
+record remove-array-element tag=4
+field payload bytes
+record set-scalar tag=5
+field payload bytes

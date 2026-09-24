@@ -1,0 +1,1 @@
+/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/📜️script.ts

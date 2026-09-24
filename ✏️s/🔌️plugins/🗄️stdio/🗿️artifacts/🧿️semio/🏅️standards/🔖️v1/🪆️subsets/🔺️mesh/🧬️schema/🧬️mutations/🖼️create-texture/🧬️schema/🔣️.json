@@ -14,27 +14,7 @@
   },
   "$defs": {
     "SemioTexture": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "mime": {
-          "type": "string"
-        },
-        "bytes": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 255
-          }
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/snapshot.json#/definitions/SemioTexture"
     }
   }
 }

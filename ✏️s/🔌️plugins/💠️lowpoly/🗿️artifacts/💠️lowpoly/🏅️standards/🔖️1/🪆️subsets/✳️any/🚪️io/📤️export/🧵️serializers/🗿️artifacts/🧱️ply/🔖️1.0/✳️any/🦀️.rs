@@ -5,21 +5,17 @@
 //! (`list uchar int vertex_indices`, widened to a `uint` count past 255 corners) holding every
 //! object's original n-gons, concatenated. Objects with empty `mesh_content` contribute nothing.
 //!
-//! The canonical `.lowpoly` DSL text is also kept, hex-encoded into ONE `comment` line
-//! (`LOWPOLY_DSL_COMMENT_PREFIX`), so lowpoly → ply → lowpoly stays lossless.
+//! 🔖 `IoFidelity::Lossy`: geometry survives with n-gons kept; object boundaries, names and paint
+//! do not.
 use crate::io::mesh_geometry::world_parts;
-use crate::schema::snapshot::text::print_dsl;
-use crate::schema::snapshot::{enc_str, LowpolySnapshot};
+use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_ply::engine::encode_ply;
 use semio_s_artifact_stdio_ply::schema::snapshot::{PlyElement, PlyProperty, PlyRow, PlyScalarType, PlyValue};
 use semio_s_artifact_stdio_ply::PlySnapshot;
 
-pub(crate) const LOWPOLY_DSL_COMMENT_PREFIX: &str = "semio-lowpoly-dsl ";
-
 pub fn register() {}
 
 pub fn serialize(snapshot: &LowpolySnapshot) -> Result<PlySnapshot, store::TextError> {
-    let hex = enc_str(&print_dsl(snapshot));
     let mut vertex_rows = Vec::new();
     let mut face_rows = Vec::new();
     let mut max_corners = 0usize;
@@ -31,7 +27,7 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<PlySnapshot, store::TextE
             face_rows.push(PlyRow { values: vec![PlyValue::List(face.iter().map(|&v| PlyValue::Int((v + offset) as i32)).collect())] });
         }
     }
-    let mut ply = PlySnapshot { comments: vec![format!("{LOWPOLY_DSL_COMMENT_PREFIX}{hex}")], ..Default::default() };
+    let mut ply = PlySnapshot::default();
     if !vertex_rows.is_empty() {
         let count_kind = if max_corners > 255 { PlyScalarType::UInt } else { PlyScalarType::UChar };
         ply.elements.push(PlyElement {

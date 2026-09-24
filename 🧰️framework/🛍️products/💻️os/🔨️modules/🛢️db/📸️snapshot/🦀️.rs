@@ -611,7 +611,10 @@ struct OptionalSnapshotPages<'pages> {
 
 const SNAPSHOT_PUBLICATION_CLAIMS: usize = 64;
 
-static SNAPSHOT_PUBLICATION_CLAIM_STATE: [std::sync::atomic::AtomicU64; SNAPSHOT_PUBLICATION_CLAIMS] = [const { std::sync::atomic::AtomicU64::new(0) }; SNAPSHOT_PUBLICATION_CLAIMS];
+/// 🔒️ Live publication claims, one per (storage scope, document) identity. A claim probes the
+/// whole fixed table, so only 64 concurrent publications can refuse one another — never two
+/// unrelated documents whose identities share a hash slot.
+static SNAPSHOT_PUBLICATION_CLAIMS_TABLE: std::sync::Mutex<[u64; SNAPSHOT_PUBLICATION_CLAIMS]> = std::sync::Mutex::new([0; SNAPSHOT_PUBLICATION_CLAIMS]);
 
 struct SnapshotPublicationClaim {
     slot: usize,
@@ -619,22 +622,29 @@ struct SnapshotPublicationClaim {
 }
 
 impl SnapshotPublicationClaim {
-    fn try_claim(document: &ArtifactId) -> Result<Self, DbError> {
-        let hash = semio_framework_hash::hash(document.0.as_bytes());
+    fn try_claim(scope: usize, document: &ArtifactId) -> Result<Self, DbError> {
+        let mut hasher = semio_framework_hash::Hasher::new();
+        hasher.update(&scope.to_le_bytes());
+        hasher.update(document.0.as_bytes());
+        let hash = hasher.finalize();
         let bytes = hash.as_bytes();
         let identity = u64::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]]) | 1;
-        let slot = usize::try_from(identity % SNAPSHOT_PUBLICATION_CLAIMS as u64).map_err(|_| DbError::LimitExceeded("snapshot publication claim slot"))?;
-        match SNAPSHOT_PUBLICATION_CLAIM_STATE[slot].compare_exchange(0, identity, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire) {
-            Ok(_) => Ok(Self { slot, identity }),
-            Err(observed) if observed == identity => Err(DbError::Conflict("snapshot publication already claimed".to_string())),
-            Err(_) => Err(DbError::LimitExceeded("snapshot publication claim collision")),
+        let mut claims = SNAPSHOT_PUBLICATION_CLAIMS_TABLE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if claims.contains(&identity) {
+            return Err(DbError::Conflict("snapshot publication already claimed".to_string()));
         }
+        let slot = claims.iter().position(|claim| *claim == 0).ok_or(DbError::LimitExceeded("snapshot publication claims"))?;
+        claims[slot] = identity;
+        Ok(Self { slot, identity })
     }
 }
 
 impl Drop for SnapshotPublicationClaim {
     fn drop(&mut self) {
-        let _ = SNAPSHOT_PUBLICATION_CLAIM_STATE[self.slot].compare_exchange(self.identity, 0, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire);
+        let mut claims = SNAPSHOT_PUBLICATION_CLAIMS_TABLE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if claims[self.slot] == self.identity {
+            claims[self.slot] = 0;
+        }
     }
 }
 
@@ -1233,7 +1243,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             if retained_len > new_pages.len() || new_pages[..retained_len].iter().any(Option::is_none) {
                 return Err(DbError::InvalidArgument("snapshot retained page source is not contiguous".to_string()));
             }
-            let _claim = SnapshotPublicationClaim::try_claim(document)?;
+            let _claim = SnapshotPublicationClaim::try_claim(self.storage.publication_scope(), document)?;
             let observed = self.storage.latest_generation(document).await?;
             if observed != Some(expected_generation) {
                 return Err(DbError::StaleGeneration { expected: GenerationId(expected_generation), actual: GenerationId(observed.unwrap_or(0)) });
@@ -1251,7 +1261,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     }
 
     async fn publish_page_source<P: SnapshotPageSource + ?Sized>(&self, document: &ArtifactId, origin: SnapshotOrigin, new_pages: &P, body: SnapshotBody) -> Result<u64, DbError> {
-        let _claim = SnapshotPublicationClaim::try_claim(document)?;
+        let _claim = SnapshotPublicationClaim::try_claim(self.storage.publication_scope(), document)?;
         let latest = self.storage.latest_generation(document).await?;
         let (generation, parent_generation, parent_footer_position) = match origin {
             SnapshotOrigin::FullBaseline => (latest.map_or(0, |g| g + 1), None, None),

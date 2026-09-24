@@ -40,7 +40,7 @@
       "exports": [
         "buildStdioComposition",
         "checkStdioComposition",
-        "testStdioComposition"
+        "runStdioTypeScriptCompiler"
       ]
     },
     {
@@ -50,6 +50,13 @@
         "StdioCompositionBuildScript",
         "StdioCompositionCheckScript",
         "StdioCompositionTestScript"
+      ]
+    },
+    {
+      "id": "composition-consumption",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧩️composition-consumption/🟦️.ts",
+      "exports": [
+        "testStdioComposition"
       ]
     },
     {
@@ -138,6 +145,7 @@
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏃️commands/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧩️composition-consumption/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
@@ -169,6 +177,7 @@
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏃️commands/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧩️composition-consumption/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",
@@ -204,6 +213,7 @@
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏃️commands/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧩️composition/🏗️build/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧩️composition-consumption/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/🏃️command-ownership/🔣️.json",

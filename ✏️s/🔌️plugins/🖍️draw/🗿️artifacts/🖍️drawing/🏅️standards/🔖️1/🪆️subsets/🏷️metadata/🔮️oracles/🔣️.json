@@ -116,7 +116,7 @@
             {
               "capability": "drawing-1-mutate-carrier",
               "qualifyingKind": "third-party-library",
-              "oracle": "serde-json-drawing-carrier-reader"
+              "oracle": "json-rust-drawing-carrier-reader"
             }
           ],
           "invariants": {
@@ -146,7 +146,7 @@
             {
               "capability": "drawing-1-mutate-carrier",
               "qualifyingKind": "third-party-library",
-              "oracle": "serde-json-drawing-carrier-reader"
+              "oracle": "json-rust-drawing-carrier-reader"
             }
           ],
           "invariants": {
@@ -235,15 +235,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🔒️set-layer-locked/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:6e0009dfe92f8c2d48f91ca7f2344770f011c300ea404a36169434a4c4411096",
-          "bytes": 1123
+          "sha256": "sha256:504ab20b625032da52d55f34278a21b59d71ee729ed44792839aa244f1643982",
+          "bytes": 1105
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🔒️set-layer-locked/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:ca20906120f60abd9162f4cce89c7082dc44d6fd645c7305643a4931a93100c9",
-          "bytes": 1122
+          "sha256": "sha256:90295a07e0ef9bfe923c5493c35ee05ad8c9c064559da6815a7782ce64b10fd0",
+          "bytes": 1104
         }
       ],
       "provenance": {
@@ -251,17 +251,17 @@
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
-        "oracle": "serde-json-drawing-carrier-reader",
-        "packageVersion": "1",
-        "engineFamily": "serde-json",
-        "engineVersion": "1",
-        "command": "bun ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "oracle": "json-rust-drawing-carrier-reader",
+        "packageVersion": "0.12",
+        "engineFamily": "json-rust",
+        "engineVersion": "0.12",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-drawing-carrier-v1",
       "reproducible": true,
       "family": "mechanical",
-      "notes": "A deterministic two-layer drawing document with the set-layer-locked mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. SVG, which this subset's other reader judges, has no representation for this field. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "notes": "A deterministic two-layer drawing document with the set-layer-locked mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. SVG, which this subset's other reader judges, has no representation for this field. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
       "comparisonPipeline": "drawing-1-carrier-compare-v1"
     },
     {
@@ -284,15 +284,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🏷️rename-layer/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:6e0009dfe92f8c2d48f91ca7f2344770f011c300ea404a36169434a4c4411096",
-          "bytes": 1123
+          "sha256": "sha256:504ab20b625032da52d55f34278a21b59d71ee729ed44792839aa244f1643982",
+          "bytes": 1105
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🏷️rename-layer/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:59a46f609cd6cb2ac443efa1a9cef2d1a50ca855a22acab76c5510430f065ef1",
-          "bytes": 1121
+          "sha256": "sha256:059851cdb2c52dfc00e0d5ea7c485b9f9829ebaad43f35c9bfbf97ce83031dd5",
+          "bytes": 1103
         }
       ],
       "provenance": {
@@ -300,17 +300,17 @@
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
-        "oracle": "serde-json-drawing-carrier-reader",
-        "packageVersion": "1",
-        "engineFamily": "serde-json",
-        "engineVersion": "1",
-        "command": "bun ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "oracle": "json-rust-drawing-carrier-reader",
+        "packageVersion": "0.12",
+        "engineFamily": "json-rust",
+        "engineVersion": "0.12",
+        "command": "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-drawing-carrier-v1",
       "reproducible": true,
       "family": "mechanical",
-      "notes": "A deterministic two-layer drawing document with the rename-layer mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. SVG, which this subset's other reader judges, has no representation for this field. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "notes": "A deterministic two-layer drawing document with the rename-layer mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. SVG, which this subset's other reader judges, has no representation for this field. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.",
       "comparisonPipeline": "drawing-1-carrier-compare-v1"
     }
   ]

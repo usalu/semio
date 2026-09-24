@@ -11,6 +11,6 @@ append-only JSONL event store and its sequence rules, and the content-hashed eve
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
-`🧪️test` harness; the third-party references are registered in `🔮️oracle/🔣️.json`.
+`🧪️test` harness; the third-party references are registered in `🔮️oracles/🔣️.json`.
 
 `📇️event-kind-catalog`, `📦️payload-encoding`, `🗃️store-append-sequence`, `🔏️export-content-hash`.

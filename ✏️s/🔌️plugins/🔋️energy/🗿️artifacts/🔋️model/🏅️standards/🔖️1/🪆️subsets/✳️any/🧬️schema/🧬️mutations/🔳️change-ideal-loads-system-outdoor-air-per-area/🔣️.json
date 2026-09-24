@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeIdealLoadsSystemOutdoorAirPerArea",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-ideal-loads-system-outdoor-air-per-area",
-  "binaryTag": null,
+  "binaryTag": 143,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

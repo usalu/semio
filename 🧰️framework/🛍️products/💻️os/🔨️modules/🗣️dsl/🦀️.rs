@@ -387,52 +387,372 @@ pub mod variants_text {
 }
 //#endregion 🔖️OpTextRt
 
+//#region 🏷️ProtocolRecord
+/// @emoji 🏷️ The one source of a mutation vocabulary's op tags: the `record <kind> tag=<n>` lines of its
+/// `💾️binary/📡️.protocol.semio`. Every codec derives its tags from here at compile time, so a kind whose
+/// record is missing or duplicated fails the build instead of drifting from the wire.
+/// See [`crate::os_dsl::grammar::parse_protocol`] for the full dialect this scanner agrees with.
+pub mod protocol_record {
+    const fn is_space(byte: u8) -> bool {
+        byte == b' ' || byte == b'\t'
+    }
+
+    const fn is_name(byte: u8) -> bool {
+        byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_' || byte == b'.'
+    }
+
+    const fn skip_space(bytes: &[u8], mut at: usize) -> usize {
+        while at < bytes.len() && is_space(bytes[at]) {
+            at += 1;
+        }
+        at
+    }
+
+    const fn line_end(bytes: &[u8], mut at: usize) -> usize {
+        while at < bytes.len() && bytes[at] != b'\n' {
+            at += 1;
+        }
+        at
+    }
+
+    const fn starts_with(bytes: &[u8], at: usize, prefix: &[u8]) -> bool {
+        if at + prefix.len() > bytes.len() {
+            return false;
+        }
+        let mut index = 0;
+        while index < prefix.len() {
+            if bytes[at + index] != prefix[index] {
+                return false;
+            }
+            index += 1;
+        }
+        true
+    }
+
+    /// 🔎️ Parses the record header at `line`: `(name start, name end, tag)`, or `None` for any other line.
+    const fn record_at(bytes: &[u8], line: usize) -> Option<(usize, usize, u64)> {
+        let at = skip_space(bytes, line);
+        if !starts_with(bytes, at, b"record") || at + 6 >= bytes.len() || !is_space(bytes[at + 6]) {
+            return None;
+        }
+        let name_start = skip_space(bytes, at + 6);
+        let mut name_end = name_start;
+        while name_end < bytes.len() && is_name(bytes[name_end]) {
+            name_end += 1;
+        }
+        let at = skip_space(bytes, name_end);
+        if name_end == name_start || !starts_with(bytes, at, b"tag=") {
+            return None;
+        }
+        let mut at = at + 4;
+        let digits = at;
+        let mut tag: u64 = 0;
+        while at < bytes.len() && bytes[at].is_ascii_digit() {
+            tag = tag * 10 + (bytes[at] - b'0') as u64;
+            at += 1;
+        }
+        if at == digits {
+            return None;
+        }
+        Some((name_start, name_end, tag))
+    }
+
+    const fn name_equals(bytes: &[u8], start: usize, end: usize, kind: &[u8]) -> bool {
+        end - start == kind.len() && starts_with(bytes, start, kind)
+    }
+
+    /// 🔢️ `(tag, occurrences)` of `kind` across every record line.
+    const fn scan(protocol: &str, kind: &str) -> (u64, usize) {
+        let bytes = protocol.as_bytes();
+        let kind = kind.as_bytes();
+        let mut line = 0;
+        let mut found = 0;
+        let mut tag = 0;
+        while line < bytes.len() {
+            if let Some((start, end, value)) = record_at(bytes, line) {
+                if name_equals(bytes, start, end, kind) {
+                    found += 1;
+                    tag = value;
+                }
+            }
+            line = line_end(bytes, line) + 1;
+        }
+        (tag, found)
+    }
+
+    /// 🏷️ The tag `kind`'s record declares; a missing or duplicated record is a const-evaluation error.
+    pub const fn tag(protocol: &str, kind: &str) -> u64 {
+        match scan(protocol, kind) {
+            (tag, 1) => tag,
+            (_, 0) => panic!("📡️.protocol.semio declares no `record <kind> tag=<n>` for this mutation kind"),
+            _ => panic!("📡️.protocol.semio declares this mutation kind more than once"),
+        }
+    }
+
+    /// 🏷️ [`tag`] for a codec whose wire tag is one byte; a tag above 255 is a const-evaluation error.
+    pub const fn tag_u8(protocol: &str, kind: &str) -> u8 {
+        let tag = tag(protocol, kind);
+        assert!(tag <= u8::MAX as u64, "📡️.protocol.semio record tag does not fit the codec's u8 tag field");
+        tag as u8
+    }
+
+    /// 🏷️ [`tag`] for a codec whose wire tag is a `u32`; a tag above `u32::MAX` is a const-evaluation error.
+    pub const fn tag_u32(protocol: &str, kind: &str) -> u32 {
+        let tag = tag(protocol, kind);
+        assert!(tag <= u32::MAX as u64, "📡️.protocol.semio record tag does not fit the codec's u32 tag field");
+        tag as u32
+    }
+
+    /// 📇️ Every `(kind, tag)` record, in file order.
+    pub fn records(protocol: &str) -> impl Iterator<Item = (&str, u64)> {
+        let bytes = protocol.as_bytes();
+        let mut line = 0;
+        std::iter::from_fn(move || {
+            while line < bytes.len() {
+                let current = line;
+                line = line_end(bytes, line) + 1;
+                if let Some((start, end, tag)) = record_at(bytes, current) {
+                    return Some((&protocol[start..end], tag));
+                }
+            }
+            None
+        })
+    }
+
+    /// 🔁️ The kind whose record declares `tag`.
+    pub fn kind(protocol: &str, tag: u64) -> Option<&str> {
+        records(protocol).find(|(_, value)| *value == tag).map(|(kind, _)| kind)
+    }
+}
+//#endregion 🏷️ProtocolRecord
+
 //#region 🔖️OpRt
-/// @emoji 🎯️ Handcrafted OpBinary helper (P6): layout `format u8 (=1) | variant ordinal varint | record body`.
+/// @emoji 🎯️ Handcrafted OpBinary helper (P6): layout `format u8 (=1) | tag varint | record body`.
+/// `encode_tagged_op`/`decode_tagged_op` take the tag from the vocabulary's `📡️.protocol.semio` record
+/// ([`super::protocol_record`]); `encode_op`/`decode_op` serve the ephemeral layers that carry no wire
+/// protocol facet, whose tag is the variant ordinal.
 /// Called explicitly from handcrafted `protocol::OpBinary` impls — never re-emitted by derive.
 pub mod variants_binary {
-    use super::DslVariants;
+    use super::{protocol_record, DslVariants};
     use crate::os_pack::{decode_record_body_exact, encode_record_body, write_varint_u64, ByteReader, DecodeOptions, EncodeOptions};
     use crate::os_spr::ProtocolError;
 
     pub const OP_BINARY_FORMAT: u8 = 1;
 
-    pub fn encode_op<T: DslVariants>(op: &T) -> Result<Vec<u8>, ProtocolError> {
+    fn encode_with<T: DslVariants>(op: &T, tag_of: impl Fn(&str, usize) -> Result<u64, ProtocolError>) -> Result<Vec<u8>, ProtocolError> {
         let (keyword, record) = op.to_named_record();
         let variants = T::variants();
         let ordinal = variants.iter().position(|(k, _)| k == &keyword).ok_or(ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword '{keyword}' missing from variants()") })?;
-        let wire_ordinal = u64::try_from(ordinal).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} exceeds the u64 wire range") })?;
+        let tag = tag_of(&keyword, ordinal)?;
         let spec = variants[ordinal].1();
         let body = encode_record_body(&spec, &record, &EncodeOptions::default()).map_err(ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
-        write_varint_u64(&mut out, wire_ordinal);
+        write_varint_u64(&mut out, tag);
         out.extend_from_slice(&body);
         Ok(out)
     }
 
-    pub fn decode_op<T: DslVariants>(bytes: &[u8]) -> Result<T, ProtocolError> {
+    fn decode_with<T: DslVariants>(bytes: &[u8], index_of: impl Fn(u64, &[(String, fn() -> super::RecordSpec)]) -> Result<usize, ProtocolError>, reencode: impl Fn(&T) -> Result<Vec<u8>, ProtocolError>) -> Result<T, ProtocolError> {
         let mut reader = ByteReader::new(bytes);
         let format = reader.read_u8()?;
         if format != OP_BINARY_FORMAT {
             return Err(ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
-        let ordinal = reader.read_varint_u64()?;
-        let index = usize::try_from(ordinal).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} exceeds the native index range") })?;
+        let tag = reader.read_varint_u64()?;
         let variants = T::variants();
-        let (keyword, spec_fn) = variants.get(index).ok_or(ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+        let index = index_of(tag, &variants)?;
+        let (keyword, spec_fn) = &variants[index];
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let record = decode_record_body_exact(body, &spec, &DecodeOptions::default()).map_err(ProtocolError::from)?;
         let record_offset = reader.position() as u64;
         let decoded = T::from_named_record(keyword, &record).map_err(|error| ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })?;
-        if encode_op(&decoded)?.as_slice() != bytes {
+        if reencode(&decoded)?.as_slice() != bytes {
             return Err(ProtocolError::Malformed { what: "op encoding", offset: 0, detail: "operation bytes are not canonical".into() });
         }
         Ok(decoded)
     }
+
+    /// 🏷️ Encodes `op` with the tag its kind's record declares in `protocol`.
+    pub fn encode_tagged_op<T: DslVariants>(protocol: &str, op: &T) -> Result<Vec<u8>, ProtocolError> {
+        encode_with(op, |keyword, _| protocol_record::records(protocol).find(|(kind, _)| *kind == keyword).map(|(_, tag)| tag).ok_or(ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("📡️.protocol.semio declares no record for '{keyword}'") }))
+    }
+
+    /// 🏷️ Decodes an op whose tag names its kind's record in `protocol`.
+    pub fn decode_tagged_op<T: DslVariants>(protocol: &str, bytes: &[u8]) -> Result<T, ProtocolError> {
+        decode_with(
+            bytes,
+            |tag, variants| {
+                let kind = protocol_record::kind(protocol, tag).ok_or(ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("📡️.protocol.semio declares no record with tag {tag}") })?;
+                variants.iter().position(|(keyword, _)| keyword == kind).ok_or(ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("record '{kind}' names no variant") })
+            },
+            |decoded| encode_tagged_op(protocol, decoded),
+        )
+    }
+
+    pub fn encode_op<T: DslVariants>(op: &T) -> Result<Vec<u8>, ProtocolError> {
+        encode_with(op, |_, ordinal| u64::try_from(ordinal).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} exceeds the u64 wire range") }))
+    }
+
+    pub fn decode_op<T: DslVariants>(bytes: &[u8]) -> Result<T, ProtocolError> {
+        decode_with(
+            bytes,
+            |ordinal, variants| {
+                let index = usize::try_from(ordinal).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} exceeds the native index range") })?;
+                if index < variants.len() { Ok(index) } else { Err(ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) }) }
+            },
+            |decoded| encode_op(decoded),
+        )
+    }
 }
 //#endregion 🔖️OpRt
+
+//#region 🏷️TaggedValueRt
+/// @emoji 🏷️ Op frame for a mutation aggregate whose payload is its `ToValue` tree: `format u8 (=1) | tag varint
+/// | wire value (`pack_rt::encode_wire_value`) of the variant's value with its variant name removed`. The tag is
+/// the variant kind's `record <kind> tag=<n>` in the vocabulary's `📡️.protocol.semio` ([`super::protocol_record`]),
+/// so the wire never spells the variant name and the protocol file is the only source of tags.
+pub mod tagged_value_binary {
+    use super::protocol_record;
+    use crate::os_dsl::schema::{DslValue, FromValue, ToValue};
+    use crate::os_pack::{write_varint_u64, ByteReader};
+    use crate::os_spr::ProtocolError;
+    use crate::os_store::pack_rt::{decode_wire_value, encode_wire_value};
+
+    pub const OP_BINARY_FORMAT: u8 = 1;
+
+    /// 🧭️ Where the aggregate's `ToValue` tree names its variant.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum VariantTag {
+        /// `#[value(tag = "…")]`, camelCase variant names, with or without `content`.
+        Field(&'static str),
+        /// Externally tagged, PascalCase variant names: `{"Variant": payload}`.
+        Key,
+    }
+
+    fn malformed(what: &'static str, offset: u64, detail: String) -> ProtocolError {
+        ProtocolError::Malformed { what, offset, detail }
+    }
+
+    fn kebab(name: &str) -> String {
+        let mut out = String::with_capacity(name.len() + 4);
+        for (index, ch) in name.char_indices() {
+            if ch.is_ascii_uppercase() {
+                if index > 0 {
+                    out.push('-');
+                }
+                out.push(ch.to_ascii_lowercase());
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn cased(kind: &str, pascal: bool) -> String {
+        let mut out = String::with_capacity(kind.len());
+        let mut upper = pascal;
+        for ch in kind.chars() {
+            if ch == '-' {
+                upper = true;
+            } else if upper {
+                out.push(ch.to_ascii_uppercase());
+                upper = false;
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    /// 🏷️ Encodes `op` under its kind's record tag.
+    pub fn encode_op<T: ToValue>(protocol: &str, tagging: VariantTag, op: &T) -> Result<Vec<u8>, ProtocolError> {
+        let DslValue::Object(mut entries) = op.to_value() else { return Err(malformed("op value", 0, "a mutation aggregate's value must be an object".into())) };
+        let (variant, payload) = match tagging {
+            VariantTag::Field(key) => {
+                let position = entries.iter().position(|(name, _)| name == key).ok_or_else(|| malformed("op value", 0, format!("value carries no `{key}` variant field")))?;
+                let (_, variant) = entries.remove(position);
+                let DslValue::String(variant) = variant else { return Err(malformed("op value", 0, format!("`{key}` is not a string"))) };
+                (variant, DslValue::Object(entries))
+            }
+            VariantTag::Key => {
+                let mut entries = entries.into_iter();
+                let (Some((variant, payload)), None) = (entries.next(), entries.next()) else { return Err(malformed("op value", 0, "an externally tagged value must hold exactly one variant".into())) };
+                (variant, payload)
+            }
+        };
+        let kind = kebab(&variant);
+        let tag = protocol_record::records(protocol).find(|(record, _)| *record == kind).map(|(_, tag)| tag).ok_or_else(|| malformed("op tag", 1, format!("📡️.protocol.semio declares no record for '{kind}'")))?;
+        let body = encode_wire_value(&payload);
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        write_varint_u64(&mut out, tag);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+
+    /// 🏷️ Decodes an op whose tag names its kind's record.
+    pub fn decode_op<T: FromValue>(protocol: &str, tagging: VariantTag, bytes: &[u8]) -> Result<T, ProtocolError> {
+        let mut reader = ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(malformed("op format", 0, format!("unsupported op format {format}")));
+        }
+        let tag = reader.read_varint_u64()?;
+        let kind = protocol_record::kind(protocol, tag).ok_or_else(|| malformed("op tag", 1, format!("📡️.protocol.semio declares no record with tag {tag}")))?;
+        let offset = reader.position();
+        let payload = decode_wire_value(&bytes[offset..]).map_err(|error| malformed("op payload", offset as u64, error.to_string()))?;
+        let value = match tagging {
+            VariantTag::Field(key) => {
+                let DslValue::Object(mut entries) = payload else { return Err(malformed("op payload", offset as u64, "payload must be an object".into())) };
+                entries.insert(0, (key.to_string(), DslValue::String(cased(kind, false))));
+                DslValue::Object(entries)
+            }
+            VariantTag::Key => DslValue::Object(vec![(cased(kind, true), payload)]),
+        };
+        T::from_value(value).map_err(|error| malformed("op value", offset as u64, error.to_string()))
+    }
+}
+//#endregion 🏷️TaggedValueRt
+
+//#region 🏷️TaggedTextRt
+/// @emoji 🏷️ Op frame for a mutation aggregate whose canonical payload is its own `OpText` line `<kind> <args>`:
+/// `format u8 (=1) | tag varint | args utf-8`. The tag is the kind's `record <kind> tag=<n>`, so the keyword never
+/// travels and the protocol file stays the only source of tags. Used where the `ToValue` tree is lossy.
+pub mod tagged_text_binary {
+    use super::protocol_record;
+    use crate::os_pack::{write_varint_u64, ByteReader};
+    use crate::os_spr::ProtocolError;
+
+    pub const OP_BINARY_FORMAT: u8 = 1;
+
+    /// 🏷️ Encodes one printed op line under its keyword's record tag.
+    pub fn encode_line(protocol: &str, line: &str) -> Result<Vec<u8>, ProtocolError> {
+        let (keyword, args) = line.split_once(' ').unwrap_or((line, ""));
+        let tag = protocol_record::records(protocol).find(|(kind, _)| *kind == keyword).map(|(_, tag)| tag).ok_or_else(|| ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("📡️.protocol.semio declares no record for '{keyword}'") })?;
+        let mut out = Vec::with_capacity(args.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        write_varint_u64(&mut out, tag);
+        out.extend_from_slice(args.as_bytes());
+        Ok(out)
+    }
+
+    /// 🏷️ Restores the op line whose keyword the tag's record names.
+    pub fn decode_line(protocol: &str, bytes: &[u8]) -> Result<String, ProtocolError> {
+        let mut reader = ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let tag = reader.read_varint_u64()?;
+        let kind = protocol_record::kind(protocol, tag).ok_or_else(|| ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("📡️.protocol.semio declares no record with tag {tag}") })?;
+        let offset = reader.position();
+        let args = std::str::from_utf8(&bytes[offset..]).map_err(|error| ProtocolError::Malformed { what: "op args", offset: offset as u64, detail: error.to_string() })?;
+        Ok(if args.is_empty() { kind.to_string() } else { format!("{kind} {args}") })
+    }
+}
+//#endregion 🏷️TaggedTextRt
 
 //#region 🔖️Idiom
 /// @emoji 🗣️ A custom front-end language layered on this engine: its own lexer/parser/printer/AST,
@@ -780,6 +1100,10 @@ mod boxed_field_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔢️checked-integers/🦀️.rs"]
 mod checked_integer_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🏷️protocol-record/🦀️.rs"]
+mod protocol_record_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

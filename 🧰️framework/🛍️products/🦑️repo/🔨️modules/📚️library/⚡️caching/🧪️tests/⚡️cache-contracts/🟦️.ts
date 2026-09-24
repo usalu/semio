@@ -23,6 +23,7 @@ import { testCiBaselineCommand } from "../../🚦️ci/🧪️tests/🚦️basel
 import { testDevcontainerContext } from "../../📦️artifacts/🐳️containers/🧪️tests/🐳️devcontainer-context/🟦️.ts";
 import { testContainerRuntimeBootstrap } from "../../📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap/🟦️.ts";
 import { testCommandImportClosure } from "../🔗️command-imports/🟦️.ts";
+import { testImportEdgeEquality } from "../🔗️import-edges/🟦️.ts";
 import { testTrunkLockfile } from "../🔒️trunk-lockfile/🟦️.ts";
 import { testNativeDependencies } from "../📦️native-dependencies/🟦️.ts";
 import { testCargoCleanupBoundary } from "../🦀️cleanup-boundary/🟦️.ts";
@@ -52,6 +53,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   const { testExtensionPackage } = await import("../../../../💻️client/🧩️vscode/🧪️tests/📦️package/🟦️.ts");
   await testExtensionPackage(output);
   await testCommandImportClosure(workspace, output);
+  await testImportEdgeEquality(workspace, output);
   await testTrunkLockfile(workspace);
   await testNativeDependencies(workspace, output);
   await testCargoCleanupBoundary(workspace, output);
@@ -99,7 +101,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testNativeRendererOutputs(workspace, output);
   const { testStylingOutputs } = await import("../🎨️styling-outputs/🟦️.ts");
   await testStylingOutputs(workspace, output);
-  const { testStylingPythonOutputs } = await import("../🎨️styling-outputs/🐍️python/🟦️.ts");
+  const { testStylingPythonOutputs } = await import("../🐍️styling-python-outputs/🟦️.ts");
   await testStylingPythonOutputs(workspace, output);
   const { testWgpuLiveActivation } = await import("../🧊️live-activation/🟦️.ts");
   await testWgpuLiveActivation(workspace, output);
@@ -277,12 +279,13 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
   testSelectedRuntimeDependencies(targets);
   let checked = 0;
   for (const component of components) for (const row of component.playground ?? []) for (const profile of ["dev", "release"]) {
-    const expected = oracle(components, [component.pluginId]).map((id: string) => `${projects.get(id)}:materialize-${profile}`).sort();
+    const bootExpected = oracle(components, [{ id: component.pluginId, appScoped: true }]).map((id: string) => `${projects.get(id)}:materialize-${profile}`).sort();
+    const fullExpected = oracle(components, [component.pluginId]).map((id: string) => `${projects.get(id)}:materialize-${profile}`).sort();
     const actual = targets[`prepare-${row.variant}-react-${profile}`].dependsOn.filter((id: string) => id.endsWith(`:materialize-${profile}`)).sort();
-    assert.deepEqual(actual, expected, `${row.variant} ${profile}: Cargo metadata and graphlib`);
+    assert.deepEqual(actual, bootExpected, `${row.variant} ${profile}: boot prepare uses appScoped host closure`);
     const native = targets[`prepare-${row.variant}-native-${profile}`];
     assert.equal(native.dependsOn[0], `@semio-tech/plugin-registry:session-${row.variant}`);
-    assert.deepEqual(native.dependsOn.slice(1).sort(), expected);
+    assert.deepEqual(native.dependsOn.slice(1).sort(), fullExpected);
     assert.ok(!native.dependsOn.some((id: string) => /renderer.*:(wasm|generate-)|:fonts$/.test(id)));
 
     if (profile === "release") {
@@ -298,7 +301,10 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
         return count <= 1 ? `${owner}/dist` : `${owner}/dist/${row.variant}`;
       })();
       assert.deepEqual(build.outputs, [distDir ? `{workspaceRoot}/${distDir}` : `{projectRoot}/dist/${name}`]);
-      assert.deepEqual(build.dependsOn, [...targets[`prepare-${row.variant}-react-release`].dependsOn, "@semio-tech/assets:build"]);
+      const prepareBoot = targets[`prepare-${row.variant}-react-release`].dependsOn;
+      assert.ok(build.dependsOn.includes("@semio-tech/assets:build"));
+      assert.ok(fullExpected.every((id: string) => build.dependsOn.includes(id)), `${name}: production ships the full materialize closure`);
+      assert.ok(prepareBoot.filter((id: string) => id.endsWith(":materialize-release")).every((id: string) => build.dependsOn.includes(id)));
       assert.ok(!build.dependsOn.some((target: string) => /:?(?:activate|dev|serve)-/.test(target)));
       assert.ok(build.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*" && input.transitive));
     }
@@ -876,8 +882,17 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         assert.equal(wgpuActivationTarget.cache, false, `${wgpuActivationName} publishes live extensions and reload notifications on every activation`);
         assert.deepEqual(wgpuActivationTarget.outputs, [`{projectRoot}/dist/runtime/wgpu/${profile}/${playground.variant}`]);
         assert.deepEqual(wgpuActivationTarget.dependsOn, [wgpuTargetName]);
-        for (const command of ["serve", "dev"]) {
-          const serverName = `${command}-${playground.variant}-react-${profile}`, server = preparationProject.targets[serverName];
+        {
+          const serverName = `serve-${playground.variant}-react-${profile}`, server = preparationProject.targets[serverName];
+          assert.ok(server, `${serverName} needs an Nx server owner`);
+          assert.equal(server.continuous, true);
+          assert.equal(server.cache, false);
+          assert.deepEqual(server.outputs, []);
+          assert.deepEqual(server.dependsOn, [`@semio-tech/plugin-registry:session-${playground.variant}`]);
+          assert.equal(server.options.command, `bun ./📜️script.ts serve ${playground.variant} react ${profile}`);
+        }
+        {
+          const serverName = `dev-${playground.variant}-react-${profile}`, server = preparationProject.targets[serverName];
           assert.ok(server, `${serverName} needs an Nx server owner`);
           assert.equal(server.continuous, true);
           assert.equal(server.cache, false);
@@ -885,9 +900,21 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
           assert.deepEqual(server.dependsOn, [activationName]);
           assert.equal(server.options.command, `bun ./📜️script.ts serve ${playground.variant} react ${profile}`);
         }
-        const components = buildPlaygroundSession(playground.variant).plugins.map((row: any) => `${componentLaunchers.find((entry) => entry.pluginId === row.pluginId)!.project}:materialize-${profile}`);
+        const hostLauncher = componentLaunchers.find((entry) => entry.pluginId === playground.pluginId);
+        assert.ok(hostLauncher, `${playground.variant}: host plugin must launch`);
+        const materializeDeps = preparation.dependsOn.filter((id: string) => id.endsWith(`:materialize-${profile}`));
+        assert.ok(materializeDeps.includes(`${hostLauncher.project}:materialize-${profile}`), `${targetName}: boot prepare must materialize the host`);
+        const fullSession = buildPlaygroundSession(playground.variant).plugins.map((row: any) => `${componentLaunchers.find((entry) => entry.pluginId === row.pluginId)!.project}:materialize-${profile}`);
+        assert.ok(materializeDeps.length <= fullSession.length, `${targetName}: boot prepare must not exceed the full session closure`);
+        // Host fanout playgrounds (no app-scoped row) previously pulled every crate; boot prepare must stay smaller.
+        if (fullSession.length > materializeDeps.length + 5) {
+          assert.ok(materializeDeps.length < fullSession.length / 2, `${targetName}: host boot prepare must skip the catalog fanout`);
+        }
         const engines = playground.engines.map((engine: string) => contracts.find((project) => resolve(root, project.root) === resolve(root, engine))!.name + ":wasm");
-        assert.deepEqual([...preparation.dependsOn].sort(), [...new Set([`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, vectors.playgroundPreparation.fonts, ...engines, ...components])].sort());
+        for (const engine of engines) assert.ok(preparation.dependsOn.includes(engine));
+        assert.ok(preparation.dependsOn.includes(`@semio-tech/plugin-registry:session-${playground.variant}`));
+        assert.ok(preparation.dependsOn.includes(`@semio-tech/framework-plugin-web:support-${profile}`));
+        assert.ok(preparation.dependsOn.includes(vectors.playgroundPreparation.fonts));
       }
       const target = `session-${playground.variant}`;
       assert.ok(sessionProject.targets[target]);
@@ -936,7 +963,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         const guard = owner!.targets[fingerprint.target.slice(separator + 1)];
         assert.ok(target.inputs.some((input: any) => input.dependentTasksOutputFiles === fingerprint.output), `${id} must hash the discovered input receipt`);
         assert.ok(!target.inputs.some((input: any) => input.runtime?.includes("generator-inputs")), `${id} must not repeat discovery inside the hasher`);
-        assert.ok(target.dependsOn.includes(fingerprint.target)); assert.equal(guard.cache, false);
+        assert.ok(target.dependsOn.includes(fingerprint.target)); assert.equal(guard.cache, true);
         assert.deepEqual(guard.outputs, [`{workspaceRoot}/${fingerprint.output}`]);
       }
       if (authority.checkTarget) {

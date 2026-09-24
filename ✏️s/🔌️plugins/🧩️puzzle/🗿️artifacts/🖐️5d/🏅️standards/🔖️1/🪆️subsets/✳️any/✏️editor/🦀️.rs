@@ -25,6 +25,7 @@ use crate::editor::puzzle5d::commands::{
 };
 use crate::editor::puzzle5d::commands::{add_target_volume, delete_target_volume, relocate_target_volume, set_target_volume_flag, set_voxel_dims};
 use crate::editor::puzzle5d::commands::{set_chunk_size, set_proximity_radius};
+use crate::editor::puzzle5d::commands::{accept_suggestion, close_vortex_suggestions, hover_suggestion, open_vortex_suggestions};
 use crate::editor::puzzle5d::commands::{export_fixture, import_fixture, open_add_part_dialog, open_import_fixture};
 use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
@@ -941,37 +942,34 @@ pub fn puzzle5d_scene_active_utility(view_state: Option<&semio_framework_plugin:
         .unwrap_or_else(|| PUZZLE5D_DEFAULT_UTILITY.to_string())
 }
 
-/// 🧭️ The select/brush/fill interaction mode the world engine reads, derived from the flat active utility
-/// (the transform gumball utilities `move`/`rotate`/`scale` and `worldRelocate` all present as `select`).
+/// 🧭️ The select/brush/fill/volume-brush interaction mode the world engine reads, derived from the flat
+/// active utility (the transform gumball and `worldRelocate` both present as `select`) — puzzle 3d's
+/// `main::scene_mode` twin.
 pub fn puzzle5d_scene_mode(active_utility: &str) -> &str {
     match active_utility {
         "brush" => "brush",
         "fill" => "fill",
+        "volumeBrush" => "volumeBrush",
         _ => "select",
     }
 }
 
-/// 🎚️ The gumball handle the world engine draws when a transform utility is active.
+/// 🎚️ The gumball handle the world engine draws when the transform utility is active.
 pub fn puzzle5d_transform_handle(active_utility: &str) -> Option<&'static str> {
-    match active_utility {
-        "move" => Some("move"),
-        "rotate" => Some("rotate"),
-        "scale" => Some("scale"),
-        _ => None,
-    }
+    (active_utility == world3d::utilities::transform::UTILITY_ID).then_some("transform")
 }
 
-/// 🧭️ Whether the active utility is a transform gumball mode.
+/// 🧭️ Whether the active utility is the transform gumball.
 pub fn puzzle5d_transform_utility_active(active_utility: &str) -> bool {
     puzzle5d_transform_handle(active_utility).is_some()
 }
 
-/// 🕹️ Whether the world gumball should render: a transform utility is active, at least one handle
+/// 🕹️ Whether the world gumball should render: the transform utility is active, at least one handle
 /// flag is on (`setTransformGumballFlag` — an all-off gumball would draw nothing to grab), and the
-/// live `vortex` selection holds at least one part. Selection comes from the framework-owned domain
-/// via [`Puzzle5dInteractionSnapshot`], never from stored app state.
+/// live `vortex` selection holds at least one part or target volume to move. Selection comes from the
+/// framework-owned domain via [`Puzzle5dInteractionSnapshot`], never from stored app state.
 pub fn puzzle5d_gumball_active(runtime: &Puzzle5dRuntime, active_utility: &str, interaction: &Puzzle5dInteractionSnapshot) -> bool {
-    puzzle5d_transform_utility_active(active_utility) && (runtime.transform_move || runtime.transform_rotate) && !interaction.selected_part_ids().is_empty()
+    puzzle5d_transform_utility_active(active_utility) && (runtime.transform_move || runtime.transform_rotate) && !(interaction.selected_part_ids().is_empty() && interaction.selected_target_volume_ids().is_empty())
 }
 
 pub fn gumball_target_world(envelope: &Puzzle5dScene, selected_part_ids: &[String]) -> Option<[f64; 3]> {
@@ -3922,24 +3920,27 @@ impl ArtifactReservedJob for Puzzle5dImportJob {
 /// trailing destructive row. `organize_context_menu`, run automatically at the `VcsArtifactApp::context_menu`
 /// funnel, handles taxonomy ordering/separator placement — this function only needs to emit the rows.
 /// 🕹️ The per-granularity ids one context-menu request carries. `surface.selection` is what the
-/// document holds selected; `surface.hits` is the entity the pointer is actually over and WINS only
-/// for a granularity the selection does not carry, so a right-click on an unselected grip opens that
-/// grip's menu while a right-click inside a part selection keeps the whole selection as the subject.
+/// document holds selected; `surface.hits` is the entity the pointer is actually over. A hit OUTSIDE
+/// the selection is the menu's whole subject — a right-click on the grip of a selected part opens that
+/// grip's menu, never the part's — while a hit inside the selection keeps the whole selection, so
+/// "Delete (3 parts)" never silently narrows to the one row under the cursor.
 #[derive(Default)]
 pub struct Puzzle5dContextSelection {
     pub part_ids: Vec<String>,
     pub grip_ids: Vec<String>,
     pub fastener_ids: Vec<String>,
+    /// 🎯️ The pointer's hit alone is the subject, so no selection read may widen it again.
+    hit_subject: bool,
 }
 
 impl Puzzle5dContextSelection {
-    /// 🪣️ The bucket one surface domain name belongs to. `"object"`/`"node"` are the board and world
-    /// hosts' own painted-entity domain names for what this app calls a PART.
+    /// 🪣️ The bucket one surface domain name belongs to — the board host's `node`/`handle`/`edge` and the world
+    /// host's `object`/`vortex`/`attraction` pick domains for what this app calls a part, grip and fastener.
     fn bucket(&mut self, domain: &str) -> Option<&mut Vec<String>> {
         match domain {
             "node" | "object" | PUZZLE5D_GRANULARITY_PART => Some(&mut self.part_ids),
-            "vortex" | PUZZLE5D_GRANULARITY_GRIP => Some(&mut self.grip_ids),
-            "attraction" | PUZZLE5D_GRANULARITY_FASTENER => Some(&mut self.fastener_ids),
+            "handle" | "vortex" | PUZZLE5D_GRANULARITY_GRIP => Some(&mut self.grip_ids),
+            "edge" | "attraction" | PUZZLE5D_GRANULARITY_FASTENER => Some(&mut self.fastener_ids),
             _ => None,
         }
     }
@@ -3953,13 +3954,34 @@ impl Puzzle5dContextSelection {
                 bucket.extend(ids);
             }
         }
-        for hit in &surface.hits {
-            let id = hit.id.clone();
-            if let Some(bucket) = out.bucket(hit.domain.as_str()).filter(|bucket| bucket.is_empty()) {
-                bucket.push(id);
+        // 🎯️ Hosts list every target under the pointer, most specific first (a grip before its part), and only
+        // that one is the menu's subject.
+        let mut hits = Self::default();
+        if let Some(hit) = surface.hits.iter().find(|hit| hits.bucket(hit.domain.as_str()).is_some()) {
+            hits.bucket(hit.domain.as_str()).into_iter().for_each(|bucket| bucket.push(hit.id.clone()));
+        }
+        let hit_selected = |selected: &[String], hit: &[String]| hit.iter().all(|id| selected.contains(id));
+        let inside = hit_selected(&out.part_ids, &hits.part_ids) && hit_selected(&out.grip_ids, &hits.grip_ids) && hit_selected(&out.fastener_ids, &hits.fastener_ids);
+        if hits.is_empty() || inside {
+            return out;
+        }
+        hits.hit_subject = true;
+        hits
+    }
+
+    /// 🕹️ Fills in the granularities the CLIENT surface never sends — puzzle 3d's twin. `World3dHost` only puts
+    /// its painted part ids into `ContextMenuSurfaceTarget.selection`, so a selected grip or fastener reaches a
+    /// menu only through the framework-owned domain read. Per-granularity additive: whatever the surface DID
+    /// supply keeps priority (a right-click on an unselected entity still targets what was clicked).
+    pub fn fill_from_interaction(&mut self, interaction: &Puzzle5dInteractionSnapshot) {
+        if self.hit_subject {
+            return;
+        }
+        for (bucket, ids) in [(&mut self.part_ids, interaction.selected_part_ids()), (&mut self.grip_ids, interaction.selected_grip_ids()), (&mut self.fastener_ids, interaction.selected_fastener_ids())] {
+            if bucket.is_empty() {
+                bucket.extend(ids.iter().cloned());
             }
         }
-        out
     }
 
     fn is_empty(&self) -> bool {
@@ -4027,10 +4049,11 @@ fn puzzle5d_context_menu_items(
     }
     if !selection.grip_ids.is_empty() {
         let mut menu = Menu::of(registry);
-        // 🎣️ Only for EXACTLY one grip: the brush suggestions link points at a single grip, so a
-        // multi-grip row would silently keep whichever one the link last held.
+        // 🎣️ Only for EXACTLY one grip: the suggestion search points at a single grip. The row carries the
+        // world host's `openVortexSuggestions` verb, which the host turns into a live submenu: it starts the
+        // search the moment the menu opens and lists the free parts as they are found.
         if let [only] = selection.grip_ids.as_slice() {
-            menu = menu.item(bespoke("suggest", labels.suggest_parts.into(), "sparkles", "targetBrushSuggestions", Some(dsl::json!({ "fullId": only.as_str() })), false));
+            menu = menu.item(bespoke("suggest", labels.suggest_parts.into(), "sparkles", "openVortexSuggestions", Some(dsl::json!({ "fullId": only.as_str() })), false));
         }
         return menu.action("focusSelection").item(bespoke("delete", labels.delete.into(), "trash", "deleteSelection", None, true)).build();
     }
@@ -4170,6 +4193,10 @@ puzzle5d_command_variants! {
     CycleBrushCandidate = "cycleBrushCandidate",
     CycleBrushCandidateBack = "cycleBrushCandidateBack",
     TargetBrushSuggestions = "targetBrushSuggestions",
+    OpenVortexSuggestions = "openVortexSuggestions",
+    CloseVortexSuggestions = "closeVortexSuggestions",
+    HoverSuggestion = "hoverSuggestion",
+    AcceptSuggestion = "acceptSuggestion",
     RegisterBrushMesh = "registerBrushMesh",
     SetBrushPlacementContactTolerance = "setBrushPlacementContactTolerance",
     SetProximityRadius = "setProximityRadius",
@@ -4524,6 +4551,31 @@ impl Puzzle5dPlayApp {
     }
 }
 
+impl Puzzle5dPlayApp {
+    /// 🖱️ The ONE context-menu implementation — `ArtifactEditor::context_menu` and
+    /// `context_menu_with_request_context` funnel here, differing only in whether `interaction` carries a live
+    /// `vortex`-domain read or the empty default.
+    fn context_menu_body(
+        request: &semio_framework_plugin::ContextMenuRequest,
+        doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
+        cfg: &ConfigView<'_, Puzzle5dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        interaction: &Puzzle5dInteractionSnapshot,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let projection = puzzle5d_projection_value(doc.snapshot.value());
+        let Some(labels) = puzzle5d_labels(view_state) else { return Vec::new() };
+        let Some(is_de) = puzzle5d_is_de_locale(view_state) else { return Vec::new() };
+        let window_id = view_state.window_id.as_deref().unwrap_or(world3d::WINDOW_KIND_ID);
+        let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
+        let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
+        let envelope = scene_from_projection(&projection, runtime, &active_utility);
+        let mut selection = Puzzle5dContextSelection::from_surface(request.surface.as_ref());
+        selection.fill_from_interaction(interaction);
+        puzzle5d_context_menu_items(&envelope, &selection, labels, is_de, registry)
+    }
+}
+
 /// 🎬️ Dispatch only: every arm's behaviour lives in its `🎮️commands/<group>/🦀️.rs` free
 /// function. No behaviour lives in this match.
 fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args: Option<&Value>) {
@@ -4568,6 +4620,10 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
         "cycleBrushCandidate" => cycle_brush_candidate::cycle_brush_candidate(ctx),
         "cycleBrushCandidateBack" => cycle_brush_candidate::cycle_brush_candidate_back(ctx),
         "targetBrushSuggestions" => target_brush_suggestions::target_brush_suggestions(ctx, args),
+        "openVortexSuggestions" => open_vortex_suggestions::open_vortex_suggestions(ctx, args),
+        "closeVortexSuggestions" => close_vortex_suggestions::close_vortex_suggestions(ctx, args),
+        "hoverSuggestion" => hover_suggestion::hover_suggestion(ctx, args),
+        "acceptSuggestion" => accept_suggestion::accept_suggestion(ctx, args),
         "registerBrushMesh" => register_brush_mesh::register_brush_mesh(ctx, args),
         "setBrushPlacementContactTolerance" => set_brush_placement_contact_tolerance::set_brush_placement_contact_tolerance(ctx, args),
         "setProximityRadius" => set_proximity_radius::set_proximity_radius(ctx, args),
@@ -4623,6 +4679,10 @@ pub(crate) const PUZZLE5D_RETAINED_TOOL_IDS: &[&str] = &[
     "setFillCount",
     "setSelectionFlag",
     "targetBrushSuggestions",
+    "openVortexSuggestions",
+    "closeVortexSuggestions",
+    "hoverSuggestion",
+    "acceptSuggestion",
     "focusSelection",
     "addBrushPart",
     "addNode",
@@ -4687,6 +4747,10 @@ const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &[
     "engagementSubmit",
     "setFillCount",
     "targetBrushSuggestions",
+    "openVortexSuggestions",
+    "closeVortexSuggestions",
+    "hoverSuggestion",
+    "acceptSuggestion",
     "setCamera",
     "setCamera2d",
     "setCamera3d",
@@ -8740,6 +8804,10 @@ impl ArtifactOwnedToolJobFactory for Puzzle5dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "targetBrushSuggestions", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "openVortexSuggestions", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "closeVortexSuggestions", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "hoverSuggestion", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "acceptSuggestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "focusSelection", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "addBrushPart", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction] },
@@ -9114,6 +9182,10 @@ impl Puzzle5dRetainedCommandProofs {
             "setFillCount",
             "setSelectionFlag",
             "targetBrushSuggestions",
+            "openVortexSuggestions",
+            "closeVortexSuggestions",
+            "hoverSuggestion",
+            "acceptSuggestion",
             "focusSelection",
             "addBrushPart",
             "addNode",
@@ -9305,7 +9377,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         }
         let tool_id = request.command.action_id();
         let mut work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match tool_id {
-            "engagementAbort" => Box::new(Puzzle5dWindowCommandWork::new(tool_id).with_tool_run(request.context.tool_run().cloned())),
+            // ⏯️ The verbs that start, retarget or abort a run read the instance's live run as of admission.
+            "engagementAbort" | "openVortexSuggestions" | "closeVortexSuggestions" => Box::new(Puzzle5dWindowCommandWork::new(tool_id).with_tool_run(request.context.tool_run().cloned())),
             window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window)),
             "addBrushPart" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id)),
             "applyBoardEvents" => Box::new(Puzzle5dBoardEventsWork::default()),
@@ -9555,15 +9628,15 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
         let window_id = view_state.window_id.as_deref().unwrap_or(window_for_body);
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
-        let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_for_body));
+        let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let envelope = scene_from_projection(&projection, runtime, &active_utility);
         let labels = puzzle5d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d has no authored label set for the host's locale/terminology axes"))?;
         // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
         // the body being rendered — every panel container below shares its first-paint row budget.
         let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
-            board2d::BODY_KEY => board2d::render(&envelope),
-            world3d::BODY_KEY => world3d::render(&envelope, doc.tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document)),
+            board2d::BODY_KEY => board2d::render(&envelope, labels, None),
+            world3d::BODY_KEY => world3d::render(&envelope, labels, doc.tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document), None),
             artifact_panel::BODY_KEY => artifact_panel::render(&envelope, labels, &windows),
             catalogue::BODY_KEY => catalogue::render(&envelope, labels, &windows),
             inspection::BODY_KEY => inspection::render(&envelope, labels, &windows),
@@ -9574,7 +9647,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
@@ -9594,9 +9667,13 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
         // the body being rendered — every panel container below shares its first-paint row budget.
         let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
+        // 🎣️ What the brush suggestions run resolved for the open menu's grip — the instance owner holds it, and both
+        // panes list it.
+        let menu_target = envelope.runtime.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.as_str());
+        let suggestions = menu_target.and_then(|target| owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(owner.brush_suggestions.found(target).cloned())).ok().flatten());
         let node = match body_key {
-            board2d::BODY_KEY => board2d::render(&envelope),
-            world3d::BODY_KEY => world3d::render(&envelope, doc.tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document)),
+            board2d::BODY_KEY => board2d::render(&envelope, labels, suggestions.as_ref()),
+            world3d::BODY_KEY => world3d::render(&envelope, labels, doc.tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document), suggestions.as_ref()),
             artifact_panel::BODY_KEY => artifact_panel::render(&envelope, labels, &windows),
             catalogue::BODY_KEY => catalogue::render(&envelope, labels, &windows),
             inspection::BODY_KEY => inspection::render(&envelope, labels, &windows),
@@ -9663,15 +9740,20 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let projection = puzzle5d_projection_value(doc.snapshot.value());
-        let Some(labels) = puzzle5d_labels(view_state) else { return Vec::new() };
-        let Some(is_de) = puzzle5d_is_de_locale(view_state) else { return Vec::new() };
-        let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(world3d::WINDOW_KIND_ID));
-        let window_id = view_state.window_id.as_deref().unwrap_or(world3d::WINDOW_KIND_ID);
-        let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
-        let envelope = scene_from_projection(&projection, runtime, &active_utility);
-        let selection = Puzzle5dContextSelection::from_surface(request.surface.as_ref());
-        puzzle5d_context_menu_items(&envelope, &selection, labels, is_de, registry)
+        Self::context_menu_body(request, doc, cfg, view_state, &Puzzle5dInteractionSnapshot::default(), registry)
+    }
+
+    /// 🕹️ The live-`vortex`-domain twin: a grip or fastener selected in EITHER pane reaches the menu even though
+    /// the world host's surface only reports its painted part ids.
+    fn context_menu_with_request_context(
+        request: &semio_framework_plugin::ContextMenuRequest,
+        doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
+        cfg: &ConfigView<'_, Puzzle5dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        interaction: &InteractionView<'_>,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        Self::context_menu_body(request, doc, cfg, view_state, &Puzzle5dInteractionSnapshot::from_interaction(interaction), registry)
     }
 }
 //#endregion 🔖️PlayApp
@@ -9763,6 +9845,7 @@ fn puzzle5d_interaction_definition() -> InteractionDefinition {
             granularity(PUZZLE5D_GRANULARITY_PART, puzzle5d_localized(|l| l.part), "box"),
             granularity(PUZZLE5D_GRANULARITY_GRIP, puzzle5d_localized(|l| l.grip), "circle-dot"),
             granularity(PUZZLE5D_GRANULARITY_FASTENER, LocalizedLabel::native("Fastener", "Verbinder"), "link"),
+            granularity(PUZZLE5D_GRANULARITY_TARGET_VOLUME, LocalizedLabel::native("Target Volume", "Zielvolumen"), "box-select"),
         ],
         hierarchy: HierarchyProvider::Topology,
         hover: HoverSpec { enabled: true, transitive: false, channels: vec![PUZZLE5D_HOVER_CHANNEL.into()], broadcast: true },
@@ -9810,9 +9893,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
                     world3d::actions::set_camera::reference(),
                 ],
             )
-            // 🏗️ 3D-first 60/40 split — mirrors semio_compose_rs's design app (scene 60% / diagram 40%,
-            // `semio_compose_rs/client/lib/sketchpad/js/index.ts:15367-15378`), the assembly-editing use case
-            // this app replaces.
+            // 🏗️ 2D-first 40/60 split — board pane left (diagram 40%), world pane right (scene 60%).
             .default_layout(edit::layout())
             .panel_tab_def(artifact_panel::definition())
             .panel_tab_def(catalogue::definition())
@@ -9887,6 +9968,11 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("cycleBrushCandidate", LocalizedLabel::native("Cycle Brush Candidate", "Pinselkandidat wechseln"))
             .view_action("cycleBrushCandidateBack", LocalizedLabel::native("Cycle Brush Candidate Back", "Pinselkandidat rückwärts wechseln"))
             .view_action("targetBrushSuggestions", LocalizedLabel::native("Target Brush Suggestions", "Pinselvorschläge ausrichten"))
+            .view_action("openVortexSuggestions", LocalizedLabel::native("Open Grip Suggestions", "Griff-Vorschläge öffnen"))
+            .view_action("closeVortexSuggestions", LocalizedLabel::native("Close Grip Suggestions", "Griff-Vorschläge schließen"))
+            .view_action("hoverSuggestion", LocalizedLabel::native("Hover Suggestion", "Vorschlag überfahren"))
+            .action_audience("hoverSuggestion", semio_framework_plugin::CapabilityAudience::Input)
+            .mutation("acceptSuggestion", LocalizedLabel::native("Accept Suggestion", "Vorschlag annehmen"))
             .view_action("registerBrushMesh", LocalizedLabel::native("Register Brush Mesh", "Pinsel-Mesh registrieren"))
             .view_action("setBrushPlacementContactTolerance", LocalizedLabel::native("Set Brush Placement Contact Tolerance", "Pinsel-Kontakttoleranz festlegen"))
             .view_action("setProximityRadius", LocalizedLabel::native("Set Proximity Radius", "Näherungsradius festlegen"))
@@ -9975,6 +10061,10 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
             .action_interactive_job("setGripKindWeight", InteractiveJobClassification::Migrated)
             .action_interactive_job("targetBrushSuggestions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("openVortexSuggestions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("closeVortexSuggestions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("hoverSuggestion", InteractiveJobClassification::Migrated)
+            .action_interactive_job("acceptSuggestion", InteractiveJobClassification::Migrated)
             .action_interactive_job("toggleSun", InteractiveJobClassification::Migrated)
             .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
@@ -10001,9 +10091,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             // owns its own id/definition; a utility bound by BOTH windows is declared once (under the
             // 2D window) and referenced by the 3D window's `definition()`.
             .utility(board2d::utilities::select::definition(puzzle5d_localized(|l| l.select)))
-            .utility(world3d::utilities::transform::move_definition())
-            .utility(world3d::utilities::transform::rotate_definition())
-            .utility(world3d::utilities::transform::scale_definition())
+            .utility(world3d::utilities::transform::definition())
             .utility(board2d::utilities::brush::definition(puzzle5d_localized(|l| l.brush)))
             .utility(world3d::utilities::volume_brush::definition(puzzle5d_localized(|l| l.volume_brush)))
             .utility(world3d::utilities::world_relocate::definition())

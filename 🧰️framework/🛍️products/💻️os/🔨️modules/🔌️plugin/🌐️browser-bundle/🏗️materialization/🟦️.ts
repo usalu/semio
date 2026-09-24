@@ -14,6 +14,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
 import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
+import { COMMAND_INGRESS_KINDS } from "../🧵️child/🧬️schema/🟦️.ts";
 import { preparedBinaryen } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
 import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
@@ -891,7 +892,7 @@ const encodeActorInstanceLifecycle = ${encodeActorInstanceLifecycle.toString()};
 const ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES = ${ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES};
 const encodeActorUiPatchReceipt = ${encodeActorUiPatchReceipt.toString()};
 const validateActorUiPatchPairing = ${validateActorUiPatchPairing.toString()};
-const commandIngressKinds = new Map([[0, "idle"], [1, "page-accepted"], [2, "backpressure"], [3, "command-pending"], [4, "command-complete"], [5, "fault"]]);
+const commandIngressKinds = new Map([${COMMAND_INGRESS_KINDS.map((tag, kind) => `[${kind}, "${tag}"]`).join(", ")}]);
 
 /** 🎁️ jco lifts \`option<t>\` as a tagged \`{ tag: "none" | "some" }\` variant; every host-side reader
  * below wants the bare value (or nothing), so unwrap exactly that shape and pass anything else through. */

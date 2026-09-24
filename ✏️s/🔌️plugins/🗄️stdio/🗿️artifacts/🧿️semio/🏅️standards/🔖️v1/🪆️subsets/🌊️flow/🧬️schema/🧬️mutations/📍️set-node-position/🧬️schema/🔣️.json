@@ -22,20 +22,7 @@
   },
   "$defs": {
     "SemioPoint2": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y"
-      ],
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/flow/snapshot.json#/definitions/SemioPoint2"
     }
   }
 }

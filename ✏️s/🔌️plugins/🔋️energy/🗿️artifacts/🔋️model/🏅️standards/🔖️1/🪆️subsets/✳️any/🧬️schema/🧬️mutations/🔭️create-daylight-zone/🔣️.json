@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateDaylightZone",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-daylight-zone",
-  "binaryTag": null,
+  "binaryTag": 151,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

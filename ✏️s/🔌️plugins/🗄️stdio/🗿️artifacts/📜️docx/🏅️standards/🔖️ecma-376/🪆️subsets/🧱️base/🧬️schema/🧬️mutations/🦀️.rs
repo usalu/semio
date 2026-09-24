@@ -530,6 +530,23 @@ fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnaps
 }
 //#endregion 🔖️OpBinaryCodec
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `DocxMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-block");
+const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
+const TAG_SET_BLOCK_CONTENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-block-content");
+const TAG_SET_RUN_TEXT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-run-text");
+const TAG_SET_RUN_FORMATTING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-run-formatting");
+const TAG_INSERT_STYLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-style");
+const TAG_REMOVE_STYLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-style");
+const TAG_SET_STYLE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-style-name");
+const TAG_SET_STYLE_BASED_ON: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-style-based-on");
+const TAG_SET_PART: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-part");
+const TAG_REMOVE_PART: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-part");
+//#endregion 🏷️WireTags
+
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
@@ -538,18 +555,18 @@ fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnaps
 impl OpBinary for DocxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => 0,
-            DocxMutation::InsertBlock(insert_block::InsertBlock { .. }) => 1,
-            DocxMutation::RemoveBlock(remove_block::RemoveBlock { .. }) => 2,
-            DocxMutation::SetBlockContent(set_block_content::SetBlockContent { .. }) => 3,
-            DocxMutation::SetRunText(set_run_text::SetRunText { .. }) => 4,
-            DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting { .. }) => 5,
-            DocxMutation::InsertStyle(insert_style::InsertStyle { .. }) => 6,
-            DocxMutation::RemoveStyle(remove_style::RemoveStyle { .. }) => 7,
-            DocxMutation::SetStyleName(set_style_name::SetStyleName { .. }) => 8,
-            DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { .. }) => 9,
-            DocxMutation::SetPart(set_part::SetPart { .. }) => 10,
-            DocxMutation::RemovePart(remove_part::RemovePart { .. }) => 11,
+            DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => TAG_SET_SNAPSHOT,
+            DocxMutation::InsertBlock(insert_block::InsertBlock { .. }) => TAG_INSERT_BLOCK,
+            DocxMutation::RemoveBlock(remove_block::RemoveBlock { .. }) => TAG_REMOVE_BLOCK,
+            DocxMutation::SetBlockContent(set_block_content::SetBlockContent { .. }) => TAG_SET_BLOCK_CONTENT,
+            DocxMutation::SetRunText(set_run_text::SetRunText { .. }) => TAG_SET_RUN_TEXT,
+            DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting { .. }) => TAG_SET_RUN_FORMATTING,
+            DocxMutation::InsertStyle(insert_style::InsertStyle { .. }) => TAG_INSERT_STYLE,
+            DocxMutation::RemoveStyle(remove_style::RemoveStyle { .. }) => TAG_REMOVE_STYLE,
+            DocxMutation::SetStyleName(set_style_name::SetStyleName { .. }) => TAG_SET_STYLE_NAME,
+            DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { .. }) => TAG_SET_STYLE_BASED_ON,
+            DocxMutation::SetPart(set_part::SetPart { .. }) => TAG_SET_PART,
+            DocxMutation::RemovePart(remove_part::RemovePart { .. }) => TAG_REMOVE_PART,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -604,31 +621,31 @@ impl OpBinary for DocxMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            0 => {
+            TAG_SET_SNAPSHOT => {
                 let snapshot = dec_docx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
-            1 => {
+            TAG_INSERT_BLOCK => {
                 let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(DocxMutation::InsertBlock(insert_block::InsertBlock { path, block }))
             }
-            2 => {
+            TAG_REMOVE_BLOCK => {
                 let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 Ok(DocxMutation::RemoveBlock(remove_block::RemoveBlock { path }))
             }
-            3 => {
+            TAG_SET_BLOCK_CONTENT => {
                 let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path, block }))
             }
-            4 => {
+            TAG_SET_RUN_TEXT => {
                 let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let run_index = reader.read_varint_u64().map_err(|e| malformed("op run_index", reader.position(), e.to_string()))? as usize;
                 let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
                 Ok(DocxMutation::SetRunText(set_run_text::SetRunText { path, run_index, text }))
             }
-            5 => {
+            TAG_SET_RUN_FORMATTING => {
                 let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let run_index = reader.read_varint_u64().map_err(|e| malformed("op run_index", reader.position(), e.to_string()))? as usize;
                 let bold = reader.read_u8().map_err(|e| malformed("op bold", reader.position(), e.to_string()))? != 0;
@@ -636,32 +653,32 @@ impl OpBinary for DocxMutation {
                 let underline = reader.read_u8().map_err(|e| malformed("op underline", reader.position(), e.to_string()))? != 0;
                 Ok(DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting { path, run_index, bold, italic, underline }))
             }
-            6 => {
+            TAG_INSERT_STYLE => {
                 let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", reader.position(), e))?;
                 Ok(DocxMutation::InsertStyle(insert_style::InsertStyle { style }))
             }
-            7 => {
+            TAG_REMOVE_STYLE => {
                 let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
                 Ok(DocxMutation::RemoveStyle(remove_style::RemoveStyle { id }))
             }
-            8 => {
+            TAG_SET_STYLE_NAME => {
                 let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 Ok(DocxMutation::SetStyleName(set_style_name::SetStyleName { id, name }))
             }
-            9 => {
+            TAG_SET_STYLE_BASED_ON => {
                 let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
                 let has = reader.read_u8().map_err(|e| malformed("op based_on presence", reader.position(), e.to_string()))?;
                 let based_on = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op based_on", reader.position(), e))?) } else { None };
                 Ok(DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id, based_on }))
             }
-            10 => {
+            TAG_SET_PART => {
                 let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let content_type = read_str_lp(&mut reader).map_err(|e| malformed("op content_type", reader.position(), e))?;
                 let bytes = read_bytes_lp(&mut reader).map_err(|e| malformed("op bytes", reader.position(), e))?;
                 Ok(DocxMutation::SetPart(set_part::SetPart { path, content_type, bytes }))
             }
-            11 => {
+            TAG_REMOVE_PART => {
                 let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 Ok(DocxMutation::RemovePart(remove_part::RemovePart { path }))
             }

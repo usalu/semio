@@ -2,7 +2,7 @@
 //! markup requires actually RASTERIZING it. The only real vector renderer in this repo is
 //! `semio_framework_os::rasterize_svg_to_png_base64` (usvg/resvg behind the framework's own
 //! interface); its raw PNG output is then canonicalized through the real
-//! `s.stdio.semio/v1/image` ↔ png codec, exactly as `raster_document_json_from_dwg` already does
+//! `s.stdio.semio/v1/image` ↔ png codec, exactly as `raster_document_from_dwg_drawing` already does
 //! for the DWG path (which is itself an SVG rasterization underneath).
 //!
 //! 🧾️ That renderer is native-tier only: inside a `wasm32-wasip2` guest it returns its own

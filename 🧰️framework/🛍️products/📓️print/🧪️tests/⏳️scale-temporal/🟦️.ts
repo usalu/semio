@@ -12,7 +12,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "scale-temporal";
-const FIXTURE = "local://scale-temporal.tex";
+const FIXTURE = "shared://⏳️scale-temporal/scale-temporal.tex";
 const DECIMALS = 6;
 
 /** ⏱️ An ISO timestamp read as UTC, the only reading the library knows. */

@@ -29,7 +29,7 @@ Feature: Numbers are formatted by the d3-format grammar in both locales
   @level-quick
   @mode-differential
   Scenario: The English locale renders every specifier as d3-format does
-    Given the committed probe document local://format-number.tex and the specifiers
+    Given the committed probe document shared://🔢️format-number/format-number.tex and the specifiers
       | specifier | value       |
       | .2f       | 3.14159     |
       | .0f       | 2.5         |
@@ -65,7 +65,7 @@ Feature: Numbers are formatted by the d3-format grammar in both locales
   @level-quick
   @mode-differential
   Scenario: The German locale swaps the decimal and grouping separators
-    Given the committed probe document local://format-number.tex and the same specifiers
+    Given the committed probe document shared://🔢️format-number/format-number.tex and the same specifiers
       | locale | decimal | thousands |
       | de     | ,       | .         |
     Then the compiled probe and the reference implementation agree on every rendered string

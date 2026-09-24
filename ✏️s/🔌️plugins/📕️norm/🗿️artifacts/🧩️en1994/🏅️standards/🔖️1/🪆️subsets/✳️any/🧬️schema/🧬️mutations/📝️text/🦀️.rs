@@ -191,31 +191,58 @@ fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Resul
     pack::json::from_json_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `En1994Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("../💾️binary/📡️.protocol.semio");
+const TAG_CHANGE_ANNEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-annex");
+const TAG_CHANGE_M_ED_KNM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-m-ed-knm");
+const TAG_CHANGE_V_ED_KN: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-v-ed-kn");
+const TAG_CHANGE_M_PLA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-m-pla");
+const TAG_CHANGE_M_PL_RD: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-m-pl-rd");
+const TAG_CHANGE_ETA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-eta");
+const TAG_CHANGE_VL_RD: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-vl-rd");
+const TAG_CHANGE_INSULATION_THICKNESS_MM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-insulation-thickness-mm");
+const TAG_CHANGE_FIRE_RATING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-fire-rating");
+const TAG_CHANGE_DECK_TYPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-deck-type");
+const TAG_CHANGE_DELTA_SIGMA_MPA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-delta-sigma-mpa");
+const TAG_CHANGE_FATIGUE_DETAIL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-fatigue-detail");
+const TAG_CHANGE_D_MM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-d-mm");
+const TAG_CHANGE_H_SC_MM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-h-sc-mm");
+const TAG_CHANGE_F_CK_MPA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-f-ck-mpa");
+const TAG_CHANGE_FU_MPA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-fu-mpa");
+const TAG_CHANGE_E_CM_MPA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-e-cm-mpa");
+const TAG_CHANGE_V_ED_PER_STUD_KN: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-v-ed-per-stud-kn");
+const TAG_CHANGE_SPAN_M: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-span-m");
+const TAG_CHANGE_FY_MPA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-fy-mpa");
+const TAG_CHANGE_N_CYCLES_STUD: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-n-cycles-stud");
+const TAG_CHANGE_DELTA_TAU_STUD_MPA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-delta-tau-stud-mpa");
+//#endregion 🏷️WireTags
+
 impl protocol::OpBinary for En1994Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            En1994Mutation::ChangeAnnex(_) => 0,
-            En1994Mutation::ChangeMEdKnm(_) => 1,
-            En1994Mutation::ChangeVEdKn(_) => 2,
-            En1994Mutation::ChangeMPla(_) => 3,
-            En1994Mutation::ChangeMPlRd(_) => 4,
-            En1994Mutation::ChangeEta(_) => 5,
-            En1994Mutation::ChangeVLRd(_) => 6,
-            En1994Mutation::ChangeInsulationThicknessMm(_) => 7,
-            En1994Mutation::ChangeFireRating(_) => 8,
-            En1994Mutation::ChangeDeckType(_) => 9,
-            En1994Mutation::ChangeDeltaSigmaMpa(_) => 10,
-            En1994Mutation::ChangeFatigueDetail(_) => 11,
-            En1994Mutation::ChangeDMm(_) => 12,
-            En1994Mutation::ChangeHScMm(_) => 13,
-            En1994Mutation::ChangeFCkMpa(_) => 14,
-            En1994Mutation::ChangeFUMpa(_) => 15,
-            En1994Mutation::ChangeECmMpa(_) => 16,
-            En1994Mutation::ChangeVEdPerStudKn(_) => 17,
-            En1994Mutation::ChangeSpanM(_) => 18,
-            En1994Mutation::ChangeFYMpa(_) => 19,
-            En1994Mutation::ChangeNCyclesStud(_) => 20,
-            En1994Mutation::ChangeDeltaTauStudMpa(_) => 21,
+            En1994Mutation::ChangeAnnex(_) => TAG_CHANGE_ANNEX,
+            En1994Mutation::ChangeMEdKnm(_) => TAG_CHANGE_M_ED_KNM,
+            En1994Mutation::ChangeVEdKn(_) => TAG_CHANGE_V_ED_KN,
+            En1994Mutation::ChangeMPla(_) => TAG_CHANGE_M_PLA,
+            En1994Mutation::ChangeMPlRd(_) => TAG_CHANGE_M_PL_RD,
+            En1994Mutation::ChangeEta(_) => TAG_CHANGE_ETA,
+            En1994Mutation::ChangeVLRd(_) => TAG_CHANGE_VL_RD,
+            En1994Mutation::ChangeInsulationThicknessMm(_) => TAG_CHANGE_INSULATION_THICKNESS_MM,
+            En1994Mutation::ChangeFireRating(_) => TAG_CHANGE_FIRE_RATING,
+            En1994Mutation::ChangeDeckType(_) => TAG_CHANGE_DECK_TYPE,
+            En1994Mutation::ChangeDeltaSigmaMpa(_) => TAG_CHANGE_DELTA_SIGMA_MPA,
+            En1994Mutation::ChangeFatigueDetail(_) => TAG_CHANGE_FATIGUE_DETAIL,
+            En1994Mutation::ChangeDMm(_) => TAG_CHANGE_D_MM,
+            En1994Mutation::ChangeHScMm(_) => TAG_CHANGE_H_SC_MM,
+            En1994Mutation::ChangeFCkMpa(_) => TAG_CHANGE_F_CK_MPA,
+            En1994Mutation::ChangeFUMpa(_) => TAG_CHANGE_FU_MPA,
+            En1994Mutation::ChangeECmMpa(_) => TAG_CHANGE_E_CM_MPA,
+            En1994Mutation::ChangeVEdPerStudKn(_) => TAG_CHANGE_V_ED_PER_STUD_KN,
+            En1994Mutation::ChangeSpanM(_) => TAG_CHANGE_SPAN_M,
+            En1994Mutation::ChangeFYMpa(_) => TAG_CHANGE_FY_MPA,
+            En1994Mutation::ChangeNCyclesStud(_) => TAG_CHANGE_N_CYCLES_STUD,
+            En1994Mutation::ChangeDeltaTauStudMpa(_) => TAG_CHANGE_DELTA_TAU_STUD_MPA,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -251,28 +278,28 @@ impl protocol::OpBinary for En1994Mutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            0 => Ok(En1994Mutation::ChangeAnnex(ChangeAnnex { new_annex: read_json_bin(&mut reader).map_err(|e| malformed("new_annex", reader.position(), e))? })),
-            1 => Ok(En1994Mutation::ChangeMEdKnm(ChangeMEdKnm { new_m_ed_knm: read_f64_bin(&mut reader).map_err(|e| malformed("new_m_ed_knm", reader.position(), e))? })),
-            2 => Ok(En1994Mutation::ChangeVEdKn(ChangeVEdKn { new_v_ed_kn: read_f64_bin(&mut reader).map_err(|e| malformed("new_v_ed_kn", reader.position(), e))? })),
-            3 => Ok(En1994Mutation::ChangeMPla(ChangeMPla { new_m_pla: read_f64_bin(&mut reader).map_err(|e| malformed("new_m_pla", reader.position(), e))? })),
-            4 => Ok(En1994Mutation::ChangeMPlRd(ChangeMPlRd { new_m_pl_rd: read_f64_bin(&mut reader).map_err(|e| malformed("new_m_pl_rd", reader.position(), e))? })),
-            5 => Ok(En1994Mutation::ChangeEta(ChangeEta { new_eta: read_f64_bin(&mut reader).map_err(|e| malformed("new_eta", reader.position(), e))? })),
-            6 => Ok(En1994Mutation::ChangeVLRd(ChangeVLRd { new_v_l_rd: read_f64_bin(&mut reader).map_err(|e| malformed("new_v_l_rd", reader.position(), e))? })),
-            7 => Ok(En1994Mutation::ChangeInsulationThicknessMm(ChangeInsulationThicknessMm { new_insulation_thickness_mm: read_f64_bin(&mut reader).map_err(|e| malformed("new_insulation_thickness_mm", reader.position(), e))? })),
-            8 => Ok(En1994Mutation::ChangeFireRating(ChangeFireRating { new_fire_rating: read_str_bin(&mut reader).map_err(|e| malformed("new_fire_rating", reader.position(), e))? })),
-            9 => Ok(En1994Mutation::ChangeDeckType(ChangeDeckType { new_deck_type: read_str_bin(&mut reader).map_err(|e| malformed("new_deck_type", reader.position(), e))? })),
-            10 => Ok(En1994Mutation::ChangeDeltaSigmaMpa(ChangeDeltaSigmaMpa { new_delta_sigma_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_delta_sigma_mpa", reader.position(), e))? })),
-            11 => Ok(En1994Mutation::ChangeFatigueDetail(ChangeFatigueDetail { new_fatigue_detail: read_str_bin(&mut reader).map_err(|e| malformed("new_fatigue_detail", reader.position(), e))? })),
-            12 => Ok(En1994Mutation::ChangeDMm(ChangeDMm { new_d_mm: read_f64_bin(&mut reader).map_err(|e| malformed("new_d_mm", reader.position(), e))? })),
-            13 => Ok(En1994Mutation::ChangeHScMm(ChangeHScMm { new_h_sc_mm: read_f64_bin(&mut reader).map_err(|e| malformed("new_h_sc_mm", reader.position(), e))? })),
-            14 => Ok(En1994Mutation::ChangeFCkMpa(ChangeFCkMpa { new_f_ck_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_f_ck_mpa", reader.position(), e))? })),
-            15 => Ok(En1994Mutation::ChangeFUMpa(ChangeFUMpa { new_f_u_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_f_u_mpa", reader.position(), e))? })),
-            16 => Ok(En1994Mutation::ChangeECmMpa(ChangeECmMpa { new_e_cm_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_e_cm_mpa", reader.position(), e))? })),
-            17 => Ok(En1994Mutation::ChangeVEdPerStudKn(ChangeVEdPerStudKn { new_v_ed_per_stud_kn: read_f64_bin(&mut reader).map_err(|e| malformed("new_v_ed_per_stud_kn", reader.position(), e))? })),
-            18 => Ok(En1994Mutation::ChangeSpanM(ChangeSpanM { new_span_m: read_f64_bin(&mut reader).map_err(|e| malformed("new_span_m", reader.position(), e))? })),
-            19 => Ok(En1994Mutation::ChangeFYMpa(ChangeFYMpa { new_f_y_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_f_y_mpa", reader.position(), e))? })),
-            20 => Ok(En1994Mutation::ChangeNCyclesStud(ChangeNCyclesStud { new_n_cycles_stud: read_f64_bin(&mut reader).map_err(|e| malformed("new_n_cycles_stud", reader.position(), e))? })),
-            21 => Ok(En1994Mutation::ChangeDeltaTauStudMpa(ChangeDeltaTauStudMpa { new_delta_tau_stud_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_delta_tau_stud_mpa", reader.position(), e))? })),
+            TAG_CHANGE_ANNEX => Ok(En1994Mutation::ChangeAnnex(ChangeAnnex { new_annex: read_json_bin(&mut reader).map_err(|e| malformed("new_annex", reader.position(), e))? })),
+            TAG_CHANGE_M_ED_KNM => Ok(En1994Mutation::ChangeMEdKnm(ChangeMEdKnm { new_m_ed_knm: read_f64_bin(&mut reader).map_err(|e| malformed("new_m_ed_knm", reader.position(), e))? })),
+            TAG_CHANGE_V_ED_KN => Ok(En1994Mutation::ChangeVEdKn(ChangeVEdKn { new_v_ed_kn: read_f64_bin(&mut reader).map_err(|e| malformed("new_v_ed_kn", reader.position(), e))? })),
+            TAG_CHANGE_M_PLA => Ok(En1994Mutation::ChangeMPla(ChangeMPla { new_m_pla: read_f64_bin(&mut reader).map_err(|e| malformed("new_m_pla", reader.position(), e))? })),
+            TAG_CHANGE_M_PL_RD => Ok(En1994Mutation::ChangeMPlRd(ChangeMPlRd { new_m_pl_rd: read_f64_bin(&mut reader).map_err(|e| malformed("new_m_pl_rd", reader.position(), e))? })),
+            TAG_CHANGE_ETA => Ok(En1994Mutation::ChangeEta(ChangeEta { new_eta: read_f64_bin(&mut reader).map_err(|e| malformed("new_eta", reader.position(), e))? })),
+            TAG_CHANGE_VL_RD => Ok(En1994Mutation::ChangeVLRd(ChangeVLRd { new_v_l_rd: read_f64_bin(&mut reader).map_err(|e| malformed("new_v_l_rd", reader.position(), e))? })),
+            TAG_CHANGE_INSULATION_THICKNESS_MM => Ok(En1994Mutation::ChangeInsulationThicknessMm(ChangeInsulationThicknessMm { new_insulation_thickness_mm: read_f64_bin(&mut reader).map_err(|e| malformed("new_insulation_thickness_mm", reader.position(), e))? })),
+            TAG_CHANGE_FIRE_RATING => Ok(En1994Mutation::ChangeFireRating(ChangeFireRating { new_fire_rating: read_str_bin(&mut reader).map_err(|e| malformed("new_fire_rating", reader.position(), e))? })),
+            TAG_CHANGE_DECK_TYPE => Ok(En1994Mutation::ChangeDeckType(ChangeDeckType { new_deck_type: read_str_bin(&mut reader).map_err(|e| malformed("new_deck_type", reader.position(), e))? })),
+            TAG_CHANGE_DELTA_SIGMA_MPA => Ok(En1994Mutation::ChangeDeltaSigmaMpa(ChangeDeltaSigmaMpa { new_delta_sigma_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_delta_sigma_mpa", reader.position(), e))? })),
+            TAG_CHANGE_FATIGUE_DETAIL => Ok(En1994Mutation::ChangeFatigueDetail(ChangeFatigueDetail { new_fatigue_detail: read_str_bin(&mut reader).map_err(|e| malformed("new_fatigue_detail", reader.position(), e))? })),
+            TAG_CHANGE_D_MM => Ok(En1994Mutation::ChangeDMm(ChangeDMm { new_d_mm: read_f64_bin(&mut reader).map_err(|e| malformed("new_d_mm", reader.position(), e))? })),
+            TAG_CHANGE_H_SC_MM => Ok(En1994Mutation::ChangeHScMm(ChangeHScMm { new_h_sc_mm: read_f64_bin(&mut reader).map_err(|e| malformed("new_h_sc_mm", reader.position(), e))? })),
+            TAG_CHANGE_F_CK_MPA => Ok(En1994Mutation::ChangeFCkMpa(ChangeFCkMpa { new_f_ck_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_f_ck_mpa", reader.position(), e))? })),
+            TAG_CHANGE_FU_MPA => Ok(En1994Mutation::ChangeFUMpa(ChangeFUMpa { new_f_u_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_f_u_mpa", reader.position(), e))? })),
+            TAG_CHANGE_E_CM_MPA => Ok(En1994Mutation::ChangeECmMpa(ChangeECmMpa { new_e_cm_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_e_cm_mpa", reader.position(), e))? })),
+            TAG_CHANGE_V_ED_PER_STUD_KN => Ok(En1994Mutation::ChangeVEdPerStudKn(ChangeVEdPerStudKn { new_v_ed_per_stud_kn: read_f64_bin(&mut reader).map_err(|e| malformed("new_v_ed_per_stud_kn", reader.position(), e))? })),
+            TAG_CHANGE_SPAN_M => Ok(En1994Mutation::ChangeSpanM(ChangeSpanM { new_span_m: read_f64_bin(&mut reader).map_err(|e| malformed("new_span_m", reader.position(), e))? })),
+            TAG_CHANGE_FY_MPA => Ok(En1994Mutation::ChangeFYMpa(ChangeFYMpa { new_f_y_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_f_y_mpa", reader.position(), e))? })),
+            TAG_CHANGE_N_CYCLES_STUD => Ok(En1994Mutation::ChangeNCyclesStud(ChangeNCyclesStud { new_n_cycles_stud: read_f64_bin(&mut reader).map_err(|e| malformed("new_n_cycles_stud", reader.position(), e))? })),
+            TAG_CHANGE_DELTA_TAU_STUD_MPA => Ok(En1994Mutation::ChangeDeltaTauStudMpa(ChangeDeltaTauStudMpa { new_delta_tau_stud_mpa: read_f64_bin(&mut reader).map_err(|e| malformed("new_delta_tau_stud_mpa", reader.position(), e))? })),
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }
     }

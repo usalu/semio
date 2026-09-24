@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeGlazingMaterialSolarTransmittance",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-glazing-material-solar-transmittance",
-  "binaryTag": null,
+  "binaryTag": 279,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -2,7 +2,7 @@
 
 import { artifactFiles } from "../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, healthyPreparedComponents, newestComponentSourceMtime, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, healthyPreparedComponents, newestComponentSourceMtime, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, readStagedSourceContentHash, writeStagedSourceContentHash, writeStagedSourceFreshness, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { FONT_ASSET, validateFontAsset } from "../../../♾️infinite/🖼️canvas/🔤️fonts/🟦️.ts";
 
@@ -102,9 +102,33 @@ class ActivationScript extends BundleScript {
       const healthy = healthyPreparedComponents(verdicts, playgroundCatalog.find((row) => row.variant === variant)?.pluginId ?? variant);
       for (const line of preparedComponentReportLines(healthy.excluded, `bun nx run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
       if (healthy.refusal) throw new Error(healthy.refusal);
+      // Content-hash warm path: when every prepared module already records the current
+      // plugin-owner source hash and the prior receipt agrees, reuse the receipt without
+      // re-digesting artifact bytes (warm `served` stays seconds, not a full republish).
+      const previousWarm = existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(receiptRoot) : undefined;
+      if (previousWarm && previousWarm.variant === variant && previousWarm.profile === profile) {
+        const prior = new Map(previousWarm.plugins.map((row) => [row.pluginId, row]));
+        let warm = healthy.prepared.length > 0 && prior.size === healthy.prepared.length;
+        for (const pluginId of healthy.prepared) {
+          const moduleDirectory = join(moduleRoot, moduleDirectoryName(pluginId));
+          const staged = readStagedSourceContentHash(moduleDirectory);
+          const row = prior.get(pluginId);
+          // Trust receipt ↔ staged-marker agreement; live source re-hash is the serve freshness pass.
+          if (!row?.sourceContentSha256 || staged !== row.sourceContentSha256) { warm = false; break; }
+        }
+        if (warm) {
+          console.log(`Activated ${variant} ${renderer} ${profile}: ${healthy.prepared.length} completed components (warm content-hash unchanged)`);
+          return;
+        }
+      }
       for (const pluginId of healthy.prepared) {
-        const digest = await activationFilesDigest(artifactFiles(join(moduleRoot, moduleDirectoryName(pluginId))), controller.signal);
-        completed.push({ pluginId, artifactSha256: createHash("sha256").update(supportDigest + digest).digest("hex") });
+        controller.signal.throwIfAborted();
+        const moduleDirectory = join(moduleRoot, moduleDirectoryName(pluginId));
+        const digest = await activationFilesDigest(artifactFiles(moduleDirectory), controller.signal);
+        const catalogEntry = catalog.get(pluginId);
+        const sourceRoot = catalogEntry ? join(repoRoot, catalogEntry.cratePath, "..", "..") : moduleDirectory;
+        const sourceContentSha256 = writeStagedSourceFreshness(moduleDirectory, sourceRoot);
+        completed.push({ pluginId, artifactSha256: createHash("sha256").update(supportDigest + digest).digest("hex"), sourceContentSha256 });
       }
       const previous = existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(receiptRoot) : undefined;
       const receipt = nextActivationReceipt(variant, profile, completed, previous);

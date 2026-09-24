@@ -651,3 +651,22 @@ mod conformance_laws {
     }
 }
 //#endregion 🔖️ConformanceLaws
+
+#[semio_framework_async_macros::async_test]
+async fn planar_curves_and_lines_become_paths_and_tilted_planes_do_not() {
+    let z = [0.0, 0.0, 1.0];
+    let line = dwg_geometry_to_path_segments(&DwgGeometry::Line { start: [1.0, 2.0, 5.0], end: [3.0, 4.0, 5.0] }).expect("line");
+    assert!(matches!(line.as_slice(), [DwgPathSegment::Move { to: [1.0, 2.0] }, DwgPathSegment::Line { to: [3.0, 4.0] }]));
+    let quarter = dwg_geometry_to_path_segments(&DwgGeometry::Arc { center: [0.0, 0.0, 0.0], radius: 2.0, start_angle: 0.0, end_angle: std::f64::consts::FRAC_PI_2, normal: z }).expect("arc");
+    let [DwgPathSegment::Move { to: from }, DwgPathSegment::Arc { rx, large_arc: false, sweep: true, to, .. }] = quarter.as_slice() else { panic!("{quarter:?}") };
+    assert!((from[0] - 2.0).abs() < 1e-12 && from[1].abs() < 1e-12 && to[0].abs() < 1e-12 && (to[1] - 2.0).abs() < 1e-12 && (rx - 2.0).abs() < 1e-12);
+    let mirrored = dwg_geometry_to_path_segments(&DwgGeometry::Arc { center: [1.0, 0.0, 0.0], radius: 1.0, start_angle: 0.0, end_angle: 1.0, normal: [0.0, 0.0, -1.0] }).expect("-Z arc");
+    assert!(matches!(mirrored[0], DwgPathSegment::Move { to } if (to[0] + 2.0).abs() < 1e-12), "a -Z extrusion mirrors the OCS x axis");
+    assert!(matches!(mirrored[1], DwgPathSegment::Arc { sweep: false, .. }), "and turns the arc clockwise in the world");
+    let ellipse = dwg_geometry_to_path_segments(&DwgGeometry::Ellipse { center: [0.0, 0.0, 0.0], major_axis: [0.0, 3.0, 0.0], ratio: 0.5, start_param: 0.0, end_param: std::f64::consts::TAU, normal: z }).expect("ellipse");
+    assert!(matches!(ellipse.as_slice(), [DwgPathSegment::Move { .. }, DwgPathSegment::Arc { ry, rotation, .. }, DwgPathSegment::Arc { .. }, DwgPathSegment::Close] if (ry - 1.5).abs() < 1e-12 && (rotation - 90.0).abs() < 1e-9));
+    let polyline = dwg_geometry_to_path_segments(&DwgGeometry::Polyline3d { closed: true, vertices: vec![[0.0, 0.0, 1.0], [1.0, 0.0, 2.0], [1.0, 1.0, 3.0]] }).expect("3d polyline");
+    assert_eq!(polyline.len(), 4);
+    assert!(dwg_geometry_to_path_segments(&DwgGeometry::Circle { center: [0.0; 3], radius: 1.0, normal: [1.0, 0.0, 0.0] }).is_none(), "a circle on a tilted plane is not a 2D path");
+    assert!(dwg_geometry_to_path_segments(&DwgGeometry::Point { at: [0.0; 3] }).is_none());
+}

@@ -10,7 +10,7 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetFormat {
-    pub(crate) format: SemioAudioFormat,
+    pub format: SemioAudioFormat,
 }
 
 impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetFormat {

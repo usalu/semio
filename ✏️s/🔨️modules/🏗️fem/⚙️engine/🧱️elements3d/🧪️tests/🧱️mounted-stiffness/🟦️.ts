@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import Ajv2020 from "ajv/dist/2020.js";
 import { applyPatch, type Operation } from "fast-json-patch";
-import fixture from "../🧫️fixtures/🧱️mounted-stiffness/🔣️.json" with { type: "json" };
-import schema from "../🧬️schema/🧱️mounted-stiffness/🔣️.json" with { type: "json" };
+import fixture from "../../🧫️fixtures/🧱️mounted-stiffness/🔣️.json" with { type: "json" };
+import schema from "../../🧫️fixtures/🧱️mounted-stiffness/📐️schema/🔣️.json" with { type: "json" };
 
 export function testFem3dMountedStiffnessOracle(): void {
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);

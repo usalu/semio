@@ -17,6 +17,6 @@ Feature: Rewriting the line a todo is and reading it back agrees
   @mode-round-trip
   Scenario: Every rewrite writes a line the grammar reads back
     Given the line vectors shared://📝️line-vectors.json
-    And the todos schema asset://🧬️schema/🔣️.json
+    And the todos schema schema://repo.todos/Todo
     When each implementation parses both documents, applies every rewrite and every removal, and parses the result again
     Then every implementation projects the same parses, the same rewritten documents, the same refusals and the same comment opener per path

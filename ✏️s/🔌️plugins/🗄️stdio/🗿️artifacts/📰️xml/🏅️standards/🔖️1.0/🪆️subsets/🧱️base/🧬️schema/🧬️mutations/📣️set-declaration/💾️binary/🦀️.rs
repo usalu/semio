@@ -1,6 +1,6 @@
 //! 💾️ Operation-specific binary payload codec for set-declaration/SetDeclaration.
 use super::SetDeclarationPayload;
-pub const BINARY_TAG: u32 = 1;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "set-declaration");
 pub fn encode_payload(value: &SetDeclarationPayload) -> Result<Vec<u8>, String> {
     Ok(pack::to_json_string(value).into_bytes())
 }

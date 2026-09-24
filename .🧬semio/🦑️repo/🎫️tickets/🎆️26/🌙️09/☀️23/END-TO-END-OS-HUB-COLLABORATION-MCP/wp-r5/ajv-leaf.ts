@@ -1,0 +1,15 @@
+import Ajv from "ajv";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+const SUBSETS = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets";
+const ajv = new Ajv({ strict: false, allErrors: true });
+const seen = new Set<string>();
+const walk = (dir: string): void => { for (const e of readdirSync(dir, { withFileTypes: true })) { const p = join(dir, e.name); if (e.isDirectory()) { if (!["🧫️fixtures", "🖼️assets", "🧪️tests", "target", "node_modules"].includes(e.name)) walk(p); continue; } if (e.name !== "🔣️.json" || !p.includes("🧬️schema")) continue; const s = JSON.parse(readFileSync(p, "utf8")); if (typeof s.$id === "string" && !seen.has(s.$id)) { seen.add(s.$id); ajv.addSchema(s); } } };
+walk(SUBSETS);
+walk("/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");
+walk("/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io");
+const [id, file, pointer] = process.argv.slice(2);
+let value = JSON.parse(readFileSync(file, "utf8"));
+for (const k of (pointer ?? "").split("/").filter(Boolean)) value = value[k];
+const v = ajv.getSchema(id)!;
+console.log(v(value) ? "ok" : JSON.stringify(v.errors!.map((e) => `${e.instancePath} ${e.message} ${JSON.stringify(e.params)}`), null, 1).slice(0, 3000));

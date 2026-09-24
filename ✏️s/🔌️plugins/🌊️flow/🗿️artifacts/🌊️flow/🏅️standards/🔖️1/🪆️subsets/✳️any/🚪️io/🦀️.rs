@@ -1,9 +1,9 @@
 //! 🚪️ IO s.flow (1/✳️any) — the artifact declaration owns this composer table.
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
+    &["stdio.json", "stdio.txt"]
 }
 pub fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
+    &["stdio.json", "stdio.txt"]
 }
 pub fn flow_to_wire(from: &crate::FlowSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(from)
@@ -19,7 +19,6 @@ pub mod derived_composition {
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.flow.flow", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_MD: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
     pub struct FlowComposerComposition;
@@ -29,7 +28,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_JSON, DEP_MD, DEP_TXT]
+            &[DIALECT, DEP_JSON, DEP_TXT]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -51,17 +50,6 @@ pub mod derived_composition {
                     };
                     if let Some(text) = text {
                         if let Ok(snapshot) = crate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text) {
-                            return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                        }
-                    }
-                }
-                if source.dialect == DEP_MD {
-                    let text: Option<String> = match &source.payload {
-                        AnalyzeSource::Text(t) => Some(t.to_string()),
-                        AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
-                    };
-                    if let Some(text) = text {
-                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::md::v_commonmark::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -126,15 +114,6 @@ pub mod io_registry {
         }
         Err(ComposeError { message: "FlowComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
-
-    const EXPORT_MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
-    fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::io::export::serializers::artifacts::md::v_commonmark::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_MD_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
@@ -150,7 +129,6 @@ pub mod io_registry {
             .get_or_init(|| {
                 vec![
                     composer_entry_of::<FlowAnyComposer>(),
-                    ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[FLOW_DIALECT], compose: compose_export_md },
                     ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[FLOW_DIALECT], compose: compose_export_json },
                 ]
             })

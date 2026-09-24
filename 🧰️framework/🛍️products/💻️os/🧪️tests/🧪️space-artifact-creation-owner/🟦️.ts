@@ -434,6 +434,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type RustWorkerHost = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").RustWorkerHost;
   type ServerFrame = import("../../../../🔨️modules/📡️replication/🟦️.ts").ServerFrame;
   type SocketGrantReceiptV1 = import("../../🟦️.ts").SocketGrantReceiptV1;
+  type DocumentSocketGrantReceiptV1 = import("../../🟦️.ts").DocumentSocketGrantReceiptV1;
   type UiNodeRecord = import("../../../../🔨️modules/🛂️manifest/🟦️.ts").UiNodeRecord;
   type WireArtifactBootstrap = import("../../../../🔨️modules/📡️replication/🟦️.ts").WireArtifactBootstrap;
   type WireFrontierSummary = import("../../../../🔨️modules/📡️replication/🟦️.ts").WireFrontierSummary;
@@ -453,6 +454,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       schema: "semio.hub.socket-grant/v1",
       protocol: "semio.socket.v1",
       grant: `socket.v1.${"1".repeat(32)}.${"2".repeat(64)}`,
+      actorId: `hub.v1.${"3".repeat(64)}`,
+      expiresAtMs: Number.MAX_SAFE_INTEGER,
+    });
+    testSeams.documentSocketGrantTestIssue = async () => ({
+      schema: "semio.hub.document-socket-grant/v1",
+      protocol: "semio.session.v1",
       actorId: `hub.v1.${"3".repeat(64)}`,
       expiresAtMs: Number.MAX_SAFE_INTEGER,
     });
@@ -841,8 +848,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const decoded = decodeServerFrame(serverFrame).frame;
       const exactBatch = extractServerCommandsDocumentBackboneBatchExact(serverFrame);
       if (typeof decoded === "string" || !("Commands" in decoded) || exactBatch === null) throw new Error("expected exact server Commands frame");
-      const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
-      const state = { config, actor: "local", openClientInstanceId: "client-1", artifactBootstrap: null, frontier: null, requiredTailFrontier: null, browserActorReservation: null } as unknown as ArtifactState;
+      const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
+      const state = { config, actor: "local", openClientInstanceId: "client-1", artifactBootstrap: null, artifactRebootstrapRequired: false, frontier: null, requiredTailFrontier: null, browserActorReservation: null, ingestedMutationIds: new Set<string>() } as unknown as ArtifactState;
       const priorSink = testSeams.workerPostTestSink;
       const posted: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => posted.push(message);
@@ -883,14 +890,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         },
         revalidation: { directoryRevision: 1, membershipGeneration: 1, sessionGeneration: 1 },
       });
-      const hubConfig: ArtifactActorConfig = { documentId: "doc-1", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1", installedTarget }], actor: "actor-1" };
+      const hubConfig: ArtifactActorConfig = { documentId: "doc-1", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1", installedTarget }], actor: "actor-1" };
       const hubState = { config: hubConfig, sessionColor: 7 } as unknown as ArtifactState;
       const peer: ArtifactPresencePeer = { actor: "actor-1", connectedAtMs: 1000, color: 99, surface: "shell-should-never-set-this", views: [] };
       const stamped = stampSession(peer, hubState);
       expect(stamped.color).toBe(7);
       expect(stamped.surface).toBe("s.space.home@1/*#editor");
 
-      const folderConfig: ArtifactActorConfig = { documentId: "doc-2", schema: "demo/v1", bindings: [{ kind: "folder", path: "/tmp/doc-2" }], actor: "actor-1" };
+      const folderConfig: ArtifactActorConfig = { documentId: "doc-2", schema: "demo/v1", bindings: [{ kind: "folder", dataClass: "persistedLocalOnly", path: "/tmp/doc-2" }], actor: "actor-1" };
       const folderState = { config: folderConfig, sessionColor: null } as unknown as ArtifactState;
       const stampedFolder = stampSession(peer, folderState);
       expect(stampedFolder.color).toBeUndefined();
@@ -898,7 +905,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("handleHubFrame stores the hub-assigned session color on a Session frame", () => {
-      const config: ArtifactActorConfig = { documentId: "doc-3", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+      const config: ArtifactActorConfig = { documentId: "doc-3", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
       const state = { config, actor: "", hubActorReady: false, pendingSocketActorId: "actor-1", outbox: [], sessionColor: null } as unknown as ArtifactState;
       handleHubFrame(state, { Session: { actor: "actor-1", color: 3 } });
       expect(state.sessionColor).toBe(3);
@@ -975,7 +982,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         openArtifact(config);
         const state = artifactState(config.documentId)!;
         artifacts.delete(state.runtimeKey);
-        const binding = { kind: "hub" as const, baseUrl: "http://hub.test", spaceId: "bootstrap-owner-space" };
+        const binding = { kind: "hub" as const, dataClass: "persistedShared" as const, baseUrl: "http://hub.test", spaceId: "bootstrap-owner-space" };
         state.config = { ...state.config, bindings: [binding] };
         state.runtimeKey = documentRuntimeKeyForConfig(state.config);
         artifacts.set(state.runtimeKey, state);
@@ -1199,7 +1206,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const prepare = async (): Promise<ArtifactState> => {
         const state = await installFixture(fixture, false);
         artifacts.delete(state.runtimeKey);
-        state.config = { ...state.config, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "bootstrap-watchdog-space" }] };
+        state.config = { ...state.config, bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "bootstrap-watchdog-space" }] };
         state.runtimeKey = documentRuntimeKeyForConfig(state.config);
         artifacts.set(state.runtimeKey, state);
         return state;
@@ -1310,7 +1317,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("invalidates the committed session before rebootstrap and bounds typed failure diagnostics", async () => {
       const fixture = await artifactBootstrapFixture();
       const state = await installFixture(fixture, false);
-      state.config = { ...state.config, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-a" }] };
+      state.config = { ...state.config, bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-a" }] };
       state.resumeToken = "stale-resume";
       await handleHubFrame(state, {
         RebootstrapRequired: {
@@ -1368,7 +1375,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         for (const client of corpus.clients) {
           const state = await installFixture(fixture, false);
           artifacts.delete(state.runtimeKey);
-          const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: "http://hub.test", spaceId: corpus.scope.spaceId, requestedSurfaceId: "s.gis.gismap@1/*/viewer" };
+          const binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }> = { kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: corpus.scope.spaceId, requestedSurfaceId: "s.gis.gismap@1/*/viewer" };
           state.config = { ...state.config, documentId: corpus.scope.documentId, bindings: [binding] };
           state.runtimeKey = documentRuntimeKeyForConfig(state.config);
           state.openClientInstanceId = client.clientInstanceId;
@@ -1493,7 +1500,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const config = fixtureConfig(fixture);
       openArtifact(config);
       const state = artifactState(config.documentId)!;
-      state.config = { ...state.config, bindings: [{ kind: "folder", path: "/tmp/bootstrap-put-failure" }] };
+      state.config = { ...state.config, bindings: [{ kind: "folder", dataClass: "persistedLocalOnly", path: "/tmp/bootstrap-put-failure" }] };
       state.currentPack = Uint8Array.of(1);
       state.currentSpr = Uint8Array.of(2);
       const priorFrontier: WireFrontierSummary = { document_id: state.config.documentId, head_edit_ordinal: 1, head_edit_id: "old", last_commit_seq: 1, chain_hash: Array(32).fill(6) };
@@ -1538,7 +1545,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           const config = fixtureConfig(fixture);
           openArtifact(config);
           const state = artifactState(config.documentId)!;
-          state.config = { ...state.config, bindings: [{ kind: "folder", path: `/tmp/bootstrap-stale-${phase}` }] };
+          state.config = { ...state.config, bindings: [{ kind: "folder", dataClass: "persistedLocalOnly", path: `/tmp/bootstrap-stale-${phase}` }] };
           state.currentPack = Uint8Array.of(1);
           state.currentSpr = Uint8Array.of(2);
           let publishes = 0,
@@ -1589,7 +1596,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(identityActorConfig("actor-1", "/tmp/s-user1")).toEqual({
         documentId: IDENTITY_CONFIG_SCHEMA,
         schema: IDENTITY_CONFIG_SCHEMA,
-        bindings: [{ kind: "folder", path: "/tmp/s-user1/os" }],
+        bindings: [{ kind: "folder", dataClass: "persistedLocalOnly", path: "/tmp/s-user1/os" }],
         actor: "actor-1",
       });
       expect(identityActorConfig("actor-1")).toEqual({ documentId: IDENTITY_CONFIG_SCHEMA, schema: IDENTITY_CONFIG_SCHEMA, bindings: [], actor: "actor-1" });
@@ -2200,7 +2207,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     class FakeDirectoryWebSocket {
       static instances: FakeDirectoryWebSocket[] = [];
       readonly url: string;
-      readonly protocol = "semio.socket.v1";
+      readonly protocol = "semio.session.v1";
       onopen: (() => void) | null = null;
       onmessage: ((event: { data: string }) => void) | null = null;
       onclose: ((event: { code: number }) => void) | null = null;
@@ -2447,10 +2454,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(paths).toEqual(["/directory/spaces/space%2Fa/documents/document%20b/socket-grants"]);
         expect(socket.url).toBe("ws://hub.test/directory/spaces/space%2Fa/documents/document%20b/socket/v1?since=7");
         socket.triggerOpen();
-        const issue = testSeams.socketGrantTestIssue;
-        testSeams.socketGrantTestIssue = null;
-        openArtifact({ documentId: scope.documentId, schema: "gis.map", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: scope.spaceId }], actor: "caller" });
-        testSeams.socketGrantTestIssue = issue;
+        const issue = testSeams.documentSocketGrantTestIssue;
+        testSeams.documentSocketGrantTestIssue = null;
+        openArtifact({ documentId: scope.documentId, schema: "gis.map", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: scope.spaceId }], actor: "caller" });
+        testSeams.documentSocketGrantTestIssue = issue;
         const state = artifactState(scope.documentId, scope.spaceId)!;
         testSeams.inferenceApprovalUndoOwner = {
           historyEpoch: ++testSeams.inferenceApprovalUndoEpoch,
@@ -2604,9 +2611,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
       // 🧷️ No socket-grant issuer and no installed target means `openArtifact` opens no hub socket
       // at all, so this harness exercises the inference port's own four calls and nothing else.
-      const originalIssue = testSeams.socketGrantTestIssue;
-      testSeams.socketGrantTestIssue = null;
-      openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller" });
+      const originalIssue = testSeams.documentSocketGrantTestIssue;
+      testSeams.documentSocketGrantTestIssue = null;
+      openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller" });
       const state = artifactState(DOCUMENT, SPACE)!;
       if (options.lease !== "none") state.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, leaseFields(options.lease === "editor"), "http://hub.test", new Uint8Array(1), new Uint8Array(1));
       return {
@@ -2629,7 +2636,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           closeArtifact(DOCUMENT, SPACE);
           clearHubSessionCapability();
           testSeams.workerPostTestSink = original;
-          testSeams.socketGrantTestIssue = originalIssue;
+          testSeams.documentSocketGrantTestIssue = originalIssue;
           (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
         },
       };
@@ -3024,7 +3031,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, accept: testSeams.acceptBrowserSessionAuthority });
         const absentBeforeReopen = artifactState(DOCUMENT, SPACE) === undefined;
         const successorClientInstanceId = "12345678-1234-4123-8123-123456789abd";
-        openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller", clientInstanceId: successorClientInstanceId });
+        openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller", clientInstanceId: successorClientInstanceId });
         const successor = artifactState(DOCUMENT, SPACE)!;
         successor.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, leaseFields(true), "http://hub.test", new Uint8Array(1), new Uint8Array(1));
         const operationEpoch = fixture.retainedClosing.operationEpoch + 11;
@@ -3452,7 +3459,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       readonly CLOSING = 2 as const;
       readonly CLOSED = 3 as const;
       readonly url: string;
-      readonly protocol = "semio.socket.v1";
+      readonly protocol = "semio.session.v1";
       readonly protocols: string | string[] | undefined;
       readonly extensions = "";
       readonly bufferedAmount = 0;
@@ -3491,7 +3498,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     function folderOnlyConfig(documentId: string): ArtifactActorConfig {
-      return { documentId, schema: "demo/v1", bindings: [{ kind: "folder", path: `/tmp/${documentId}` }], actor: "actor-1" };
+      return { documentId, schema: "demo/v1", bindings: [{ kind: "folder", dataClass: "persistedLocalOnly", path: `/tmp/${documentId}` }], actor: "actor-1" };
     }
 
     function exactDocumentBackboneMessage(
@@ -3594,9 +3601,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     type BrowserDocumentOpenFixture = {
       nowMs: number;
       intent: DocumentOpenIntentV1;
-      installedTarget: NonNullable<Extract<PersistenceBinding, { kind: "hub" }>["installedTarget"]>;
+      installedTarget: NonNullable<Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }>["installedTarget"]>;
       plan: DocumentOpenPlanV1;
-      socketGrant: SocketGrantReceiptV1;
+      socketGrant: DocumentSocketGrantReceiptV1;
       expected: {
         httpPaths: [string, string];
         webSocketPath: string;
@@ -3615,7 +3622,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       return JSON.parse(await readFile(new URL("./🧫️fixtures/📇️directory/🌐️browser-document-open-v1.json", source.url), "utf8")) as BrowserDocumentOpenFixture;
     }
 
-    function currentBrowserDocumentOpenFixture(fixture: BrowserDocumentOpenFixture): { plan: DocumentOpenPlanV1; grant: SocketGrantReceiptV1 } {
+    function currentBrowserDocumentOpenFixture(fixture: BrowserDocumentOpenFixture): { plan: DocumentOpenPlanV1; grant: DocumentSocketGrantReceiptV1 } {
       const now = Date.now();
       return {
         plan: { ...structuredClone(fixture.plan), expiresAtUnixMs: now + 30_000 },
@@ -3649,7 +3656,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         clientInstanceId,
         documentId,
         schema: fixture.plan.artifact.schema,
-        bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId, installedTarget: fixture.installedTarget }],
+        bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId, installedTarget: fixture.installedTarget }],
         actor: "caller-selected-actor",
       });
       try {
@@ -3667,9 +3674,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           ["send", attemptB],
           ["close", attemptB],
         ]);
-        expect(documentExecutionOwners.has(documentRuntimeKeyV1({ kind: "hub", spaceId, documentId }))).toBe(false);
+        expect(documentExecutionOwners.has(documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId, documentId }))).toBe(false);
       } finally {
-        documentExecutionOwners.delete(documentRuntimeKeyV1({ kind: "hub", spaceId, documentId }));
+        documentExecutionOwners.delete(documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId, documentId }));
       }
     });
 
@@ -3689,7 +3696,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         clientInstanceId,
         documentId,
         schema: fixture.plan.artifact.schema,
-        bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
+        bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
         actor: "caller-selected-actor",
       });
       dispatch({ kind: "send", documentId, spaceId: fixture.intent.scope.spaceId, clientInstanceId, message: { kind: "detach" } });
@@ -3703,24 +3710,24 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const originalWebSocket = globalThis.WebSocket;
       const current = currentBrowserDocumentOpenFixture(fixture);
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
-      testSeams.socketGrantTestIssue = async () => current.grant;
+      testSeams.documentSocketGrantTestIssue = async () => current.grant;
       const left = fixture.expected.scopeIsolation.left;
       const right = fixture.expected.scopeIsolation.right;
       try {
         openArtifact({
           documentId: left.documentId,
           schema: fixture.installedTarget.artifact.schema,
-          bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: left.spaceId, installedTarget: fixture.installedTarget }],
+          bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: left.spaceId, installedTarget: fixture.installedTarget }],
           actor: "caller-selected-actor",
         });
         openArtifact({
           documentId: right.documentId,
           schema: fixture.installedTarget.artifact.schema,
-          bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: right.spaceId, installedTarget: fixture.installedTarget }],
+          bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: right.spaceId, installedTarget: fixture.installedTarget }],
           actor: "caller-selected-actor",
         });
-        expect(documentRuntimeKeyV1({ kind: "hub", ...left })).toBe(fixture.expected.scopeIsolation.leftKey);
-        expect(documentRuntimeKeyV1({ kind: "hub", ...right })).toBe(fixture.expected.scopeIsolation.rightKey);
+        expect(documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...left })).toBe(fixture.expected.scopeIsolation.leftKey);
+        expect(documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...right })).toBe(fixture.expected.scopeIsolation.rightKey);
         expect(documentRuntimeKeyV1({ kind: "local", documentId: left.documentId })).toBe(fixture.expected.scopeIsolation.localKey);
         expect(fixture.expected.scopeIsolation.leftKey).not.toBe(fixture.expected.scopeIsolation.rightKey);
         expect(fixture.expected.scopeIsolation.localKey).not.toBe(fixture.expected.scopeIsolation.leftKey);
@@ -3735,7 +3742,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       } finally {
         closeArtifact(left.documentId, left.spaceId);
         closeArtifact(right.documentId, right.spaceId);
-        testSeams.socketGrantTestIssue = null;
+        testSeams.documentSocketGrantTestIssue = null;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
       }
     });
@@ -3745,7 +3752,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const config: ArtifactActorConfig = {
         documentId: fixture.intent.scope.documentId,
         schema: fixture.installedTarget.artifact.schema,
-        bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
+        bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
         actor: "caller-selected-actor",
         packSchemaHash: new Array(32).fill(fixture.expected.helloPackSchemaHashByte),
       };
@@ -3781,7 +3788,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const originalWebSocket = globalThis.WebSocket;
       const requests: { url: string; headers: Headers; body: string }[] = [];
       FakeHubWebSocket.instances = [];
-      testSeams.socketGrantTestIssue = null;
+      testSeams.documentSocketGrantTestIssue = null;
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
       (globalThis as unknown as { fetch: unknown }).fetch = async (input: string, init?: RequestInit) => {
         const url = String(input);
@@ -3794,7 +3801,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         openArtifact({
           documentId: fixture.intent.scope.documentId,
           schema: fixture.plan.artifact.schema,
-          bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
+          bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
           actor: "caller-selected-actor",
         });
         const socket = await waitForDocumentSocket();
@@ -3809,7 +3816,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(JSON.parse(requests[1]!.body)).toEqual({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: current.plan.receipt });
         expect(requests.every(({ headers }) => headers.get("authorization") === `Bearer ${WORKER_LAW_CAPABILITY}`)).toBe(true);
         expect(socket.url).toBe(`ws://hub.test${fixture.expected.webSocketPath}`);
-        expect(socket.protocols).toEqual([fixture.expected.protocol, current.grant.grant]);
+        expect(socket.protocols).toEqual([fixture.expected.protocol, WORKER_LAW_CAPABILITY]);
         for (const forbidden of fixture.expected.forbiddenSocketFragments) expect(socket.url).not.toContain(forbidden);
         socket.open();
         expect(socket.sent).toHaveLength(1);
@@ -3841,7 +3848,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const originalFetch = globalThis.fetch;
       const originalWebSocket = globalThis.WebSocket;
       FakeHubWebSocket.instances = [];
-      testSeams.socketGrantTestIssue = null;
+      testSeams.documentSocketGrantTestIssue = null;
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
       let effects = 0;
       (globalThis as unknown as { fetch: unknown }).fetch = async () => {
@@ -3852,7 +3859,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         openArtifact({
           documentId: fixture.intent.scope.documentId,
           schema: fixture.plan.artifact.schema,
-          bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
+          bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
           actor: "caller-selected-actor",
         });
         const socket = await waitForDocumentSocket();
@@ -3880,7 +3887,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       intent: DocumentOpenIntentV1;
       plan: DocumentOpenPlanV1;
       manifest: DocumentExecutionTargetLeaseFieldsV1;
-      socketGrant: SocketGrantReceiptV1;
+      socketGrant: DocumentSocketGrantReceiptV1;
       componentHex: string;
       descriptorHex: string;
       expected: {
@@ -3927,7 +3934,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     type ExecutionTargetHarness = {
       state: ArtifactState;
-      binding: Extract<PersistenceBinding, { kind: "hub" }>;
+      binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }>;
       requests: { url: string; method: string; body: string }[];
       statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[];
       release: () => void;
@@ -3954,7 +3961,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const requests: { url: string; method: string; body: string }[] = [];
       const statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [];
       const originalFetch = globalThis.fetch;
-      testSeams.socketGrantTestIssue = null;
+      testSeams.documentSocketGrantTestIssue = null;
       testSeams.executionTargetStatusObserver = (status) => statuses.push(status);
       await acceptCurrentTestBrowserSessionAuthority("a".repeat(64));
       openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor" });
@@ -3962,7 +3969,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       state.openClientInstanceId = fixture.intent.clientInstanceId;
       // 🪪️ The caller declares only which surface it wants: nothing forgeable is supplied, so the
       // verified lease is the sole local comparison input for this wasm target.
-      const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: fixture.hubOrigin, spaceId: fixture.intent.scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId };
+      const binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }> = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: fixture.intent.scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId };
       artifacts.delete(state.runtimeKey);
       state.config = { ...state.config, bindings: [binding] };
       state.runtimeKey = documentRuntimeKeyForConfig(state.config);
@@ -4004,8 +4011,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
       const grant = { ...structuredClone(fixture.socketGrant), expiresAtMs: Date.now() + 25_000 };
       const scope = fixture.intent.scope;
-      const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...scope });
-      testSeams.socketGrantTestIssue = null;
+      const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...scope });
+      testSeams.documentSocketGrantTestIssue = null;
       FakeHubWebSocket.instances = [];
       testSeams.workerPostTestSink = (message) => posted.push(message);
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
@@ -4027,7 +4034,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           documentId: scope.documentId,
           schema: plan.artifact.schema,
           actor: "caller-is-not-authority",
-          bindings: [{ kind: "hub", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId }],
+          bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId }],
         });
         const deadline = Date.now() + 5_000;
         while (FakeHubWebSocket.instances.length === 0 && !posted.some((message) => message.kind === "socket-actor-failed") && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 0));
@@ -4053,7 +4060,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(posted.filter((message) => message.kind === "socket-actor-failed" && message.documentId === localId)).toHaveLength(corpus.firstOpen.localSocketFailures);
         closeArtifact(localId);
         const unselectedId = "unselected-first-opening";
-        handleTsRequest({ kind: "open", documentId: unselectedId, schema: plan.artifact.schema, actor: "untrusted", bindings: [{ kind: "hub", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId }] });
+        handleTsRequest({ kind: "open", documentId: unselectedId, schema: plan.artifact.schema, actor: "untrusted", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId }] });
         expect(posted.filter((message) => message.kind === "socket-actor-failed" && message.documentId === unselectedId)).toHaveLength(corpus.firstOpen.unselectedSocketFailures);
         closeArtifact(unselectedId, scope.spaceId);
         expect(requests.map(({ stage }) => stage)).toEqual(corpus.firstOpen.requestStages);
@@ -4076,12 +4083,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         originalSocket = globalThis.WebSocket,
         originalPost = testSeams.workerPostTestSink;
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
-      testSeams.socketGrantTestIssue = null;
+      testSeams.documentSocketGrantTestIssue = null;
       try {
         for (const row of corpus.firstOpen.hostile) {
           const fixture = await executionTargetLeaseFixture();
           const scope = fixture.intent.scope;
-          const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...scope });
+          const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...scope });
           const stages: string[] = [];
           const statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [];
           const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
@@ -4114,7 +4121,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               documentId: scope.documentId,
               schema: fixture.plan.artifact.schema,
               actor: "untrusted",
-              bindings: [{ kind: "hub", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId }],
+              bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId }],
             });
             const state = artifacts.get(runtimeKey);
             const deadline = Date.now() + 5_000;
@@ -4529,7 +4536,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "untrusted-ui-actor" });
         const state = artifactState(documentId)!;
         artifacts.delete(state.runtimeKey);
-        const binding = { kind: "hub", baseUrl: fixture.hubOrigin, spaceId } as const;
+        const binding = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId } as const;
         state.config = { ...state.config, bindings: [binding] };
         if (name === "foreign-origin") state.config = { ...state.config, bindings: [{ ...binding, baseUrl: "http://foreign.test" }] };
         if (name === "foreign-schema") state.config = { ...state.config, schema: "foreign-schema" };
@@ -4633,6 +4640,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           beforeTerminate = resolve;
         });
         await reserveDocumentBrowserActorChild(entry.state);
+        entry.lease.drop();
         await retired;
         expect(entry.state.browserActorReservation).toBeNull();
         expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
@@ -4742,7 +4750,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
                     ...this.binding,
                     kind: "result",
                     sequence: message.sequence,
-                    value: { uiPatches: [], effects: [], presence: [], nextWake: null, status: { tag: "idle" }, fuelUsed: 1n, commandIngress: { tag: "idle" }, coldPairIngress: { tag: "idle" }, lifecycleReceipt, uiPatchReceipt: null },
+                    value: { uiPatches: [], effects: [], presence: [], nextWake: null, status: { tag: "idle" }, fuelUsed: 1n, commandIngress: { kind: 0, cursor: { owner: 0n, generation: 0n, commandIndex: 0, commandCount: 0, instance: 0, seq: 0n, kind: 0, pageIndex: 0, pageCount: 0, itemCount: 0, metadata: 0 }, fault: [] }, coldPairIngress: { tag: "idle" }, lifecycleReceipt, uiPatchReceipt: null },
                   });
                   this.port.postMessage({ ...this.binding, kind: "transferred", sequence: message.sequence, detached: 0 });
                 }
@@ -4764,7 +4772,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             }
           }
           (globalThis as unknown as { Worker: unknown }).Worker = SessionWorker;
-          testSeams.socketGrantTestIssue = null;
+          testSeams.documentSocketGrantTestIssue = null;
           testSeams.executionTargetStatusObserver = (status) => {
             statuses.push(status);
             if (status.progress?.stage === "manifest") bodyProgress.delete(status.spaceId);
@@ -4819,7 +4827,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             const state = artifactState(current.intent.scope.documentId)!;
             state.openClientInstanceId = current.intent.clientInstanceId;
             artifacts.delete(state.runtimeKey);
-            const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: current.hubOrigin, spaceId, requestedSurfaceId: current.intent.requestedSurfaceId };
+            const binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }> = { kind: "hub", dataClass: "persistedShared", baseUrl: current.hubOrigin, spaceId, requestedSurfaceId: current.intent.requestedSurfaceId };
             state.config = { ...state.config, bindings: [binding] };
             state.runtimeKey = documentRuntimeKeyForConfig(state.config);
             artifacts.set(state.runtimeKey, state);
@@ -5141,7 +5149,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             };
             const emitsPatch = initialScene || uiIntent !== null || patchAck?.receipt.patchSequence === 1n;
             const nodeBytes = initialScene ? encodePackValue(node) : null;
-            const patchReceiptBytes = emitsPatch ? encodeActorUiPatchReceipt({ lifetime: lifetime!, patchSequence: initialScene ? 1n : uiIntent !== null ? 3n : 2n }) : null;
+            const patchReceipt = emitsPatch ? { lifetime: lifetime!, patchSequence: initialScene ? 1n : uiIntent !== null ? 3n : 2n } : null;
             const effects: Record<string, unknown>[] = [];
             let controlReceipt: Uint8Array | null = null;
             if (shellMessage !== null) {
@@ -5193,7 +5201,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               effects.push(actionFixture.publication.hostEffect);
             }
             if (commandBackbone !== null) effects.push({ tag: "send-message", val: { target: { tag: "backbone", val: `actor://${state.runtimeKey}` }, payload: commandBackbone } });
-            const resultTransfers: ArrayBuffer[] = initialScene ? [transferableBuffer(nodeBytes!), transferableBuffer(patchReceiptBytes!)] : patchReceiptBytes ? [transferableBuffer(patchReceiptBytes)] : [];
+            const resultTransfers: ArrayBuffer[] = initialScene ? [transferableBuffer(nodeBytes!)] : [];
             if (controlReceipt !== null) resultTransfers.push(transferableBuffer(controlReceipt));
             if (actionPublication !== null) resultTransfers.push(transferableBuffer(actionPublication));
             if (commandBackbone !== null) resultTransfers.push(transferableBuffer(commandBackbone));
@@ -5225,10 +5233,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
                   nextWake: null,
                   status: { tag: (visible && visibleViews.length === 1) || (wake && !initialScene) ? "more-work" : "idle" },
                   fuelUsed: 1n,
-                  commandIngress: { tag: commandSequence === null ? "idle" : "command-complete" },
+                  commandIngress: { kind: commandSequence === null ? 0 : 4, cursor: { owner: 0n, generation: 0n, commandIndex: 0, commandCount: 0, instance: 0, seq: 0n, kind: 0, pageIndex: 0, pageCount: 0, itemCount: 0, metadata: 0 }, fault: [] },
                   coldPairIngress,
                   lifecycleReceipt,
-                  uiPatchReceipt: patchReceiptBytes,
+                  uiPatchReceipt: patchReceipt === null ? { tag: "none" } : { tag: "some", val: patchReceipt },
                 },
               },
               resultTransfers,
@@ -5260,7 +5268,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "untrusted-ui-actor" });
       const state = artifactState(documentId)!;
       artifacts.delete(state.runtimeKey);
-      const binding = { kind: "hub", baseUrl: fixture.hubOrigin, spaceId: "cold-browser-space", requestedSurfaceId: fixture.manifest.surface.surfaceId } as const;
+      const binding = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: "cold-browser-space", requestedSurfaceId: fixture.manifest.surface.surfaceId } as const;
       state.config = { ...state.config, documentId, schema: fixture.manifest.artifact.schema, bindings: [binding] };
       state.runtimeKey = documentRuntimeKeyForConfig(state.config);
       artifacts.set(state.runtimeKey, state);
@@ -5586,8 +5594,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const ownerAwaitingA = testSeams.inferenceApprovalUndoOwner!;
         const stateB: ArtifactState = {
           ...state,
-          runtimeKey: documentRuntimeKeyV1({ kind: "hub", spaceId: "unrelated-space", documentId: "unrelated-document" }),
-          config: { ...state.config, documentId: "unrelated-document", bindings: [{ kind: "hub", baseUrl: fixture.hubOrigin, spaceId: "unrelated-space" }] },
+          runtimeKey: documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId: "unrelated-space", documentId: "unrelated-document" }),
+          config: { ...state.config, documentId: "unrelated-document", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: "unrelated-space" }] },
           openClientInstanceId: "unrelated-client",
           browserActorReservation: reservation,
           verifiedColdPair: owner,
@@ -5785,13 +5793,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const current = currentBrowserDocumentOpenFixture(fixture);
       const originalFetch = globalThis.fetch;
       FakeHubWebSocket.instances = [];
-      testSeams.socketGrantTestIssue = null;
-      const openOwner = async (proof: string): Promise<Readonly<{ state: ArtifactState; binding: Extract<PersistenceBinding, { kind: "hub" }> }>> => {
+      testSeams.documentSocketGrantTestIssue = null;
+      const openOwner = async (proof: string): Promise<Readonly<{ state: ArtifactState; binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }> }>> => {
         await acceptCurrentTestBrowserSessionAuthority(proof);
         openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor" });
         const state = artifactState(fixture.intent.scope.documentId)!;
         state.openClientInstanceId = fixture.intent.clientInstanceId;
-        const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget };
+        const binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }> = { kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget };
         artifacts.delete(state.runtimeKey);
         state.config = { ...state.config, bindings: [binding] };
         state.runtimeKey = documentRuntimeKeyForConfig(state.config);
@@ -5816,7 +5824,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           effects += 1;
           return Response.json(current.plan);
         };
-        const unavailable = await rejection(requestDocumentSocketAuthority(state, { kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId }));
+        const unavailable = await rejection(requestDocumentSocketAuthority(state, { kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId }));
         expect(unavailable.message).toBe("document open: installed target unavailable");
         expect(effects).toBe(0);
 
@@ -5874,10 +5882,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const actorA = `hub.v1.${"a".repeat(64)}`;
       const actorB = `hub.v1.${"b".repeat(64)}`;
       const opaqueNoncanonicalPack = new Uint8Array(Buffer.from("00010111048000", "hex"));
-      testSeams.socketGrantTestIssue = async (_baseUrl, path) => ({
-        schema: "semio.hub.socket-grant/v1",
-        protocol: "semio.socket.v1",
-        grant: `socket.v1.${path.includes("doc-a") ? "1".repeat(32) : "2".repeat(32)}.${"3".repeat(64)}`,
+      testSeams.documentSocketGrantTestIssue = async (_baseUrl, path) => ({
+        schema: "semio.hub.document-socket-grant/v1",
+        protocol: "semio.session.v1",
         actorId: path.includes("doc-a") ? actorA : actorB,
         expiresAtMs: Number.MAX_SAFE_INTEGER,
       });
@@ -5907,7 +5914,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         }),
       });
       try {
-        for (const documentId of ["doc-a", "doc-b"]) openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller-selected-actor" });
+        for (const documentId of ["doc-a", "doc-b"]) openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller-selected-actor" });
         await flushSocketGrantTurns();
         const [socketA, socketB] = FakeHubWebSocket.instances;
         socketA!.open();
@@ -5948,10 +5955,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
       (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = BoundPortBroadcastChannel;
-      testSeams.socketGrantTestIssue = async () => ({
-        schema: "semio.hub.socket-grant/v1",
-        protocol: "semio.socket.v1",
-        grant: `socket.v1.${"1".repeat(32)}.${"2".repeat(64)}`,
+      testSeams.documentSocketGrantTestIssue = async () => ({
+        schema: "semio.hub.document-socket-grant/v1",
+        protocol: "semio.session.v1",
         actorId: `hub.v1.${"3".repeat(64)}`,
         expiresAtMs: Number.MAX_SAFE_INTEGER,
       });
@@ -5981,7 +5987,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const outcomes: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => outcomes.push(message);
       try {
-        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
         await flushSocketGrantTurns();
         const socket = FakeHubWebSocket.instances[0]!;
         socket.open();
@@ -6022,10 +6028,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
       (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = BoundPortBroadcastChannel;
-      testSeams.socketGrantTestIssue = async () => ({
-        schema: "semio.hub.socket-grant/v1",
-        protocol: "semio.socket.v1",
-        grant: `socket.v1.${"1".repeat(32)}.${"2".repeat(64)}`,
+      testSeams.documentSocketGrantTestIssue = async () => ({
+        schema: "semio.hub.document-socket-grant/v1",
+        protocol: "semio.session.v1",
         actorId: `hub.v1.${"3".repeat(64)}`,
         expiresAtMs: Number.MAX_SAFE_INTEGER,
       });
@@ -6048,7 +6053,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       // callback down to its initializer, which makes the optional call below a call on `never`.
       const mirrorRetirement: { release: (() => void) | null } = { release: null };
       try {
-        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
         await flushSocketGrantTurns();
         const state = artifactState(documentId, "space-1")!;
         const frontier = installVerifiedDocumentBackbonePair(state);
@@ -6066,7 +6071,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: firstMessage } });
         expect(state.pendingBatches.size).toBe(1);
         expect(state.pendingDocumentBackboneBytes).toBe(firstMessage.byteLength);
-        state.canonicalFolderMirror = { binding: { kind: "folder", path: "/tmp/rebootstrap-raw" }, documentId, epoch: 1, capability: "a".repeat(64) };
+        state.canonicalFolderMirror = { binding: { kind: "folder", dataClass: "persistedLocalOnly", path: "/tmp/rebootstrap-raw" }, documentId, epoch: 1, capability: "a".repeat(64) };
         (globalThis as unknown as { fetch: unknown }).fetch = async () => {
           await new Promise<void>((resolve) => { mirrorRetirement.release = resolve; });
           return new Response(null, { status: 204 });
@@ -6333,7 +6338,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
 
       try {
-        const config: ArtifactActorConfig = { documentId: "doc-hub-flush", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        const config: ArtifactActorConfig = { documentId: "doc-hub-flush", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
         await flushSocketGrantTurns();
         const state = artifactState("doc-hub-flush")!;
@@ -6404,7 +6409,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
 
       try {
-        const config: ArtifactActorConfig = { documentId: "doc-hub-stranded", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        const config: ArtifactActorConfig = { documentId: "doc-hub-stranded", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
         await flushSocketGrantTurns();
         const state = artifactState("doc-hub-stranded")!;
@@ -6457,7 +6462,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
 
       try {
-        const config: ArtifactActorConfig = { documentId: "doc-hub-reset", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        const config: ArtifactActorConfig = { documentId: "doc-hub-reset", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
         await flushSocketGrantTurns();
 
@@ -6503,7 +6508,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
 
       try {
-        const config: ArtifactActorConfig = { documentId: "doc-hub-no-reset", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        const config: ArtifactActorConfig = { documentId: "doc-hub-no-reset", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
         await flushSocketGrantTurns();
 
@@ -6539,7 +6544,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       vi.useFakeTimers();
 
       try {
-        const config: ArtifactActorConfig = { documentId: "doc-hub-abort", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        const config: ArtifactActorConfig = { documentId: "doc-hub-abort", schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
         openArtifact(config);
         await flushSocketGrantTurns();
         FakeHubWebSocket.instances[0]!.open(); // sustained-health timer now pending too.
@@ -6604,7 +6609,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const socketB = { close: vi.fn() } as unknown as WebSocket;
       const makeState = (spaceId: string, socket: WebSocket): ArtifactState =>
         ({
-          config: { documentId: "same-document", schema: "demo/v1", actor: "requested", bindings: [{ kind: "hub", baseUrl: "https://hub.example", spaceId }] },
+          config: { documentId: "same-document", schema: "demo/v1", actor: "requested", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "https://hub.example", spaceId }] },
           socket,
           actor: "",
           hubActorReady: false,

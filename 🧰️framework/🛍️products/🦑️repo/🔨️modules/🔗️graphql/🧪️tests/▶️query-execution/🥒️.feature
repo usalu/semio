@@ -9,11 +9,11 @@ Feature: One query over one frozen repository answers the same way in every impl
   is coerced before a resolver ever sees it.
 
   Every implementation loads the same frozen repository records shared://🔣️repo-records.json into its
-  context port and runs every query of local://🔣️queries.json
+  context port and runs every query of shared://▶️query-execution/🔣️queries.json
   in order. No filesystem, no clock and no process is reachable from a scenario, so the only thing two implementations can disagree about is the
   meaning of the query.
 
-  The reference is `graphql-js`: the committed SDL asset://🧬️schema/🔣️schema.graphql
+  The reference is `graphql-js`: the committed SDL shared://📜️served-schema/🔗️.graphql
   is built into a real GraphQL schema and the same documents are executed against it. The oracle's source objects are
   a DECLARED mapping of the same records — it restates the field derivations, and `graphql-js` alone
   decides what executing a selection set against them means. It is not a second executor: nothing in
@@ -24,7 +24,7 @@ Feature: One query over one frozen repository answers the same way in every impl
   @mode-differential
   Scenario: Every query of the corpus returns the same data payload
     Given the frozen repository shared://🔣️repo-records.json
-    And the query corpus local://🔣️queries.json
+    And the query corpus shared://▶️query-execution/🔣️queries.json
     When each implementation executes every query against the schema
     Then every implementation returns the same data payload for every query
 
@@ -33,6 +33,6 @@ Feature: One query over one frozen repository answers the same way in every impl
   @mode-differential
   Scenario: An enum member and a variable reach the resolver as the value the schema declares
     Given the frozen repository shared://🔣️repo-records.json
-    And the query corpus local://🔣️queries.json
+    And the query corpus shared://▶️query-execution/🔣️queries.json
     When each implementation executes only the queries that carry an argument or a variable
     Then every implementation filters by the same coerced argument value

@@ -35,6 +35,7 @@ async fn flow_content_round_trips_nested_control_bodies() {
     let document = crate::procedure_snapshot_with_content("procedure.document", &path, &seed);
     store::os_store::test_support::assert_dsl_round_trip(&document);
     store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    assert_pack_keeps_owned_content(&document);
 }
 
 /// 🔁 Replaces the retired `dsl_parses_dictionary_and_atom_variants` — same rationale as
@@ -58,6 +59,7 @@ async fn text_content_round_trips_dictionary_and_atom_variants() {
     let document = crate::procedure_snapshot_with_content("procedure.document", &Path::new(), &seed);
     store::os_store::test_support::assert_dsl_round_trip(&document);
     store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    assert_pack_keeps_owned_content(&document);
 }
 
 /// 🔁 Retired-format twin was `dsl_rejects_unterminated_string`; the new hand-rolled body grammar
@@ -127,13 +129,21 @@ async fn the_demo_asset_carries_the_default_program() {
     assert_eq!(crate::procedure_working_scene(&parsed).path, crate::procedure_working_scene(&crate::schema::default_snapshot()).path);
 }
 
-/// 📖️ `path=` and `seed=` are required lines of `📖️.grammar.semio`.
+/// 📖️ `path` and `seed` are required fields of `📖️.grammar.semio`; the derived text prints them last.
 #[semio_framework_async_macros::async_test]
 async fn a_body_without_its_content_lines_is_refused() {
     let printed = print_dsl(&crate::schema::default_snapshot());
-    for line in ["path=", "seed="] {
-        let stripped = printed.lines().filter(|row| !row.starts_with(line)).collect::<Vec<_>>().join("\n");
-        assert!(parse_dsl(&stripped).is_err(), "a body without its {line} line must be refused");
+    for field in ["path=", "seed="] {
+        let stripped = &printed[..printed.find(field).expect("printed content field")];
+        assert!(parse_dsl(stripped).is_err(), "a body without its {field} field must be refused");
     }
 }
 //#endregion 🛤️ContentLines
+
+/// 🧬️ The derived pack declares its schema identity and re-attaches the exact flow/text content.
+fn assert_pack_keeps_owned_content(document: &ProcedureSnapshot) {
+    store::os_store::test_support::assert_pack_schema_identity(document);
+    let decoded: ProcedureSnapshot = store::ArtifactPack::decode_pack(&store::ArtifactPack::encode_pack(document)).expect("decode");
+    let (before, after) = (crate::procedure_working_scene(document), crate::procedure_working_scene(&decoded));
+    assert_eq!((after.path, after.seed), (before.path, before.seed));
+}

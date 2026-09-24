@@ -1,0 +1,20 @@
+# 🧭️ Own workspace root: the repository root manifest is a shared leased file, and a member crate would serialise
+# every concurrent session behind that lease.
+[workspace]
+
+[package]
+name = "semio-gis-mutation-bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🏭️ Production mutation bridge for 🌍️gis — answers listMutations from the production dispatch aggregates themselves."
+
+[[bin]]
+name = "semio-gis-mutation-bridge"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-s-artifact-gis-gismap = { path = "../🗿️artifacts/🗺️gismap/📦️packages/🦀️rust" }
+semio-s-artifact-gis-gisterrain = { path = "../🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust" }

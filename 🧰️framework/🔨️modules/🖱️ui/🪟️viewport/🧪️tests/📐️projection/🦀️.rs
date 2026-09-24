@@ -26,7 +26,7 @@ fn json_equal(left: &serde_json::Value, right: &serde_json::Value) -> bool {
 
 #[test]
 fn viewport_projection_corpus_matches_serde_value_and_derivation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️projection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️projection/🔣️.json")).unwrap();
     let default_json = fixture["defaultPreferences"].clone();
     let defaults: Viewport3dProjectionPreferences = serde_json::from_value(default_json.clone()).unwrap();
     assert_eq!(defaults, Viewport3dProjectionPreferences::default());
@@ -58,7 +58,7 @@ fn viewport_projection_corpus_matches_serde_value_and_derivation() {
 
 #[test]
 fn viewport_projection_rejects_closed_schema_and_range_violations() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️projection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️projection/🔣️.json")).unwrap();
     let defaults = &fixture["defaultPreferences"];
     for row in fixture["preferenceRejections"].as_array().unwrap() {
         let invalid = patched(defaults, &row["patch"]);
@@ -119,7 +119,7 @@ fn viewport_projection_rejects_closed_schema_and_range_violations() {
 
 #[test]
 fn viewport_projection_retains_inactive_preferences_across_selection() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️projection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️projection/🔣️.json")).unwrap();
     let edited = patched(&fixture["defaultPreferences"], &fixture["retention"]["editWhileOrthographic"]);
     let retained: Viewport3dProjectionPreferences = serde_json::from_value(edited.clone()).unwrap();
     assert_eq!(retained.kind, Viewport3dProjectionKind::Orthographic);

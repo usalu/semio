@@ -2,6 +2,7 @@ import { existsSync, lstatSync } from "node:fs";
 import { join } from "node:path";
 import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { buildCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { pluginComponentRustcArgs } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts";
 import { BundleScript, buildBudgetMs, devToolingEnv, resolveTestLevel, resolveWorkspaceBin, runCargoTestBudgeted, runCmd } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 export const CRATE_NAME = "semio-framework-plugin-describe";
 export const DESCRIPTOR_PACK_FILENAME = "🛂️.descriptor.semio";
@@ -52,10 +53,10 @@ export function pluginWasmArtifactPath(repoRoot: string, packageName: string, pr
   return join(targetRoot, "wasm32-wasip2", profile, `${packageName.replace(/-/g, "_")}.wasm`);
 }
 
-/** @emoji 🧩 Builds one exact plugin component and returns cargo's fresh output path. */
-export function buildPluginComponent(repoRoot: string, packageName: string, rootCdylib = false, budgetMs = buildBudgetMs()): string {
-  const buildArgs = rootCdylib ? ["rustc", "-p", packageName, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", "wasm-dev"] : ["build", "-p", packageName, "--target", "wasm32-wasip2", "--profile", "wasm-dev"];
-  runCmd("cargo", buildArgs, { cwd: repoRoot, env: devToolingEnv(), budgetMs });
+/** @emoji 🧩 Builds the exact `component-dev` unit ({@link pluginComponentRustcArgs}) into the shared target
+ * and returns cargo's uplifted output path, so the described bytes are the bytes `materialize-dev` ships. */
+export function buildPluginComponent(repoRoot: string, packageName: string, budgetMs = buildBudgetMs()): string {
+  runCmd("cargo", ["rustc", ...pluginComponentRustcArgs(packageName, "wasm-dev")], { cwd: repoRoot, env: devToolingEnv(), budgetMs });
   const component = pluginWasmArtifactPath(repoRoot, packageName);
   if (!existsSync(component)) throw new Error(`cargo did not produce ${component}`);
   return component;

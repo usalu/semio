@@ -11,7 +11,7 @@ import (
 
 // region 🔖️Vectors
 
-const vectorsURI = "local://🔣️vectors.json"
+const vectorsURI = "shared://🔤️slug-normalisation/🔣️vectors.json"
 
 type vectorGroup struct {
 	Normalise []string `json:"normalise"`

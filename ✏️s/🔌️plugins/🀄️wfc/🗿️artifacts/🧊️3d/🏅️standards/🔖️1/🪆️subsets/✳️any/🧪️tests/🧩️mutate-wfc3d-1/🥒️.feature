@@ -51,6 +51,7 @@ Feature: Apply every typed wfc3d mutation twice — once in Rust, once in Python
     Then the committed mutation payload declares the <id> kind
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
+      | id                 | vector                                                     |
       | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99             |
       | create-slot        | 🧩️create-slot/🧩️inserts-room-c-at-the-sorted-position      |
       | delete-slot        | 🕳️delete-slot/🕳️removes-room-a-and-cascades-its-edge       |
@@ -86,6 +87,7 @@ Feature: Apply every typed wfc3d mutation twice — once in Rust, once in Python
     And every field the committed diff declares actually differs
     And the reference's own inverse of the committed mutation restores the before-snapshot exactly
     Examples:
+      | id                 | vector                                                     |
       | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99             |
       | create-slot        | 🧩️create-slot/🧩️inserts-room-c-at-the-sorted-position      |
       | delete-slot        | 🕳️delete-slot/🕳️removes-room-a-and-cascades-its-edge       |

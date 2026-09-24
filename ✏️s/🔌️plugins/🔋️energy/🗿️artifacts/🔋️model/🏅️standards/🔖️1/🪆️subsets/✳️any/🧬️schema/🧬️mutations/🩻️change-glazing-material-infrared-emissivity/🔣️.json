@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeGlazingMaterialInfraredEmissivity",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-glazing-material-infrared-emissivity",
-  "binaryTag": null,
+  "binaryTag": 281,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

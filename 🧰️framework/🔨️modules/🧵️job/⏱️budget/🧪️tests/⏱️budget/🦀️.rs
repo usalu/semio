@@ -75,7 +75,6 @@ fn microsecond_language_neutral_deadline_boundaries_and_overflow() {
             assert_eq!(expired, law["expired"][index].as_bool().unwrap());
             assert_eq!(yielded, law["yielded"][index].as_bool().unwrap());
         }
-        eprintln!("[DEBUG] microsecond fixture={} grant={grant} deadline={:?}", law["id"], budget.map(|budget| budget.deadline_us));
     }
 }
 
@@ -109,9 +108,13 @@ fn microsecond_retained_worker_admits_half_ms_and_rejects_missing_or_overflow_cl
         assert_eq!(terminal, faulted);
         assert_eq!(actual_fault, faulted);
         assert_eq!(entered, expected_entries);
-        eprintln!("[DEBUG] microsecond worker clock={clock:?} grant={grant} fuel={fuel} entered={entered} fault={actual_fault}");
     }
 }
+
+/// 🎲️ A real 500 µs grant is spent by wall time, and a loaded host may deschedule this thread for
+/// longer than that between reading the grant's start and the first step — an honest overrun that
+/// admits no step. Fresh attempts separate that from a clock or budget defect, which fails them all.
+const REAL_CLOCK_ATTEMPTS: usize = 64;
 
 #[test]
 fn microsecond_platform_clock_and_real_half_ms_worker_progress() {
@@ -125,13 +128,15 @@ fn microsecond_platform_clock_and_real_half_ms_worker_progress() {
         if submillisecond_sample { break; }
     }
     assert!(submillisecond_sample, "platform clock lost microsecond precision");
-    let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { site: "microsecond-real-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: default_now_us };
-    let mut authority = WorkerJobAuthorityOwner::try_new(EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
-    let terminal = drive_worker_job_authority(&mut authority);
-    let entered = close_authority(authority);
-    assert!(!terminal);
-    assert_eq!(entered, 1);
-    eprintln!("[DEBUG] actual monotonic clock retained 500us worker entered={entered}");
+    let entered = (0..REAL_CLOCK_ATTEMPTS)
+        .map(|_| {
+            let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { site: "microsecond-real-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: default_now_us };
+            let mut authority = WorkerJobAuthorityOwner::try_new(EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
+            assert!(!drive_worker_job_authority(&mut authority), "a spent real grant yields, it never terminates");
+            close_authority(authority)
+        })
+        .find(|entered| *entered != 0);
+    assert_eq!(entered, Some(1), "a real 500 µs grant admits exactly one step whenever this thread is not descheduled past it");
 }
 
 //#endregion 🧵️RetainedWorker
@@ -152,6 +157,7 @@ impl InteractiveJob for CompletionProbe {
 
 #[test]
 fn microsecond_exact_callback_quarantine_retains_original_output_and_session_identity() {
+    let _slots = super::worker_session_slots_shared();
     assert!(install_microsecond_clock(now).is_ok());
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../⏱️trace/⏱️clock/🧫️fixtures/🧪️contention/🔣️.json")).unwrap();
     let operation = allocate_operation_id();
@@ -194,7 +200,6 @@ fn microsecond_exact_callback_quarantine_retains_original_output_and_session_ide
         assert!(ledger.terminal_is_empty());
         assert_eq!(owned_bytes, 2 * JOB_PAYLOAD_PAGE_BYTES);
         assert_eq!(released_bytes, owned_bytes);
-        eprintln!("[DEBUG] exact callback quarantine {} sample_fault={faulted} session_quarantined={quarantined} original_bytes=4 retired_bytes={released_bytes} same_numeric_identity=true", law["id"]);
     }
 }
 //#endregion 🔒️CallbackQuarantine
@@ -279,18 +284,16 @@ fn descheduled_step_over_the_ceiling_is_recorded_and_the_job_keeps_running() {
     assert_eq!(consecutive, 0, "a step that fit the ceiling clears the run");
     assert_eq!(total, 1);
     assert!(worst_us >= semio_framework_trace::INTERACTIVE_STEP_CEILING_US, "the overrun really happened and was recorded");
-    eprintln!("[DEBUG] single descheduled step: steps={steps} quarantined_at={quarantined_at:?} consecutive={consecutive} total_overruns={total} worst={worst_us}us");
 }
 
 #[test]
 fn every_step_over_the_ceiling_is_quarantined_within_the_sustained_threshold() {
     let threshold = usize::try_from(semio_framework_trace::SUSTAINED_OVERRUN_QUARANTINE_STEPS).unwrap();
-    let (steps, quarantined_at, consecutive, total, worst_us) = drive_slow_probe(threshold + 4, threshold + 4);
+    let (steps, quarantined_at, consecutive, total, _) = drive_slow_probe(threshold + 4, threshold + 4);
     assert_eq!(quarantined_at, Some(threshold - 1), "a runaway step is stopped exactly at the threshold");
     assert_eq!(steps, threshold, "no step may run after the quarantine");
     assert_eq!(consecutive, u32::try_from(threshold).unwrap());
     assert_eq!(total, u32::try_from(threshold).unwrap());
-    eprintln!("[DEBUG] runaway step: steps={steps} quarantined_at={quarantined_at:?} consecutive={consecutive} total_overruns={total} worst={worst_us}us");
 }
 //#endregion 📒️SustainedOverrun
 

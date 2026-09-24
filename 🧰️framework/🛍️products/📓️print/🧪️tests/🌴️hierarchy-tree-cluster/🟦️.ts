@@ -11,7 +11,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "hierarchy-tree-cluster";
-const FIXTURE = "local://hierarchy-tree-cluster.tex";
+const FIXTURE = "shared://🌴️hierarchy-tree-cluster/hierarchy-tree-cluster.tex";
 const DECIMALS = 6;
 
 type Row = readonly [id: string, parent: string, value: number];

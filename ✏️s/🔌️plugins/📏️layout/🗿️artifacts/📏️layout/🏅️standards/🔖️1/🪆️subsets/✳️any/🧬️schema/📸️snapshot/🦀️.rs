@@ -12,13 +12,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `s.stdio.semio/v1/drawing` subset as a genuine child slot (see the artifact root's
 /// `🔖️ComposedTypes` region doc for the full before/after); `referenced_model` is a forward
 /// `ArtifactLink` reference slot, both new. `#[child(...)]`/`#[link_slot(...)]` drive
-/// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Dropped the
-/// `dsl::DslArtifact` derive this struct used to carry — `ArtifactChild<S>`/`ArtifactLink` have no
-/// `dsl::DslField` impl reachable from this crate, the same wall `✳️object`/`✳️kit`/cad hit; every
-/// field's text/binary shape is now hand-rolled below instead (JSON-then-hex for structured fields,
-/// same convention cad's `📸️snapshot/🦀️.rs` established for this ticket).
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+/// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Text and pack are the
+/// derived spec-driven encodings of the one `dsl::DslRecord` spec, composed child and link slot included.
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
+#[dsl(extension = "layout")]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutSnapshot {
     #[state(artifact)]
@@ -83,184 +81,8 @@ pub(crate) fn empty_layout_snapshot() -> LayoutSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️ChildCodecPrimitives
-/// 🧪️ Real hex/bracket child-handle codec — identical shape to cad's own `enc_child`/`dec_child`
-/// (the working reference for a composite subset's child-handle primitives): a handle is exactly two
-/// strings (`child_id`, the target's `ArtifactRef` flattened via `to_uri()`), never the child's own
-/// content.
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-pub(crate) fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-//#endregion 🔖️ChildCodecPrimitives
-
-//#region 🔖️JsonFieldPrimitives
-/// 🧾️ Every collection/nested-record field on `LayoutSnapshot` (`grid`, the style/story/link/page
-/// tables, `parent_pages`, `spreads`, `pages` — each implements `ToValue`/`FromValue`) is
-/// JSON-serialized then hex-encoded, one line per field, matching every scalar field's own
-/// `enc_str`/`dec_str` convention (see cad's identically-named region for precedent). `referenced_model`
-/// (an `Option<store::ArtifactLink>`) uses the same helper — `ArtifactLink`/`LinkPin`/`BlobRef` are
-/// themselves plain `ToValue`/`FromValue`, so no bespoke hex/bracket encoder was needed for it.
-fn enc_json<T: protocol::ToValue>(value: &T) -> String {
-    enc_str(&protocol::json::to_json_string(value))
-}
-fn dec_json<T: protocol::FromValue>(s: &str) -> Result<T, String> {
-    protocol::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
-}
-//#endregion 🔖️JsonFieldPrimitives
-
-//#region 🔖️TextPrimitives
-fn print_layout_snapshot_body(s: &LayoutSnapshot) -> String {
-    format!(
-        "schema={}\nname={}\ngrid={}\nparagraphStyles={}\ncharacterStyles={}\nstories={}\nlinks={}\nparentPages={}\nspreads={}\npages={}\nprintTarget={}\ndataFieldsJson={}\nbackgroundDrawing={}\nreferencedModel={}",
-        enc_str(&s.schema),
-        enc_str(&s.name),
-        enc_json(&s.grid),
-        enc_json(&s.paragraph_styles),
-        enc_json(&s.character_styles),
-        enc_json(&s.stories),
-        enc_json(&s.links),
-        enc_json(&s.parent_pages),
-        enc_json(&s.spreads),
-        enc_json(&s.pages),
-        enc_json(&s.print_target),
-        enc_json(&s.data_fields_json),
-        enc_json(&s.background_drawing),
-        enc_json(&s.referenced_model),
-    )
-}
-fn parse_layout_snapshot_body(body: &str) -> Result<LayoutSnapshot, String> {
-    let mut snapshot = empty_layout_snapshot();
-    let mut saw_schema = false;
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("schema=") {
-            snapshot.schema = dec_str(rest)?;
-            saw_schema = true;
-        } else if let Some(rest) = line.strip_prefix("name=") {
-            snapshot.name = dec_str(rest)?;
-        } else if let Some(rest) = line.strip_prefix("grid=") {
-            snapshot.grid = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("paragraphStyles=") {
-            snapshot.paragraph_styles = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("characterStyles=") {
-            snapshot.character_styles = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("stories=") {
-            snapshot.stories = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("links=") {
-            snapshot.links = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("parentPages=") {
-            snapshot.parent_pages = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("spreads=") {
-            snapshot.spreads = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("pages=") {
-            snapshot.pages = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("printTarget=") {
-            snapshot.print_target = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("dataFieldsJson=") {
-            snapshot.data_fields_json = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("backgroundDrawing=") {
-            snapshot.background_drawing = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("referencedModel=") {
-            snapshot.referenced_model = dec_json(rest)?;
-        } else {
-            return Err(format!("layout snapshot: unknown line {line:?}"));
-        }
-    }
-    if !saw_schema {
-        return Err("layout snapshot: missing schema line".to_string());
-    }
-    Ok(snapshot)
-}
-//#endregion 🔖️TextPrimitives
-
-//#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
-fn write_json<T: protocol::ToValue>(out: &mut Vec<u8>, value: &T) {
-    write_str_lp(out, &protocol::json::to_json_string(value));
-}
-fn read_json<T: protocol::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
-    protocol::json::from_json_str(&read_str_lp(reader)?).map_err(|e| e.to_string())
-}
-
-fn encode_layout_snapshot_binary(s: &LayoutSnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut out = vec![PACK_BINARY_FORMAT];
-    write_str_lp(&mut out, &s.schema);
-    write_str_lp(&mut out, &s.name);
-    write_json(&mut out, &s.grid);
-    write_json(&mut out, &s.paragraph_styles);
-    write_json(&mut out, &s.character_styles);
-    write_json(&mut out, &s.stories);
-    write_json(&mut out, &s.links);
-    write_json(&mut out, &s.parent_pages);
-    write_json(&mut out, &s.spreads);
-    write_json(&mut out, &s.pages);
-    write_json(&mut out, &s.print_target);
-    write_json(&mut out, &s.data_fields_json);
-    write_str_lp(&mut out, &protocol::json::to_json_string(&s.background_drawing));
-    write_json(&mut out, &s.referenced_model);
-    out
-}
-fn decode_layout_snapshot_binary(bytes: &[u8]) -> Result<LayoutSnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
-        return Err(format!("unsupported pack format {format}"));
-    }
-    let mut snapshot = empty_layout_snapshot();
-    snapshot.schema = read_str_lp(&mut reader)?;
-    snapshot.name = read_str_lp(&mut reader)?;
-    snapshot.grid = read_json(&mut reader)?;
-    snapshot.paragraph_styles = read_json(&mut reader)?;
-    snapshot.character_styles = read_json(&mut reader)?;
-    snapshot.stories = read_json(&mut reader)?;
-    snapshot.links = read_json(&mut reader)?;
-    snapshot.parent_pages = read_json(&mut reader)?;
-    snapshot.spreads = read_json(&mut reader)?;
-    snapshot.pages = read_json(&mut reader)?;
-    snapshot.print_target = read_json(&mut reader)?;
-    snapshot.data_fields_json = read_json(&mut reader)?;
-    snapshot.background_drawing = protocol::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
-    snapshot.referenced_model = read_json(&mut reader)?;
-    Ok(snapshot)
-}
-//#endregion 🔖️BinaryPrimitives
-
 //#region 🔖️HandcraftedArtifactCodecs
-/// ✉️ Handcrafted `ArtifactDsl`/`ArtifactPack`, real hex/bracket text + LEB128-length-prefixed binary
-/// primitives — same upgrade `✳️object`/`✳️kit`/cad made when they gained real `ArtifactChild<S>`
-/// slots (the old `dsl::DslArtifact`-derive-driven `Self::__dsl_spec()` path cannot express a
-/// composed child slot or a link slot, neither of which has a `dsl::DslField` impl reachable from
-/// this crate).
+/// ✉️ `ArtifactDsl` and `ArtifactPack` over the one derived record spec.
 impl store::ArtifactDsl for LayoutSnapshot {
     const EXTENSION: &'static str = "layout";
     fn envelope_id() -> &'static str {
@@ -271,10 +93,11 @@ impl store::ArtifactDsl for LayoutSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_layout_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = print_layout_snapshot_body(self);
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -282,18 +105,20 @@ impl store::ArtifactDsl for LayoutSnapshot {
 
 impl store::ArtifactPack for LayoutSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_layout_snapshot_binary(self);
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        decode_layout_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

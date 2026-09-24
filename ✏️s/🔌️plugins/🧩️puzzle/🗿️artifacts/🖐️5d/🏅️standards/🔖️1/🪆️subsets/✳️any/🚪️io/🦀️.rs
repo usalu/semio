@@ -1,10 +1,10 @@
 //! 🚪️ IO s.puzzle5d (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from this file's own `io_registry::register()`), not per-leaf register().
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"]
+    &["stdio.json", "stdio.txt", "stdio.zip"]
 }
 pub fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"]
+    &["stdio.json", "stdio.png", "stdio.txt", "stdio.zip"]
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -14,9 +14,6 @@ pub mod derived_composition {
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.puzzle.puzzle5d", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_OBJ: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    const DEP_STL: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
 
@@ -27,7 +24,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STL, DEP_TXT, DEP_ZIP]
+            &[DIALECT, DEP_JSON, DEP_TXT, DEP_ZIP]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -48,33 +45,6 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_OBJ {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PNG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::png::v1_2::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_STL {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -175,22 +145,6 @@ pub mod io_registry {
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
-    const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::stl::v_ascii::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_STL_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_OBJ_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
     //#endregion 🔖️ExportEntries
 
     pub fn entries() -> &'static [ComposerEntry] {
@@ -201,11 +155,38 @@ pub mod io_registry {
                     ComposerEntry { writes: EXPORT_ZIP_DIALECT, reads: &[PUZZLE5D_DIALECT], compose: compose_export_zip },
                     ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[PUZZLE5D_DIALECT], compose: compose_export_png },
                     ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PUZZLE5D_DIALECT], compose: compose_export_json },
-                    ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[PUZZLE5D_DIALECT], compose: compose_export_stl },
-                    ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[PUZZLE5D_DIALECT], compose: compose_export_obj },
                 ]
             })
             .as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+//#region 🕸️BoardDrawing
+/// 🎲️ The assembly's 2D board as a node-link diagram: each visible part's `part_2d` circle or
+/// rectangle (the 2D board's own shape rule and defaults) labelled with its text, fasteners as links between the parts they join. The png export
+/// draws this picture.
+pub fn puzzle5d_board_drawing(snapshot: &crate::Puzzle5dSnapshot) -> semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{diagram_drawing, SemioDiagram, SemioDiagramLink, SemioDiagramNode, SemioDiagramShape};
+    let nodes = snapshot
+        .parts
+        .iter()
+        .filter(|part| part.part_2d.hidden != Some(true))
+        .map(|part| {
+            let board = &part.part_2d;
+            let radius = board.radius.unwrap_or(24.0);
+            let rectangle = board.shape.as_deref() == Some("rectangle") || (board.shape.is_none() && board.width.is_some());
+            let shape = if rectangle { SemioDiagramShape::Rectangle { width: board.width.unwrap_or(radius * 2.0), height: board.height.unwrap_or(radius * 2.0) } } else { SemioDiagramShape::Circle { radius } };
+            SemioDiagramNode { id: part.id.clone(), x: board.x, y: board.y, shape, label: board.text.clone().filter(|text| !text.is_empty()) }
+        })
+        .collect();
+    let links = snapshot.fasteners.iter().map(|fastener| SemioDiagramLink { from: fastener.source.clone(), to: fastener.target.clone(), label: None }).collect();
+    diagram_drawing(&SemioDiagram { nodes, links, frames: Vec::new() })
+}
+//#endregion 🕸️BoardDrawing
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

@@ -107,6 +107,9 @@ export type ArtifactPresencePeer = {
    * an agent and an agent session can never hide as a human. `undefined` is the pre-agent wire shape
    * and a reader must treat it as `"human"`. */
   readonly principalKind?: ArtifactPresencePrincipalKind;
+  /** 🛠️ Active editor tool/utility id (bit 12, ARTIFACT scope) — e.g. select/brush/fill. Optional when
+   * the peer has not published an active tool. Distinct from `toolRun` (interactive long-running tool). */
+  readonly activeTool?: string;
 };
 
 /** 🤖️ Twin of Rust `PresencePrincipalKind`, in binary tag order. An `agent` peer is an AI agent
@@ -140,6 +143,8 @@ export type ArtifactPresenceWindowView = {
   readonly kind: ArtifactPresenceViewKind;
   readonly size: readonly [number, number];
   readonly pointer?: readonly [number, number, number];
+  /** World-space ray origin for 3D presence (Orbit); absent for canvas/geo. */
+  readonly rayOrigin?: readonly [number, number, number];
 };
 
 /** 🎥️ Twin of Rust `PresenceViewKind` — internally tagged `kind`, camelCase (`{"kind":"orbit",…}`). */
@@ -313,6 +318,37 @@ export function readVarintU64(bytes: Uint8Array, pos: [number]): number {
   throw new Error("wire frame varint: overlong varint (exceeds 10 bytes)");
 }
 
+/** 🎞️ Exact `u64` twin of {@link writeVarintU64} for values that may exceed 2^53 (hash-derived revisions). */
+export function writeVarintU64Exact(out: number[], value: bigint): void {
+  if (value < 0n || value > 0xffff_ffff_ffff_ffffn) throw new Error("wire frame varint: u64 range");
+  let remaining = value;
+  for (;;) {
+    const byte = Number(remaining & 0x7fn);
+    remaining >>= 7n;
+    if (remaining === 0n) {
+      out.push(byte);
+      return;
+    }
+    out.push(byte | 0x80);
+  }
+}
+
+/** 🎞️ Exact `u64` twin of {@link readVarintU64}. */
+export function readVarintU64Exact(bytes: Uint8Array, pos: [number]): bigint {
+  let result = 0n;
+  for (let i = 0; i < 10; i++) {
+    const byte = bytes[pos[0]];
+    if (byte === undefined) throw new Error("wire frame varint: truncated");
+    pos[0] += 1;
+    result |= BigInt(byte & 0x7f) << BigInt(7 * i);
+    if ((byte & 0x80) === 0) {
+      if (result > 0xffff_ffff_ffff_ffffn) throw new Error("wire frame varint: u64 range");
+      return result;
+    }
+  }
+  throw new Error("wire frame varint: overlong varint (exceeds 10 bytes)");
+}
+
 /** 🎞️ `varint-u64 len | utf8 bytes` — the TS twin of `protocol_core::write_str`. */
 export function writeStr(out: number[], value: string): void {
   const bytes = new TextEncoder().encode(value);
@@ -431,6 +467,7 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   if (presencePresent(peer.ui)) flags |= 1 << 9;
   if (presencePresent(peer.toolRun)) flags |= 1 << 10;
   if (presencePresent(peer.principalKind)) flags |= 1 << 11;
+  if (presencePresent(peer.activeTool)) flags |= 1 << 12;
   writeVarintU64(out, flags);
   writeVarintU64(out, peer.connectedAtMs ?? 0);
   if (presencePresent(peer.label)) writeStr(out, peer.label);
@@ -449,6 +486,7 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
     if (tag < 0) throw new Error(`presence peer principal kind: unknown ${peer.principalKind}`);
     out.push(tag);
   }
+  if (presencePresent(peer.activeTool)) writeStr(out, peer.activeTool);
   return out;
 }
 
@@ -593,7 +631,8 @@ class PresencePeerReader {
       const kind = this.viewKind();
       const size: readonly [number, number] = [this.number("presence view width"), this.number("presence view height")];
       const pointer = this.boolean("presence view pointer") ? this.triple("presence view pointer") : undefined;
-      views.push({ windowId, space, kind, size, pointer });
+      const rayOrigin = this.boolean("presence view ray origin") ? this.triple("presence view ray origin") : undefined;
+      views.push({ windowId, space, kind, size, pointer, rayOrigin });
     }
     return views;
   }
@@ -640,7 +679,7 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   const reader = new PresencePeerReader(bytes, pos[0]);
   const actor = reader.text("presence peer actor");
   const flags = reader.varint("presence peer flags");
-  if (flags > 0xfff) reader.fail("presence peer flags", `unknown flag bits set: ${flags.toString(16)}`);
+  if (flags > 0x1fff) reader.fail("presence peer flags", `unknown flag bits set: ${flags.toString(16)}`);
   const connectedAtMs = reader.varint("presence peer connected at");
   if (connectedAtMs > PRESENCE_PEER_WIRE_LIMITS_V1.maximumConnectedAtMs) reader.fail("presence peer connected at", "limit exceeded");
   const label = flags & (1 << 0) ? reader.text("presence peer label") : undefined;
@@ -655,9 +694,10 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   const ui = flags & (1 << 9) ? reader.ui() : undefined;
   const toolRun = flags & (1 << 10) ? reader.toolRun() : undefined;
   const principalKind = flags & (1 << 11) ? reader.principalKind() : undefined;
+  const activeTool = flags & (1 << 12) ? reader.text("presence peer active tool") : undefined;
   if (reader.position !== bytes.length) reader.fail("presence peer", "trailing bytes");
   pos[0] = reader.position;
-  return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui, toolRun, principalKind };
+  return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui, toolRun, principalKind, activeTool };
 }
 
 /** ⏯️ Twin of Rust `encode_presence_tool_run`: the standalone tool run summary body a guest's
@@ -752,6 +792,8 @@ function writePresenceWindowView(out: number[], view: ArtifactPresenceWindowView
   writeF64(out, view.size[1]);
   writeBool(out, presencePresent(view.pointer));
   if (presencePresent(view.pointer)) for (const value of view.pointer) writeF64(out, value);
+  writeBool(out, presencePresent(view.rayOrigin));
+  if (presencePresent(view.rayOrigin)) for (const value of view.rayOrigin) writeF64(out, value);
 }
 
 function writeVecPresenceWindowView(out: number[], values: readonly ArtifactPresenceWindowView[]): void {
@@ -1734,4 +1776,30 @@ if (import.meta.vitest) {
   await registerTests2(import.meta.vitest, { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact }, { directory: import.meta.dir, url: import.meta.url });
   const { registerTests3 } = await import("./🧪️tests/🧪️history-transition/🟦️.ts");
   await registerTests3(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url });
+  const { registerTests: registerDurableCollaborativeRedoTests } = await import("./🧪️tests/🗄️durable-collaborative-redo/🟦️.ts");
+  await registerDurableCollaborativeRedoTests(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url });
+
 }
+
+export {
+  canvasPeerViewportRect,
+  canvasPointToScreen,
+  orbitPointToScreen,
+  orbitFrustumCorners,
+  orbitFrustumSegments,
+  peerOverlayLabels,
+  peerOverlayPath,
+  peerMarksFor,
+  peersForWindow,
+  presenceColorCss,
+  PEER_OVERLAY_LABELS,
+  type PeerOverlayKind,
+  type PeerOverlayLocale,
+  type PeerOverlaySpec,
+  type PeerView,
+  type PresenceDomainInput,
+  type PresencePeerInput,
+  type PresenceViewKindInput,
+  type PresenceWindowViewInput,
+  type UiPeerMark,
+} from "./👕️peer-overlay/🟦️.ts";

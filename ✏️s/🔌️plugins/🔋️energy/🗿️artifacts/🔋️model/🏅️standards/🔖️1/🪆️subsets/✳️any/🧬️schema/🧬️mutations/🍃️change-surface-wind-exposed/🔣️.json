@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeSurfaceWindExposed",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-surface-wind-exposed",
-  "binaryTag": null,
+  "binaryTag": 33,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

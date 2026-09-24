@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeMaterialSpecificHeat",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-material-specific-heat",
-  "binaryTag": null,
+  "binaryTag": 66,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -1,14 +1,10 @@
-//! deser shooting via txt
-//! 🐛️ Pre-migration content here referenced `crate::artifacts::json`/`crate::artifacts::txt`,
-//! types that don't exist in this crate (dead code, never mounted by the old glue, never
-//! compiled) -- likely a copy-paste of stdio's own internal json<-txt bridge into the wrong
-//! plugin's txt target folder. Left as an honest stub producing this artifact's own real
-//! snapshot type, pending a real txt import/export implementation.
+//! shooting ← txt — the body of a `s.stdio.txt` carrier parsed as this artifact's own DSL, the inverse
+//! of the sibling export leaf (`IoFidelity::Exact`).
 use crate::ShootingSnapshot;
+
 pub fn register() {}
-pub fn deserialize(_from: &semio_s_artifact_stdio_txt::TxtSnapshot) -> Result<ShootingSnapshot, String> {
-    Err("txt import not yet implemented".into())
-}
-pub fn deserialize_bytes(_bytes: &[u8]) -> Result<ShootingSnapshot, String> {
-    Err("txt import not yet implemented".into())
+
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<ShootingSnapshot, store::TextError> {
+    let text = std::str::from_utf8(bytes).map_err(|error| store::TextError::new(format!("shooting←txt: {error}"), dsl::TextSpan::at(1, 1)))?;
+    <ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }

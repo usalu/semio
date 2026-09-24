@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeInfiltrationVelocityTermCoefficient",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-velocity-term-coefficient",
-  "binaryTag": null,
+  "binaryTag": 107,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

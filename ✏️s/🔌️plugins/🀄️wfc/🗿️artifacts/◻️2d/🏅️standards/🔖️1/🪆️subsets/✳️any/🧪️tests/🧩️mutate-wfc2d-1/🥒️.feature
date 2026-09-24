@@ -29,48 +29,73 @@ Feature: Apply every typed wfc2d mutation twice — once in Rust, once in Python
   ✅️ ALL FIFTEEN KINDS ARE ADJUDICATED AND NONE IS REFUSED: the tile media is only ever carried here,
   never re-derived, so nothing depends on a rendering function no specification states.
 
-  Scenario Outline: <case> agrees across Rust and Python
-    Given the committed before-snapshot at <vector>
-    When the <kind> mutation is applied in both implementations
-    Then the produced diff, the raised diagnostics and the after-snapshot agree
+  @id-mutate
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: The committed <id> vector declares its own kind and moves the document
+    Given the committed specification vector for the <id> kind
+      """
+      {
+        "kind": "<id>",
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+      }
+      """
+    Then the committed mutation payload declares the <id> kind
+    And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
+    Examples:
+      | id                 | vector                                                            |
+      | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99                    |
+      | create-slot        | 🧩️create-slot/🧩️inserts-slot-d-in-canonical-order                 |
+      | delete-slot        | 🕳️delete-slot/🚫️removes-slot-a-and-cascades-edge-ab               |
+      | move-slot          | ↔️move-slot/↔️drags-slot-b-down                                   |
+      | resize-slot        | 📐️resize-slot/📐️widens-slot-b                                     |
+      | connect-slots      | 🔗️connect-slots/🔗️joins-slot-a-to-slot-c                          |
+      | disconnect-slots   | ✂️disconnect-slots/✂️severs-edge-ab                               |
+      | pin-slot           | 📌️pin-slot/📌️pins-slot-a-to-the-roof-tile                         |
+      | unpin-slot         | 🔓️unpin-slot/🔓️releases-the-slot-c-pin                            |
+      | create-tile        | 🀄️create-tile/🀄️adds-the-window-tile                              |
+      | delete-tile        | 🗑️delete-tile/🚫️removes-the-wall-tile-and-cascades-rules-and-pins |
+      | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-wall-tile-bias                  |
+      | change-tile-media  | 🎨️change-tile-media/🎨️repaints-the-roof-tile-as-a-raster          |
+      | create-rule        | 🚦️create-rule/⛔️forbids-roof-over-roof                            |
+      | delete-rule        | ❌delete-rule/🚫️removes-the-wall-wall-rule                         |
 
-    Examples: mutate
-      | id                 | vector             | code                                                    |
-      | change-seed        | mutate-change-seed        | asset://🧫️fixtures/🧬️mutations/🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99/ |
-      | create-slot        | mutate-create-slot        | asset://🧫️fixtures/🧬️mutations/🧩️create-slot/🧩️inserts-slot-d-in-canonical-order/ |
-      | delete-slot        | mutate-delete-slot        | asset://🧫️fixtures/🧬️mutations/🕳️delete-slot/🚫️removes-slot-a-and-cascades-edge-ab/ |
-      | move-slot          | mutate-move-slot          | asset://🧫️fixtures/🧬️mutations/↔️move-slot/↔️drags-slot-b-down/ |
-      | resize-slot        | mutate-resize-slot        | asset://🧫️fixtures/🧬️mutations/📐️resize-slot/📐️widens-slot-b/ |
-      | connect-slots      | mutate-connect-slots      | asset://🧫️fixtures/🧬️mutations/🔗️connect-slots/🔗️joins-slot-a-to-slot-c/ |
-      | disconnect-slots   | mutate-disconnect-slots   | asset://🧫️fixtures/🧬️mutations/✂️disconnect-slots/✂️severs-edge-ab/ |
-      | pin-slot           | mutate-pin-slot           | asset://🧫️fixtures/🧬️mutations/📌️pin-slot/📌️pins-slot-a-to-the-roof-tile/ |
-      | unpin-slot         | mutate-unpin-slot         | asset://🧫️fixtures/🧬️mutations/🔓️unpin-slot/🔓️releases-the-slot-c-pin/ |
-      | create-tile        | mutate-create-tile        | asset://🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/ |
-      | delete-tile        | mutate-delete-tile        | asset://🧫️fixtures/🧬️mutations/🗑️delete-tile/🚫️removes-the-wall-tile-and-cascades-rules-and-pins/ |
-      | change-tile-weight | mutate-change-tile-weight | asset://🧫️fixtures/🧬️mutations/⚖️change-tile-weight/⚖️raises-the-wall-tile-bias/ |
-      | change-tile-media  | mutate-change-tile-media  | asset://🧫️fixtures/🧬️mutations/🎨️change-tile-media/🎨️repaints-the-roof-tile-as-a-raster/ |
-      | create-rule        | mutate-create-rule        | asset://🧫️fixtures/🧬️mutations/🚦️create-rule/⛔️forbids-roof-over-roof/ |
-      | delete-rule        | mutate-delete-rule        | asset://🧫️fixtures/🧬️mutations/❌delete-rule/🚫️removes-the-wall-wall-rule/ |
-
-  Scenario Outline: <case> inverts across Rust and Python
-    Given the committed before-snapshot at <vector>
-    When the <kind> mutation and then its inverse are applied in both implementations
-    Then the before-snapshot is restored exactly, row values and row positions alike
-
-    Examples: inverse
-      | id                 | vector             | code                                                    |
-      | change-seed        | inverse-change-seed        | asset://🧫️fixtures/🧬️mutations/🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99/ |
-      | create-slot        | inverse-create-slot        | asset://🧫️fixtures/🧬️mutations/🧩️create-slot/🧩️inserts-slot-d-in-canonical-order/ |
-      | delete-slot        | inverse-delete-slot        | asset://🧫️fixtures/🧬️mutations/🕳️delete-slot/🚫️removes-slot-a-and-cascades-edge-ab/ |
-      | move-slot          | inverse-move-slot          | asset://🧫️fixtures/🧬️mutations/↔️move-slot/↔️drags-slot-b-down/ |
-      | resize-slot        | inverse-resize-slot        | asset://🧫️fixtures/🧬️mutations/📐️resize-slot/📐️widens-slot-b/ |
-      | connect-slots      | inverse-connect-slots      | asset://🧫️fixtures/🧬️mutations/🔗️connect-slots/🔗️joins-slot-a-to-slot-c/ |
-      | disconnect-slots   | inverse-disconnect-slots   | asset://🧫️fixtures/🧬️mutations/✂️disconnect-slots/✂️severs-edge-ab/ |
-      | pin-slot           | inverse-pin-slot           | asset://🧫️fixtures/🧬️mutations/📌️pin-slot/📌️pins-slot-a-to-the-roof-tile/ |
-      | unpin-slot         | inverse-unpin-slot         | asset://🧫️fixtures/🧬️mutations/🔓️unpin-slot/🔓️releases-the-slot-c-pin/ |
-      | create-tile        | inverse-create-tile        | asset://🧫️fixtures/🧬️mutations/🀄️create-tile/🀄️adds-the-window-tile/ |
-      | delete-tile        | inverse-delete-tile        | asset://🧫️fixtures/🧬️mutations/🗑️delete-tile/🚫️removes-the-wall-tile-and-cascades-rules-and-pins/ |
-      | change-tile-weight | inverse-change-tile-weight | asset://🧫️fixtures/🧬️mutations/⚖️change-tile-weight/⚖️raises-the-wall-tile-bias/ |
-      | change-tile-media  | inverse-change-tile-media  | asset://🧫️fixtures/🧬️mutations/🎨️change-tile-media/🎨️repaints-the-roof-tile-as-a-raster/ |
-      | create-rule        | inverse-create-rule        | asset://🧫️fixtures/🧬️mutations/🚦️create-rule/⛔️forbids-roof-over-roof/ |
-      | delete-rule        | inverse-delete-rule        | asset://🧫️fixtures/🧬️mutations/❌delete-rule/🚫️removes-the-wall-wall-rule/ |
+  @id-inverse
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: The committed <id> vector changes only what its diff declares, and inverts exactly
+    Given the committed specification vector for the <id> kind
+      """
+      {
+        "kind": "<id>",
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+      }
+      """
+    Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
+    And every field the committed diff declares actually differs
+    And the reference's own inverse of the committed mutation restores the before-snapshot exactly
+    Examples:
+      | id                 | vector                                                            |
+      | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99                    |
+      | create-slot        | 🧩️create-slot/🧩️inserts-slot-d-in-canonical-order                 |
+      | delete-slot        | 🕳️delete-slot/🚫️removes-slot-a-and-cascades-edge-ab               |
+      | move-slot          | ↔️move-slot/↔️drags-slot-b-down                                   |
+      | resize-slot        | 📐️resize-slot/📐️widens-slot-b                                     |
+      | connect-slots      | 🔗️connect-slots/🔗️joins-slot-a-to-slot-c                          |
+      | disconnect-slots   | ✂️disconnect-slots/✂️severs-edge-ab                               |
+      | pin-slot           | 📌️pin-slot/📌️pins-slot-a-to-the-roof-tile                         |
+      | unpin-slot         | 🔓️unpin-slot/🔓️releases-the-slot-c-pin                            |
+      | create-tile        | 🀄️create-tile/🀄️adds-the-window-tile                              |
+      | delete-tile        | 🗑️delete-tile/🚫️removes-the-wall-tile-and-cascades-rules-and-pins |
+      | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-wall-tile-bias                  |
+      | change-tile-media  | 🎨️change-tile-media/🎨️repaints-the-roof-tile-as-a-raster          |
+      | create-rule        | 🚦️create-rule/⛔️forbids-roof-over-roof                            |
+      | delete-rule        | ❌delete-rule/🚫️removes-the-wall-wall-rule                         |

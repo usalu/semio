@@ -12,7 +12,7 @@ import { type ProbeProjection, compileVizProbe, probeProjection } from "../../�
 
 //#region 🔖️Vectors
 const CASE = "theme-palettes";
-const FIXTURE = "local://theme-palettes.tex";
+const FIXTURE = "shared://🌈️theme-palettes/theme-palettes.tex";
 
 /** 🥒️ The vector table of the running scenario, as one record per row. */
 function rows(ctx: AdapterContext): Record<string, string>[] {

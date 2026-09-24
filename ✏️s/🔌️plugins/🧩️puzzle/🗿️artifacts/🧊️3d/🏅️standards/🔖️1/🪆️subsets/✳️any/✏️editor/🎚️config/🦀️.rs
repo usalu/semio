@@ -131,7 +131,8 @@ impl Default for Puzzle3dSelectableKinds {
     }
 }
 
-/// 🎯️ Open per-vortex brush-candidate suggestion popup (context menu / Alt+right-click).
+/// 🎯️ Open per-vortex brush-candidate suggestion menu: a floating popup (Alt+right-click, armed brush) or the
+/// "suggest" row's submenu inside the regular context menu (`submenu`).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dSuggestionMenu {
@@ -145,6 +146,10 @@ pub struct Puzzle3dSuggestionMenu {
     /// read back from `render` (see `puzzle3d_brush_target_vortex`'s doc comment).
     #[value(default)]
     pub vortex_full_id: String,
+    /// 📂️ Listed as the context menu's "suggest" submenu (searching since the menu opened) rather than as its
+    /// own floating popup.
+    #[value(default)]
+    pub submenu: bool,
 }
 //#endregion 🔖️Selection
 

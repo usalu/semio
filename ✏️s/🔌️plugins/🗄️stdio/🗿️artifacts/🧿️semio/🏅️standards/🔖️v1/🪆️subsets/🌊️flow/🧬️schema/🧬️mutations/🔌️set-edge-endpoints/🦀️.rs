@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetEdgeEndpoints {
-    pub(crate) id: String,
-    pub(crate) from: PortRef,
-    pub(crate) to: PortRef,
+    pub id: String,
+    pub from: PortRef,
+    pub to: PortRef,
 }
 
 impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for SetEdgeEndpoints {

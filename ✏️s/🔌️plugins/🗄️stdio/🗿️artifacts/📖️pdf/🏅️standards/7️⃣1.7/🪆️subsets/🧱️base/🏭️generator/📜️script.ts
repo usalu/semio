@@ -34,6 +34,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -104,7 +105,7 @@ async function manifests(): Promise<void> {
     units: { length: "unitless", angle: "degree" },
     files: [{ role: "seed-pdf", path: `../🧫️fixtures/${ASSET_DIRECTORY}/${ASSET_FILE}`, mediaType: "application/pdf", sha256: await sha256(join(FIXTURES_DIR, ASSET_DIRECTORY, ASSET_FILE)), bytes: readFileSync(join(FIXTURES_DIR, ASSET_DIRECTORY, ASSET_FILE)).length }],
     provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-    generator: { oracle: ORACLE_ID, packageVersion: "0.44", engineFamily: "lopdf", engineVersion: "0.44", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`, platform: process.platform },
+    generator: { oracle: ORACLE_ID, packageVersion: "0.44", engineFamily: "lopdf", engineVersion: "0.44", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`, platform: currentPlatform() },
     // 📎️Carried for schema completeness only: this asset declares no mutation and no pipeline reads it,
     // but `fixtureProvenance` requires the field on every entry.
     comparisonProfile: COMPARISON_PROFILE,
@@ -131,7 +132,7 @@ async function manifests(): Promise<void> {
       units: { length: "unitless", angle: "degree" },
       files,
       provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-      generator: { oracle: ORACLE_ID, packageVersion: "0.44", engineFamily: "lopdf", engineVersion: "0.44", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`, platform: process.platform },
+      generator: { oracle: ORACLE_ID, packageVersion: "0.44", engineFamily: "lopdf", engineVersion: "0.44", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/📜️script.ts generate`, platform: currentPlatform() },
       comparisonPipeline: "pdf-1-7-base-lopdf-compare-v1",
       comparisonProfile: COMPARISON_PROFILE,
       reproducible: true,

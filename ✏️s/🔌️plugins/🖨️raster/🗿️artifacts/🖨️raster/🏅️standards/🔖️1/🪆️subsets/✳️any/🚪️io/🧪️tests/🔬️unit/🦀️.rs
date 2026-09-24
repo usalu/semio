@@ -156,20 +156,6 @@ async fn bmp_import_matches_the_typescript_parity_fixture() {
     }
 }
 
-/// 🧪️ Every hop this subset declines is declined with a SENTENCE, never with silently wrong
-/// bytes and never with a bare "not implemented".
-#[semio_framework_async_macros::async_test]
-async fn declined_hops_refuse_with_a_reason() {
-    let document = document_with_solid_layer(1, 2, 3, 255, 2, 2);
-    let pdf_export = crate::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&document).expect_err("pdf export is declined");
-    assert!(pdf_export.contains("pdf export not supported for a raster document:"), "{pdf_export}");
-    let pdf_import = crate::io::import::deserializers::artifacts::pdf::v1_4::any::deserialize_bytes(b"%PDF-1.4\n").expect_err("pdf import is declined");
-    assert!(pdf_import.contains("pdf import not supported for a raster document:"), "{pdf_import}");
-    let dwg_export = crate::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&document).expect_err("dwg export is declined");
-    assert!(dwg_export.contains("dwg export not supported for a raster document:"), "{dwg_export}");
-    retire(document);
-}
-
 /// 🧪️ The two advertised-kind lists must name only formats a leaf really encodes/decodes —
 /// `negotiate_wire_format` picks workflow wires straight out of them.
 #[semio_framework_async_macros::async_test]

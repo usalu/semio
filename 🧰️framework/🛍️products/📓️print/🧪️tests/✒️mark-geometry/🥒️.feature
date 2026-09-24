@@ -18,7 +18,7 @@ Feature: Every section 0 primitive emits its own geometry
   @level-quick
   @mode-conformance
   Scenario: All fifty-six section 0 primitives are present and pairwise distinct
-    Given the committed probe document local://mark-geometry.tex and the section 0 slugs
+    Given the committed probe document shared://✒️mark-geometry/mark-geometry.tex and the section 0 slugs
       | slugs |
       | dot, circle, square, rectangle |
       | triangle, diamond, cross, plus |
@@ -40,7 +40,7 @@ Feature: Every section 0 primitive emits its own geometry
   @level-quick
   @mode-conformance
   Scenario: A rotated mark keeps its point and reports its angle
-    Given the committed probe document local://mark-rotation.tex and the drawn rotations
+    Given the committed probe document shared://✒️mark-geometry/mark-rotation.tex and the drawn rotations
       | kind, angle |
       | triangle, 0 |
       | triangle, 30 |

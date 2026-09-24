@@ -1,4 +1,5 @@
 use super::*;
+use ui_wgpu::wgpu::InputState;
 
 #[test]
 fn context_menu_path_for_ordinal_selects_enabled_rows() {
@@ -21,7 +22,7 @@ fn context_menu_click_on_group_row_control_id_opens_its_submenu_instead_of_dispa
         ..Default::default()
     });
     let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some("menu.group.view".into()), kind: HitKind::ContextMenu, drag_axis: None, drag_data: None };
-    let consumed = semio_framework_async::block_on(shell.handle_shell_hit(&hit)).expect("group-row click never errors");
+    let consumed = semio_framework_async::block_on(shell.handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("group-row click never errors");
     assert!(consumed);
     let menu = shell.context_menu.as_ref().expect("a group-row click opens its submenu instead of closing the menu");
     assert_eq!(menu.active, vec![0]);

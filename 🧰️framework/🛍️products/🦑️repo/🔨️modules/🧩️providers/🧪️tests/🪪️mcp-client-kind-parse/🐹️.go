@@ -13,7 +13,7 @@ import (
 
 // region 🔖️Vectors
 
-const identityVectors = "local://🪪️client-kinds.json"
+const identityVectors = "shared://🪪️mcp-client-kind-parse/🪪️client-kinds.json"
 
 type identityVectorFile struct {
 	Inputs          []string `json:"inputs"`

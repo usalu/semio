@@ -1,0 +1,18 @@
+{
+  "title": "Puzzle 5d Context Menu Suggestions, Vortex Selection Sync and Transform Gumball",
+  "emoji": "🖐️",
+  "status": "closed",
+  "description": "Puzzle 5d is still extremely ad hoc. (1) The vortex context menu must show a 'Suggest objects' item: suggestions start precomputing as soon as the context menu opens; hovering the item shows the suggestion list as a submenu; hovering an individual suggestion previews only that one in 3d. (2) Vortex selection is not properly synchronized. (3) In 5d the transform utility does not show the gumball, and move/rotate options appear twice: once in the utility options and again wrongly as Move and Rotate tabs instead of directly on the Transform tab. (4) Find and remove further ad-hoc divergences from puzzle 3d. Predecessor: 26/09/17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D.",
+  "summary": "Puzzle 5d de-ad-hoc: single Transform utility (gumball, flags on the Transform tab, no Move/Rotate/Scale tabs); World3d pane bound to the shared vortex domain with part/grip/fastener/targetVolume granularities (3D picks sync with the board); grip context menu with a live 'Suggest parts' submenu (search starts on menu open, candidates stream in, hovering one draws only its trace record, click places + selects, Escape releases); menu subject = hit outside selection (5d+3d); missing lanes (lodJson, voxelDims, gridFactor, chunk size, volumeBrush). Live headless probe PASS=19/0; 5d lib 588/1 (pre-existing import-media law), 3d 144/1 (load-sensitive timing law). Details in 📓️summary.md. Round 2: board pane gets the same grip suggestion submenu (shared 🎣️suggestion-submenu host module, board twin focus, board engine pick targets, ContextMenuController live-items fix); probe PASS=26/0. Round 3: 3d verified live with the generalized probe (PASS=14/0, 5d re-run 26/0); fixed 3d accept not selecting the placed object (retained accept emitted no interaction write) + law; framework history one-command lag for lane-less ops found and spun off (semantics conflict with no-row laws).",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "sessions": [
+    "⚪4905b6a0-ae82-440e-b6a1-85238db32c35"
+  ],
+  "note": "Ticket bookkeeping done manually on disk: repo MCP ticket_open answered 'invalid tool params' (2026-09-23). ticket_close also answered 'invalid tool params'; closed on disk 2026-09-23.",
+  "files": [
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/PUZZLE-5D-CONTEXT-MENU-SUGGESTIONS-SELECTION-SYNC-AND-TRANSFORM-GUMBALL/🔍️suggestion-probe.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/PUZZLE-5D-CONTEXT-MENU-SUGGESTIONS-SELECTION-SYNC-AND-TRANSFORM-GUMBALL/📓️summary.md"
+  ]
+}

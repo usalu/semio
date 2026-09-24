@@ -9,7 +9,7 @@ import { createMemoryStoragePort, type TutorialDefinition, type TutorialUiChange
 import { initialShellState, shellReducer, type ShellAction, type ShellState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, captureTutorialUiSnapshot, type TutorialUiBridgeContext } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import schema from "../../🧬️schema/🎥️tutorial-bridge/🔣️.json" with { type: "json" };
-import fixture from "../../🧪️fixtures/🎥️tutorial-bridge/🔣️.json" with { type: "json" };
+import fixture from "../../🧫️fixtures/🎥️tutorial-bridge/🔣️.json" with { type: "json" };
 
 const project = (snapshot: TutorialUiSnapshot) => ({
   focusedWindowId: snapshot.focusedWindowId,

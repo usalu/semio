@@ -7,7 +7,7 @@
   "aggregateVariant": "SetEntityName",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-entity-name",
-  "binaryTag": null,
+  "binaryTag": 6,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

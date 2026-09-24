@@ -1,4 +1,4 @@
-export const BROWSER_ACTOR_CHILD_LIMITS = Object.freeze({ actors: 2, actorBytes: 67108864, messageBytes: 262144, outputBytes: 1048576, bootMs: 10000, loadMs: 5000, loadBytesPerMs: 2048, invokeMs: 2000, wasiOutputBytes: 65536, wasiOutputWrites: 128 });
+export const BROWSER_ACTOR_CHILD_LIMITS = Object.freeze({ actors: 2, actorBytes: 67108864, messageBytes: 262144, outputBytes: 1048576, bootMs: 30000, loadMs: 15000, loadBytesPerMs: 1024, invokeMs: 5000, wasiOutputBytes: 65536, wasiOutputWrites: 128 });
 
 /** 🪜️ Every stage one child load passes through, in order, as the child itself names them. The
  * bundle's own `onProgress` hook already emits `decode`, `compile` and `instantiate` per core
@@ -53,6 +53,10 @@ export function isChildLoadProgress(value: unknown): value is BrowserActorChildL
 export function documentOpeningDeadlineMs(): number {
   return childLoadDeadlineMs(BROWSER_ACTOR_CHILD_LIMITS.actorBytes) + Math.ceil(BROWSER_ACTOR_CHILD_LIMITS.actorBytes / BROWSER_ACTOR_CHILD_LIMITS.loadBytesPerMs) + BROWSER_ACTOR_CHILD_LIMITS.bootMs + BROWSER_ACTOR_CHILD_LIMITS.invokeMs;
 }
+/** 📥️ `reactor::command-ingress-status.kind` (`🔌️plugin/🧬️schema/📜️.wit`) indexed by its `u8`: a guest turn
+ * reports its command ingress as that flat record, never as a tagged variant, on every browser lane. */
+export const COMMAND_INGRESS_KINDS = Object.freeze(["idle", "page-accepted", "backpressure", "command-pending", "command-complete", "fault"] as const);
+export type CommandIngressKindV1 = (typeof COMMAND_INGRESS_KINDS)[number];
 export const BROWSER_ACTOR_CHILD_SCHEMA = "semio.os.browser-actor-child/v1";
 export const BROWSER_ACTOR_CHILD_REJECTION_LIMITS = Object.freeze({ pathBytes: 128, classBytes: 64, messageBytes: 512, frameBytes: 256, frames: 4 });
 export const BROWSER_ACTOR_CHILD_REJECTION_PHASES = Object.freeze(["load", "invoke"] as const);

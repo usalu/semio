@@ -14,7 +14,7 @@
 //! dependency-free `parse_json`.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use crate::editor::gis3d::modes::view::windows::terrain::config::gis_terrain_window_config_mutation_report_json;
+use semio_s_artifact_gis_gisterrain::editor::gis3d::modes::view::windows::terrain::config::gis_terrain_window_config_mutation_report_json;
 
 //#region 🔖️Kinds
 const KINDS: &[&str] = &["set-camera"];

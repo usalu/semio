@@ -14,7 +14,7 @@ produces the `semio-repo` twin selected by `SEMIO_REPO_IMPLEMENTATION=go`.
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
-`🧪️test` harness; the third-party references are registered in `🔮️oracle/🔣️.json`.
+`🧪️test` harness; the third-party references are registered in `🔮️oracles/🔣️.json`.
 
 `🧭️command-parsing`, `🖨️render-formats`, `📖️usage-text`, `🔁️graphql-verb-roundtrip`,
 `🔌️mcp-verb-handshake`, `🧪️test-verb-planning`, `📤️export-verb-records`, `🪝️hook-verb-dispatch`.

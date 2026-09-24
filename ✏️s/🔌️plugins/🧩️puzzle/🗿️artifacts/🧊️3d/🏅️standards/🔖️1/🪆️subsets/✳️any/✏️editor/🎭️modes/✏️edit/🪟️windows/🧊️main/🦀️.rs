@@ -607,6 +607,11 @@ fn object_kind_icon(meta: &Puzzle3dFixtureMeta, object_kind: Option<&str>) -> St
     catalog_entry_field(meta, "objects", object_kind, &["icon", "iconId"], "box")
 }
 
+/// 🏷️ The authored catalog label of an object kind, else its id — what a suggestion row names the kind by.
+fn object_kind_label(meta: &Puzzle3dFixtureMeta, object_kind: &str) -> String {
+    catalog_entry_field(meta, "objects", Some(object_kind), &["label", "name"], object_kind)
+}
+
 /// 🎨️ First present `fields` entry on the `section` catalog row whose `id` is `kind_id`, else `fallback`.
 fn catalog_entry_field(meta: &Puzzle3dFixtureMeta, section: &str, kind_id: Option<&str>, fields: &[&str], fallback: &str) -> String {
     let Some(kind_id) = kind_id else {
@@ -751,14 +756,15 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
         let found = suggestions.filter(|found| !menu.vortex_full_id.is_empty() && found.target == menu.vortex_full_id);
         let candidates: Vec<Value> = found
             .into_iter()
-            .flat_map(BrushSuggestionsFound::free)
+            .flat_map(BrushSuggestionsFound::free_keyed)
             .take(PUZZLE3D_SUGGESTION_MENU_CANDIDATE_PAGE)
             .enumerate()
-            .map(|(index, candidate)| {
+            .map(|(index, (key, candidate))| {
                 let object_kind = Some(candidate.object_kind_id.as_str());
                 json!({
                     "index": index,
-                    "objectLabel": candidate.object_kind_id,
+                    "key": key,
+                    "objectLabel": object_kind_label(&envelope.fixture.meta, &candidate.object_kind_id),
                     "vortexLabel": format!("vortex {}", candidate.source_vortex_index),
                     "icon": object_kind_icon(&envelope.fixture.meta, object_kind),
                     "color": object_kind_color(&envelope.fixture.meta, object_kind),
@@ -775,6 +781,7 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
             "y": menu.y,
             "windowId": menu.window_id,
             "vortexFullId": menu.vortex_full_id,
+            "submenu": menu.submenu,
             "pending": pending,
             "candidates": candidates,
         })

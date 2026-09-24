@@ -92,6 +92,38 @@ describe("🖱️ context menu submenu reachability", () => {
     expect(group.getAttribute("aria-expanded")).toBe("true");
   });
 });
+
+// #region 🔴️LiveItems
+/** 🔴️ A live menu (a suggestion submenu whose candidates stream in) republishes NEW row objects with the SAME ids
+ * while open, the checked candidate sitting inside the submenu. */
+const liveItems = (): ContextMenuItem[] => [
+  {
+    id: "suggest",
+    label: uiDataLabel("Suggest parts"),
+    children: [
+      { id: "suggestion-0", label: uiDataLabel("Capsule · Grip 1"), checked: true, action: "acceptSuggestion" },
+      { id: "suggestion-1", label: uiDataLabel("Core · Grip 2"), action: "acceptSuggestion" },
+    ],
+  },
+  { id: "delete", label: uiDataLabel("Delete"), action: "deleteSelection" },
+];
+
+describe("🖱️ context menu with live items", () => {
+  it("keeps the keyboard position across republished rows, so Escape collapses the submenu and then closes the menu", () => {
+    const onOpenChange = vi.fn();
+    const menu = (items: ContextMenuItem[]) => <ContextMenuController open position={{ x: 40, y: 40 }} items={items} onOpenChange={onOpenChange} title={uiDataLabel("Actions")} />;
+    const { rerender } = render(menu(liveItems()));
+    expect(document.activeElement?.id).toBe("suggestion-0");
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(document.activeElement?.id).toBe("suggest");
+    rerender(menu(liveItems()));
+    expect(document.activeElement?.id).toBe("suggest");
+    expect(onOpenChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+});
+// #endregion 🔴️LiveItems
 // #endregion 🖱️SubmenuReachability
 
 // #region 🖱️OutsideDismiss

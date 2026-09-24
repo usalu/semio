@@ -10,7 +10,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "geometry-tilings-fractals";
-const FIXTURE = "local://geometry-tilings-fractals.tex";
+const FIXTURE = "shared://❄️geometry-tilings-fractals/geometry-tilings-fractals.tex";
 const DECIMALS = 3;
 
 /** 🔢️ Rounds an oracle's numbers onto the emission grid the comparison uses. */

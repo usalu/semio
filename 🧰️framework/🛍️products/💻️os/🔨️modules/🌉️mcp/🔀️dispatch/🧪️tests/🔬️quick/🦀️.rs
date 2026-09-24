@@ -484,6 +484,7 @@ fn run_inference_sends_one_infer_command_and_returns_the_guest_result() {
         canonical_payload: b"{\"seed\":7}".to_vec(),
         artifact_id: String::new(),
         artifact_document: None,
+        cancel: crate::actions::InferenceCancel::default(),
     };
     let outcome = adapter.run_inference(3, command.clone()).expect("the mock channel answers a real Inferred frame");
     assert_eq!(outcome.inference_schema, "s.wfc.wfc3d.solve");

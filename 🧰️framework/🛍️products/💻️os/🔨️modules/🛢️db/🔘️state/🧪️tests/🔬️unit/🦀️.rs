@@ -293,6 +293,9 @@ async fn retained_state_exact_backing_cancel_capacity_and_close_are_hostile() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_state_sorted_fixed_capacity_hash_and_terminal_close_are_deterministic() {
+    if !crate::db_storage::process_isolated_law("db_state::tests::retained_state_sorted_fixed_capacity_hash_and_terminal_close_are_deterministic") {
+        return;
+    }
     let mut map = RetainedStateMap::new();
     let mut control = StateCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
     for index in (0..RETAINED_STATE_ENTRIES).rev() {

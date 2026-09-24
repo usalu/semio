@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/fixture-expectation/schema.json",
+  "title": "HubFixtureExpectationV1",
+  "description": "🛂️ One fixture-declared expectation of a hub contract vector: the stage that decides it, whether that stage accepts or rejects it, and the reason code a rejection carries. `🟦️.ts` enforces it against the observed contract-stage outcome.",
+  "type": "object",
+  "required": ["stage", "result", "code"],
+  "properties": {
+    "stage": { "enum": ["contract", "domain", "bounds"], "description": "🚦️ The admission stage that decides the vector." },
+    "result": { "enum": ["accepted", "rejected"], "description": "✅️ What that stage answers." },
+    "code": { "type": "string", "minLength": 1, "description": "🏷️ The reason code, or the vector's own name when it is accepted." }
+  }
+}

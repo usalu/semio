@@ -15,14 +15,32 @@ async function compileVcsScopeExport(repoRoot: string, exportId: string) {
 }
 
 /** 🪤 Independently validates the literal VCS codec identity and its protocol-byte receipt. */
+type VcsNativeCodecFixture = {
+  packageId: string;
+  packageVersion: string;
+  receipts: Array<{
+    protocolPath: string;
+    protocolBytes: number;
+    protocolSha256: string;
+    factoryId: string;
+    kind: string;
+    capability: string;
+    schema: string;
+    extension: string;
+    packRecord: { keyword: string; fields: Array<{ id: number; key: string; optional: boolean }> };
+  }>;
+  hostile: string[];
+  pluginId?: string;
+};
+
 export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<void> {
   const owner = join(repoRoot, "✏️s/🔌️plugins/🌿️vcs");
   const root = join(owner, "📇️native-codecs");
-  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as VcsNativeCodecFixture;
   const validate = await compileVcsScopeExport(repoRoot, "VcsNativeCodecs");
   if (!validate(fixture)) throw new Error(`invalid VCS receipt corpus: ${JSON.stringify(validate.errors)}`);
   const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1");
-  const documentIds = JSON.parse(readFileSync(join(documentIdRoot, "🔣️.json"), "utf8"));
+  const documentIds = JSON.parse(readFileSync(join(documentIdRoot, "🔣️.json"), "utf8")) as { cases: ReadonlyArray<{ id: string; documentId: string; accepted: boolean }> };
   const registryModule = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json"), "utf8"));
   const { default: RegistryAjv } = await import("ajv");
   const registryAjv = new RegistryAjv({ strict: true, allErrors: true });

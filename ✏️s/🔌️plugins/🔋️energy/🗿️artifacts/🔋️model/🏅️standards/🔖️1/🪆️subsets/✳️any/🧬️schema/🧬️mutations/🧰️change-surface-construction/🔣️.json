@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeSurfaceConstruction",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-surface-construction",
-  "binaryTag": null,
+  "binaryTag": 30,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

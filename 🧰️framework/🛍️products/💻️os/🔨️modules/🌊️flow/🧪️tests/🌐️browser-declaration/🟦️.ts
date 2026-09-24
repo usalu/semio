@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { MethodDeclaration } from "typescript";
 import { flowBrowserDeclaration } from "../../🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts";
-import { flowWasmContract } from "../../🕸️wasm/🧪️tests/🧬️schema-oracle/🛂️admission/🟦️.ts";
+import { flowWasmContract } from "../../🕸️wasm/🔮️oracles/🛂️contract-admission/🟦️.ts";
 
 const testDirectory = fileURLToPath(new URL(".", import.meta.url));
 const browserTypesFixturePath = join(testDirectory, "../../🕸️wasm/🧫️fixtures/📝️browser-types/🔣️.json");

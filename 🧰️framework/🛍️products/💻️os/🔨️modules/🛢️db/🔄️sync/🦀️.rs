@@ -1194,16 +1194,16 @@ impl DatabaseSyncHelloFollowUp {
                     }
                     return Ok(pending);
                 }
-                if let Some(envelopes) = envelopes.as_mut() {
-                    if let Some(envelope) = envelopes.pop() {
+                if let Some(owners) = envelopes.as_mut() {
+                    if let Some(envelope) = owners.pop() {
                         *closing = Some(DatabaseSyncHelloEnvelopeClose { owner: Some(envelope) });
                         return Ok(true);
                     }
-                    if envelopes.capacity() != 0 {
-                        drop(std::mem::take(envelopes));
+                    if owners.capacity() != 0 {
+                        drop(std::mem::take(owners));
                         return Ok(true);
                     }
-                    *envelopes = Vec::new();
+                    *envelopes = None;
                     return Ok(true);
                 }
                 if let Some(owner) = origin.as_mut() {
@@ -1529,6 +1529,50 @@ pub fn database_sync_hello_live_slots() -> usize {
     database_sync_hello_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter(|slot| slot.is_some()).count()
 }
 
+#[cfg(test)]
+impl DatabaseSyncHelloState {
+    fn debug_witness(&self) -> String {
+        use std::sync::atomic::Ordering::Acquire;
+        let core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        format!(
+            "driver={} retry_job={} cancelled={} expired={} abandoned={} close_armed={} close_requested={} wake={} demand={} future={} execution={} frame={} frame_close={} returned={} fallback={} quarantined={} progress={}",
+            self.driver.load(Acquire),
+            self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),
+            self.cancelled.load(Acquire),
+            self.expired.load(Acquire),
+            self.abandoned.load(Acquire),
+            self.close_armed.load(Acquire),
+            self.close_requested.load(Acquire),
+            self.wake_requested.load(Acquire),
+            self.demand.load(Acquire),
+            core.future.is_some(),
+            core.execution.is_some(),
+            core.frame.is_some(),
+            core.frame_close.is_some(),
+            core.returned_frame.is_some(),
+            core.returned_fallback.is_some(),
+            core.quarantined.is_some(),
+            self.progress.load(Acquire),
+        )
+    }
+}
+
+/// 🔬️ Per-owner retirement witness of one hello session: the state it owns, observed without
+/// keeping it alive, so concurrent sessions of other owners never enter the observation.
+#[cfg(test)]
+pub(crate) struct DatabaseSyncHelloRetirementWitness(std::sync::Weak<DatabaseSyncHelloState>);
+
+#[cfg(test)]
+impl DatabaseSyncHelloRetirementWitness {
+    pub(crate) fn retired(&self) -> bool {
+        self.0.strong_count() == 0
+    }
+
+    pub(crate) fn describe(&self) -> String {
+        self.0.upgrade().map_or_else(|| String::from("retired"), |state| state.debug_witness())
+    }
+}
+
 static DATABASE_SYNC_HELLO_STATE_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 /// 🔬️ How many LIVE `DatabaseSyncHelloState` owners still hold the `WorkerPoolUse` clone their
@@ -1568,14 +1612,19 @@ impl DatabaseSyncHelloState {
         self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(DatabaseSyncHelloAdmission::is_current)
     }
 
-    /// 🔔️ The signal half of the driver handoff. A caller that finds the driver busy does NOT
-    /// re-submit — it has already published its signal (`wake_requested` or `demand`) and hands the
-    /// re-drive to `drive_one`'s release. Both halves are `SeqCst` so the two stores and the two
-    /// loads share one total order: whenever this CAS reads a busy driver, the release is guaranteed
-    /// to read the signal, and whenever the release's loads read no signal, this CAS is guaranteed to
-    /// read `Idle` and queue the turn itself. Any weaker pair permits StoreLoad reordering, i.e. a
-    /// lost wake whose only recovery is the 30 s `DATABASE_SYNC_HELLO_DEADLINE_MS` callback.
+    /// 🔔️ The signal half of the driver handoff. Every request publishes `wake_requested` before it
+    /// tries to queue a turn, so a caller that finds the driver busy never re-submits and never loses
+    /// its request either: `drive_one` clears the signal when its turn starts and re-reads it after
+    /// its release. That covers every reason a turn is requested — a waker, an acknowledged frame
+    /// mounting its close, a close request, a demand — not only the ones that also carry their own
+    /// flag. Both halves are `SeqCst` so the store and the CAS here and the release store and the
+    /// loads there share one total order: whenever this CAS reads a busy driver, the release is
+    /// guaranteed to read the signal, and whenever the release reads no signal, this CAS is
+    /// guaranteed to read `Idle` and queue the turn itself. A lost request parks the hello with
+    /// nothing scheduled; its registry slot and `WorkerPoolUse` then outlive every session, and the
+    /// only recovery was the 30 s `DATABASE_SYNC_HELLO_DEADLINE_MS` callback.
     fn schedule(self: &std::sync::Arc<Self>) {
+        self.wake_requested.store(true, std::sync::atomic::Ordering::SeqCst);
         if self.driver.compare_exchange(DatabaseSyncHelloDriverAuthority::Idle as u8, DatabaseSyncHelloDriverAuthority::Queued as u8, std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst).is_err() {
             return;
         }
@@ -1611,22 +1660,28 @@ impl DatabaseSyncHelloState {
     }
 
     /// 🚚️ One driver turn, and the release that must never drop a signal raised during it. The
-    /// swap of `wake_requested` happens before the driver goes `Idle`, so a wake raised in that
-    /// window finds a busy driver in `schedule` AND has already been swapped out here — the reason
-    /// both signals are re-read AFTER the release. A dropped signal parks the whole hello with
-    /// nothing scheduled, and its only recovery is the 30 s deadline callback, which every caller
-    /// of `hello()`/`next_frame()` experiences as a bootstrap frame that simply never arrives.
+    /// turn clears `wake_requested` before it does any work, so every request raised while it runs
+    /// is still set when the driver goes `Idle` — the reason the signals are re-read AFTER the
+    /// release. A turn spent retiring a returned frame while a close is requested stays pending, so
+    /// the close itself gets the next turn. A dropped signal parks the whole hello with nothing scheduled, and its only recovery
+    /// is the 30 s deadline callback, which every caller of `hello()`/`next_frame()` experiences as a
+    /// bootstrap frame that simply never arrives and a stopping `Database` as a hello that never
+    /// retires.
     fn drive_one(self: std::sync::Arc<Self>) {
         if self.driver.compare_exchange(DatabaseSyncHelloDriverAuthority::Queued as u8, DatabaseSyncHelloDriverAuthority::Driving as u8, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return;
         }
+        self.wake_requested.store(false, std::sync::atomic::Ordering::SeqCst);
         let returned = self.close_returned_frame_one();
         let closing = self.close_requested.load(std::sync::atomic::Ordering::Acquire) && self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).future.is_none();
-        let pending = returned.unwrap_or_else(|| if closing { self.close_one_claimed() } else { self.poll_one() });
-        let wake = self.wake_requested.swap(false, std::sync::atomic::Ordering::SeqCst);
+        let pending = match returned {
+            Some(pending) => pending || closing,
+            None if closing => self.close_one_claimed(),
+            None => self.poll_one(),
+        };
         self.driver.store(DatabaseSyncHelloDriverAuthority::Idle as u8, std::sync::atomic::Ordering::SeqCst);
         let signalled = self.wake_requested.load(std::sync::atomic::Ordering::SeqCst) || self.demand.load(std::sync::atomic::Ordering::SeqCst);
-        if pending || wake || signalled {
+        if pending || signalled {
             self.schedule();
         }
     }
@@ -2160,6 +2215,11 @@ pub struct DatabaseSyncHelloSession {
 }
 
 impl DatabaseSyncHelloSession {
+    #[cfg(test)]
+    pub(crate) fn retirement_witness(&self) -> DatabaseSyncHelloRetirementWitness {
+        DatabaseSyncHelloRetirementWitness(self.state.as_ref().map_or_else(std::sync::Weak::new, std::sync::Arc::downgrade))
+    }
+
     pub fn take_welcome(&mut self) -> Result<DatabaseSyncHelloReturnedFrame, DbError> {
         if self.welcome_taken {
             return Err(DbError::Closed);
@@ -2410,6 +2470,10 @@ impl DatabaseSyncHelloRejectedClose {
             return;
         }
         if self.queued.swap(true, std::sync::atomic::Ordering::AcqRel) {
+            return;
+        }
+        if self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
+            self.queued.store(false, std::sync::atomic::Ordering::Release);
             return;
         }
         if !self.claim_submission() {

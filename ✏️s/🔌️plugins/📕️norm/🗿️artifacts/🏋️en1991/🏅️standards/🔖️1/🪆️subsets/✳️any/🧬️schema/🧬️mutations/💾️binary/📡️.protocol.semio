@@ -3,14 +3,75 @@ protocol en1991.mutations
 version 1
 schema norm.en1991.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real `En1991Mutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records at compile time (`dsl::protocol_record::tag_u8`).
+header fixed 2
+field format u8
+field tag u8
+record change-area-m2 tag=0
+field payload bytes
+record change-category tag=1
+field payload bytes
+record change-annex tag=2
+field payload bytes
+record change-self-weight-material tag=3
+field payload bytes
+record change-self-weight-thickness-m tag=4
+field payload bytes
+record change-assumed-gk-kn-m2 tag=5
+field payload bytes
+record change-fire-curve tag=6
+field payload bytes
+record change-fire-resistance-min tag=7
+field payload bytes
+record change-fire-member-capacity-c tag=8
+field payload bytes
+record change-snow-zone tag=9
+field payload bytes
+record change-snow-altitude-m tag=10
+field payload bytes
+record change-en-sk-kn-m2 tag=11
+field payload bytes
+record change-wind-zone tag=12
+field payload bytes
+record change-en-vbms tag=13
+field payload bytes
+record change-delta-tk tag=14
+field payload bytes
+record change-construction-activity tag=15
+field payload bytes
+record change-accidental-mass-t tag=16
+field payload bytes
+record change-accidental-speed-km-h tag=17
+field payload bytes
+record change-bridge-lane tag=18
+field payload bytes
+record change-bridge-span-m tag=19
+field payload bytes
+record change-bridge-lane-width-m tag=20
+field payload bytes
+record change-bridge-moment-resistance-knm tag=21
+field payload bytes
+record change-crane-class tag=22
+field payload bytes
+record change-hoist-class tag=23
+field payload bytes
+record change-hoisting-speed-ms tag=24
+field payload bytes
+record change-silo-bulk-density-kn-m3 tag=25
+field payload bytes
+record change-silo-height-m tag=26
+field payload bytes
+record change-silo-hydraulic-radius-m tag=27
+field payload bytes
+record change-silo-mu tag=28
+field payload bytes
+record change-silo-k tag=29
+field payload bytes
+record change-cs tag=30
+field payload bytes
+record change-cd tag=31
+field payload bytes

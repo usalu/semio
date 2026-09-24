@@ -1,9 +1,12 @@
 //! lowpoly -> stl
 //!
 //! Real ASCII STL export through `engine::encode_stl_ascii`: every object whose persisted
-//! `mesh_content` is non-empty is transformed into world space (scale → Euler-degree rotation →
+//! `mesh_content` is non-empty is transformed into world space (scale -> Euler-degree rotation ->
 //! translation) and each n-gon is fan-triangulated, one facet per triangle with its computed unit
-//! face normal. STL has no comment slot, so this direction is geometry-only (lossy by format).
+//! face normal.
+//!
+//! 🔖 `IoFidelity::Lossy`: STL is one triangle soup — object boundaries, names, n-gons, paint and
+//! transforms (already applied) do not survive.
 use crate::io::mesh_geometry::{triangle_normal, world_parts};
 use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_stl::engine::encode_stl_ascii;

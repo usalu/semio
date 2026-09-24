@@ -5,21 +5,37 @@ schema stdio.semio.presentation
 start body
 framing record
 
-# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave: REAL binary op
-# frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut
-# (`🧬️mutations/🦀️.rs`'s old `OpBinary::encode_op`). `SemioPresentationMutation` is a
-# genuine data-carrying enum whose variants embed a nested `SlideShape`/`document::DocBlock`/
-# `SemioPresentationSnapshot` payload — no `dsl::DslField` impl exists for the tagged `SlideShape`
-# enum (hand-rolled per this subset's own `🔺️diff`/`🧬️mutations` convention), so the generic
-# derive-based `format u8 | ordinal varint | record body` layout doesn't apply. Handcrafted instead:
-# `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioPresentationMutation` variant
-# ordinal, `🧬️mutations/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`, same 0-14 ordering as
-# `parse_presentation_mutation`'s keyword match) as two REAL fixed fields, then the variant's own
-# `key=value ...` argument payload as one opaque trailing `bytes` chain — the same honest boundary
-# the sibling `../../🔺️diff/💾️binary/📡️.protocol.semio` uses
-# (`protocol-array-of-records`/`protocol-prim-ref-recursion`, per the recipe's gap table).
+# Real `SemioPresentationMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record set-snapshot tag=0
+field payload bytes
+record insert-slide tag=1
+field payload bytes
+record remove-slide tag=2
+field payload bytes
+record set-slide-layout tag=3
+field payload bytes
+record set-slide-notes tag=4
+field payload bytes
+record insert-shape tag=5
+field payload bytes
+record remove-shape tag=6
+field payload bytes
+record set-shape-frame tag=7
+field payload bytes
+record set-text-box-blocks tag=8
+field payload bytes
+record insert-master tag=9
+field payload bytes
+record remove-master tag=10
+field payload bytes
+record insert-layout tag=11
+field payload bytes
+record remove-layout tag=12
+field payload bytes
+record set-layout-master tag=13
+field payload bytes

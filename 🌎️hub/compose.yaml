@@ -2,6 +2,7 @@
 #
 #   docker compose -f 🌎️hub/compose.yaml up --build             # sqlite + filesystem store (default)
 #   docker compose -f 🌎️hub/compose.yaml --profile postgres up --build
+#   docker compose -f 🌎️hub/compose.yaml --profile neo4j up --build
 #
 # Seed the first user into the volume before the first `up` — there is no sign-up, and the verb
 # needs the data root rather than a running hub:
@@ -66,10 +67,10 @@ services:
   #   OS_HUB_DIRECTORY_BACKEND: postgres
   #   OS_HUB_DIRECTORY_DATABASE_URL: postgres://semio:semio@postgres:5432/semio
   #
-  # The postgres lanes compile and are unit-tested but have never been run against a real server
-  # (ticket 26/09/18, G11 §B.1 — an open decision, not a claim of support). The image must also be
-  # built with the `postgres` cargo feature for those variables to be anything but a boot error
-  # naming the backend.
+  # The image must be built with the `postgres` cargo feature for those variables to be anything
+  # but a boot error naming the backend. Every document's WAL writer holds a session advisory lock
+  # on this server (`🛢️db/🗄️storage/🔐️writer` `WalWriterFenceV1`), released when the hub closes
+  # its storage on SIGTERM or when the server ends a crashed hub's session.
   postgres:
     profiles: ["postgres"]
     image: postgres:17-alpine
@@ -86,6 +87,34 @@ services:
       retries: 10
     restart: unless-stopped
 
+  # 🕸️ Optional, the Neo4j twin of `postgres` above. `docker compose --profile neo4j up` starts it;
+  # point the hub at it with the `neo4j` cargo feature and these variables in the `hub` service:
+  #
+  #   OS_HUB_STORAGE_BACKEND: neo4j
+  #   OS_HUB_NEO4J_URI: bolt://neo4j:7687
+  #   OS_HUB_NEO4J_USER: neo4j
+  #   OS_HUB_NEO4J_PASSWORD: semio-hub
+  #   OS_HUB_DIRECTORY_BACKEND: neo4j
+  #   OS_HUB_DIRECTORY_NEO4J_URI: bolt://neo4j:7687
+  #
+  # Every document's WAL writer is a lease node on this server (`🛢️db/🗄️storage/🔐️writer`
+  # `WalWriterFenceV1`): a hub that stops on SIGTERM releases its leases before it exits, a crashed
+  # hub's leases lapse after `leaseTtlMs` (15 s) on this server's clock.
+  neo4j:
+    profiles: ["neo4j"]
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/semio-hub
+    volumes:
+      - hub-neo4j:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell --username neo4j --password semio-hub 'RETURN 1'"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+    restart: unless-stopped
+
 volumes:
   hub-data:
   hub-postgres:
+  hub-neo4j:

@@ -7,7 +7,7 @@
   "aggregateVariant": "RenameVortexKind",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-vortex-kind",
-  "binaryTag": null,
+  "binaryTag": 18,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

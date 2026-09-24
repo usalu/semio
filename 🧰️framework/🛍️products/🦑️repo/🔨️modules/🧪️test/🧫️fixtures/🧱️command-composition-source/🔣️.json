@@ -14,6 +14,7 @@
         "ownerShipsImplementation",
         "contributedOraclePackages",
         "materializeRustHost",
+        "repositoryGoWorkspace",
         "materializeGoHost",
         "oracleHostPython",
         "provisionPythonInterpreter",
@@ -26,7 +27,7 @@
       ]
     },
     { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏃️execution/🎬️scenario/🟦️.ts", "declarations": ["PhaseOutcome", "executeOne"] },
-    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️parity/📋️orchestration/🟦️.ts", "declarations": ["oracleDecision", "planModeOf", "runPhases", "OracleScript", "SubjectScript", "ParityScript"] },
+    { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️parity/📋️orchestration/🟦️.ts", "declarations": ["oracleDecision", "subjectImplementations", "planModeOf", "runPhases", "OracleScript", "SubjectScript", "ParityScript"] },
     { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧾️contracts/📋️orchestration/🟦️.ts", "declarations": ["DiscoverScript", "ContractScript", "RunScript"] },
     { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📊️reporting/📋️orchestration/🟦️.ts", "declarations": ["reportsDir", "readImplementationCoverage", "ReportScript", "MetricsScript"] },
     { "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/📋️orchestration/🟦️.ts", "declarations": ["loadClassifiedBaseline", "DependencyScript"] },

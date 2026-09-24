@@ -4,19 +4,19 @@
   "_comment": "🔄 This subset's own contribution — the inline labelled equation AST composed alongside the graph and geometry playgrounds (1 of s.mathematical.equation's 15 mutation kinds: change-coefficient; ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The equation reaches the JSON export intact (unlike the graph/geometry scene, which is skipped entirely), so change-coefficient is witnessable there — discharged by the serde-json carrier reader below.",
   "oracles": [
     {
-      "id": "serde-json-equation-carrier-reader",
+      "id": "json-rust-equation-carrier-reader",
       "kind": "third-party-library",
       "ecosystem": "rust",
-      "package": "serde_json",
-      "version": "1",
+      "package": "json",
+      "version": "0.12",
       "source": {
-        "repository": "https://github.com/serde-rs/json",
+        "repository": "https://github.com/maciejhirsz/json-rust",
         "license": "MIT OR Apache-2.0"
       },
       "engine": {
-        "family": "serde-json",
-        "implementation": "serde_json 1 value tree",
-        "version": "1"
+        "family": "json-rust",
+        "implementation": "json-rust 0.12 value tree",
+        "version": "0.12"
       },
       "capabilities": [
         "equation-1-mutate-carrier"
@@ -35,7 +35,7 @@
         "linux-arm64",
         "win32-x64"
       ],
-      "homepage": "https://docs.rs/serde_json",
+      "homepage": "https://docs.rs/json",
       "rationale": "📖️ A READER for the ONE remaining kind that is a fact about this subset's own carrier, and a precise statement of why the other nine are not.\n\nThis subset's state splits three ways. `equation` is INLINE in `EquationSnapshot`, so it reaches the JSON export intact and `change-coefficient` is witnessable here. The graph's NODES reach the CSV export as `id,label,x,y`, which is why the sibling csv oracle covers exactly the five node kinds. The graph's EDGES, its `directed` flag, its `algorithm` and the geometry's POINTS reach NO carrier at all: `EquationIntoCsv` is declared `IoFidelity::Lossy` and emits only nodes, and the JSON export carries `notation`/`results`/`computed` as `ArtifactChild` handles whose `local_owner` is `#[serde(skip)]`, so the scene behind them is never serialised.\n\nSo `connect-nodes`, `disconnect-nodes`, `change-graph-directed`, `update-graph-algorithm`, `replace-graph`, `insert-point`, `move-point`, `remove-point` and `replace-points` are blocked on EXPORT, not on oracles — the same category as `tiff::change-byte-order`. A reader cannot witness what no carrier records, and registering one against them would be a fiction."
     }
   ],
@@ -45,7 +45,7 @@
       "id": "equation-1-equation",
       "capability": "equation-1-equation-mutate",
       "standardDirectoryName": "🔖️1",
-      "subsetDirectoryName": "✳️equation",
+      "subsetDirectoryName": "➗️equation",
       "vectors": [
         {
           "mutationId": "change-coefficient",
@@ -69,12 +69,12 @@
       "id": "equation-carrier-project",
       "kind": "external-process",
       "ecosystem": "rust",
-      "package": "serde_json",
-      "version": "1",
+      "package": "json",
+      "version": "0.12",
       "engine": {
-        "family": "serde-json",
-        "implementation": "serde_json 1 value tree",
-        "version": "1"
+        "family": "json-rust",
+        "implementation": "json-rust 0.12 value tree",
+        "version": "0.12"
       },
       "capabilities": [
         "equation.carrier.project"
@@ -122,7 +122,7 @@
           {
             "id": "offline",
             "met": true,
-            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+            "detail": "json 0.12 is vendored in the cargo registry cache; builds and runs with --offline"
           }
         ]
       }
@@ -131,12 +131,12 @@
       "id": "equation-carrier-compare",
       "kind": "external-process",
       "ecosystem": "rust",
-      "package": "serde_json",
-      "version": "1",
+      "package": "json",
+      "version": "0.12",
       "engine": {
-        "family": "serde-json",
-        "implementation": "serde_json 1 value tree",
-        "version": "1"
+        "family": "json-rust",
+        "implementation": "json-rust 0.12 value tree",
+        "version": "0.12"
       },
       "capabilities": [
         "equation.carrier.compare"
@@ -184,7 +184,7 @@
           {
             "id": "offline",
             "met": true,
-            "detail": "serde_json 1 is vendored in the cargo registry cache; builds and runs with --offline"
+            "detail": "json 0.12 is vendored in the cargo registry cache; builds and runs with --offline"
           }
         ]
       }
@@ -193,7 +193,7 @@
   "comparisonPipelines": [
     {
       "id": "equation-1-carrier-compare-v1",
-      "description": "Carrier-level equality over the inline equation tree, read through serde_json. GATING for change-coefficient.",
+      "description": "Carrier-level equality over the inline equation tree, read through json-rust. GATING for change-coefficient.",
       "stages": [
         {
           "probe": "equation-carrier-project",
@@ -234,7 +234,7 @@
       "standard": "1",
       "subset": "equation",
       "standardDirectoryName": "🔖️1",
-      "subsetDirectoryName": "✳️equation",
+      "subsetDirectoryName": "➗️equation",
       "mutations": [
         {
           "id": "change-coefficient",
@@ -253,7 +253,7 @@
             {
               "capability": "equation-1-mutate-carrier",
               "qualifyingKind": "third-party-library",
-              "oracle": "serde-json-equation-carrier-reader"
+              "oracle": "json-rust-equation-carrier-reader"
             }
           ],
           "invariants": {
@@ -305,17 +305,17 @@
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
-        "oracle": "serde-json-equation-carrier-reader",
-        "packageVersion": "1",
-        "engineFamily": "serde-json",
-        "engineVersion": "1",
+        "oracle": "json-rust-equation-carrier-reader",
+        "packageVersion": "0.12",
+        "engineFamily": "json-rust",
+        "engineVersion": "0.12",
         "command": "bun ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-equation-carrier-v1",
       "reproducible": true,
       "family": "mechanical",
-      "notes": "A deterministic snapshot whose inline equation is 3/4·x + 2, with change-coefficient rewriting the labelled rational coefficient to 7/5 as an edit to the JSON CARRIER, read back through serde_json — never through this repository's own mutation engine. The coefficient is a Rational lexeme pair, never an f64, matching EquationNodeKind::Rational's own round-trip-exact representation. Observability is checked before the pair is written.",
+      "notes": "A deterministic snapshot whose inline equation is 3/4·x + 2, with change-coefficient rewriting the labelled rational coefficient to 7/5 as an edit to the JSON CARRIER, read back through json-rust — never through this repository's own mutation engine. The coefficient is a Rational lexeme pair, never an f64, matching EquationNodeKind::Rational's own round-trip-exact representation. Observability is checked before the pair is written.",
       "comparisonPipeline": "equation-1-carrier-compare-v1"
     }
   ]

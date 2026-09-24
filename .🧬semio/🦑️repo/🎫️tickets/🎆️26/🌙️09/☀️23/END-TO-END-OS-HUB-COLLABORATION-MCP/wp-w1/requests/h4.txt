@@ -1,0 +1,16 @@
+H4 request (2026-09-24): rebuild guests after the shared kernel Store identity change.
+Why: every guest Store now mints edit/operation ids under a per-instance replica identity drawn from
+`wasi:random/random@0.2.9#get-random-u64` (🪪️identity fill_entropy wasip2 arm), fixing the frozen hub ledger
+(agent edits reused a committed id, the hub deduped them as replays). Kernel files: 🏪️store/🦀️.rs, 🌿️vcs/🦀️.rs, 🪪️identity/🦀️.rs.
+Hosts updated: owned interpreter (real wall clock, insecure-seed, get-random-u64), browser WASI profile (+ wasi:random/random@0.2.9), describe host (deterministic 0).
+Needed first (priority): note (hub-agent-participant + G4 repro), then the full catalog (every guest links the Store).
+Please confirm the component links (new import wasi:random/random@0.2.9) and report the note wasm sha256 + staged path here.
+
+[w1 2026-09-24 03:04] DONE note via `bun nx run @semio-tech/note-plugin:describe` then `:materialize-dev` (wasm mutex w1, shared target, incl. H4 Store identity + W1 ArtifactViewer owner-default fix):
+  wasm sha256 6cd7dcc54bc2b5c43c8f875924ac1b55dff468f78881479554c1d35ba73f5cb7
+    == /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2/wasm-dev/semio_s_plugin_note.wasm
+    == ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/dist/component-dev/semio_s_plugin_note.wasm
+    == ✏️s/🔌️plugins/🗒️note/🔣️.json hashes.wasmSha256 (descriptorSha256 4504341c…f817)
+    == staged 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🗒️note/🔣️.json
+  imports present in the component: wasi:random/random@0.2.9, wasi:random/insecure-seed@0.2.9
+  log: .tmp-ticket/wp-w1/generated/stage-note-plugin.txt

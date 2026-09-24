@@ -17,66 +17,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::{SequenceContentChild, SequenceSnapshot};
 
-//#region 🔖️ChildCodecPrimitives
-/// 🧪️ Real hex/bracket child-handle codec (mirrors `📐️cad`/`✒️writer`'s own `enc_child`/`dec_child`)
-/// — a handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened via
-/// `to_uri()`), never the child's own content. `SequenceSnapshot` no longer derives
-/// `dsl::DslRecord` (the composed child has no reachable `DslField` impl from this crate) — this
-/// facet hand-rolls the whole `ArtifactDsl`/`ArtifactPack` codec instead.
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
-}
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
-}
-fn enc_child(c: &SequenceContentChild) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
-fn dec_child(s: &str) -> Result<SequenceContentChild, String> {
-    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
-    let parts: Vec<&str> = inner.splitn(2, ',').collect();
-    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
-}
-//#endregion 🔖️ChildCodecPrimitives
-//#region 🔖️TextPrimitives
-fn print_sequence_snapshot_body(s: &SequenceSnapshot) -> String {
-    format!("schema={}\ncontent={}", enc_str(&s.schema), enc_child(&s.content))
-}
-fn parse_sequence_snapshot_body(body: &str) -> Result<SequenceSnapshot, String> {
-    let mut schema = None;
-    let mut content = None;
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("content=") {
-            content = Some(dec_child(rest)?);
-        } else {
-            return Err(format!("sequence snapshot: unknown line {line:?}"));
-        }
-    }
-    Ok(SequenceSnapshot { schema: schema.ok_or_else(|| "sequence snapshot: missing schema line".to_string())?, content: content.ok_or_else(|| "sequence snapshot: missing content line".to_string())? })
-}
-//#endregion 🔖️TextPrimitives
 //#region 🔖️ArtifactDslCodec
 impl store::ArtifactDsl for SequenceSnapshot {
     const EXTENSION: &'static str = "sequence";
@@ -88,10 +28,11 @@ impl store::ArtifactDsl for SequenceSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_sequence_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = print_sequence_snapshot_body(self);
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -120,3 +61,4 @@ pub fn print_dsl(snapshot: &SequenceSnapshot) -> String {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+

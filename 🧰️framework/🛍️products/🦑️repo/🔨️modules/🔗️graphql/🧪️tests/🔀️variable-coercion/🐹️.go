@@ -22,7 +22,7 @@ type corpus struct {
 }
 
 func coerceCorpus(ctx *host.Context, onlyWithDefaults bool) (host.Outcome, error) {
-	bytes, err := ctx.FixtureBytes("local://🔣️coercions.json")
+	bytes, err := ctx.FixtureBytes("shared://🔀️variable-coercion/🔣️coercions.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

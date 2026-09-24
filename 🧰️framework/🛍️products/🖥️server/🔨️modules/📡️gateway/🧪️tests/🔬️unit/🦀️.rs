@@ -23,7 +23,7 @@ fn event(stream: &ActorKey, seq: u64) -> EventRecord {
 
 fn grant(state: &ServerState<TestInstance>, point: PolicyPoint, action: &str) {
     let mut engine = state.policy.write().unwrap();
-    engine.register_template(PolicyTemplate { name: format!("{point:?}-{action}"), grants: vec![PolicyGrant { point, resource: "*".into(), action: action.to_string() }] });
+    engine.register_template(PolicyTemplate { name: format!("{point:?}-{action}"), auto_apply: false, grants: vec![PolicyGrant { point, resource: "*".into(), action: action.to_string() }] });
     engine.assign("anonymous".to_string(), format!("{point:?}-{action}"));
 }
 
@@ -421,3 +421,24 @@ fn envelope() -> CommandEnvelope {
     }
 }
 //#endregion 🔖️Server
+
+#[test]
+fn document_socket_identity_binds_from_resolved_actor_never_query() {
+    let resolved = crate::policy::Resolved {
+        principal: Principal::User { id: "alice".into() },
+        session: Some(crate::contract::SessionId("session-1".into())),
+        device: None,
+        via: "test".into(),
+        actor: Some("hub.v1.alice".into()),
+    };
+    let identity = document_socket_identity(&resolved).expect("binds");
+    assert_eq!(identity.actor, "hub.v1.alice");
+    assert_eq!(identity.session, "session-1");
+}
+
+#[test]
+fn document_socket_identity_rejects_anonymous_without_grant() {
+    let resolved = crate::policy::Resolved { principal: Principal::Anonymous, session: None, device: None, via: "anonymous".into(), actor: None };
+    assert!(document_socket_identity(&resolved).is_err());
+}
+

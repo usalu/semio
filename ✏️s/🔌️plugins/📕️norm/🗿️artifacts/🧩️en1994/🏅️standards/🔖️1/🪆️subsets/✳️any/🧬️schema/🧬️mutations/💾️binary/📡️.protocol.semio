@@ -3,14 +3,55 @@ protocol en1994.mutations
 version 1
 schema norm.en1994.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real `En1994Mutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records at compile time (`dsl::protocol_record::tag_u8`).
+header fixed 2
+field format u8
+field tag u8
+record change-annex tag=0
+field payload bytes
+record change-m-ed-knm tag=1
+field payload bytes
+record change-v-ed-kn tag=2
+field payload bytes
+record change-m-pla tag=3
+field payload bytes
+record change-m-pl-rd tag=4
+field payload bytes
+record change-eta tag=5
+field payload bytes
+record change-vl-rd tag=6
+field payload bytes
+record change-insulation-thickness-mm tag=7
+field payload bytes
+record change-fire-rating tag=8
+field payload bytes
+record change-deck-type tag=9
+field payload bytes
+record change-delta-sigma-mpa tag=10
+field payload bytes
+record change-fatigue-detail tag=11
+field payload bytes
+record change-d-mm tag=12
+field payload bytes
+record change-h-sc-mm tag=13
+field payload bytes
+record change-f-ck-mpa tag=14
+field payload bytes
+record change-fu-mpa tag=15
+field payload bytes
+record change-e-cm-mpa tag=16
+field payload bytes
+record change-v-ed-per-stud-kn tag=17
+field payload bytes
+record change-span-m tag=18
+field payload bytes
+record change-fy-mpa tag=19
+field payload bytes
+record change-n-cycles-stud tag=20
+field payload bytes
+record change-delta-tau-stud-mpa tag=21
+field payload bytes

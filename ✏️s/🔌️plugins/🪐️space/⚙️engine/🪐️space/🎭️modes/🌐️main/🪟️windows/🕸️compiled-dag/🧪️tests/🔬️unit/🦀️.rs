@@ -13,4 +13,5 @@ async fn renders_compiled_dag_editor() {
     assert!(json.contains("text-editor"));
     let wire = compiled_dag_wire_literal(&demo_space_projection().await).await;
     assert!(wire.contains("appInstance") || wire.contains("draw"));
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }

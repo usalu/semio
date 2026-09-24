@@ -27,7 +27,7 @@ Feature: Aggregates, quantiles, density estimates and least-squares fits agree w
   @level-quick
   @mode-differential
   Scenario: Every rollup reduces its group as d3-array does
-    Given the committed probe document local://transform-statistics.tex and the aggregates
+    Given the committed probe document shared://📋️transform-statistics/transform-statistics.tex and the aggregates
       | table             | group | column | rollups                          |
       | demo-distribution | grp   | value  | mean,median,sum,min,max,count    |
     Then the compiled probe and the reference implementation agree on every aggregate
@@ -36,7 +36,7 @@ Feature: Aggregates, quantiles, density estimates and least-squares fits agree w
   @level-quick
   @mode-differential
   Scenario: Quantiles follow the R-7 definition d3-array implements
-    Given the committed probe document local://transform-statistics.tex and the probabilities
+    Given the committed probe document shared://📋️transform-statistics/transform-statistics.tex and the probabilities
       | probabilities            |
       | 0,0.25,0.5,0.75,1        |
       | 0.1,0.33,0.66,0.9        |
@@ -46,7 +46,7 @@ Feature: Aggregates, quantiles, density estimates and least-squares fits agree w
   @level-quick
   @mode-differential
   Scenario: The kernel density estimate matches an independent implementation of the same formula
-    Given the committed probe document local://transform-statistics.tex and the kernels
+    Given the committed probe document shared://📋️transform-statistics/transform-statistics.tex and the kernels
       | kernel       | bandwidth | samples |
       | gaussian     | 1         | 9       |
       | epanechnikov | 1.5       | 9       |
@@ -56,7 +56,7 @@ Feature: Aggregates, quantiles, density estimates and least-squares fits agree w
   @level-quick
   @mode-differential
   Scenario: The five least-squares fits agree with d3-regression
-    Given the committed probe document local://transform-statistics.tex and the points
+    Given the committed probe document shared://📋️transform-statistics/transform-statistics.tex and the points
       | x | y    |
       | 1 | 2.1  |
       | 2 | 3.9  |

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
-import corpus from "./🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import corpus from "../../🧫️fixtures/📦️numerical-close/🔣️.json" with { type: "json" };
+import schema from "../../🧫️fixtures/📦️numerical-close/📐️schema/🔣️.json" with { type: "json" };
 
 export function testFem3dNumericalCloseOwners(): void {
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);

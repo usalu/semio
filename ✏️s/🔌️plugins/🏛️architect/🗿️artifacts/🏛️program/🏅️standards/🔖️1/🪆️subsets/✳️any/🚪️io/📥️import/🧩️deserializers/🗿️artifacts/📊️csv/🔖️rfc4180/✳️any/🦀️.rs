@@ -1,21 +1,17 @@
-//! program <- csv. `stdio.csv`'s real `CsvSnapshot` shape (`has_header` + `records`) landed
-//! after this leaf was first written; the old `headers`/`rows` fields it read never existed on
-//! `ProgramSnapshot` either (this always failed deserialization) — lagging call site fixed to
-//! match (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a
-//! closer), same honest no-mapping-exists semantics fem's csv import leaf documents: no CSV
-//! grid can reconstruct a ~78-register program artifact, so this returns a structurally valid
-//! empty snapshot rather than fabricating one.
+//! 🏛️ program ← csv — a register table (`register,id,name,status,priority,tags,source`, any RFC 4180
+//! producer) read by stdio's own csv codec into a fresh program through the editor's
+//! `import_registers_csv` with `MergeStrategy::Replace`; a table with any other header is refused.
+//!
+//! 🔖 `IoFidelity::Lossy`: the inverse of the sibling export — register rows only.
+use crate::editor::architect::behavior::{import_registers_csv, MergeStrategy};
 use crate::schema::snapshot::ProgramSnapshot;
-use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 
-pub fn deserialize(from: &CsvSnapshot) -> Result<ProgramSnapshot, store::TextError> {
-    let _ = (STDIO_CSV_DOCUMENT_SCHEMA, from);
-    Ok(ProgramSnapshot::default())
-}
-
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<ProgramSnapshot, store::TextError> {
-    let _ = bytes;
-    Ok(ProgramSnapshot::default())
+    let error = |message: String| store::TextError::new(format!("program←csv: {message}"), dsl::TextSpan::at(1, 1));
+    let text = std::str::from_utf8(bytes).map_err(|e| error(e.to_string()))?;
+    let mut program = ProgramSnapshot::default();
+    import_registers_csv(&mut program, text, MergeStrategy::Replace).map_err(|e| error(e.to_string()))?;
+    Ok(program)
 }

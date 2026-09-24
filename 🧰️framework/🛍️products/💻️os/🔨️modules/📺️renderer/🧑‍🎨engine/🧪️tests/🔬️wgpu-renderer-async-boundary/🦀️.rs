@@ -1296,7 +1296,7 @@ fn frame_deferred_cancel_retires_one_action_per_step() {
 
 #[test]
 fn catalogue_terminal_pair_never_partially_enters_the_frame_action_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🛒️canvas-catalogue-terminal/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛒️canvas-catalogue-terminal/🔣️.json"))).unwrap();
     let frame = &fixture["frameOwner"];
     assert_eq!(WORLD3D_DEADLINE_CAPACITY, frame["capacity"].as_u64().unwrap() as usize);
     let mut actions = FrameActionOwners::default();

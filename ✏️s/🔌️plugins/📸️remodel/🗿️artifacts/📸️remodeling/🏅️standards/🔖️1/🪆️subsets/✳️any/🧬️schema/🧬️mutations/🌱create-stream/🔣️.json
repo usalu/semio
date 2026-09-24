@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateStream",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-stream",
-  "binaryTag": null,
+  "binaryTag": 0,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

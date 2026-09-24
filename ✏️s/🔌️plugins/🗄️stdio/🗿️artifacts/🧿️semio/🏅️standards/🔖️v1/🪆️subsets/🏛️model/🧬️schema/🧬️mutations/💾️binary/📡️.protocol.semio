@@ -5,19 +5,29 @@ schema stdio.semio.model.mutation
 start body
 framing record
 
-# P2 pilot (model): REAL binary op frame, replacing the old plain `serde_json::to_vec`/`from_slice`
-# shortcut (`🧬️mutations/🦀️.rs`'s old `OpBinary::encode_op`/`decode_op`).
-# `SemioModelMutation` is a genuine data-carrying enum whose variants embed nested `SpatialNode`/
-# `SemioModelElement`/`ModelRelation`/`SemioModelSnapshot` payloads — no `dsl::DslField` impl exists
-# for any of them (hand-rolled per this subset's own `🔺️diff`/`🧬️mutations` convention), so the
-# generic derive-based `format u8 | ordinal varint | record body` layout doesn't apply. Handcrafted
-# instead: `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioModelMutation` variant
-# ordinal, `🧬️mutations/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`, same 0-10 ordering as
-# `parse_semio_model_mutation`'s keyword match) as two REAL fixed fields, then the variant's own
-# `key=value ...` argument payload as one opaque trailing `bytes` chain — the same honest boundary
-# the sibling `../../🔺️diff/💾️binary/📡️.protocol.semio` uses.
+# Real `SemioModelMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record set-snapshot tag=0
+field payload bytes
+record insert-spatial-node tag=1
+field payload bytes
+record remove-spatial-node tag=2
+field payload bytes
+record set-spatial-node tag=3
+field payload bytes
+record insert-element tag=4
+field payload bytes
+record remove-element tag=5
+field payload bytes
+record set-element tag=6
+field payload bytes
+record insert-relation tag=7
+field payload bytes
+record remove-relation tag=8
+field payload bytes
+record set-relation tag=9
+field payload bytes

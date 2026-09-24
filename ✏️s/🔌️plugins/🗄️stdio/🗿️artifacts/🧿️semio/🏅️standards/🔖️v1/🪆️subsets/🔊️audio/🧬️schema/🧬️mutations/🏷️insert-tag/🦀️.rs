@@ -10,8 +10,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct InsertTag {
-    pub(crate) index: usize,
-    pub(crate) tag: SemioAudioTag,
+    pub index: usize,
+    pub tag: SemioAudioTag,
 }
 
 impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for InsertTag {

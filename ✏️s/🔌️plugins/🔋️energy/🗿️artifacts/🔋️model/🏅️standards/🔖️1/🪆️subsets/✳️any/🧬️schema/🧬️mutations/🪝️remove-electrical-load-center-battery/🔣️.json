@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveElectricalLoadCenterBattery",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-electrical-load-center-battery",
-  "binaryTag": null,
+  "binaryTag": 198,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

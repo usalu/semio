@@ -7,7 +7,7 @@
   "aggregateVariant": "DeletePlantLoop",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-plant-loop",
-  "binaryTag": null,
+  "binaryTag": 179,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

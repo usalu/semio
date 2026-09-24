@@ -10,7 +10,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ApplyAnimation {
-    pub(crate) mutation: SemioAnimationMutation,
+    pub mutation: SemioAnimationMutation,
 }
 
 impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyAnimation {

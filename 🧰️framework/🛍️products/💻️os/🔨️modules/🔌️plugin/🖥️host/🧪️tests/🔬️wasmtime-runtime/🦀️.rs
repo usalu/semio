@@ -43,7 +43,7 @@ async fn io_run_effect_is_a_reported_error_not_a_silent_mismap() {
 // 🩺️ GJ1 — the job lane's trap classifier and the host watchdog it made readable.
 // `📓️gj1-guest-inference-job-trap.md` §2/§3: `step-job` reported every trap as an unattributed
 // backtrace (`Display` is a wasmtime error's FIRST line only), and its store ceilings came from the
-// GUEST's cooperative grant, which is 2 epoch ticks — so a `s.wfc.bitmap.solve` crossing was killed
+// GUEST's cooperative grant, which is 2 ms — so a `s.wfc.bitmap.solve` crossing was killed
 // after ~2 ms at whatever instruction it had reached.
 
 #[test]
@@ -65,13 +65,12 @@ fn a_real_trap_keeps_its_whole_source_chain_not_its_first_line() {
 #[test]
 fn the_host_watchdog_is_not_the_guests_cooperative_grant() {
     // ⏱️ The regression this ratchets: `step_job` used to arm the store from `RELAY_JOB_BUDGET`,
-    // whose `deadline_ms` is `USER_VISIBLE_LANE_WALL_US / 1_000`. With `EPOCH_TICK_INTERVAL_MS = 1`
-    // that is a two-millisecond hard kill per crossing.
+    // whose `deadline_ms` is `USER_VISIBLE_LANE_WALL_US / 1_000`: a two-millisecond hard kill per
+    // crossing.
     assert_eq!(RELAY_JOB_BUDGET.deadline_ms as u64, semio_framework_job::USER_VISIBLE_LANE_WALL_US / 1_000, "the guest's grant stays the cooperative slice it always was");
     assert!(
         GUEST_JOB_WATCHDOG_MS >= RELAY_JOB_BUDGET.deadline_ms as u64 * 1_000,
-        "the host's wedged watchdog ({GUEST_JOB_WATCHDOG_MS} epoch ticks at {}ms each) must be orders of magnitude above the guest's own step slice ({} ticks), never equal to it",
-        EPOCH_TICK_INTERVAL_MS,
+        "the host's wedged watchdog ({GUEST_JOB_WATCHDOG_MS} ms) must be orders of magnitude above the guest's own step slice ({} ms), never equal to it",
         RELAY_JOB_BUDGET.deadline_ms,
     );
 }

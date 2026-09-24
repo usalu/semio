@@ -81,6 +81,15 @@ fn home_row_action(icon: IconName, label: semio_framework_plugin::LabelText, act
 fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<TableRowAction>> {
     let mut actions = semio_framework_plugin::UiFixedList::default();
     actions.try_push(home_row_action(IconName::FolderOpen, labels.action_open, "openSpace", &row.id)?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
+        if row.data_class == "ephemeralLocalOnly" {
+            for action in [
+                home_row_action(IconName::Cloud, labels.action_promote, "promoteToHubSpace", &row.id)?,
+                home_row_action(IconName::Save, labels.action_persist, "persistLocally", &row.id)?,
+            ] {
+                actions.try_push(action).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
+            }
+            return Ok(actions);
+        }
     if row.origin == "hub" && row.role == Some(crate::DirectorySpaceRole::Author) {
         for action in [
             home_row_action(IconName::Pencil, labels.action_rename, "renameSpace", &row.id)?,

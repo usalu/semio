@@ -18,7 +18,7 @@ class BrowserDeclarationsScript extends BundleScript {
 
 class BrowserOwnershipScript extends BundleScript {
   async run(): Promise<void> {
-    const { testFlowBrowserOwnership } = await import("../../../🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🟦️.ts");
+    const { testFlowBrowserOwnership } = await import("../../../🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🏷️browser-ownership/🟦️.ts");
     await testFlowBrowserOwnership();
   }
 }

@@ -22,7 +22,7 @@
 //! 🧹️ The guard releases on EVERY exit — normal return, early return, `?`, and a panicking law's
 //! unwind — because release is `Drop`, and a poisoned mutex is taken anyway: a law that panicked
 //! while holding it has already reported its own failure and must not cascade into every later law.
-//! `🧪️tests/🔬️unit/🦀️.rs` states all three as laws.
+//! `../🔒️serial-lock-discipline/🦀️.rs` states all three as laws.
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard};
@@ -93,7 +93,3 @@ pub(crate) fn lock() -> TestSerialGuard {
 pub(crate) fn held_by_this_thread() -> bool {
     OWNER.load(Ordering::Acquire) == thread_token()
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

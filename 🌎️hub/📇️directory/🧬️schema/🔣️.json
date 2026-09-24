@@ -234,19 +234,6 @@
       }
     },
 
-    "SocketGrantReceiptV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema", "protocol", "grant", "actorId", "expiresAtMs"],
-      "properties": {
-        "schema": { "const": "semio.hub.socket-grant/v1" },
-        "protocol": { "const": "semio.socket.v1" },
-        "grant": { "type": "string", "pattern": "^socket\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
-        "actorId": { "type": "string", "pattern": "^hub\\.v1\\.[0-9a-f]{64}$" },
-        "expiresAtMs": { "$ref": "#/$defs/positiveSafeInteger" }
-      }
-    },
-
     "DirectoryCommandReceiptV1": {
       "type": "object",
       "additionalProperties": false,

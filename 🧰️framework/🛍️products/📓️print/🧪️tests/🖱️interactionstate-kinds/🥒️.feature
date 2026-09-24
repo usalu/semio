@@ -30,7 +30,7 @@ Feature: Every frozen interaction-state kind draws geometry of its own
   @level-long
   @mode-conformance
   Scenario: The fifteen interaction-state kinds emit geometry and are pairwise distinct inside their family
-    Given the committed probe document local://interactionstate-kinds.tex and the state families
+    Given the committed probe document shared://🖱️interactionstate-kinds/interactionstate-kinds.tex and the state families
       | family          | kinds |
       | state-overview  | 5     |
       | state-selection | 3     |

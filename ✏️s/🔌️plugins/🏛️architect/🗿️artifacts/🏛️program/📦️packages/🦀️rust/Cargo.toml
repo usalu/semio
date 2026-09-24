@@ -39,6 +39,8 @@ serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 zip = { version = "6", default-features = false, features = ["deflate"] }
+# 🔮 Test-only CSV ORACLE: the third-party `csv` reader parses the register export.
+csv = "1"
 # 🚫️ NOT a path dev-dependency on `semio-s-plugin-stdio-test-oracle`. That crate declares its own
 # `[workspace]` on purpose ("linked by generated cache-local test hosts by path and must not join
 # the repository workspace"), so a direct path dep from a workspace member makes cargo fail with

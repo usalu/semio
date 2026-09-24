@@ -552,9 +552,6 @@
   ],
   "meshes": [
     {
-      "weights": [
-        0.5
-      ],
       "extras": {
         "meshKind": "fixture"
       },

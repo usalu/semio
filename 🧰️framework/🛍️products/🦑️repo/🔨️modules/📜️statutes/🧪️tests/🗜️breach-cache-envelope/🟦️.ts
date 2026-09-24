@@ -47,7 +47,7 @@ export default defineTestAdapter({
   scenarios: {
     "the-digest-is-sha-256": {
       oracle: (ctx) => {
-        const file = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("local://🔣️vectors.json"))) as { digests: string[]; envelope: string };
+        const file = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://🗜️breach-cache-envelope/🔣️vectors.json"))) as { digests: string[]; envelope: string };
         const encoder = new TextEncoder();
         return {
           projection: {
@@ -59,7 +59,7 @@ export default defineTestAdapter({
     },
     "a-member-inflates-anywhere": {
       oracle: (ctx) => {
-        const file = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("local://🔣️vectors.json"))) as { payloads: string[] };
+        const file = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://🗜️breach-cache-envelope/🔣️vectors.json"))) as { payloads: string[] };
         const rawPath = (ctx.plan as unknown as { subjectRawInputs?: Record<string, string> }).subjectRawInputs?.rust;
         if (rawPath === undefined) throw new Error("no raw subject output from rust; run the subject phase before this byte-decoding oracle");
         const members = unframe(new Uint8Array(readFileSync(rawPath)));

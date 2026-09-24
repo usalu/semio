@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeSolarThermalSystemCollectorArea",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-solar-thermal-system-collector-area",
-  "binaryTag": null,
+  "binaryTag": 221,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

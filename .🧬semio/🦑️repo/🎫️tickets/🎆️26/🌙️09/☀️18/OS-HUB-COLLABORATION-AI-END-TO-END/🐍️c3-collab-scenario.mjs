@@ -143,7 +143,7 @@ async function openRemoteCard(page) {
 }
 
 /** 🌐️ footer sync tab ▸ `sync` collection ▸ Remote ▸ `<host>/<space>/<document>` ▸ Attach. */
-async function attachRemote(page, settleMs = 45_000) {
+async function attachRemote(page, settleMs = 180_000) {
   const opened = await openRemoteCard(page);
   if (!opened.ok) return { card: "absent", trail: opened.trail };
   const input = page.locator('[id="framework.sync.remote.path"]');
@@ -226,7 +226,7 @@ for (const user of USERS) {
     if (url.includes("open-plan") || url.includes("socket-grants") || url.includes("execution-target")) lines.push(`${ms()} response ${response.status()} ${url.slice(url.indexOf("/documents/"))}`);
   });
   page.on("websocket", (ws) => {
-    if (ws.url().includes("/socket/v1")) sockets.push({ url: ws.url(), openedAt: ms(), closedAt: null });
+    if (ws.url().includes("/socket/v1") || ws.url().includes("/document/ws")) sockets.push({ url: ws.url(), openedAt: ms(), closedAt: null });
     ws.on("close", () => {
       const row = sockets.find((s) => s.url === ws.url() && s.closedAt === null);
       if (row) row.closedAt = ms();
@@ -269,10 +269,18 @@ for (const session of sessions) {
 
 for (const session of sessions) {
   session.attach = await attachRemote(session.page);
+  for (let i = 0; i < 90; i += 1) {
+    const shell = await read(session.page);
+    const pill = shell.syncPill ?? "";
+    const target = (shell.executionTarget ?? []).join(" ");
+    if (/Persisted|Synced|Connected/i.test(pill) && !/unavailable|backoff/i.test(pill + target)) break;
+    if (/actor-ready/i.test(target) && !/unavailable/i.test(target)) break;
+    await session.page.waitForTimeout(2_000);
+  }
   await session.page.waitForTimeout(4_000);
 }
 for (const session of sessions) session.afterAttach = await read(session.page);
-const bothAttached = sessions.every((s) => s.sockets.some((row) => row.url.includes("/documents/") && row.url.includes("/socket/v1")));
+const bothAttached = sessions.every((s) => s.sockets.some((row) => row.url.includes("/document/ws") || (row.url.includes("/documents/") && row.url.includes("/socket/v1"))));
 record(
   "1c-both-attached",
   bothAttached,

@@ -2,7 +2,7 @@
 //#region 💾️PayloadCodec
 use super::SetTrailingNewlinePayload;
 use crate::schema::mutations::TxtMutation;
-pub const BINARY_TAG: u32 = 1;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "set-trailing-newline");
 pub fn encode_payload(value: &SetTrailingNewlinePayload) -> Result<Vec<u8>, String> {
     Ok(pack::to_json_string(value).into_bytes())
 }

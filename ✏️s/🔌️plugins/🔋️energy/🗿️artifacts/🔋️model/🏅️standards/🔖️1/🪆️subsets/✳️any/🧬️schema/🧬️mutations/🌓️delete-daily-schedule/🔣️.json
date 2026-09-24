@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteDailySchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-daily-schedule",
-  "binaryTag": null,
+  "binaryTag": 256,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

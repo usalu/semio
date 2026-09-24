@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeRepresentationMeshUrl",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-representation-mesh-url",
-  "binaryTag": null,
+  "binaryTag": 11,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

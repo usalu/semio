@@ -9,7 +9,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct UpsertInstance {
-    pub(crate) instance: Part21Instance,
+    pub instance: Part21Instance,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for UpsertInstance {

@@ -419,3 +419,26 @@ async fn an_unstamped_store_is_adopted_at_the_current_version_without_losing_rec
     assert_eq!(read_stamp(&dir.join("sessions")).store, "sessions");
 }
 //#endregion 🔖️Format
+
+
+#[tokio::test]
+async fn hub_directory_module_registers_directory_decider() {
+    use super::{HubDirectoryModule, HubModules};
+    use server::authority::Decider;
+    use server::gateway::ServerModule;
+
+    let module = HubModules::Directory(HubDirectoryModule::new());
+    assert_eq!(module.manifest().await.id, "hub.directory");
+    let deciders = module.deciders().await;
+    assert_eq!(deciders.len(), 1);
+    assert_eq!(deciders[0].actor_kind().await, "directory");
+}
+
+#[tokio::test]
+async fn hub_documents_port_is_owned_by_the_hub_router() {
+    use std::any::TypeId;
+    use super::HubInstance;
+    use server::gateway::{NoDocumentAuthority, ServerInstance};
+
+    assert_eq!(TypeId::of::<<HubInstance as ServerInstance>::Documents>(), TypeId::of::<NoDocumentAuthority>());
+}

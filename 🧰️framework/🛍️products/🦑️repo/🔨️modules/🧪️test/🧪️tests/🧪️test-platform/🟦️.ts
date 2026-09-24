@@ -18,7 +18,7 @@ import protocolSchema from "../../🧬️schema/🔣️.json";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, parseFeature, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, validateAllContracts, validateResult, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, reimplementationOracleBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, parseFeature, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, validateAllContracts, validateResult, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
@@ -322,7 +322,8 @@ describe("🧹️ clean safety", () => {
       for (const area of exemptAreas()) expect(row.path.includes(`${area}/`), `clean candidate inside the exempt area ${area}`).toBe(false);
     }
     expect(readFileSync(sentinelFixture, "utf8")).toBe(before);
-    expect(existsSync(join(repoRoot, "compose"))).toBe(true);
+    expect(report.removals.some((row) => row.path.endsWith("compose.yaml"))).toBe(false);
+    expect(existsSync(join(repoRoot, "🌎️hub/compose.yaml"))).toBe(true);
   });
 
   test("marking a directory outside the test cache root is refused", () => {
@@ -530,6 +531,19 @@ describe("🌱️ native second implementation", () => {
     expect(isQualifyingOracleKind("verified-native-second-implementation")).toBe(true);
   });
 
+  test("a surveyed decision keeps a mutation's reference gap visible as medium, and an unsurveyed one still blocks", () => {
+    const manifest = nativeManifest("s.norm.test-code", [["change-a", "test-code-1-mutate"]]);
+    const survey = { ecosystemsSearched: ["pypi", "crates.io"], candidatesConsidered: [{ package: "networkx", ecosystem: "pypi", verdict: "cannot-express-the-mutation" as const, reason: "models graphs but has no notion of the test-code document it would have to edit" }], whyNoneQualifies: "The format is defined by this repository, so no third party implements its mutation semantics." };
+    const decision = { id: "test-code-gap", capabilities: ["test-code-1-mutate"], rationale: "The vocabulary is this repository's own.", substitutes: ["specification-vectors"], coversMutations: true, referenceSurvey: survey };
+    const justified = { ...registryWith("test/owner", [], [manifest]), noOracleDecisions: [decision] } as unknown as Registry;
+    const gap = oracleRequirementBreaches(justified, "scope", manifest, manifest.mutations[0]!);
+    expect(gap.map((row) => [row.id, row.priority])).toEqual([["justified-reference-gap", "medium"]]);
+    expect(noOracleMisuseBreaches(justified)).toEqual([]);
+    const unsurveyed = { ...registryWith("test/owner", [], [manifest]), noOracleDecisions: [{ ...decision, referenceSurvey: undefined }] } as unknown as Registry;
+    expect(oracleRequirementBreaches(unsurveyed, "scope", manifest, manifest.mutations[0]!).map((row) => row.id)).toEqual(["missing-external-oracle"]);
+    expect(noOracleMisuseBreaches(unsurveyed).map((row) => row.id)).toEqual(["no-oracle-covers-mutation"]);
+  });
+
   test("a fully earned claim discharges the requirement and records no breach of its own", () => {
     const manifest = nativeManifest("s.norm.test-code", [["change-a", "test-code-1-mutate"]]);
     const registry = registryWith("test/owner", [entry("test-code-python-independent", ["test-code-1-mutate"], { nativeSecondImplementation: earnedEvidence("s.norm.test-code", ["test-code-1-mutate"]) })], [manifest]);
@@ -670,18 +684,21 @@ describe("🪆️ case above subset", () => {
     expect(caseAboveSubsetBreaches(discoveredAt("🧪️synthetic/📦️artifact"), featureTagged("@mutations-does-not-exist"), registry)).toEqual([]);
   });
 
-  // 🔍️The real gate: the only live violation this rule should find, right now, is the one case C4's
-  // own write-up (📓️c4-relocation-completion.md) named and left in place deliberately — a pre-existing
-  // Rust adapter/feature mismatch, not a fixture-placement problem. A regression here means either a
-  // NEW case was left above its subset, or this named debt was finally paid off and the assertion
-  // below needs updating to match.
-  test("the only live case-above-subset violation is the one C4 documented as deliberately blocked", () => {
+  // 🔍️The real gate: the one case C4 left above its subset (`mutate-obj-3-0-material`) now lives in
+  // `🗽️obj/…/🎨️material/🧪️tests/`, so no live case may sit above the subset its catalog names.
+  test("no live case sits above the subset its mutation catalog names", () => {
     const liveRegistry = repoRegistry;
     const scopes = discoverTestCases(repoRoot)
       .flatMap((discovered) => caseAboveSubsetBreaches(discovered, parseFeature(readFileSync(join(repoRoot, discovered.featurePath), "utf8")), liveRegistry))
       .map((entry) => entry.scope);
-    expect(scopes).toEqual(["✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🧪️tests/mutate-obj-3-0-material"]);
+    expect(scopes).toEqual([]);
   }, 30_000);
+});
+
+describe("📡️ binary protocol records", () => {
+  test("every live mutation vocabulary's 📡️.protocol.semio declares exactly one record per leaf kind, each at its own tag", () => {
+    expect(binaryProtocolDriftBreaches(repoRoot, repoRegistry).map((row) => `${row.id} ${row.scope}: ${row.summary}`)).toEqual([]);
+  }, 60_000);
 });
 
 describe("🧫️ mutation without fixture", () => {
@@ -807,7 +824,6 @@ describe("🚫️ oracle purity", () => {
   }, 60_000);
 });
 
-
 describe("🧩️ cross-language oracle hosts", () => {
   test("a contributed host package is selected for whichever implementation declares it, not for Rust alone", () => {
     const registry = repoRegistry;
@@ -825,7 +841,7 @@ describe("🧩️ cross-language oracle hosts", () => {
     const declared = registry.contributions.flatMap((entry) => entry.oracleHostPackages);
     const taxonomy = testTaxonomy(repoRoot);
     const contributionFilename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
-    expect(external.map((entry) => entry.name).sort()).toEqual(declared.filter((entry) => entry.path === undefined).map((entry) => entry.package).sort());
+    expect(external.map((entry) => `${entry.ecosystem}:${entry.name}`).sort()).toEqual([...new Set(declared.filter((entry) => entry.path === undefined).map((entry) => `${dependencyEcosystemOf(entry.implementation)}:${entry.package}`))].sort());
     for (const entry of external) expect(entry.users.every((user) => user.endsWith(contributionFilename))).toBe(true);
     expect(dependencyEcosystemOf("typescript")).toBe("js");
     expect(dependencyEcosystemOf("python")).toBe("python");
@@ -873,6 +889,7 @@ describe("🧩️ cross-language oracle hosts", () => {
     for (const host of externalOracleHostPackages(repoRegistry)) {
       const entry = baseline.entries.find((candidate) => candidate.ecosystem === host.ecosystem && candidate.name === host.name);
       expect(entry, `${host.ecosystem}:${host.name} is on a generated host's import path but is absent from the dependency baseline`).toBeDefined();
+      if (repoRegistry.oracles.some((oracle) => oracle.productionDebt !== undefined && oracleLinkedPackages(oracle).some((linked) => linked.package === host.name))) continue;
       expect(entry!.kinds).toEqual(["test-oracle"]);
       expect(entry!.productionReachable).toBe(false);
     }
@@ -1076,13 +1093,8 @@ describe("🧭️ contribution directory ownership", () => {
   });
 
   test("root dependency discovery and classification honor the same neutral owner contract", async () => {
-    const ts = await import("typescript");
-    const source = ts.createSourceFile("script.ts", readFileSync(join(repoRoot, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const names = ["dependencyDiscoverContributionManifests", "dependencyClassifyOracleEntry"];
-    const statements = source.statements.filter((node) => ts.isFunctionDeclaration(node) && names.includes(node.name?.text ?? "") || ts.isVariableStatement(node) && node.declarationList.declarations.some((item) => item.name.getText(source) === "DEPENDENCY_TEST_DOMAIN_PATH_RE"));
-    expect(statements).toHaveLength(3);
-    const compiled = ts.transpileModule(statements.map((node) => node.getText(source)).join("\n"), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
-    const api = new Function("readdirSync", "existsSync", "join", `${compiled}\nreturn { discover: dependencyDiscoverContributionManifests, classify: dependencyClassifyOracleEntry };`)(readdirSync, existsSync, join) as {
+    const inventory = await import("../../../📚️library/🕸️dependencies/📇️inventory/🟦️.ts");
+    const api = { discover: inventory.dependencyDiscoverContributionManifests, classify: inventory.dependencyClassifyOracleEntry } as unknown as {
       discover(root: string, directory: string, filename: string): string[];
       classify(entry: { name: string; version: string; kinds: string[]; users: string[]; declarations: { user: string; version: string; kind: string }[]; oracleConflictUsers?: string[] }, oracleIds: readonly string[], directory: string): void;
     };
@@ -1257,6 +1269,14 @@ describe("🧬️ physical mutation vector registry", () => {
     expect(mutationCatalogProblems(catalog, "artifact/🏅️standards/🔖️1/🪆️subsets/✳️anywhere/✏️editor/🎚️config")).toContain("catalog profile does not match its contribution owner");
   });
 
+  test("a profile directory is any canonical semantic emoji plus its slug, never a fixed prefix", () => {
+    for (const [standardDirectoryName, subsetDirectoryName] of [["🔖️v1", "✉️base"], ["9️⃣89a", "🧱️base"], ["4️⃣1.4", "♾️any"], ["🔖️ap214", "1️⃣cc1"]] as const) {
+      expect(mutationCatalogProblems({ ...catalog, standardDirectoryName, subsetDirectoryName }, `artifact/🏅️standards/${standardDirectoryName}/🪆️subsets/${subsetDirectoryName}`)).toEqual([]);
+    }
+    expect(mutationCatalogProblems({ ...catalog, subsetDirectoryName: "any" }, "artifact/🏅️standards/🔖️1/🪆️subsets/any")).toContain("subsetDirectoryName must be one canonical semantic emoji followed by a subset slug");
+    expect(mutationCatalogProblems({ ...catalog, standardDirectoryName: "1" }, "artifact/🏅️standards/1/🪆️subsets/✳️any")).toContain("standardDirectoryName must be one canonical semantic emoji followed by a standard slug");
+  });
+
   // 🪆️A framework facet owns a mutation vocabulary too, and its path carries no
   // `🏅️standards/🪆️subsets` coordinates to restate. Requiring them unconditionally made such a
   // catalog unrepresentable, which silently dropped the whole contribution — and an owner whose
@@ -1302,14 +1322,14 @@ describe("🧬️ physical mutation vector registry", () => {
 describe("🧫️ real-world artifact fixtures", () => {
   // 🧫️A multi-megabyte real document is read where the domain already keeps it. Copying it into a
   // fixtures directory would duplicate megabytes of git history for no gain.
-  const thesis = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/📚️examples/🎓️bachelor-thesis/🖼️assets/🎓️bachelor-thesis.pdf";
-  const owner = dirname(dirname(thesis));
+  const owner = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base";
+  const thesis = `${owner}/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf`;
   const featureFilename = testFilenameForKind(testTaxonomy(repoRoot), testTaxonomy(repoRoot).testFeatureFileKindId);
   const discovered = { owner, ownerName: "📄️pdf", case: "c", caseDir: `${owner}/🧪️tests/c`, featurePath: `${owner}/🧪️tests/c/${featureFilename}`, adapters: {}, sharedFixtureDir: null, projectName: "p" } as unknown as import("../../📦️packages/🟦️typescript/🟦️.ts").DiscoveredCase;
 
   test("asset:// resolves against the owner assets and pins the real artifact's digest", () => {
     expect(existsSync(join(repoRoot, thesis))).toBe(true);
-    const uri = `asset://${basename(thesis)}`;
+    const uri = "asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf";
     const { fixtures, missing } = resolveFixtures(repoRoot, discovered, [uri]);
     expect(missing).toEqual([]);
     expect(fixtures[0].scope).toBe("asset");
@@ -1353,16 +1373,49 @@ describe("🧪️ projected vector storage", () => {
       const taxonomyPath = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
       mkdirSync(join(taxonomyPath, ".."), { recursive: true });
       writeFileSync(taxonomyPath, readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json")));
-      const executable = join(root, "artifact", taxonomy.testsDirName, "mutate-thing");
+      const executable = join(root, "artifact", taxonomy.testsDirName, "🦠️mutate-thing");
       const projected = join(root, "artifact", taxonomy.testsDirName, "🪆️1-any", "🪄️change-value", "🧪️changes-the-value");
       mkdirSync(executable, { recursive: true });
       mkdirSync(projected, { recursive: true });
       writeFileSync(join(executable, featureFilename), "Feature: executable\n");
       writeFileSync(join(projected, featureFilename), "Feature: must stay storage\n");
       const { discoverCaseDirs } = await import("../../🟨️.mjs");
-      expect(discoverCaseDirs(root)).toEqual([`artifact/${taxonomy.testsDirName}/mutate-thing`]);
+      expect(discoverCaseDirs(root)).toEqual([`artifact/${taxonomy.testsDirName}/🦠️mutate-thing`]);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
+});
+
+describe("🔬️ subject selection", () => {
+  test("an oracle implemented in the case's own adapter is never also dispatched as that case's subject", async () => {
+    const { oracleDecision, subjectImplementations } = await import("../../⚖️parity/📋️orchestration/🟦️.ts");
+    const cases = new Map(discoverTestCases(repoRoot).map((entry) => [entry.caseDir, entry] as const));
+    const hosting = repoRegistry.oracles.filter((oracle) => oracle.hostPath !== undefined && cases.has(oracle.hostPath));
+    expect(hosting.length).toBeGreaterThan(0);
+    for (const oracle of hosting) {
+      const discovered = cases.get(oracle.hostPath!)!;
+      const decision = oracleDecision(repoRoot, discovered, "exhaustive");
+      if (decision.implementation === null) continue;
+      expect(decision.hostedByCase, `${oracle.id} is hosted by ${discovered.caseDir}`).toBe(true);
+      expect(subjectImplementations(repoRoot, discovered, decision, ["rust", "typescript", "python", "go", "dotnet"])).not.toContain(decision.implementation);
+    }
+  }, 300_000);
+
+  test("a package of an enclosing framework never makes a nested product's reference adapter a subject", async () => {
+    const { oracleDecision, subjectImplementations } = await import("../../⚖️parity/📋️orchestration/🟦️.ts");
+    const product = "🧰️framework/🛍️products/🦑️repo";
+    const hosted = discoverTestCases(repoRoot).filter((entry) => entry.owner.startsWith(`${product}/`) && entry.adapters.typescript !== undefined && entry.adapters.rust !== undefined);
+    let referenceOnly = 0;
+    for (const discovered of hosted) {
+      const decision = oracleDecision(repoRoot, discovered, "exhaustive");
+      if (decision.implementation !== "typescript") continue;
+      const segments = discovered.owner.split("/");
+      const within = Array.from({ length: segments.length - product.split("/").length + 1 }, (_, index) => segments.slice(0, segments.length - index).join("/"));
+      const ships = within.some((dir) => existsSync(join(repoRoot, dir, "📦️packages", "🟦️typescript")));
+      if (!ships) referenceOnly += 1;
+      expect(subjectImplementations(repoRoot, discovered, decision, ["rust", "typescript"]), discovered.caseDir).toEqual(ships ? ["rust", "typescript"] : ["rust"]);
+    }
+    expect(referenceOnly).toBeGreaterThan(0);
+  }, 300_000);
 });

@@ -15,7 +15,7 @@ fn projection(identity: &NativeVcsCodecIdentityV1) -> serde_json::Value {
 async fn vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_factory_substitution() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
     let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
-    let document_id = document_ids["cases"].as_array().unwrap().iter().find(|row| row["accepted"] == true).unwrap()["artifactId"].as_str().unwrap();
+    let document_id = document_ids["cases"].as_array().unwrap().iter().find(|row| row["accepted"] == true).unwrap()["documentId"].as_str().unwrap();
     let receipts = native_codec_factory_receipts().expect("complete inert VCS closure");
     assert_eq!(receipts.len(), fixture["receipts"].as_array().unwrap().len());
     for (receipt, expected) in receipts.into_iter().zip(fixture["receipts"].as_array().unwrap()) {
@@ -57,7 +57,7 @@ async fn vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_
         assert!(cursor.redo_edit_ids.is_empty());
         assert!(cursor.checkpoint_id.is_none());
         for row in document_ids["cases"].as_array().unwrap().iter().filter(|row| row["accepted"] == false) {
-            let hostile_id = row["artifactId"].as_str().unwrap();
+            let hostile_id = row["documentId"].as_str().unwrap();
             assert!(
                 semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_vcs_vcs::editor::vcs::VcsPlayApp>>(hostile_id).await.is_err(),
                 "VCS genesis admitted hostile document id {}",

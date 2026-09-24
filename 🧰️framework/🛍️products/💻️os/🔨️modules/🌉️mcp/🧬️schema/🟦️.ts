@@ -121,13 +121,18 @@ export type ArtifactCreateInput = {
 };
 
 export type ArtifactCreateOutput = {
-  readonly "artifactId"?: string;
-  readonly "kind"?: string;
+  readonly "appId"?: string;
+  readonly "artifactId": string;
+  readonly "jobId": string;
+  readonly "kind": string;
+  readonly "pluginId"?: string;
   readonly "revision"?: {
     readonly "artifactId"?: string;
     readonly "cursor"?: string;
     readonly "headEditId"?: string;
   } | null;
+  readonly "sizeBytes"?: number;
+  readonly "status": "SUCCEEDED" | "CANCELLED";
 };
 
 export type ArtifactCreateTemplateInput = {
@@ -201,6 +206,15 @@ export type ArtifactOpenOutput = {
     readonly "artifactId"?: string;
     readonly "cursor"?: string;
     readonly "headEditId"?: string;
+  } | null;
+  readonly "sessionDocument"?: {
+    readonly "appId"?: string;
+    readonly "packBytes"?: number;
+    readonly "pluginId"?: string;
+    readonly "relayedBatches"?: number;
+    readonly "sprBytes"?: number;
+    readonly "surfaceId"?: string | null;
+    readonly "writePath"?: string;
   } | null;
   readonly "sizeBytes"?: number | null;
 };

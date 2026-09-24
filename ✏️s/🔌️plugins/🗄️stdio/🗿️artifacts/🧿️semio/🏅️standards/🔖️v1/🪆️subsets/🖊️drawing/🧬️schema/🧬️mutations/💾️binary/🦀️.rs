@@ -1,5 +1,5 @@
 //! ⚡️ Semio drawing artifact — hand-rolled `OpBinary` for `SemioDrawingMutation`. `format u8`
-//! (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, [`OP_KEYWORDS`]) are two REAL
+//! (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) are two REAL
 //! fixed fields; the variant's own argument payload follows as one opaque trailing `bytes` chain —
 //! reuses the already-real, already-tested `../📝️text/🦀️.rs` text codec (`print_op`'s
 //! argument tail) rather than re-deriving a second independent encoding, mirroring `🔤️text`'s own
@@ -12,52 +12,69 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-//#region 🔖️OpBinary
-/// 🧾️ Text-op keyword table + variant ordinal, 0-indexed in enum declaration order — the binary
-/// frame's `tag` byte selects the keyword `decode_op` re-prefixes onto the argument tail before
-/// handing the line to `parse_op`, so these are the TEXT grammar's own keywords
-/// (`../📝️text/📖️.grammar.semio`'s `op` alternatives: `rotate`, `group`, …), never the kebab-case
-/// catalog names in [`super::KINDS`]. `op_binary_roundtrip_law` keeps the two tables aligned.
-const OP_KEYWORDS: [&str; 17] = [
-    "createLayer",
-    "deleteLayer",
-    "createNode",
-    "deleteNode",
-    "moveNode",
-    "dragNodes",
-    "rotate",
-    "scale",
-    "reorderNodes",
-    "group",
-    "ungroup",
-    "flatten",
-    "unflatten",
-    "replacePath",
-    "replaceFill",
-    "changeStrokeColor",
-    "changeStrokeWidth",
+/// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
+const TEXT_KEYWORDS: [(&str, &str); 17] = [
+    ("create-layer", "createLayer"),
+    ("delete-layer", "deleteLayer"),
+    ("create-node", "createNode"),
+    ("delete-node", "deleteNode"),
+    ("move-node", "moveNode"),
+    ("drag-nodes", "dragNodes"),
+    ("rotate-node", "rotate"),
+    ("scale-node", "scale"),
+    ("reorder-nodes", "reorderNodes"),
+    ("group-nodes", "group"),
+    ("ungroup-node", "ungroup"),
+    ("flatten-node", "flatten"),
+    ("unflatten-node", "unflatten"),
+    ("replace-path", "replacePath"),
+    ("replace-fill", "replaceFill"),
+    ("change-stroke-color", "changeStrokeColor"),
+    ("change-stroke-width", "changeStrokeWidth"),
 ];
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioDrawingMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
+const TAG_CREATE_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-layer");
+const TAG_DELETE_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-layer");
+const TAG_CREATE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-node");
+const TAG_DELETE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-node");
+const TAG_MOVE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-node");
+const TAG_DRAG_NODES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "drag-nodes");
+const TAG_ROTATE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rotate-node");
+const TAG_SCALE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "scale-node");
+const TAG_REORDER_NODES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "reorder-nodes");
+const TAG_GROUP_NODES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "group-nodes");
+const TAG_UNGROUP_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "ungroup-node");
+const TAG_FLATTEN_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "flatten-node");
+const TAG_UNFLATTEN_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "unflatten-node");
+const TAG_REPLACE_PATH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-path");
+const TAG_REPLACE_FILL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-fill");
+const TAG_CHANGE_STROKE_COLOR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-stroke-color");
+const TAG_CHANGE_STROKE_WIDTH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-stroke-width");
+//#endregion 🏷️WireTags
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioDrawingMutation) -> u8 {
+fn wire_tag(m: &SemioDrawingMutation) -> u8 {
     match m {
-        SemioDrawingMutation::CreateLayer(_) => 0,
-        SemioDrawingMutation::DeleteLayer(_) => 1,
-        SemioDrawingMutation::CreateNode(_) => 2,
-        SemioDrawingMutation::DeleteNode(_) => 3,
-        SemioDrawingMutation::MoveNode(_) => 4,
-        SemioDrawingMutation::DragNodes(_) => 5,
-        SemioDrawingMutation::RotateNode(_) => 6,
-        SemioDrawingMutation::ScaleNode(_) => 7,
-        SemioDrawingMutation::ReorderNodes(_) => 8,
-        SemioDrawingMutation::GroupNodes(_) => 9,
-        SemioDrawingMutation::UngroupNode(_) => 10,
-        SemioDrawingMutation::FlattenNode(_) => 11,
-        SemioDrawingMutation::UnflattenNode(_) => 12,
-        SemioDrawingMutation::ReplacePath(_) => 13,
-        SemioDrawingMutation::ReplaceFill(_) => 14,
-        SemioDrawingMutation::ChangeStrokeColor(_) => 15,
-        SemioDrawingMutation::ChangeStrokeWidth(_) => 16,
+        SemioDrawingMutation::CreateLayer(_) => TAG_CREATE_LAYER,
+        SemioDrawingMutation::DeleteLayer(_) => TAG_DELETE_LAYER,
+        SemioDrawingMutation::CreateNode(_) => TAG_CREATE_NODE,
+        SemioDrawingMutation::DeleteNode(_) => TAG_DELETE_NODE,
+        SemioDrawingMutation::MoveNode(_) => TAG_MOVE_NODE,
+        SemioDrawingMutation::DragNodes(_) => TAG_DRAG_NODES,
+        SemioDrawingMutation::RotateNode(_) => TAG_ROTATE_NODE,
+        SemioDrawingMutation::ScaleNode(_) => TAG_SCALE_NODE,
+        SemioDrawingMutation::ReorderNodes(_) => TAG_REORDER_NODES,
+        SemioDrawingMutation::GroupNodes(_) => TAG_GROUP_NODES,
+        SemioDrawingMutation::UngroupNode(_) => TAG_UNGROUP_NODE,
+        SemioDrawingMutation::FlattenNode(_) => TAG_FLATTEN_NODE,
+        SemioDrawingMutation::UnflattenNode(_) => TAG_UNFLATTEN_NODE,
+        SemioDrawingMutation::ReplacePath(_) => TAG_REPLACE_PATH,
+        SemioDrawingMutation::ReplaceFill(_) => TAG_REPLACE_FILL,
+        SemioDrawingMutation::ChangeStrokeColor(_) => TAG_CHANGE_STROKE_COLOR,
+        SemioDrawingMutation::ChangeStrokeWidth(_) => TAG_CHANGE_STROKE_WIDTH,
     }
 }
 
@@ -75,7 +92,7 @@ fn print_op_args(m: &SemioDrawingMutation) -> String {
 impl protocol::OpBinary for SemioDrawingMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_op_args(self).as_bytes());
         Ok(out)
     }
@@ -89,7 +106,8 @@ impl protocol::OpBinary for SemioDrawingMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let kind = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
+        let keyword = TEXT_KEYWORDS.iter().find(|(record, _)| *record == kind).map(|(_, keyword)| *keyword).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("record {kind} has no text keyword") })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword}:{args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })

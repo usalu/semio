@@ -24,7 +24,7 @@ class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { level } = resolveTestLevel(segments);
     if (TEST_LEVELS.indexOf(level) < TEST_LEVELS.indexOf("long")) return;
-    runBunx(["vscode-test", "--config", "../../🧪️tests/🧩️extension/🎚️config/🟨️.mjs"], this.root);
+    runBunx(["vscode-test", "--config", "../../🧪️tests/🎚️config/🟨️.mjs"], this.root);
   }
 }
 

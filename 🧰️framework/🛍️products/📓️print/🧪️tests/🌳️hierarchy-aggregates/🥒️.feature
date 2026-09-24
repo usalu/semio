@@ -24,7 +24,7 @@ Feature: Hierarchy aggregates, orders and traversals follow d3-hierarchy
   @level-quick
   @mode-differential
   Scenario: sum and count aggregate over the postorder the way d3 does
-    Given the committed probe document local://hierarchy-aggregates.tex and the aggregations
+    Given the committed probe document shared://🌳️hierarchy-aggregates/hierarchy-aggregates.tex and the aggregations
       | hierarchy                 | aggregate |
       | demo-hierarchy-deep       | sum       |
       | demo-hierarchy-deep       | count     |
@@ -36,7 +36,7 @@ Feature: Hierarchy aggregates, orders and traversals follow d3-hierarchy
   @level-quick
   @mode-differential
   Scenario: depth, height and the postorder match d3's own traversals
-    Given the committed probe document local://hierarchy-aggregates.tex and the hierarchies
+    Given the committed probe document shared://🌳️hierarchy-aggregates/hierarchy-aggregates.tex and the hierarchies
       | hierarchy                 |
       | demo-hierarchy-deep       |
       | demo-hierarchy-unbalanced |
@@ -46,7 +46,7 @@ Feature: Hierarchy aggregates, orders and traversals follow d3-hierarchy
   @level-quick
   @mode-differential
   Scenario: Every comparator reorders the children the way the matching d3 sort does
-    Given the committed probe document local://hierarchy-aggregates.tex and the comparators
+    Given the committed probe document shared://🌳️hierarchy-aggregates/hierarchy-aggregates.tex and the comparators
       | hierarchy                 | sort              |
       | demo-hierarchy-deep       | value-descending  |
       | demo-hierarchy-deep       | value-ascending   |
@@ -59,7 +59,7 @@ Feature: Hierarchy aggregates, orders and traversals follow d3-hierarchy
   @level-quick
   @mode-differential
   Scenario: leaves, ancestors and links list the same nodes in the same order as d3
-    Given the committed probe document local://hierarchy-aggregates.tex and the traversals
+    Given the committed probe document shared://🌳️hierarchy-aggregates/hierarchy-aggregates.tex and the traversals
       | hierarchy                 | traversal | node |
       | demo-hierarchy-deep       | leaves    |      |
       | demo-hierarchy-unbalanced | leaves    |      |
@@ -72,7 +72,7 @@ Feature: Hierarchy aggregates, orders and traversals follow d3-hierarchy
   @level-quick
   @mode-differential
   Scenario: A delimited path column creates every prefix once, in first-seen order
-    Given the committed probe document local://hierarchy-aggregates.tex and the path table
+    Given the committed probe document shared://🌳️hierarchy-aggregates/hierarchy-aggregates.tex and the path table
       | hierarchy           | delimiter |
       | demo-hierarchy-path | /         |
     Then the compiled probe and the reference implementation agree on every value

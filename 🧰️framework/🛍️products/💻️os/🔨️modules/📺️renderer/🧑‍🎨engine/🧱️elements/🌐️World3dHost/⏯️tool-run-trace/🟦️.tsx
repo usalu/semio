@@ -12,7 +12,7 @@
 // #region 🔌️Adapters
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ViewToolRunTraceCursor } from "@semio-tech/framework";
-import { BoxGeometry, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, EdgesGeometry, InstancedBufferAttribute, InstancedMesh, LineBasicMaterial, LineDashedMaterial, LineSegments, MeshStandardMaterial } from "three";
+import { BoxGeometry, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, EdgesGeometry, InstancedBufferAttribute, InstancedMesh, LineBasicMaterial, LineDashedMaterial, LineSegments, Mesh, MeshStandardMaterial } from "three";
 import { sceneHostPort } from "@semio-tech/ui-react";
 
 const { useFrame } = sceneHostPort.fiber;
@@ -108,6 +108,12 @@ export class ToolRunTraceRecordStore {
 
   has(key: bigint): boolean {
     return this.#records.has(key);
+  }
+
+  /** 🔎️ Where record `key` lives right now — its batch and dense index — or `null` once retired. The
+   * index moves under swap-remove, so a renderer re-reads it every frame instead of caching it. */
+  slot(key: bigint): { readonly batch: ToolRunTraceBatch; readonly index: number } | null {
+    return this.#records.get(key) ?? null;
   }
 
   /** 🔢️ Resident records with `verdict`, optionally restricted to one subject family. */
@@ -439,6 +445,49 @@ function ToolRunTraceNewestOutline({ store, geometryForMesh, reducedMotion }: { 
   return line && subject?.kind === "instance3d" ? <primitive object={line} renderOrder={3} /> : null;
 }
 
+/** 🔦️ The ONE record a host focuses (e.g. the hovered row of a suggestion menu): drawn alone, opaque in its
+ * verdict paint and outlined in the highlight token, so the viewport answers "this one" instead of the whole
+ * search. Re-reads its slot every frame, so a record that moves batch or index stays tracked. */
+function ToolRunTraceFocusedRecord({ store, focus, geometryForMesh }: { readonly store: ToolRunTraceRecordStore; readonly focus: bigint; readonly geometryForMesh: (mesh: number) => BufferGeometry }) {
+  const slot = store.slot(focus);
+  const subject = slot ? slot.batch.subjects[slot.index] : undefined;
+  const meshIndex = subject?.kind === "instance3d" ? subject.mesh : -1;
+  const verdict = slot?.batch.verdict ?? "success";
+  const geometry = meshIndex >= 0 ? geometryForMesh(meshIndex) : null;
+  const body = useMemo(() => {
+    if (!geometry) return null;
+    const paint = TOOL_RUN_TRACE_VERDICT_PAINT[verdict];
+    const mesh = new Mesh(geometry, new MeshStandardMaterial({ color: new Color(resolveColorHex(paint.fill)), side: DoubleSide }));
+    const outline = new LineSegments(new EdgesGeometry(geometry), new LineBasicMaterial({ color: new Color(resolveColorHex(TOOL_RUN_TRACE_HIGHLIGHT_PAINT)), transparent: true, depthTest: false, linewidth: TOOL_RUN_TRACE_METRICS.testingOutlineWidth }));
+    outline.renderOrder = 3;
+    outline.raycast = () => undefined;
+    mesh.add(outline);
+    mesh.matrixAutoUpdate = false;
+    return mesh;
+  }, [geometry, verdict]);
+  useEffect(
+    () => () => {
+      if (!body) return;
+      (body.material as MeshStandardMaterial).dispose();
+      for (const child of body.children) {
+        const line = child as LineSegments;
+        line.geometry.dispose();
+        (line.material as LineBasicMaterial).dispose();
+      }
+    },
+    [body],
+  );
+  useFrame(() => {
+    const live = store.slot(focus);
+    if (!body) return;
+    body.visible = live !== null;
+    if (!live) return;
+    body.matrix.fromArray(live.batch.matrices, live.index * 16);
+    body.matrixWorldNeedsUpdate = true;
+  });
+  return body ? <primitive object={body} renderOrder={3} raycast={() => null} /> : null;
+}
+
 export type ToolRunTraceLayerProps = {
   /** 🚚️ `World3dScene.toolRunTrace`. */
   readonly lane: string | null | undefined;
@@ -452,11 +501,13 @@ export type ToolRunTraceLayerProps = {
   readonly onCursor?: (cursor: ToolRunTraceCursor) => void;
   /** 🗂️ A host-owned store (so the host can also spread {@link toolRunTraceDataAttributes}). */
   readonly store?: { readonly store: ToolRunTraceRecordStore; readonly version: number };
+  /** 🔦️ When set, only this record draws — see {@link ToolRunTraceFocusedRecord}. */
+  readonly focus?: bigint | null;
 };
 
 /** ⏯️ Mounts inside the World3d R3F scene: one instanced mesh per visible `(mesh, verdict)` batch plus the
  * highlighted newest `testing` outline. Placement and entity subjects are counted but not drawn in 3d. */
-export function ToolRunTraceLayer({ lane, geometryForMesh, visibility = TOOL_RUN_TRACE_VISIBLE_ALL, reducedMotion, onCursor, store: hosted }: ToolRunTraceLayerProps) {
+export function ToolRunTraceLayer({ lane, geometryForMesh, visibility = TOOL_RUN_TRACE_VISIBLE_ALL, reducedMotion, onCursor, store: hosted, focus }: ToolRunTraceLayerProps) {
   const own = useToolRunTraceStore(hosted ? undefined : lane, onCursor);
   const { store, version } = hosted ?? own;
   const prefersReduced = usePrefersReducedMotion();
@@ -473,6 +524,13 @@ export function ToolRunTraceLayer({ lane, geometryForMesh, visibility = TOOL_RUN
     };
   }, [geometryForMesh]);
   const batches = useMemo(() => [...store.batches()].filter((batch) => batch.family === "instance3d" && toolRunTraceShows(visibility, batch.verdict)), [store, version, visibility]);
+  if (focus !== undefined && focus !== null) {
+    return (
+      <group name="tool-run-trace">
+        <ToolRunTraceFocusedRecord store={store} focus={focus} geometryForMesh={resolve} />
+      </group>
+    );
+  }
   return (
     <group name="tool-run-trace">
       {batches.map((batch) => (

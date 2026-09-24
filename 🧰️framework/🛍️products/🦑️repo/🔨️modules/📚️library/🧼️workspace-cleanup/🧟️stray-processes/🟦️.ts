@@ -1,9 +1,13 @@
 import { spawnSync } from "node:child_process";
 import { basename } from "node:path";
 
-/** 🧟Dev-tool executables whose leftovers accumulate across agent/terminal sessions and are safe to reap. */
+/**
+ * 🧟Dev-tool executables whose leftovers accumulate across agent/terminal sessions and are safe to reap. Excludes
+ * generic shells (`zsh`, `bash`, `sh`) — a bare interactive shell (e.g. a manually opened terminal running
+ * `caffeinate`) must never be killed by name alone; only `DEV_COMMAND_MARKERS` can flag a shell as a leftover.
+ */
 const DEV_TOOL_EXECUTABLE_NAMES = new Set([
-  "bun", "zsh", "cargo", "node", "esbuild", "rustc", "vite", "deno", "go", "rust-analyzer", "gopls", "tsserver",
+  "bun", "cargo", "node", "esbuild", "rustc", "vite", "deno", "go", "rust-analyzer", "gopls", "tsserver",
   "jest", "vitest", "playwright", "nx", "turbo", "webpack", "rollup", "tsc", "watchman", "cursor-agent", "wasm-pack",
   "mdbook", "gradle", "mvn", "java", "javac", "swift", "ruby", "perl", "make", "ninja", "cmake", "docker", "colima",
 ]);
@@ -25,6 +29,7 @@ const DEV_COMMAND_MARKERS = [
 ];
 
 const IDE_HOST_MARKERS = /(?:Cursor Helper|Code Helper|Electron|Visual Studio Code)/i;
+const ACTIVE_SEMIO_TECH_BUILD = /\bnx(?:\.js)?\s+run\s+['"]?@semio-tech\//;
 
 export interface ProcessRow {
   pid: number;
@@ -55,6 +60,7 @@ export function strayProcessExecutableName(command: string): string {
 /** 🧪Whether a live process row looks like an abandoned dev-session leftover. */
 export function isDevLeftoverRow(row: Pick<ProcessRow, "name" | "command" | "stat">): boolean {
   if (row.stat.startsWith("Z")) return false;
+  if (ACTIVE_SEMIO_TECH_BUILD.test(row.command)) return false;
   if (row.name !== "<defunct>" && DEV_TOOL_EXECUTABLE_NAMES.has(row.name)) return true;
   return DEV_COMMAND_MARKERS.some((marker) => marker.test(row.command));
 }
@@ -96,6 +102,26 @@ function ideHostedPids(rows: readonly ProcessRow[]): Set<number> {
   return hosted;
 }
 
+function activeSemioTechBuildPids(rows: readonly ProcessRow[]): Set<number> {
+  const byPid = new Map(rows.map((row) => [row.pid, row]));
+  const protectedPids = new Set<number>();
+  for (const row of rows) {
+    if (!ACTIVE_SEMIO_TECH_BUILD.test(row.command)) continue;
+    protectedPids.add(row.pid);
+    for (let parent = byPid.get(row.ppid); parent && isDevLeftoverRow(parent); parent = byPid.get(parent.ppid)) protectedPids.add(parent.pid);
+  }
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const row of rows) {
+      if (!protectedPids.has(row.ppid) || protectedPids.has(row.pid)) continue;
+      protectedPids.add(row.pid);
+      changed = true;
+    }
+  }
+  return protectedPids;
+}
+
 function rowDevLeftoverLabel(row: ProcessRow, byPid: ReadonlyMap<number, ProcessRow>): string | null {
   if (isDevLeftoverRow(row)) return row.name !== "<defunct>" ? row.name : "dev-leftover";
   if (!row.stat.startsWith("Z")) return null;
@@ -111,7 +137,7 @@ function rowDevLeftoverLabel(row: ProcessRow, byPid: ReadonlyMap<number, Process
  */
 export function planStrayProcessRemovals(rows: readonly ProcessRow[], selfPid: number): StrayProcessRemoval[] {
   const byPid = new Map(rows.map((row) => [row.pid, row]));
-  const protectedPids = new Set([...ancestryPids(rows, selfPid), ...ideHostedPids(rows)]);
+  const protectedPids = new Set([...ancestryPids(rows, selfPid), ...ideHostedPids(rows), ...activeSemioTechBuildPids(rows)]);
   const removals: StrayProcessRemoval[] = [];
   const killed = new Set<number>();
   const liveLeftovers = rows

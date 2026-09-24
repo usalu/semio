@@ -75,12 +75,23 @@ fn procedural_parameter_controls_match_the_json_oracle() {
 }
 
 fn meta() -> ActionMeta {
-    ActionMeta { actor: "local".into(), instance_id: 1, view_state: None }
+    artifact_app_laws::meta("local")
 }
 
+/// 🔗️ Registered AND bound: a migrated tool command is refused with `interactive-job.live-instance`
+/// unless the mounted live instance id equals the dispatching `ActionMeta`'s.
 async fn new_app() -> VcsArtifactApp<ModuleApp> {
     let definition = create_module_app().await.expect("module definition").definition;
-    VcsArtifactApp::with_registry(ModuleApp, AppActionRegistry::from_definition(&definition)).await
+    let mut app = VcsArtifactApp::with_registry(ModuleApp, AppActionRegistry::from_definition(&definition)).await;
+    app.bind_instance_id(meta().instance_id).await;
+    app
+}
+
+/// 🔁️ Admits one migrated action and settles its publication — the admission receipt alone
+/// publishes nothing.
+async fn act(app: &mut VcsArtifactApp<ModuleApp>, action: &str, args: Option<&DslValue>) {
+    app.handle_action(action, args, &meta()).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
+    artifact_app_laws::settle_registered_typed_operation(app, meta().instance_id).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
 }
 
 fn payload_json(params: Value) -> String {
@@ -117,6 +128,7 @@ async fn preview_body_emits_world_scene() {
     let node = app.render(BODY_PREVIEW, Some(&document), &ViewModel::default()).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("preview projection");
     assert!(json.contains("world-3d"));
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -124,7 +136,10 @@ async fn params_body_lists_flow_inputs() {
     let mut app = new_app().await;
     let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("params projection");
-    assert!(json.contains("stack"));
+    let tree: serde_json::Value = serde_json::from_str(&json).expect("independent JSON parser");
+    let fields = tree["children"].as_array().expect("column children").iter().filter(|child| child["component"]["role"] == "field").map(|child| child["component"]["label"].as_str().expect("field label")).collect::<Vec<_>>();
+    assert_eq!(fields, ["Column Height", "Profile Radius", "Side Count"], "every flow input of the default fixture is a labelled field");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -133,8 +148,9 @@ async fn params_body_includes_media_export_buttons() {
     let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("params projection");
     let tree: serde_json::Value = serde_json::from_str(&json).expect("independent JSON parser");
-    let button_count = tree["children"].as_array().expect("column children").iter().filter(|child| child["type"] == "button").count();
+    let button_count = tree["children"].as_array().expect("column children").iter().filter(|child| child["component"]["type"] == "button").count();
     assert_eq!(button_count, SOLID_MEDIA_FORMATS.len() * 2);
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -144,45 +160,51 @@ async fn export_solid_action_stashes_result_and_is_undoable() {
     // The export action emits a whole-payload `SetPayload` operation; the store applies it and the
     // stashed result is read back through the materialized projection.
     let export_args = json_to_dsl_value(&pack::json!({ "format": "obj" }));
-    app.handle_action(ACTION_EXPORT_SOLID, Some(&export_args), &meta()).await.expect("export");
+    act(&mut app, ACTION_EXPORT_SOLID, Some(&export_args)).await;
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload operation");
     // The operation carries a true inverse (the pre-operation payload), so undo removes the stashed result.
-    app.handle_action("undo", None, &meta()).await.expect("undo");
+    artifact_app_laws::settle_history_verb(&mut app, "undo", meta().instance_id).await;
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-operation payload");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn import_solid_action_stashes_result_on_params() {
     let mut app = new_app().await;
     let import_args = json_to_dsl_value(&pack::json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" }));
-    app.handle_action(ACTION_IMPORT_SOLID, Some(&import_args), &meta()).await.expect("import");
+    act(&mut app, ACTION_IMPORT_SOLID, Some(&import_args)).await;
     assert!(app.snapshot().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload operation");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn import_solid_action_reports_error_when_no_data_given() {
     let mut app = new_app().await;
     let import_args = json_to_dsl_value(&pack::json!({ "format": "obj" }));
-    app.handle_action(ACTION_IMPORT_SOLID, Some(&import_args), &meta()).await.expect("import");
+    act(&mut app, ACTION_IMPORT_SOLID, Some(&import_args)).await;
     let payload = app.snapshot().expect("projection");
     let import = payload.params.get("__solidImport").expect("import result present");
     assert!(import.get("error").is_some());
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn export_solid_declares_only_format_arg_and_materializes_default() {
     use semio_framework_plugin::app::AppActionRegistry;
     let definition = create_module_app().await.expect("MODULE_APP_ID must be a canonical surface id").definition;
-    let import = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == ACTION_IMPORT_SOLID).expect("import declared");
+    let declared = || definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter()));
+    let import = declared().find(|action| action.id == ACTION_IMPORT_SOLID).expect("import declared");
     assert!(import.args.iter().all(|arg| arg.id == "format"), "only `format` is a user-facing arg; `data` is file-callback populated");
-    let export = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");
+    let export = declared().find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");
     assert_eq!(export.args.len(), 1, "export exposes exactly the format choice");
     let registry = AppActionRegistry::from_definition(&definition);
     let mut app: VcsArtifactApp<ModuleApp> = VcsArtifactApp::with_registry(ModuleApp, registry).await;
+    app.bind_instance_id(meta().instance_id).await;
     // exportSolid fired with no args: the declared `format` default is materialized before dispatch,
     // so the whole-payload operation still applies and stashes a result.
-    app.handle_action(ACTION_EXPORT_SOLID, None, &meta()).await.expect("export");
+    act(&mut app, ACTION_EXPORT_SOLID, None).await;
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed under the materialized format");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -191,6 +213,7 @@ async fn unknown_action_yields_no_document_change() {
     let before = app.snapshot().expect("projection");
     assert!(app.handle_action("noSuchAction", None, &meta()).await.is_err(), "an undeclared action is rejected rather than silently ignored");
     assert_eq!(app.snapshot().expect("snapshot"), before);
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -259,11 +282,15 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> =
         ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None)).await.expect("valid artifact store fixture");
+    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ModuleRenderPayload, ModulePayloadMutation>());
     let mut payload = default_payload();
     payload.interactive = false;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], description: None }).await.expect("apply");
     let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    while !store.close_owned_terminal_is_empty() {
+        store.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("module store closes through its exact bounded owners");
+    }
 }
 //#endregion 🔖️CommandEnvelopeTests
 //#endregion 🔖️DslAndOpText

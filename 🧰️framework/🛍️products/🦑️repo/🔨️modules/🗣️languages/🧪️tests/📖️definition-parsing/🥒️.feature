@@ -21,6 +21,6 @@ Feature: A file's definitions are found where the language's own compiler finds 
   @level-fundamental
   @mode-differential
   Scenario: A const bound to a callable initialiser is reported as a function, not a constant
-    Given the case source local://🔤️callables.ts
+    Given the case source shared://📖️definition-parsing/🔤️callables.ts
     When each implementation parses its definitions
     Then every implementation reports the same names and the same callable flag per name

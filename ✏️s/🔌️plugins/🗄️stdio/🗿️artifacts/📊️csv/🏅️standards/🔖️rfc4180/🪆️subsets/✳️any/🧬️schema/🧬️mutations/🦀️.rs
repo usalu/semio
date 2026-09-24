@@ -244,29 +244,39 @@ fn op_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "csv op binary", offset: 0, detail: e.to_string() }
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `CsvMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_SET_HAS_HEADER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-has-header");
+const TAG_INSERT_RECORD: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-record");
+const TAG_REMOVE_RECORD: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-record");
+const TAG_SET_FIELD: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-field");
+//#endregion 🏷️WireTags
+
 impl OpBinary for CsvMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new();
         match self {
             CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
-                w.write_u8(1);
+                w.write_u8(TAG_SET_SNAPSHOT);
                 write_bin_snapshot(&mut w, snapshot);
             }
             CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header }) => {
-                w.write_u8(2);
+                w.write_u8(TAG_SET_HAS_HEADER);
                 w.write_u8(if *has_header { 1 } else { 0 });
             }
             CsvMutation::InsertRecord(insert_record::InsertRecord { index, record }) => {
-                w.write_u8(3);
+                w.write_u8(TAG_INSERT_RECORD);
                 w.write_varint_u64(*index as u64);
                 write_bin_record(&mut w, record);
             }
             CsvMutation::RemoveRecord(remove_record::RemoveRecord { index }) => {
-                w.write_u8(4);
+                w.write_u8(TAG_REMOVE_RECORD);
                 w.write_varint_u64(*index as u64);
             }
             CsvMutation::SetField(set_field::SetField { record_index, field_index, value, quoted }) => {
-                w.write_u8(5);
+                w.write_u8(TAG_SET_FIELD);
                 w.write_varint_u64(*record_index as u64);
                 w.write_varint_u64(*field_index as u64);
                 w.write_u8(if *quoted { 1 } else { 0 });
@@ -279,15 +289,15 @@ impl OpBinary for CsvMutation {
         let mut r = dsl::ByteReader::new(bytes);
         let ordinal = r.read_u8().map_err(|error| op_pack_err(&error))?;
         let mutation = match ordinal {
-            1 => CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(|error| op_pack_err(&error))? }),
-            2 => CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: r.read_u8().map_err(|error| op_pack_err(&error))? != 0 }),
-            3 => {
+            TAG_SET_SNAPSHOT => CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(|error| op_pack_err(&error))? }),
+            TAG_SET_HAS_HEADER => CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: r.read_u8().map_err(|error| op_pack_err(&error))? != 0 }),
+            TAG_INSERT_RECORD => {
                 let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
                 let record = read_bin_record(&mut r).map_err(|error| op_pack_err(&error))?;
                 CsvMutation::InsertRecord(insert_record::InsertRecord { index, record })
             }
-            4 => CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize }),
-            5 => {
+            TAG_REMOVE_RECORD => CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize }),
+            TAG_SET_FIELD => {
                 let record_index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
                 let field_index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
                 let quoted = r.read_u8().map_err(|error| op_pack_err(&error))? != 0;

@@ -294,7 +294,7 @@ pub fn flatten_raster_layers(layers: &[RasterLayerNode]) -> Vec<&RasterLayerNode
 //#endregion 🔖️Tree
 
 /// 🖼️ `pub` (not `fn` as it was inside `⚙️engine`, where crate-locality made privacy moot): now called
-/// cross-module from `🚪️io/🦀️.rs`'s `MediaImport` region (`raster_document_json_from_dwg`,
+/// cross-module from `🚪️io/🦀️.rs`'s `MediaImport` region (`raster_document_from_dwg_drawing`,
 /// `raster_image_layer_and_asset`), which need a specific name/width/height rather than
 /// `create_layer_of_kind`'s generic defaults.
 pub fn create_pixel_layer(name: &str, width: u32, height: u32) -> RasterLayerNode {

@@ -8,7 +8,7 @@ struct OrbitOracle { position: [f64; 3], target: [f64; 3], zoom: f64, up: Option
 
 #[test]
 fn viewport_ownership_neutral_admission_and_serde_round_trip() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️poses/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️poses/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let value = DslValue::from(row["value"].clone());
         let valid = row["valid"].as_bool().unwrap();

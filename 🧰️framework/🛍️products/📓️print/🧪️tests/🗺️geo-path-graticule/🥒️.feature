@@ -21,7 +21,7 @@ Feature: geoPath and the graticule of semio-viz-geo agree with d3-geo
   is compared before projection, so a disagreement is a disagreement about the graticule and not
   about the projection.
 
-  Probe documents: local://path-none.tex, local://path-resampled.tex and local://graticule.tex are all committed.
+  Probe documents: shared://🗺️geo-path-graticule/path-none.tex, shared://🗺️geo-path-graticule/path-resampled.tex and shared://🗺️geo-path-graticule/graticule.tex are all committed.
 
   Antimeridian clipping is out of scope — `semio-viz-geo` does not split geometry at ±180°, and
   every vector below stays inside one hemisphere of longitude so that d3's default `clipAntimeridian`
@@ -31,7 +31,7 @@ Feature: geoPath and the graticule of semio-viz-geo agree with d3-geo
   @level-quick
   @mode-differential
   Scenario: Unresampled ring vertices agree with d3-geo's geoPath
-    Given the committed probe document local://path-none.tex and the projections
+    Given the committed probe document shared://🗺️geo-path-graticule/path-none.tex and the projections
       | kind            | precision |
       | equirectangular | 0         |
       | mercator        | 0         |
@@ -42,7 +42,7 @@ Feature: geoPath and the graticule of semio-viz-geo agree with d3-geo
   @level-quick
   @mode-differential
   Scenario: Adaptively resampled ring vertices agree with d3-geo's geoPath
-    Given the committed probe document local://path-resampled.tex and the projections
+    Given the committed probe document shared://🗺️geo-path-graticule/path-resampled.tex and the projections
       | kind             | precision          |
       | mercator         | 0.7071067811865476 |
       | conic-equal-area | 0.7071067811865476 |
@@ -52,7 +52,7 @@ Feature: geoPath and the graticule of semio-viz-geo agree with d3-geo
   @level-quick
   @mode-differential
   Scenario: The graticule line list agrees with d3-geo
-    Given the committed probe document local://graticule.tex and the graticule steps
+    Given the committed probe document shared://🗺️geo-path-graticule/graticule.tex and the graticule steps
       | stepMinorX | stepMinorY | stepMajorX | stepMajorY | precision |
       | 20         | 20         | 90         | 360        | 30        |
     Then the compiled probe and the reference implementation agree on every graticule vertex

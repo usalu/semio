@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetEntityGeometry {
-    pub(crate) handle: String,
-    pub(crate) entity: CadEntity,
+    pub handle: String,
+    pub entity: CadEntity,
 }
 
 impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetEntityGeometry {

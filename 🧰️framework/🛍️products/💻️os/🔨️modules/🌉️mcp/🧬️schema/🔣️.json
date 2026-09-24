@@ -58,10 +58,19 @@
     },
     "ArtifactCreateOutput": {
       "properties": {
+        "appId": {
+          "type": "string"
+        },
         "artifactId": {
           "type": "string"
         },
+        "jobId": {
+          "type": "string"
+        },
         "kind": {
+          "type": "string"
+        },
+        "pluginId": {
           "type": "string"
         },
         "revision": {
@@ -80,8 +89,24 @@
             "object",
             "null"
           ]
+        },
+        "sizeBytes": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "SUCCEEDED",
+            "CANCELLED"
+          ]
         }
       },
+      "required": [
+        "jobId",
+        "status",
+        "artifactId",
+        "kind"
+      ],
       "type": "object"
     },
     "ArtifactCreateTemplateInput": {
@@ -381,6 +406,38 @@
               "type": "string"
             },
             "headEditId": {
+              "type": "string"
+            }
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "sessionDocument": {
+          "properties": {
+            "appId": {
+              "type": "string"
+            },
+            "packBytes": {
+              "type": "integer"
+            },
+            "pluginId": {
+              "type": "string"
+            },
+            "relayedBatches": {
+              "type": "integer"
+            },
+            "sprBytes": {
+              "type": "integer"
+            },
+            "surfaceId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "writePath": {
               "type": "string"
             }
           },

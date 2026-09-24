@@ -183,12 +183,12 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use crate::standards::energyplus::subsets::any::io::{decode_epw, encode_epw};
-    use crate::standards::energyplus::subsets::any::schema::mutations::apply_epw_mutation;
-    use crate::standards::energyplus::subsets::any::schema::mutations::{
+    use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::io::{decode_epw, encode_epw};
+    use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::mutations::apply_epw_mutation;
+    use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::mutations::{
         insert_record, remove_record, set_comments1, set_comments2, set_data_periods, set_design_conditions, set_ground_temperatures, set_holidays_dst, set_location, set_record_field, set_snapshot, set_typical_extreme_periods,
     };
-    use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriod, EpwDataPeriods, EpwLocation, EpwRecord, EPW_RECORD_FIELD_COUNT};
+    use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriod, EpwDataPeriods, EpwLocation, EpwRecord, EPW_RECORD_FIELD_COUNT};
     use crate::{EpwMutation, EpwSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::project_epw;
 

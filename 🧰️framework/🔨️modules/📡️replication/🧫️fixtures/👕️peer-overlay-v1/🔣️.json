@@ -1,0 +1,272 @@
+{
+  "id": "peer-overlay-v1",
+  "description": "Presence interaction + window views reduce to canvas peer overlays (ephemeral shared only).",
+  "cases": [
+    {
+      "id": "canvas-pointer-and-selection",
+      "windowId": "board-main",
+      "space": "canvas",
+      "mySurface": "drawing@1/any#edit",
+      "myActor": "self",
+      "localColor": 0,
+      "localView": {
+        "kind": "canvas",
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "localSize": [
+        800.0,
+        600.0
+      ],
+      "scenePath": "scene",
+      "roster": [
+        {
+          "actor": "self",
+          "connectedAtMs": 1,
+          "label": "Me",
+          "color": 0,
+          "surface": "drawing@1/any#edit",
+          "views": [],
+          "interaction": {
+            "appId": "drawing",
+            "domains": []
+          }
+        },
+        {
+          "actor": "peer-a",
+          "connectedAtMs": 2,
+          "label": "Ada",
+          "color": 3,
+          "surface": "drawing@1/any#edit",
+          "views": [
+            {
+              "windowId": "board-main",
+              "space": "canvas",
+              "kind": {
+                "kind": "canvas",
+                "x": 100.0,
+                "y": 50.0,
+                "zoom": 2.0
+              },
+              "size": [
+                400.0,
+                300.0
+              ],
+              "pointer": [
+                120.0,
+                80.0,
+                0.0
+              ]
+            }
+          ],
+          "interaction": {
+            "appId": "drawing",
+            "domains": [
+              {
+                "domain": "layer",
+                "granularity": "stroke",
+                "selected": [
+                  "s1"
+                ],
+                "hovered": [
+                  "s2"
+                ]
+              }
+            ]
+          },
+          "activeTool": "brush"
+        },
+        {
+          "actor": "peer-b",
+          "connectedAtMs": 3,
+          "label": "Bea",
+          "color": 5,
+          "surface": "writer@1/any#edit",
+          "views": [
+            {
+              "windowId": "other",
+              "space": "canvas",
+              "kind": {
+                "kind": "canvas",
+                "x": 0.0,
+                "y": 0.0,
+                "zoom": 1.0
+              },
+              "size": [
+                100.0,
+                100.0
+              ],
+              "pointer": [
+                1.0,
+                1.0,
+                0.0
+              ]
+            }
+          ],
+          "interaction": {
+            "appId": "writer",
+            "domains": [
+              {
+                "domain": "text",
+                "granularity": "span",
+                "selected": [
+                  "c1"
+                ],
+                "hovered": []
+              }
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "artifactPeerActors": [
+          "peer-a"
+        ],
+        "cursorScreen": [
+          520.0,
+          380.0
+        ],
+        "viewportRect": [
+          400.0,
+          275.0,
+          200.0,
+          150.0
+        ],
+        "markKeys": [
+          "layer:s1",
+          "layer:s2"
+        ],
+        "paths": {
+          "cursor": "scene/peerCursor[0]#peer-a",
+          "viewport": "scene/peerCamera[0]#peer-a",
+          "markSelection": "scene/peerMarks[0]#layer:s1",
+          "markHover": "scene/peerMarks[1]#layer:s2"
+        },
+        "activeTools": [
+          "brush"
+        ]
+      }
+    },
+    {
+      "id": "orbit-pointer-same-space",
+      "windowId": "world-main",
+      "space": "world",
+      "mySurface": "puzzle3d@1/any#edit",
+      "myActor": "self",
+      "localColor": 1,
+      "localView": {
+        "kind": "orbit",
+        "position": [
+          0,
+          0,
+          5
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "fov": 45
+      },
+      "localSize": [
+        1024.0,
+        768.0
+      ],
+      "scenePath": "scene",
+      "roster": [
+        {
+          "actor": "peer-c",
+          "connectedAtMs": 4,
+          "label": "Cam",
+          "color": 7,
+          "surface": "puzzle3d@1/any#edit",
+          "views": [
+            {
+              "windowId": "world-main",
+              "space": "world",
+              "kind": {
+                "kind": "orbit",
+                "position": [
+                  2,
+                  3,
+                  4
+                ],
+                "target": [
+                  0,
+                  0,
+                  0
+                ],
+                "up": [
+                  0,
+                  1,
+                  0
+                ],
+                "fov": 50
+              },
+              "size": [
+                800.0,
+                600.0
+              ],
+              "pointer": [
+                0.5,
+                0.25,
+                0.0
+              ],
+              "rayOrigin": [
+                2.0,
+                3.0,
+                4.0
+              ]
+            }
+          ],
+          "interaction": {
+            "appId": "puzzle3d",
+            "domains": [
+              {
+                "domain": "object",
+                "granularity": "object",
+                "selected": [
+                  "o1"
+                ],
+                "hovered": []
+              }
+            ]
+          },
+          "activeTool": "select"
+        }
+      ],
+      "expected": {
+        "artifactPeerActors": [
+          "peer-c"
+        ],
+        "markKeys": [
+          "object:o1"
+        ],
+        "frustumCornerCount": 5,
+        "frustumSegmentCount": 8,
+        "activeTools": [
+          "select"
+        ],
+        "cursorScreen": [
+          604.705801,
+          337.6471
+        ],
+        "paths": {
+          "cursor": "scene/peerCursor[0]#peer-c",
+          "selection": "scene/peerMarks[0]#object:o1"
+        },
+        "rayOrigin": [
+          2.0,
+          3.0,
+          4.0
+        ]
+      }
+    }
+  ]
+}

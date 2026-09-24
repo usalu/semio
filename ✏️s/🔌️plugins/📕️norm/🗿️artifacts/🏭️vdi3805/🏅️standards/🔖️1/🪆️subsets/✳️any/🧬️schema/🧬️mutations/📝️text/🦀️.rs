@@ -222,28 +222,52 @@ fn read_opt_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<usize
     }
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `Vdi3805Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("../💾️binary/📡️.protocol.semio");
+const TAG_UPDATE_MANUFACTURER_FILE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-manufacturer-file");
+const TAG_CHANGE_CORRECTION_AS_OF: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-correction-as-of");
+const TAG_CHANGE_STRICT_MODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-strict-mode");
+const TAG_UPDATE_LIMITS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-limits");
+const TAG_CHANGE_EDITION_PROFILE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-edition-profile");
+const TAG_REMOVE_EDITION_PROFILE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-edition-profile");
+const TAG_CREATE_PRODUCT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-product");
+const TAG_DELETE_PRODUCT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-product");
+const TAG_RENAME_PRODUCT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rename-product");
+const TAG_REPLACE_PRODUCT_CONFIGURATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-product-configuration");
+const TAG_CREATE_GEOMETRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-geometry");
+const TAG_DELETE_GEOMETRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-geometry");
+const TAG_RESIZE_GEOMETRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "resize-geometry");
+const TAG_ADD_GEOMETRY_CONNECTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "add-geometry-connection");
+const TAG_REMOVE_GEOMETRY_CONNECTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-geometry-connection");
+const TAG_REPLACE_GEOMETRY_PARAMETERS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-geometry-parameters");
+const TAG_CREATE_CURVE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-curve");
+const TAG_DELETE_CURVE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-curve");
+const TAG_REPLACE_CURVE_POINTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-curve-points");
+//#endregion 🏷️WireTags
+
 impl protocol::OpBinary for Vdi3805Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            Vdi3805Mutation::UpdateManufacturerFile(_) => 0,
-            Vdi3805Mutation::ChangeCorrectionAsOf(_) => 1,
-            Vdi3805Mutation::ChangeStrictMode(_) => 2,
-            Vdi3805Mutation::UpdateLimits(_) => 3,
-            Vdi3805Mutation::ChangeEditionProfile(_) => 4,
-            Vdi3805Mutation::RemoveEditionProfile(_) => 5,
-            Vdi3805Mutation::CreateProduct(_) => 6,
-            Vdi3805Mutation::DeleteProduct(_) => 7,
-            Vdi3805Mutation::RenameProduct(_) => 8,
-            Vdi3805Mutation::ReplaceProductConfiguration(_) => 9,
-            Vdi3805Mutation::CreateGeometry(_) => 10,
-            Vdi3805Mutation::DeleteGeometry(_) => 11,
-            Vdi3805Mutation::ResizeGeometry(_) => 12,
-            Vdi3805Mutation::AddGeometryConnection(_) => 13,
-            Vdi3805Mutation::RemoveGeometryConnection(_) => 14,
-            Vdi3805Mutation::ReplaceGeometryParameters(_) => 15,
-            Vdi3805Mutation::CreateCurve(_) => 16,
-            Vdi3805Mutation::DeleteCurve(_) => 17,
-            Vdi3805Mutation::ReplaceCurvePoints(_) => 18,
+            Vdi3805Mutation::UpdateManufacturerFile(_) => TAG_UPDATE_MANUFACTURER_FILE,
+            Vdi3805Mutation::ChangeCorrectionAsOf(_) => TAG_CHANGE_CORRECTION_AS_OF,
+            Vdi3805Mutation::ChangeStrictMode(_) => TAG_CHANGE_STRICT_MODE,
+            Vdi3805Mutation::UpdateLimits(_) => TAG_UPDATE_LIMITS,
+            Vdi3805Mutation::ChangeEditionProfile(_) => TAG_CHANGE_EDITION_PROFILE,
+            Vdi3805Mutation::RemoveEditionProfile(_) => TAG_REMOVE_EDITION_PROFILE,
+            Vdi3805Mutation::CreateProduct(_) => TAG_CREATE_PRODUCT,
+            Vdi3805Mutation::DeleteProduct(_) => TAG_DELETE_PRODUCT,
+            Vdi3805Mutation::RenameProduct(_) => TAG_RENAME_PRODUCT,
+            Vdi3805Mutation::ReplaceProductConfiguration(_) => TAG_REPLACE_PRODUCT_CONFIGURATION,
+            Vdi3805Mutation::CreateGeometry(_) => TAG_CREATE_GEOMETRY,
+            Vdi3805Mutation::DeleteGeometry(_) => TAG_DELETE_GEOMETRY,
+            Vdi3805Mutation::ResizeGeometry(_) => TAG_RESIZE_GEOMETRY,
+            Vdi3805Mutation::AddGeometryConnection(_) => TAG_ADD_GEOMETRY_CONNECTION,
+            Vdi3805Mutation::RemoveGeometryConnection(_) => TAG_REMOVE_GEOMETRY_CONNECTION,
+            Vdi3805Mutation::ReplaceGeometryParameters(_) => TAG_REPLACE_GEOMETRY_PARAMETERS,
+            Vdi3805Mutation::CreateCurve(_) => TAG_CREATE_CURVE,
+            Vdi3805Mutation::DeleteCurve(_) => TAG_DELETE_CURVE,
+            Vdi3805Mutation::ReplaceCurvePoints(_) => TAG_REPLACE_CURVE_POINTS,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -303,57 +327,57 @@ impl protocol::OpBinary for Vdi3805Mutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            0 => Ok(Vdi3805Mutation::UpdateManufacturerFile(UpdateManufacturerFile { new_manufacturer_file: read_json_bin(&mut reader).map_err(|e| malformed("new_manufacturer_file", reader.position(), e))? })),
-            1 => Ok(Vdi3805Mutation::ChangeCorrectionAsOf(ChangeCorrectionAsOf { new_correction_as_of: read_json_bin(&mut reader).map_err(|e| malformed("new_correction_as_of", reader.position(), e))? })),
-            2 => Ok(Vdi3805Mutation::ChangeStrictMode(ChangeStrictMode { new_strict_mode: read_bool_bin(&mut reader).map_err(|e| malformed("new_strict_mode", reader.position(), e))? })),
-            3 => Ok(Vdi3805Mutation::UpdateLimits(UpdateLimits { new_limits: read_json_bin(&mut reader).map_err(|e| malformed("new_limits", reader.position(), e))? })),
-            4 => {
+            TAG_UPDATE_MANUFACTURER_FILE => Ok(Vdi3805Mutation::UpdateManufacturerFile(UpdateManufacturerFile { new_manufacturer_file: read_json_bin(&mut reader).map_err(|e| malformed("new_manufacturer_file", reader.position(), e))? })),
+            TAG_CHANGE_CORRECTION_AS_OF => Ok(Vdi3805Mutation::ChangeCorrectionAsOf(ChangeCorrectionAsOf { new_correction_as_of: read_json_bin(&mut reader).map_err(|e| malformed("new_correction_as_of", reader.position(), e))? })),
+            TAG_CHANGE_STRICT_MODE => Ok(Vdi3805Mutation::ChangeStrictMode(ChangeStrictMode { new_strict_mode: read_bool_bin(&mut reader).map_err(|e| malformed("new_strict_mode", reader.position(), e))? })),
+            TAG_UPDATE_LIMITS => Ok(Vdi3805Mutation::UpdateLimits(UpdateLimits { new_limits: read_json_bin(&mut reader).map_err(|e| malformed("new_limits", reader.position(), e))? })),
+            TAG_CHANGE_EDITION_PROFILE => {
                 let sheet = read_str_bin(&mut reader).map_err(|e| malformed("sheet", reader.position(), e))?;
                 let new_choice = read_json_bin(&mut reader).map_err(|e| malformed("new_choice", reader.position(), e))?;
                 Ok(Vdi3805Mutation::ChangeEditionProfile(ChangeEditionProfile { sheet, new_choice }))
             }
-            5 => Ok(Vdi3805Mutation::RemoveEditionProfile(RemoveEditionProfile { sheet: read_str_bin(&mut reader).map_err(|e| malformed("sheet", reader.position(), e))? })),
-            6 => {
+            TAG_REMOVE_EDITION_PROFILE => Ok(Vdi3805Mutation::RemoveEditionProfile(RemoveEditionProfile { sheet: read_str_bin(&mut reader).map_err(|e| malformed("sheet", reader.position(), e))? })),
+            TAG_CREATE_PRODUCT => {
                 let product = read_json_bin(&mut reader).map_err(|e| malformed("product", reader.position(), e))?;
                 let index = read_opt_usize_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 Ok(Vdi3805Mutation::CreateProduct(CreateProduct { product, index }))
             }
-            7 => Ok(Vdi3805Mutation::DeleteProduct(DeleteProduct { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
-            8 => {
+            TAG_DELETE_PRODUCT => Ok(Vdi3805Mutation::DeleteProduct(DeleteProduct { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
+            TAG_RENAME_PRODUCT => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let new_title = read_json_bin(&mut reader).map_err(|e| malformed("new_title", reader.position(), e))?;
                 Ok(Vdi3805Mutation::RenameProduct(RenameProduct { id, new_title }))
             }
-            9 => {
+            TAG_REPLACE_PRODUCT_CONFIGURATION => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let new_configuration = read_json_bin(&mut reader).map_err(|e| malformed("new_configuration", reader.position(), e))?;
                 Ok(Vdi3805Mutation::ReplaceProductConfiguration(ReplaceProductConfiguration { id, new_configuration }))
             }
-            10 => Ok(Vdi3805Mutation::CreateGeometry(CreateGeometry { geometry: read_json_bin(&mut reader).map_err(|e| malformed("geometry", reader.position(), e))? })),
-            11 => Ok(Vdi3805Mutation::DeleteGeometry(DeleteGeometry { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
-            12 => {
+            TAG_CREATE_GEOMETRY => Ok(Vdi3805Mutation::CreateGeometry(CreateGeometry { geometry: read_json_bin(&mut reader).map_err(|e| malformed("geometry", reader.position(), e))? })),
+            TAG_DELETE_GEOMETRY => Ok(Vdi3805Mutation::DeleteGeometry(DeleteGeometry { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
+            TAG_RESIZE_GEOMETRY => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let new_bbox = read_json_bin(&mut reader).map_err(|e| malformed("new_bbox", reader.position(), e))?;
                 Ok(Vdi3805Mutation::ResizeGeometry(ResizeGeometry { id, new_bbox }))
             }
-            13 => {
+            TAG_ADD_GEOMETRY_CONNECTION => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let connection = read_json_bin(&mut reader).map_err(|e| malformed("connection", reader.position(), e))?;
                 Ok(Vdi3805Mutation::AddGeometryConnection(AddGeometryConnection { id, connection }))
             }
-            14 => {
+            TAG_REMOVE_GEOMETRY_CONNECTION => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let connection_id = read_str_bin(&mut reader).map_err(|e| malformed("connection_id", reader.position(), e))?;
                 Ok(Vdi3805Mutation::RemoveGeometryConnection(RemoveGeometryConnection { id, connection_id }))
             }
-            15 => {
+            TAG_REPLACE_GEOMETRY_PARAMETERS => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let new_parameters = read_json_bin(&mut reader).map_err(|e| malformed("new_parameters", reader.position(), e))?;
                 Ok(Vdi3805Mutation::ReplaceGeometryParameters(ReplaceGeometryParameters { id, new_parameters }))
             }
-            16 => Ok(Vdi3805Mutation::CreateCurve(CreateCurve { curve: read_json_bin(&mut reader).map_err(|e| malformed("curve", reader.position(), e))? })),
-            17 => Ok(Vdi3805Mutation::DeleteCurve(DeleteCurve { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
-            18 => {
+            TAG_CREATE_CURVE => Ok(Vdi3805Mutation::CreateCurve(CreateCurve { curve: read_json_bin(&mut reader).map_err(|e| malformed("curve", reader.position(), e))? })),
+            TAG_DELETE_CURVE => Ok(Vdi3805Mutation::DeleteCurve(DeleteCurve { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
+            TAG_REPLACE_CURVE_POINTS => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let new_points = read_json_bin(&mut reader).map_err(|e| malformed("new_points", reader.position(), e))?;
                 Ok(Vdi3805Mutation::ReplaceCurvePoints(ReplaceCurvePoints { id, new_points }))

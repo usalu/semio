@@ -5,111 +5,6 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "mutationManifests": [
-    {
-      "schema": "semio.repository-test.mutation-manifest/v2",
-      "artifact": "s.stdio.gif",
-      "standard": "89a",
-      "subset": "application",
-      "standardDirectoryName": "9️⃣89a",
-      "subsetDirectoryName": "🧩️application",
-      "mutations": [
-        {
-          "id": "add-app-extension",
-          "capability": "gif-89a-application-mutate",
-          "payloadSchema": "../../🧱️base/🧬️schema/🧬️mutations/🧩add-app-extension/🦀️.rs#AddAppExtension",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "add-app-extension",
-            "bridgeVersion": 1,
-            "variant": "GifMutation::AddAppExtension"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "gif-89a-application-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-extension-reader"
-            }
-          ],
-          "carriers": [
-            "gif"
-          ],
-          "invariants": {
-            "local": [
-              "application-extension-identifier-authcode-data-agree"
-            ],
-            "enclosing": [
-              "gif-reencode-round-trip-agrees-with-reference-decoder"
-            ]
-          }
-        },
-        {
-          "id": "remove-app-extension",
-          "capability": "gif-89a-application-mutate",
-          "payloadSchema": "../../🧱️base/🧬️schema/🧬️mutations/➖remove-app-extension/🦀️.rs#RemoveAppExtension",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "remove-app-extension",
-            "bridgeVersion": 1,
-            "variant": "GifMutation::RemoveAppExtension"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "gif-89a-application-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-extension-reader"
-            }
-          ],
-          "carriers": [
-            "gif"
-          ],
-          "invariants": {
-            "local": [
-              "application-extension-count-agrees"
-            ],
-            "enclosing": [
-              "gif-reencode-round-trip-agrees-with-reference-decoder"
-            ]
-          }
-        },
-        {
-          "id": "set-loop-count",
-          "capability": "gif-89a-application-mutate",
-          "payloadSchema": "../../🧱️base/🧬️schema/🧬️mutations/🔁set-loop-count/🦀️.rs#SetLoopCount",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-loop-count",
-            "bridgeVersion": 1,
-            "variant": "GifMutation::SetLoopCount"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "gif-89a-application-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-any-mutate-reader"
-            }
-          ],
-          "carriers": [
-            "gif"
-          ],
-          "invariants": {
-            "local": [
-              "netscape-loop-extension-count-agrees"
-            ],
-            "enclosing": [
-              "gif-reencode-round-trip-agrees-with-reference-decoder"
-            ]
-          }
-        }
-      ]
-    }
-  ],
   "fixtureManifests": [
     {
       "schema": "semio.repository-test.fixture/v2",
@@ -152,7 +47,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts extensions",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-gif-89a-extension-v1",
       "reproducible": true,
@@ -201,7 +96,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts extensions",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-gif-89a-extension-v1",
       "reproducible": true,

@@ -91,7 +91,7 @@
         "energy-model-1-simulate"
       ],
       "comparisonProfiles": [
-        "energy-model-1-bestest-compare-v1"
+        "ordered-json-v1"
       ],
       "license": "BSD-3-Clause AND AGPL-3.0-only",
       "testOnly": true,

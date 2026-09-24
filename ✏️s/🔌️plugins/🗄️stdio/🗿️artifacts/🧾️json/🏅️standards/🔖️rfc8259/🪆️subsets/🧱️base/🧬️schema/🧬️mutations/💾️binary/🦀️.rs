@@ -3,13 +3,17 @@ use crate::schema::mutations::JsonMutation;
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 pub const BINARY_TAGS: &[(&str, u32)] = &[("set-member", 1), ("remove-member", 2), ("insert-array-element", 3), ("remove-array-element", 4), ("set-scalar", 5)];
+//#region 🏷️WireTags
+/// 🏷️ `JsonMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
+const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
+//#endregion 🏷️WireTags
+
 impl protocol::OpBinary for JsonMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self))).into_bytes())
+        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let parsed = pack::parse_json_bytes(bytes).map_err(|cause| protocol::ProtocolError::Malformed { what: "json mutation", offset: 0, detail: cause.to_string() })?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|cause| protocol::ProtocolError::Malformed { what: "json mutation", offset: 0, detail: cause.to_string() })
+        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
     }
 }

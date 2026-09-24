@@ -33,7 +33,7 @@ func newContext(ctx *host.Context) (*graphql.RecordingContext, error) {
 
 // 📥️ Reads the query corpus.
 func readCorpus(ctx *host.Context) (corpus, error) {
-	raw, err := ctx.FixtureBytes("local://🔣️queries.json")
+	raw, err := ctx.FixtureBytes("shared://▶️query-execution/🔣️queries.json")
 	if err != nil {
 		return corpus{}, err
 	}

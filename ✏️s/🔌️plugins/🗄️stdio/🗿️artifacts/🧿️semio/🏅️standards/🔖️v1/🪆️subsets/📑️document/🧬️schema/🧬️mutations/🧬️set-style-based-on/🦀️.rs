@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetStyleBasedOn {
-    pub(crate) id: String,
-    pub(crate) based_on: Option<String>,
+    pub id: String,
+    pub based_on: Option<String>,
 }
 
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for SetStyleBasedOn {

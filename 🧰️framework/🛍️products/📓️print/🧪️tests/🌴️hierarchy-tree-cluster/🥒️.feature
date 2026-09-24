@@ -30,7 +30,7 @@ Feature: The tree and cluster layouts place nodes exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: A tree normalised onto a size fills the frame the way d3 tree().size() does
-    Given the committed probe document local://hierarchy-tree-cluster.tex and the tree extents
+    Given the committed probe document shared://🌴️hierarchy-tree-cluster/hierarchy-tree-cluster.tex and the tree extents
       | hierarchy                  | mode | width | height |
       | demo-hierarchy-deep        | size | 100   | 60     |
       | demo-hierarchy-unbalanced  | size | 100   | 60     |
@@ -40,7 +40,7 @@ Feature: The tree and cluster layouts place nodes exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: A tree with a fixed node size scales instead of normalising, as d3 tree().nodeSize() does
-    Given the committed probe document local://hierarchy-tree-cluster.tex and the tree extents
+    Given the committed probe document shared://🌴️hierarchy-tree-cluster/hierarchy-tree-cluster.tex and the tree extents
       | hierarchy                  | mode     | width | height |
       | demo-hierarchy-deep        | nodeSize | 12    | 20     |
       | demo-hierarchy-unbalanced  | nodeSize | 12    | 20     |
@@ -50,7 +50,7 @@ Feature: The tree and cluster layouts place nodes exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: A custom separation widens siblings and cousins as d3 tree().separation() does
-    Given the committed probe document local://hierarchy-tree-cluster.tex and the separations
+    Given the committed probe document shared://🌴️hierarchy-tree-cluster/hierarchy-tree-cluster.tex and the separations
       | hierarchy                  | mode     | siblings | cousins |
       | demo-hierarchy-deep        | size     | 1        | 2.5     |
       | demo-hierarchy-unbalanced  | nodeSize | 2        | 3       |
@@ -60,7 +60,7 @@ Feature: The tree and cluster layouts place nodes exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: A cluster puts every leaf on the last row as d3 cluster().size() does
-    Given the committed probe document local://hierarchy-tree-cluster.tex and the cluster extents
+    Given the committed probe document shared://🌴️hierarchy-tree-cluster/hierarchy-tree-cluster.tex and the cluster extents
       | hierarchy                  | mode | width | height |
       | demo-hierarchy-deep        | size | 100   | 60     |
       | demo-hierarchy-unbalanced  | size | 100   | 60     |
@@ -70,7 +70,7 @@ Feature: The tree and cluster layouts place nodes exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: A cluster with a fixed node size anchors on its root as d3 cluster().nodeSize() does
-    Given the committed probe document local://hierarchy-tree-cluster.tex and the cluster extents
+    Given the committed probe document shared://🌴️hierarchy-tree-cluster/hierarchy-tree-cluster.tex and the cluster extents
       | hierarchy                  | mode     | width | height | siblings | cousins |
       | demo-hierarchy-deep        | nodeSize | 12    | 20     |          |         |
       | demo-hierarchy-unbalanced  | nodeSize | 12    | 20     | 1.5      | 3       |

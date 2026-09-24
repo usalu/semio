@@ -18,30 +18,7 @@
   },
   "$defs": {
     "CadLayer": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "colorIndex",
-        "lineType",
-        "visible"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "colorIndex": {
-          "type": "integer",
-          "minimum": -2147483648,
-          "maximum": 2147483647
-        },
-        "lineType": {
-          "type": "string"
-        },
-        "visible": {
-          "type": "boolean"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/cad/snapshot.json#/$defs/CadLayer"
     }
   }
 }

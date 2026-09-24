@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteBattery",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-battery",
-  "binaryTag": null,
+  "binaryTag": 208,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

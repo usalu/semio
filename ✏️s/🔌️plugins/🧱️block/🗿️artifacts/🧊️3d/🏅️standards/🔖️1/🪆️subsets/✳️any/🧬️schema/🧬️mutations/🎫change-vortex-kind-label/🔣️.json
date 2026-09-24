@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeVortexKindLabel",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-vortex-kind-label",
-  "binaryTag": null,
+  "binaryTag": 19,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -1,0 +1,14 @@
+{
+  "mutation": "applyCad",
+  "payload": {
+    "mutation": {
+      "mutation": "addLayer",
+      "layer": {
+        "colorIndex": 3,
+        "lineType": "DASHED",
+        "name": "dimensions",
+        "visible": true
+      }
+    }
+  }
+}

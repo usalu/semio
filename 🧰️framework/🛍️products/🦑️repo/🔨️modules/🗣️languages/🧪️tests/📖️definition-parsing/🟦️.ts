@@ -46,7 +46,7 @@ export default defineTestAdapter({
       oracle: (ctx) => ({ projection: declarations(new TextDecoder().decode(ctx.fixtureBytes("shared://🟦️sample.ts")), "🟦️sample.ts") }),
     },
     "callable-const-is-a-function": {
-      oracle: (ctx) => ({ projection: declarations(new TextDecoder().decode(ctx.fixtureBytes("local://🔤️callables.ts")), "🔤️callables.ts") }),
+      oracle: (ctx) => ({ projection: declarations(new TextDecoder().decode(ctx.fixtureBytes("shared://📖️definition-parsing/🔤️callables.ts")), "🔤️callables.ts") }),
     },
   },
 });

@@ -309,3 +309,113 @@ fn a_stated_snapshot_is_resolved_unchanged() {
     assert_eq!(resolved.output.width, snapshot.output.width);
 }
 //#endregion 📜️PublishedContract
+
+//#region 🌱️ArtifactBoundGenesis
+/// 🌱️ The canonical pair `artifact_create` of an `s.wfc.bitmap` answers over the semio MCP
+/// (captured live, G4 session 10): the artifact-bound carrier must decode to the genesis snapshot and
+/// that snapshot must solve, exactly like the stated-snapshot carrier.
+const GENESIS_PACK_BASE64: &str = "iVNFTQ0KGgoSAAAAd2ZjLmJpdG1hcC5wYWNrIHYxiVNQSw0KGgoBAAAAAQAAAAEAAADvZe+IAAAAAAAAAAADAxAOY+Qp1itPS9ZLyizJTSwAAClm/p8EA6ABqgPjZWBjYGRhZ2IRYGYRYGG/weTo6OgMxEDgCaHSwaSTY6Crk6MjEAe6OoLZgUB1YNoTIpcOlgPqRVED1YdVP7odUHux6UezA2IvmhqoPuz2o9kBtRebflQ7oPbicD9W+7GFn60tK4sEG4sEOxMHCzMnCwcXE48IMwsDA7PaI8ZjjIxA+h5jCyMTA7PeJUYPZgbm/4wgyCvCwAxUA5QGygAA6gTz6AEDMjBj+PH28NHH/f2nXdQftkRY3Wg5UdRX+sW6Wen6vDyVf5dlHlusYmRUkGAAglXMvAyMAOkhXcwAAAB6o2RgU1BLRk9PVDEBAAAAAQAAAOIAAAAAAAAAOgAAAAAAAAB3AQAAAAAAAIpDqEbUaRgDDs1P6htRYTSodwW++npI2e6EP3NjDg6FAAAAAAAAAAA9mtYA";
+const GENESIS_SPR_BASE64: &str = "iVNQUg0KGgoBAAAAAQAAAAEAAABv3uXPAAAAAAAAAAAqAwIBAAIXcy53ZmMuYml0bWFwQDEvKiNlZGl0b3IMcy53ZmMuYml0bWFwwYNpoTMAAAAHAQIBAQABAQY4LAwQAAAACQMCAQICATEBKl5NgEISAAAACkEAAQIBAQECAQNojUfJEwAAAEIMAgEAAAAAAAAAAAAAAAAAAABoAAAAAAAAAAQAAAAAAAAAT2/GOvLREraRMQ76Y5Hc2YPnnZpw7/JgKceH3PJJ3c5CncDjSwAAAA==";
+
+#[test]
+fn the_artifact_bound_genesis_document_resolves_and_solves() {
+    let document = semio_framework_plugin::ArtifactDocumentPayload { pack: GENESIS_PACK_BASE64.to_string(), spr: GENESIS_SPR_BASE64.to_string() };
+    let snapshot = BitmapInferenceRequest { snapshot: None, document: Some(document), checkpoint: None }.resolve_snapshot().expect("the genesis pair decodes");
+    assert_eq!((snapshot.input.width, snapshot.input.height, snapshot.input.palette.len()), (16, 16, 3));
+    assert_eq!((snapshot.output.width, snapshot.output.height, snapshot.output.periodic), (24, 24, true));
+    assert_eq!((snapshot.model.pattern_size, snapshot.model.symmetry), (3, 8));
+    let commit = solve_with_job(&snapshot).expect("the genesis snapshot solves");
+    assert!(!commit.contradiction);
+    assert_eq!(decode_base64(&commit.pixels).expect("pixels decode").len(), 24 * 24);
+}
+//#endregion 🌱️ArtifactBoundGenesis
+
+//#region ⏱️RelayCrossingGrant
+/// ⏱️ The language-agnostic law this region replays: `semio.infer`'s `Pump` must spend the host's
+/// whole crossing grant on the mounted session instead of ending the crossing at the first outcome.
+const RELAY_CROSSING_LAW: &str = include_str!("../../🧫️fixtures/⏱️relay-crossing-grant-law.json");
+
+/// 🔁️ The reactor's job futures settle inside the state action that polls them, so one poll with a
+/// no-op waker is the whole drive; a pending future here is itself a law violation.
+fn settle<F: std::future::Future>(future: F) -> F::Output {
+    let mut future = std::pin::pin!(future);
+    match future.as_mut().poll(&mut std::task::Context::from_waker(std::task::Waker::noop())) {
+        std::task::Poll::Ready(output) => output,
+        std::task::Poll::Pending => panic!("a reactor job future must settle inside its own state action"),
+    }
+}
+
+/// 🌱️ The exact wire request the semio MCP gateway sends for `inference_run` on an `artifact_create`d
+/// bitmap: the genesis pair bound into the request body, the gateway's default work units.
+fn genesis_wire_request(law: &serde_json::Value, cancellation_id: &str) -> Vec<u8> {
+    let metadata = bitmap_inference_metadata();
+    let workload = &law["workload"];
+    let payload = BitmapInferenceRequest { snapshot: None, document: Some(semio_framework_plugin::ArtifactDocumentPayload { pack: GENESIS_PACK_BASE64.to_string(), spr: GENESIS_SPR_BASE64.to_string() }), checkpoint: None };
+    let request = semio_framework_plugin::app::WireArtifactInferenceRequest {
+        wire_version: semio_framework_plugin::app::ARTIFACT_INFERENCE_WIRE_VERSION,
+        owner: metadata.owner.into(),
+        artifact_kind: workload["artifactKind"].as_str().expect("law workload kind").into(),
+        artifact_schema: metadata.artifact_schema.into(),
+        artifact_schema_version: metadata.artifact_schema_version,
+        inference_schema: workload["inferenceSchema"].as_str().expect("law workload schema").into(),
+        inference_schema_version: metadata.inference_schema_version,
+        algorithm_version: metadata.algorithm_version,
+        policy_version: metadata.policy_version,
+        revision: 1,
+        generation: 1,
+        source_dialect: "s.wfc.bitmap.standard.v1.dialect.canonical".into(),
+        policy: Vec::new(),
+        budgets: semio_framework_plugin::app::WireArtifactInferenceBudget { allocation_bytes: workload["allocationBytes"].as_u64().expect("law allocation"), work_units: workload["workUnits"].as_u64().expect("law work units"), recursion_depth: 4 },
+        cancellation_id: cancellation_id.into(),
+        previous_state: None,
+        requested_cache_mode: semio_framework_plugin::app::WireArtifactInferenceCacheMode::Cold,
+        canonical_payload: protocol::json::to_json_string(&payload).into_bytes(),
+        dependencies: Vec::new(),
+    };
+    protocol::json::to_json_string(&request).into_bytes()
+}
+
+/// 🏁 Drives one `semio.infer` job through the guest job protocol under `grant` exactly as the host
+/// relay does, and reports how many `step-job` crossings it took and how long.
+fn run_genesis_crossings(law: &serde_json::Value, job: u64, grant: &serde_json::Value) -> (usize, std::time::Duration) {
+    use semio_framework_plugin::reactor::jobs::{start_job, step_job, JobBudget, JobStep, JOB_KIND_INFER};
+    register_bitmap_inference_factory(&semio_framework::ActionBus::production()).ok();
+    let budget = JobBudget { fuel: grant["fuel"].as_u64().expect("law fuel"), deadline_ms: u32::try_from(grant["deadlineMs"].as_u64().expect("law deadline")).expect("law deadline fits") };
+    let started = std::time::Instant::now();
+    settle(start_job(job, JOB_KIND_INFER, &genesis_wire_request(law, &format!("wfc-relay-crossing-law-{job}"))));
+    for crossing in 1..=5_000_000usize {
+        match settle(step_job(job, budget)) {
+            JobStep::Running(_) => {}
+            JobStep::Done(bytes) => {
+                let result: serde_json::Value = serde_json::from_slice(&bytes).expect("the inference result is json");
+                assert_eq!(result["complete"], true, "{result}");
+                return (crossing, started.elapsed());
+            }
+            JobStep::Failed(error) => panic!("the genesis solve failed after {crossing} crossings: {}", String::from_utf8_lossy(&error)),
+        }
+    }
+    panic!("the genesis solve did not settle within five million crossings");
+}
+
+/// ⏱️ With a grant that covers the whole solve, the machine needs only its fixed state walk —
+/// dispatch, the pump, the commit's outcome pages and the session's retirement — never a crossing
+/// per preview, and it costs no more than the law's wall ratio over the headless native driver
+/// solving the same snapshot in the same process. The crossing count is load-independent: a crossing
+/// ends on the grant, a lossless outcome or the terminal, never on time.
+#[test]
+fn a_whole_solve_grant_settles_the_genesis_inference_in_a_bounded_state_walk() {
+    let law: serde_json::Value = serde_json::from_str(RELAY_CROSSING_LAW).expect("relay crossing law parses");
+    let grant = &law["wholeSolveGrant"];
+    let snapshot = BitmapInferenceRequest { snapshot: None, document: Some(semio_framework_plugin::ArtifactDocumentPayload { pack: GENESIS_PACK_BASE64.to_string(), spr: GENESIS_SPR_BASE64.to_string() }), checkpoint: None }.resolve_snapshot().expect("the genesis pair decodes");
+    let native_started = std::time::Instant::now();
+    solve_with_job(&snapshot).expect("the genesis snapshot solves natively");
+    let native = native_started.elapsed();
+    let (crossings, relayed) = run_genesis_crossings(&law, 9_101, grant);
+    let ceiling = grant["maxCrossings"].as_u64().expect("law crossing ceiling") as usize;
+    assert!(crossings <= ceiling, "the genesis solve took {crossings} step-job crossings under a whole-solve grant ({relayed:?}); the law allows {ceiling}");
+    let ratio = relayed.as_secs_f64() / native.as_secs_f64();
+    let wall_ceiling = grant["maxWallRatioToHeadlessNative"].as_f64().expect("law wall ratio");
+    assert!(ratio <= wall_ceiling, "the job protocol took {relayed:?} against {native:?} for the headless native driver ({ratio:.2}x); the law allows {wall_ceiling}x");
+}
+
+//#endregion ⏱️RelayCrossingGrant

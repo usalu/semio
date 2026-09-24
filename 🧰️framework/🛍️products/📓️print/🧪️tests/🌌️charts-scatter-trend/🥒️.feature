@@ -16,7 +16,7 @@ Feature: A scatter's trend line is the least-squares fit d3-regression computes
   @level-long
   @mode-differential
   Scenario: The trend line is d3-regression's least-squares fit
-    Given the committed probe document local://linear-trend.tex and the points
+    Given the committed probe document shared://🌌️charts-scatter-trend/linear-trend.tex and the points
       | x  | y   |
       | 1  | 2.4 |
       | 2  | 3.1 |
@@ -34,7 +34,7 @@ Feature: A scatter's trend line is the least-squares fit d3-regression computes
   @level-long
   @mode-differential
   Scenario: A size encoding is a square-root scale onto the radius
-    Given the committed probe document local://bubble-size.tex and the sizes
+    Given the committed probe document shared://🌌️charts-scatter-trend/bubble-size.tex and the sizes
       | values                | rmin | rmax |
       | 3,5,2,7,4,6,3,8,5,4   | 0.7  | 2.8  |
     Then the compiled probe and the reference implementation agree on every radius

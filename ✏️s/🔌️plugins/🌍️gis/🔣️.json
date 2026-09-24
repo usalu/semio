@@ -25746,45 +25746,6 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.pdf",
-          "standard": "1.4",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.gis.gismap",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.png",
-          "standard": "1.2",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.gis.gismap",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.svg",
-          "standard": "1.1",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.gis.gismap",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
           "artifactKind": "s.stdio.txt",
           "standard": "utf-8",
           "subset": "*"
@@ -25811,99 +25772,8 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.dwg",
-          "standard": "ac1018",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.gis.gisterrain",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.gltf",
-          "standard": "2.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.gis.gisterrain",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
           "artifactKind": "s.stdio.json",
           "standard": "rfc8259",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.gis.gisterrain",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.las",
-          "standard": "1.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.gis.gisterrain",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.obj",
-          "standard": "3.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.gis.gisterrain",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.ply",
-          "standard": "1.0",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.gis.gisterrain",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.png",
-          "standard": "1.2",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.gis.gisterrain",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.stl",
-          "standard": "ascii",
           "subset": "*"
         },
         "direction": "import"
@@ -25951,21 +25821,6 @@
             "subset": "*"
           },
           {
-            "artifactKind": "s.stdio.pdf",
-            "standard": "1.4",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.png",
-            "standard": "1.2",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.svg",
-            "standard": "1.1",
-            "subset": "*"
-          },
-          {
             "artifactKind": "s.stdio.txt",
             "standard": "utf-8",
             "subset": "*"
@@ -25985,43 +25840,8 @@
             "subset": "*"
           },
           {
-            "artifactKind": "s.stdio.dwg",
-            "standard": "ac1018",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.gltf",
-            "standard": "2.0",
-            "subset": "*"
-          },
-          {
             "artifactKind": "s.stdio.json",
             "standard": "rfc8259",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.las",
-            "standard": "1.0",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.obj",
-            "standard": "3.0",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.ply",
-            "standard": "1.0",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.png",
-            "standard": "1.2",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.stl",
-            "standard": "ascii",
             "subset": "*"
           },
           {
@@ -26034,8 +25854,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "93ab98ba7e42f8117d7a7747bd00a900b48d435a4d359e2df7a41a979e09f9f0",
-    "coreWasmSha256": "0168158e3241aeea482c427b7cdd51bcc142761056834e8d65f94c5092ad6714",
-    "descriptorSha256": "9fe8e82b7514b85d30d579eab9cbd4e2f54fe675d07c533c3536dc83946a7c18"
+    "wasmSha256": "04844275baacc67f39742009d5ebbe17e00405e3fed19af3bd2889ad85710120",
+    "coreWasmSha256": "929aca807ea5091015f5617f8fd8c1b683d639a5741c4da845d1bdee45790dde",
+    "descriptorSha256": "d108087fd46cac6120e6cb555ca147a76ec035288dcff1c6c45f424185bfd933"
   }
 }

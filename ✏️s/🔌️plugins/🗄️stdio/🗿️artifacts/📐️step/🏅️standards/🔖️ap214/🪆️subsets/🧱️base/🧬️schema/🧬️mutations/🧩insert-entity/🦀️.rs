@@ -9,8 +9,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertEntity {
-    pub(crate) index: usize,
-    pub(crate) entity: StepEntity,
+    pub index: usize,
+    pub entity: StepEntity,
 }
 
 impl protocol::MutationKind<StepSnapshot, StepMutation> for InsertEntity {

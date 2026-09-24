@@ -31,7 +31,10 @@
 
 //#region 🔌️Adapters
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { Validator } from "jsonschema";
 //#endregion 🔌️Adapters
 
@@ -778,6 +781,15 @@ function validateToleranceContract(): number {
 }
 //#endregion 📏️ToleranceContract
 
+//#region 🧩️Carrier
+/** 🧩️ Builds the standalone json-rust carrier engine and writes its reviewed JSON-carrier pair into the committed fixtures. */
+function carrier(): number {
+  const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
+  if (build.status !== 0) return build.status ?? 1;
+  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
+}
+//#endregion 🧩️Carrier
+
 //#region 🚪️Entry
 async function main(argv: readonly string[]): Promise<number> {
   const [command = "generate", ...rest] = argv;
@@ -786,6 +798,7 @@ async function main(argv: readonly string[]): Promise<number> {
     return index === -1 ? null : (rest[index + 1] ?? null);
   };
   if (command === "tolerance-contract") return validateToleranceContract();
+  if (command === "carrier") return carrier();
   const only = value("--only");
   const recipes = only === null ? RECIPES : RECIPES.filter((recipe) => recipe.id === only);
   if (recipes.length === 0) {

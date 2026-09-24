@@ -1,0 +1,23 @@
+{
+  "$schema": "../🧬️schema/🔣️.json#/$defs/InferenceBindingCancellationLawV1",
+  "law": "Binding an artifact into inference_run is a job: every phase reports progress, and a cancel landing in any phase is answered CANCELLED within the ceiling. A cancelled binding leaves no half-open guest behind, so the next binding of the same artifact answers the same document an uncancelled one does. The compiling-component phase is reached only by a cold compile; its cancellation is the compile law's (🏠️workspace/🧫️fixtures/⏱️compile-cancellation-law.json).",
+  "cancelAnswerCeilingMs": 100,
+  "phases": [
+    { "phase": "resolving-component", "position": 0.0 },
+    { "phase": "reading-component", "position": 0.14285714285714285 },
+    { "phase": "hashing-component", "position": 0.2857142857142857 },
+    { "phase": "loading-compiled-code", "position": 0.42857142857142855 },
+    { "phase": "compiling-component", "position": 0.5714285714285714 },
+    { "phase": "opening-guest", "position": 0.7142857142857143 },
+    { "phase": "reading-document", "position": 0.8571428571428571 }
+  ],
+  "cases": [
+    { "cancelAt": "resolving-component", "expected": "CANCELLED", "rebindMatchesUncancelled": true },
+    { "cancelAt": "reading-component", "expected": "CANCELLED", "rebindMatchesUncancelled": true },
+    { "cancelAt": "hashing-component", "expected": "CANCELLED", "rebindMatchesUncancelled": true },
+    { "cancelAt": "loading-compiled-code", "expected": "CANCELLED", "rebindMatchesUncancelled": true },
+    { "cancelAt": "opening-guest", "expected": "CANCELLED", "rebindMatchesUncancelled": true },
+    { "cancelAt": "reading-document", "expected": "CANCELLED", "rebindMatchesUncancelled": true },
+    { "cancelAt": null, "expected": "BOUND", "rebindMatchesUncancelled": true }
+  ]
+}

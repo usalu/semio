@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetIcc {
-    pub(crate) icc: Option<Vec<u8>>,
+    pub icc: Option<Vec<u8>>,
 }
 
 impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetIcc {

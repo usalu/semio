@@ -216,9 +216,8 @@
     }
   },
   "socketGrant": {
-    "schema": "semio.hub.socket-grant/v1",
-    "protocol": "semio.socket.v1",
-    "grant": "socket.v1.11111111111111111111111111111111.2222222222222222222222222222222222222222222222222222222222222222",
+    "schema": "semio.hub.document-socket-grant/v1",
+    "protocol": "semio.session.v1",
     "actorId": "hub.v1.3333333333333333333333333333333333333333333333333333333333333333",
     "expiresAtMs": 2000000025000
   },
@@ -227,8 +226,8 @@
       "/spaces/raum%3A%C3%A4/documents/plan%3A%E6%9D%B1%E4%BA%AC/open-plan",
       "/spaces/raum%3A%C3%A4/documents/plan%3A%E6%9D%B1%E4%BA%AC/socket-grants"
     ],
-    "webSocketPath": "/spaces/raum%3A%C3%A4/documents/plan%3A%E6%9D%B1%E4%BA%AC/socket/v1?surface=surface.gis.editor",
-    "protocol": "semio.socket.v1",
+    "webSocketPath": "/scopes/raum%3A%C3%A4%2Fplan%3A%E6%9D%B1%E4%BA%AC/document/ws?surface=surface.gis.editor",
+    "protocol": "semio.session.v1",
     "helloSchema": "s.gis.gismap@1/*:精密",
     "helloPackSchemaHashByte": 17,
     "responseMaxBytes": 65536,

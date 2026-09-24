@@ -14,7 +14,7 @@ Feature: What a ticket owes its issue tracker is a fixed sequence of calls, and 
   @level-fundamental
   @mode-differential
   Scenario: A ticket with no issue asks for its goal's milestone and creates exactly one issue
-    Given the issue tracker scripts local://🐙️transcripts.json
+    Given the issue tracker scripts shared://🐙️issue-sync-transcripts/🐙️transcripts.json
     When a ticket with no management link is synchronised
     Then every implementation projects the same ordered calls and the same resulting issue link
 
@@ -22,7 +22,7 @@ Feature: What a ticket owes its issue tracker is a fixed sequence of calls, and 
   @level-fundamental
   @mode-differential
   Scenario: A ticket that already carries an open issue creates nothing
-    Given the issue tracker scripts local://🐙️transcripts.json
+    Given the issue tracker scripts shared://🐙️issue-sync-transcripts/🐙️transcripts.json
     When a ticket carrying an open issue is synchronised with reopening enabled
     Then every implementation projects a read and no reopen, and the same unchanged link
 
@@ -30,7 +30,7 @@ Feature: What a ticket owes its issue tracker is a fixed sequence of calls, and 
   @level-fundamental
   @mode-differential
   Scenario: A ticket whose issue is closed is reopened rather than duplicated
-    Given the issue tracker scripts local://🐙️transcripts.json
+    Given the issue tracker scripts shared://🐙️issue-sync-transcripts/🐙️transcripts.json
     When a ticket carrying a closed issue is synchronised with reopening enabled
     Then every implementation projects a read followed by a reopen, and the same unchanged link
 
@@ -38,7 +38,7 @@ Feature: What a ticket owes its issue tracker is a fixed sequence of calls, and 
   @level-fundamental
   @mode-differential
   Scenario: Closing a ticket comments the summary, applies the labels and closes the issue, in that order
-    Given the issue tracker scripts local://🐙️transcripts.json
+    Given the issue tracker scripts shared://🐙️issue-sync-transcripts/🐙️transcripts.json
     When a ticket is closed both normally and in bulk
     Then every implementation projects the same ordered calls for each, with the bulk close skipping the comment and the labels
 
@@ -46,6 +46,6 @@ Feature: What a ticket owes its issue tracker is a fixed sequence of calls, and 
   @level-fundamental
   @mode-error
   Scenario: A tracker that refuses every call yields warnings, never a failed ticket
-    Given the issue tracker scripts local://🐙️transcripts.json
+    Given the issue tracker scripts shared://🐙️issue-sync-transcripts/🐙️transcripts.json
     When every synchronisation is run against a tracker that fails
     Then every implementation projects the same warnings and no error

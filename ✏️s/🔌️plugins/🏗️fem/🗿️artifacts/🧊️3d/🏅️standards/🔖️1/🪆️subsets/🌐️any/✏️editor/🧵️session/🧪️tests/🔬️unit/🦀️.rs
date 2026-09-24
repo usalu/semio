@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn fem3d_numerical_child_retains_every_outcome_until_bounded_retirement() {
     use semio_framework_job::{Checkpoint, CommitCandidate, JobFault, JobPayloadStream, JOB_PAYLOAD_PAGE_BYTES};
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧪️tests/🪟️window-config-contract/🧫️fixtures/🧒️child-outcomes/🔣️.json")).expect("neutral child outcomes");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧫️fixtures/🧒️child-outcomes/🔣️.json")).expect("neutral child outcomes");
     let operation = semio_framework_job::Operation::new(OperationId(991), RevisionId(997), Generation(1009), 0);
     let payload = |stream| {
         let mut sequence = 0;
@@ -270,7 +270,7 @@ fn fem3d_numerical_fixed_owner_maximum_plus_one_refuses_unchanged_and_closes_one
 
 #[test]
 fn fem3d_numerical_child_absent_lanes_retain_later_close_owners() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../📦️numerical-close/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️numerical-close/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     for row in corpus["cases"].as_array().unwrap() {
         let lane = row["lane"].as_u64().unwrap() as u8;
@@ -590,7 +590,7 @@ fn fem3d_queued_running_and_state_drop_publish_exact_identity_and_drain_one_owne
 
 #[test]
 fn fem3d_window_config_mounted_close_preserves_foreign_instance_in_same_slot() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧪️tests/🪟️window-config-contract/🧫️fixtures/🧹️mounted-close/🔣️.json")).expect("mounted close neutral fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧫️fixtures/🧹️mounted-close/🔣️.json")).expect("mounted close neutral fixture");
     for row in fixture["cases"].as_array().expect("close cases") {
         let closing = row["closingInstanceId"].as_u64().expect("closing instance") as u32;
         let pending = row["before"]["pendingInstanceId"].as_u64().map(|id| id as u32);
@@ -627,7 +627,7 @@ fn fem3d_window_config_mounted_close_preserves_foreign_instance_in_same_slot() {
 
 #[test]
 fn fem3d_visual_close_grants_retain_exact_backing_until_admitted() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧪️tests/🪟️window-config-contract/🧫️fixtures/💳️visual-close-grants/🔣️.json")).expect("neutral close grants");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧫️fixtures/💳️visual-close-grants/🔣️.json")).expect("neutral close grants");
     for row in corpus["cases"].as_array().expect("cases") {
         let doc = Fem3dSnapshot::default();
         let mut candidate = Fem3dPageVisualJob::new(freshness(19), credit(&doc));

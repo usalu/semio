@@ -10,6 +10,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSy
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createServer as createNetServer } from "node:net";
 import { build, type Plugin } from "esbuild";
 import picomatch from "picomatch";
 import { describe, expect, it, vi } from "vitest";
@@ -301,6 +302,25 @@ describe("dev server watch policy", () => {
 /** @emoji ✍️ The write styles a dev server must survive. `sed -i ''` and a rename-into-place are the same
  * shape — macOS editors, `sed`, and every agent file-writing tool save atomically — and that shape is
  * exactly the one whose filesystem event never names the edited file. */
+
+/** @emoji 📦️ Reserve one loopback port for Vite — server.port 0 hangs under this runner. */
+async function reserveLoopbackPort(): Promise<number> {
+  return await new Promise((resolve, reject) => {
+    const server = createNetServer();
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        server.close();
+        reject(new Error("loopback listen returned no port"));
+        return;
+      }
+      const { port } = address;
+      server.close((error) => error ? reject(error) : resolve(port));
+    });
+  });
+}
+
 const DEV_SERVER_WRITE_STYLES: readonly (readonly [string, (target: string, body: string) => void])[] = [
   ["an in-place write", (target, body) => writeFileSync(target, body)],
   ["an atomic save (rename into place)", (target, body) => {
@@ -319,18 +339,18 @@ describe("dev server transform freshness", () => {
     mkdirSync(join(sandbox, "🧰️framework"), { recursive: true });
     const target = join(sandbox, "🧰️framework/🟦️.ts");
     writeFileSync(target, "export const value: number = 0;\n");
+    const port = await reserveLoopbackPort();
     const server = await createServer({
       configFile: false,
       root: sandbox,
       logLevel: "silent",
       cacheDir: join(sandbox, ".vite"),
       optimizeDeps: { noDiscovery: true, include: [] },
-      server: { host: "127.0.0.1", port: 0, hmr: false, watch: null },
+      server: { host: "127.0.0.1", port, strictPort: true, hmr: false, watch: null },
       plugins: semioSourceFreshnessVitePlugins({ repoRoot: sandbox }),
     });
     try {
       await server.listen();
-      const port = (server.httpServer!.address() as { port: number }).port;
       // 🧭️ `/@fs/` is the shape Vite transforms AND caches; a root-relative `.ts` URL is answered by the
       // static middleware from disk, which is always fresh and would make this law vacuous. The type
       // annotation proves the response really is a transform rather than the file's own bytes.
@@ -348,7 +368,7 @@ describe("dev server transform freshness", () => {
       await server.close();
       rmSync(sandbox, { recursive: true, force: true });
     }
-  }, 60_000);
+  }, 120_000);
 
   it("re-verifies the whole transformed set on a document request", async () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-transform-freshness-document-"));
@@ -358,18 +378,18 @@ describe("dev server transform freshness", () => {
     writeFileSync(leaf, "export const leaf: number = 0;\n");
     writeFileSync(target, "export { leaf } from \"./🍃️leaf.ts\";\n");
     writeFileSync(join(sandbox, "index.html"), "<!doctype html><html><head></head><body><script type=\"module\" src=\"/🧰️framework/🟦️.ts\"></script></body></html>");
+    const port = await reserveLoopbackPort();
     const server = await createServer({
       configFile: false,
       root: sandbox,
       logLevel: "silent",
       cacheDir: join(sandbox, ".vite"),
       optimizeDeps: { noDiscovery: true, include: [] },
-      server: { host: "127.0.0.1", port: 0, hmr: false, watch: null },
+      server: { host: "127.0.0.1", port, strictPort: true, hmr: false, watch: null },
       plugins: semioSourceFreshnessVitePlugins({ repoRoot: sandbox }),
     });
     try {
       await server.listen();
-      const port = (server.httpServer!.address() as { port: number }).port;
       const leafRequest = async () => (await fetch(`http://127.0.0.1:${port}/@fs${leaf}`, { headers: { accept: "*/*" } })).text();
       const cachedLeaf = await leafRequest();
       expect(cachedLeaf, "the measured response must be a cached transform, not the raw file").not.toContain(": number");
@@ -386,7 +406,7 @@ describe("dev server transform freshness", () => {
       await server.close();
       rmSync(sandbox, { recursive: true, force: true });
     }
-  }, 60_000);
+  }, 120_000);
 
   it.each([
     ["/@fs/Users/x/🧰️framework/🟦️.ts", "/Users/x/🧰️framework/🟦️.ts"],

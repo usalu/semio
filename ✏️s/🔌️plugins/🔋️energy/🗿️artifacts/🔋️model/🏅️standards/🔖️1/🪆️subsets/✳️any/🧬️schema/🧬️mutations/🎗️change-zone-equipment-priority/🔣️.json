@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeZoneEquipmentPriority",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-zone-equipment-priority",
-  "binaryTag": null,
+  "binaryTag": 148,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

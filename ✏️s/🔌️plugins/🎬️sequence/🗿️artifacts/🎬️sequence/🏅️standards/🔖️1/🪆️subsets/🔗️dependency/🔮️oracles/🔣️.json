@@ -120,9 +120,7 @@
       "outcome": "applied",
       "units": {
         "length": "unitless",
-        "angle": "radian",
-        "handedness": "none",
-        "up": "none"
+        "angle": "radian"
       },
       "files": [
         {
@@ -173,9 +171,7 @@
       "outcome": "applied",
       "units": {
         "length": "unitless",
-        "angle": "radian",
-        "handedness": "none",
-        "up": "none"
+        "angle": "radian"
       },
       "files": [
         {

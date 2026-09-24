@@ -78,7 +78,7 @@ const DEFAULT_VERBS = {
   "playbook-module-procedural": "importSolidGeometry", procedural: "addWidget", process: "addStep",
   puzzle: "addNode", raster: "addLayer", reasoning: "addNode", remodel: "addStream", sequence: "addStep",
   shooting: "addShot", sourcing: "curationSetCount", space: "renameArtifact", stdio: "set-cell",
-  trinity: "patchNodes", vcs: "incrementCounter", wfc: "change-seed", writer: "paste",
+  trinity: "patchNodes", vcs: "incrementCounter", wfc: "change-seed", writer: "setText",
 };
 const KNOWN_VERBS = process.env.S6_VERBS ? JSON.parse(process.env.S6_VERBS) : DEFAULT_VERBS;
 /** 🩻️ **The third shape: a staged value is DOCUMENT-SPECIFIC and must be read off the LIVE document.**
@@ -169,7 +169,8 @@ const DEFAULT_ARGS = {
   // (`…:1145`). `nodeIds` is a live graph id, so it is resolved off the spawned graph window rather
   // than guessed (ticket 26/09/18 S13).
   "trinity.patchNodes": { nodeIds: LIVE_ID, field: "name", value: "S13 Node" },
-  "sourcing.curationSetCount": { delta: "1" },
+  "sourcing.curationSetCount": { objectId: LIVE_ID, delta: "1" },
+  "writer.setText": { text: "S14 writer buffer" },
   // 🗄️ `set-cell` is the `TableWindowKit` verb the stdio csv editor composes, and — since S13 —
   // bridges: it is the ONLY document mutation any 🗄️stdio artifact publishes on a palette row, so it
   // is this kind's pin rather than a scan candidate. Row 0 of the rendered grid is `records[1]` when
@@ -201,7 +202,7 @@ const KNOWN_ARGS = process.env.S6_ARGS ? JSON.parse(process.env.S6_ARGS) : DEFAU
  * payload is. `renameArtifact` is the index's own document mutation and rounds trip cleanly
  * (`edits [0,1,0,1]`, `Rename Artifact↶`) once the editor declares its document-store retirement
  * owners (ticket 26/09/18 S11 §3.3/§5.4). */
-const DEFAULT_APPS = { norm: "s.norm.din16798@1/*#editor", space: "s.space.space@1/*#editor" };
+const DEFAULT_APPS = { norm: "s.norm.din16798@1/*#editor", space: "s.space.space@1/*#editor", stdio: "s.stdio.csv@rfc4180/*#editor", writer: "s.writer.writer@1/*#editor", sourcing: "s.sourcing.curation@1/*#editor", trinity: "s.trinity.jack@1/*#editor", energy: "s.energy.model@1/*#editor" };
 const KNOWN_APPS = process.env.S6_APPS ? JSON.parse(process.env.S6_APPS) : DEFAULT_APPS;
 
 const FAULT = /unreachable|trapped|\btrap\b|panicked|fault|refused|dropped action|not-ui-safe|missing-owned|invalid-args|unsupported|pageerror|Uncaught|dispatch-failed/i;

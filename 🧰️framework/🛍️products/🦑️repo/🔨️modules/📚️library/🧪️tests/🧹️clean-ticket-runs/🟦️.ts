@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
+import { CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES } from "../../🧼️workspace-cleanup/🔍️candidate-discovery/🟦️.ts";
 import { CleanScript } from "../../🧼️workspace-cleanup/🎮️command/🟦️.ts";
 
 test("clean removes generated ticket run output without removing ticket material", () => {
@@ -47,6 +49,53 @@ test("clean removes root Generation3d transient mounts without removing ordinary
     mkdirSync(retained, { recursive: true });
     new CleanScript(root, root).run([]);
     for (const directory of transients) expect(existsSync(directory)).toBe(false);
+    expect(existsSync(retained)).toBe(true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("clean removes oversized ignored files from open tickets", () => {
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for cleanup fixture output.");
+  mkdirSync(artifactRoot, { recursive: true });
+  const root = mkdtempSync(join(artifactRoot, "semio-clean-oversized-ignored-"));
+  const ticket = join(root, ".🧬semio", "🦑️repo", "🎫️tickets", "🎆️26", "🌙️09", "☀️24", "CLEAN-OVERSIZED-IGNORED");
+  const huge = join(ticket, "bin", "os-hub.big");
+  const retained = join(ticket, "📝️notes.md");
+  try {
+    const init = spawnSync("git", ["init"], { cwd: root, stdio: "ignore" });
+    if (init.status !== 0) throw new Error("git init failed for cleanup fixture.");
+    writeFileSync(join(root, ".gitignore"), "*.big\n");
+    mkdirSync(dirname(huge), { recursive: true });
+    writeFileSync(huge, "x");
+    truncateSync(huge, CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES + 1);
+    writeFileSync(join(ticket, "🎫️ticket.json"), JSON.stringify({ status: "open" }, null, 2));
+    writeFileSync(retained, "ticket material\n");
+    new CleanScript(root, root).run([]);
+    expect(existsSync(huge)).toBe(false);
+    expect(existsSync(retained)).toBe(true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("clean removes oversized non-ignored files from open tickets", () => {
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for cleanup fixture output.");
+  mkdirSync(artifactRoot, { recursive: true });
+  const root = mkdtempSync(join(artifactRoot, "semio-clean-oversized-open-ticket-"));
+  const ticket = join(root, ".🧬semio", "🦑️repo", "🎫️tickets", "🎆️26", "🌙️09", "☀️24", "CLEAN-OPEN-TICKET-OVERSIZED");
+  const huge = join(ticket, "db-test");
+  const retained = join(ticket, "📝️notes.md");
+  try {
+    mkdirSync(ticket, { recursive: true });
+    writeFileSync(huge, "x");
+    truncateSync(huge, CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES + 1);
+    writeFileSync(join(ticket, "🎫️ticket.json"), JSON.stringify({ status: "open" }, null, 2));
+    writeFileSync(retained, "ticket material\n");
+    new CleanScript(root, root).run([]);
+    expect(existsSync(huge)).toBe(false);
     expect(existsSync(retained)).toBe(true);
   } finally {
     rmSync(root, { recursive: true, force: true });

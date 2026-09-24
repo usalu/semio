@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeSizingObjectDesignDayType",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-sizing-object-design-day-type",
-  "binaryTag": null,
+  "binaryTag": 161,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

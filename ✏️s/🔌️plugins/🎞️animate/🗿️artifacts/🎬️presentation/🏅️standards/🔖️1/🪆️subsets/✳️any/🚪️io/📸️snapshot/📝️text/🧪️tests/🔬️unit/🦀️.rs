@@ -17,6 +17,7 @@ fn dsl_round_trip_presentation_deck_with_tiles() {
     let deck = crate::presentation_snapshot_with_tiles(&source, &tiles);
     test_support::assert_dsl_round_trip(&deck);
     test_support::assert_dsl_pack_equivalence(&deck);
+    test_support::assert_pack_schema_identity(&deck);
 }
 
 #[test]

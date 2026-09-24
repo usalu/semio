@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 5d Part Drag Preview in Both Windows",
+  "emoji": "👻️",
+  "status": "open",
+  "description": "The drag and drop preview of parts only shows in 3d but not in 2d window when the cursor is over the 2d. Make sure it works for both.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪d346313daef049de8675f38fd7769767"
+  ]
+}

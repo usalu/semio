@@ -55,3 +55,35 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     }
 }
 //#endregion 🔖️IoDeclaration
+
+//#region 🧾️Record
+/// 🧾️ The column names of the one-record table csv and xlsx carry — every field of the snapshot,
+/// `tags` joined with `;`.
+pub const VCS_RECORD_COLUMNS: [&str; 6] = ["schema", "title", "counter", "notes", "status", "tags"];
+
+/// 🧾️ The snapshot as the values of [`VCS_RECORD_COLUMNS`], in order.
+pub fn vcs_record(from: &crate::VcsSnapshot) -> [String; 6] {
+    [from.schema.clone(), from.title.clone(), from.counter.to_string(), from.notes.clone(), from.status.clone(), from.tags.join(";")]
+}
+
+/// 🧾️ A snapshot from a header row and a value row, matched by column name; a missing column or an
+/// unparsable counter is refused.
+pub fn vcs_from_record(header: &[String], values: &[String]) -> Result<crate::VcsSnapshot, String> {
+    let get = |name: &str| header.iter().position(|column| column == name).and_then(|at| values.get(at)).cloned().ok_or_else(|| format!("the table has no `{name}` column"));
+    let tags = get("tags")?;
+    Ok(crate::VcsSnapshot {
+        schema: get("schema")?,
+        title: get("title")?,
+        counter: get("counter")?.parse().map_err(|error| format!("counter: {error}"))?,
+        notes: get("notes")?,
+        status: get("status")?,
+        tags: if tags.is_empty() { Vec::new() } else { tags.split(';').map(String::from).collect() },
+    })
+}
+//#endregion 🧾️Record
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

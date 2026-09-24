@@ -163,5 +163,5 @@ pub fn accessibility_announced(projection: &[AccessibilityProjectionNode]) -> Ve
 #[path = "../../../🧪️tests/🔬️targets-wgpu-accessibility-projection/🦀️.rs"]
 mod tests;
 #[cfg(test)]
-#[path = "../../../🧪️tests/📂️retained-section-collapse/♿️.rs"]
+#[path = "../../../🧪️tests/♿️retained-section-accessibility/🦀️.rs"]
 mod retained_section_collapse_tests;

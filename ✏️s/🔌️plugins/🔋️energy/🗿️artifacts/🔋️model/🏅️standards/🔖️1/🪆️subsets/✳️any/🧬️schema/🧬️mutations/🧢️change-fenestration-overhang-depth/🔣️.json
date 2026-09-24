@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeFenestrationOverhangDepth",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-overhang-depth",
-  "binaryTag": null,
+  "binaryTag": 56,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

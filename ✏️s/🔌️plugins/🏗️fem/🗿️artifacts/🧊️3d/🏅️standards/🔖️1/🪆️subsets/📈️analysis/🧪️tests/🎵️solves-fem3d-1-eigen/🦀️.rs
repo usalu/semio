@@ -4,9 +4,9 @@
 //! assembles from the textbook Euler-Bernoulli matrices, plus the closed forms both implementations
 //! are held to. This adapter registers the SUBJECT half only.
 //!
-//! **What this file puts under test.** `crate::fem3d_engine::modal_buckling::fem3d_modal` and
+//! **What this file puts under test.** `semio_s_artifact_fem_3d::fem3d_engine::modal_buckling::fem3d_modal` and
 //! `fem3d_buckling` — and behind them this repository's own hand-rolled subspace iteration
-//! (`crate::sparse::subspace_iteration`), which until this case had no external reference of any
+//! (`semio_s_artifact_fem_3d::sparse::subspace_iteration`), which until this case had no external reference of any
 //! kind. The kernel's own benchmarks compared it with a closed form at a TEN-percent tolerance; this
 //! case demands two, on an eight-element discretisation where the reference itself lands inside
 //! 0.3 %.
@@ -274,7 +274,7 @@ mod subject {
     pub fn modal(needle: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
             let document = decode::snapshot(&fixture(ctx, needle)?)?;
-            let solved = crate::fem3d_engine::modal_buckling::fem3d_modal(&document).map_err(|error| error.to_string())?;
+            let solved = semio_s_artifact_fem_3d::fem3d_engine::modal_buckling::fem3d_modal(&document).map_err(|error| error.to_string())?;
             let (material, section) = (&document.materials[0], &document.sections[0]);
             let length = document.nodes[document.nodes.len() - 1].x;
             let mut closed: Vec<f64> = Vec::new();
@@ -308,7 +308,7 @@ mod subject {
         move |ctx: &Context| {
             let document = decode::snapshot(&fixture(ctx, needle)?)?;
             let case_id = document.load_cases[0].id.clone();
-            let solved = crate::fem3d_engine::modal_buckling::fem3d_buckling(&document, &case_id).map_err(|error| error.to_string())?;
+            let solved = semio_s_artifact_fem_3d::fem3d_engine::modal_buckling::fem3d_buckling(&document, &case_id).map_err(|error| error.to_string())?;
             let (material, section) = (&document.materials[0], &document.sections[0]);
             let height = document.nodes[document.nodes.len() - 1].z;
             let critical = std::f64::consts::PI * std::f64::consts::PI * material.e * section.iz / (effective_length_factor * height).powi(2);

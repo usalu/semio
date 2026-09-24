@@ -32,7 +32,7 @@ pub(super) async fn test_directory() -> (PostgresDirectory, PostgresContainer) {
     let sequence = NEXT_CONTAINER.fetch_add(1, Ordering::Relaxed);
     let name = format!("semio-hub-postgres-{}-{sequence}", std::process::id());
     let mapping = format!("127.0.0.1:{port}:5432");
-    let output = Command::new("docker").args(["run", "--detach", "--rm", "--name", &name, "--env", "POSTGRES_PASSWORD=postgres", "--publish", &mapping, "postgres:16-alpine"]).output().expect("start docker for postgres fixture");
+    let output = Command::new("docker").args(["run", "--detach", "--rm", "--name", &name, "--env", "POSTGRES_PASSWORD=postgres", "--publish", &mapping, "postgres:17-alpine"]).output().expect("start docker for postgres fixture");
     assert!(output.status.success(), "start postgres fixture: {}", String::from_utf8_lossy(&output.stderr));
     let url = format!("postgres://postgres:postgres@127.0.0.1:{port}/postgres");
     let container = PostgresContainer { name, url: url.clone() };

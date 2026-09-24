@@ -10,7 +10,7 @@ import { type ProbeProjection, type ProbeRecord, compileVizProbe, roundProbeNumb
 
 //#region 🔖️Vectors
 const CASE = "spatial-quadtree";
-const FIXTURE = "local://spatial-quadtree.tex";
+const FIXTURE = "shared://🌳️spatial-quadtree/spatial-quadtree.tex";
 const DECIMALS = 6;
 type Point = readonly [number, number];
 

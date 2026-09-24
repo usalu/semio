@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveContent",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-content",
-  "binaryTag": null,
+  "binaryTag": 34,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

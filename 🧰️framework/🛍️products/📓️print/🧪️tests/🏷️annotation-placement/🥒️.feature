@@ -16,7 +16,7 @@ Feature: An annotation is anchored in data space, not in millimetres
   @level-quick
   @mode-differential
   Scenario: Data coordinates are mapped through the scales d3-scale defines
-    Given the committed probe document local://data-space.tex and the anchors
+    Given the committed probe document shared://🏷️annotation-placement/data-space.tex and the anchors
       | x | y  |
       | 3 | 50 |
       | 7 | 85 |
@@ -27,7 +27,7 @@ Feature: An annotation is anchored in data space, not in millimetres
   @level-quick
   @mode-conformance
   Scenario: Reference lines and bands span the opposite scale's range
-    Given the committed probe document local://data-space.tex
+    Given the committed probe document shared://🏷️annotation-placement/data-space.tex
     Then the compiled probe reports the specified extents
       | key             | values         |
       | reference-line  | 8,38,118,38    |
@@ -38,7 +38,7 @@ Feature: An annotation is anchored in data space, not in millimetres
   @level-quick
   @mode-conformance
   Scenario: A bracket turns inward along its own perpendicular
-    Given the committed probe document local://bracket.tex with from=20,12 to=50,12 depth=2
+    Given the committed probe document shared://🏷️annotation-placement/bracket.tex with from=20,12 to=50,12 depth=2
     Then the compiled probe reports the specified bracket
       | key     | values        |
       | bracket | 20,12,50,12,2 |

@@ -6,8 +6,8 @@ import { parseSchemaRecord } from "../../../../../../🔨️modules/🧬️schem
 type EmptyStateFixture = Record<"json" | "text" | "pack", readonly { value: unknown; accepted: boolean }[]>;
 
 export function testFrameworkEmptyStateContract(): void {
-  const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚫️empty-state/📐️schema/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚫️empty-state/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true });
   assert(ajv.compile<EmptyStateFixture>(schema)(fixture));
   for (const lane of ["json", "text", "pack"] as const) {

@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetParagraphStyle {
-    pub(crate) path: DocBlockPath,
-    pub(crate) style_id: Option<String>,
+    pub path: DocBlockPath,
+    pub style_id: Option<String>,
 }
 
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for SetParagraphStyle {

@@ -284,7 +284,7 @@ class UiPatchMarshallingCheckScript extends BundleScript {
     assert.equal(new Set(fixture.operationKinds).size, 11);
     for (const row of fixture.cases) {
       const count = row.emitted + row.returned;
-      const accepted = count <= 1 && row.receipt === (count === 1);
+      const accepted = !(row.emitted > 0 && row.returned > 0) && count <= fixture.maximumPatches && row.receipt === (count > 0);
       assert.equal(accepted ? "accepted" : "rejected", row.expected, row.id);
     }
     const componentExpected = new Map([
@@ -321,7 +321,7 @@ class UiPatchMarshallingCheckScript extends BundleScript {
     assert(existsSync(scaleWasm), "registered scale component was not materialized");
     const receipts = await runExactCargoLaws({
       cwd: this.root,
-      env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432", CARGO_BUILD_JOBS: "1", SEMIO_UI_PATCH_SCALE_WASM: scaleWasm },
+      env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432", CARGO_BUILD_JOBS: "1" },
       nativeEnv: { RUST_MIN_STACK: "268435456" },
       groups: [
         {

@@ -2024,6 +2024,22 @@ pub mod io_mechanism {
     }
     //#endregion 🔖️Traits
 
+    //#region 🔖️DslTxtCarrier
+    /// 🗒️ Serialize any `ArtifactDsl` document as UTF-8 carrier text (stdio.txt body law).
+    pub fn serialize_dsl_txt<S: store::ArtifactDsl>(from: &S) -> IoResult<IoPayload> {
+        Ok(IoOutcome::clean(IoPayload::Text(store::ArtifactDsl::print_dsl(from))))
+    }
+
+    /// 📃️ Parse carrier text (or UTF-8 binary) back into an `ArtifactDsl` document.
+    pub fn deserialize_dsl_txt<S: store::ArtifactDsl>(payload: &IoPayload) -> IoResult<S> {
+        let text = match payload {
+            IoPayload::Text(text) => text.as_str(),
+            IoPayload::Binary(bytes) => std::str::from_utf8(bytes).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })?,
+        };
+        S::parse_dsl(text).map(IoOutcome::clean).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })
+    }
+    //#endregion 🔖️DslTxtCarrier
+
     //#region 🔖️Entry
     /// 🧾️ Type-erased io vtable row: one directed hop `from -> into` at a declared `fidelity`, an
     /// optional `sniff` (carrier-dialect identification), and the erased `run` this hop executes.

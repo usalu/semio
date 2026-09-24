@@ -4,51 +4,15 @@ extension raster
 use family-scene
 start document
 
-# Real grammar for `RasterSnapshot::print_dsl`/`parse_dsl`
-# (🧬️schema/📸️snapshot/🦀️.rs's `print_raster_snapshot_body`/`parse_raster_snapshot_body`,
-# lines 262-292) — a hand-rolled hex/bracket `key=value` line codec, one line per field, exactly
-# like the already-fixed `stdio.semio.cad` snapshot pair. This REPLACES the stale, cross-plugin
-# copy-pasted "canvas layer" template (`layers { shape/path/text { canvas-field* } }`,
-# `add-layer`/`set-stroke`/`move-layer`/`set-fill`) this file previously carried — see
-# `.🧬semio/…/STUBS-AND-PLACEHOLDERS-COMPLETION/📓️grammar-envelope-transcription.md` for how that
-# mismatch was discovered.
-#
-# Printer and parser are exact inverses over the whole document: `enc_layer_list`/`enc_asset_map`
-# emit the same populated `layers`/`assets` lists `dec_layer_list`/`dec_asset_map` read, which is
-# what the committed `🖼️assets/🎬️demo/🗣️.dsl.semio` carrier already spells.
+# Real grammar for `RasterSnapshot::print_dsl`/`parse_dsl`: the derived spec-driven text of
+# `RasterPackRecord` (📸️snapshot/🦀️.rs), the same record the pack encodes. Each layer is its
+# first-party JSON text (a quoted string); each asset row carries its map key, the composed
+# `s.stdio.semio@v1/image` child handle and that child's own pack bytes as base64 (`""` when the
+# handle carries no materialization).
+# Fields are space-separated `key=value` tokens in any order; an absent optional field is omitted.
 artifact-mark = "semio raster.raster.dsl v1"
-document = artifact-mark schema-line id-line title-line layers-line assets-line
-
-schema-line = "schema" "=" hex
-id-line = "id" "=" hex
-title-line = "title" "=" opt-hex
-layers-line = "layers" "=" "[" layer-items? "]"
-layer-items = layer ("," layer)*
-assets-line = "assets" "=" "[" asset-items? "]"
-asset-items = asset-entry ("," asset-entry)*
-
-opt-hex = "[0]" / "[1," hex "]"
-opt-u32 = "[0]" / "[1," number "]"
-
-# `enc_layer` (🦀️.rs:182-194) tags each variant with a bare one-char prefix glued
-# directly onto its own bracketed field list.
-layer = pixel-layer / group-layer / adjustment-layer
-pixel-layer = "p" "[" hex "," hex "," bool "," number "," hex "," transform "," opt-mask "," opt-u32 "," opt-u32 "," opt-hex "]"
-group-layer = "g" "[" hex "," hex "," bool "," number "," hex "," transform "," opt-mask "," "[" layer-items? "]" "]"
-adjustment-layer = "a" "[" hex "," hex "," bool "," number "," hex "," transform "," hex "," "[" param-items? "]" "]"
-param-items = param-entry ("," param-entry)*
-param-entry = "[" hex "," hex "]"
-
-transform = "[" number "," number "," number "," number "," number "]"
-opt-mask = "[0]" / "[1," mask "]"
-mask = "[" bool "," bool "," bool "," opt-u32 "," opt-u32 "]"
-
-asset-entry = "[" hex "," child-handle "]"
-child-handle = "[" hex "," hex "]"
-
-bool = "true" / "false"
-number = INT / FLOAT
-
-# `hex` (bare, deliberately not defined as a local production) is the framework's built-in `hex`
-# macro — every hex-bracket-encoded leaf string is `enc_str` (lowercase-hex UTF-8 bytes), same
-# convention the `stdio.semio.cad` pair already established.
+document = artifact-mark field*
+field = {"schema" "=" TEXT} | {"id" "=" TEXT} | {"title" "=" TEXT} | {"layers" "=" "[" TEXT* "]"} | {"assets" "=" "[" asset-row* "]"}
+asset-row = asset-field+
+asset-field = {"key" "=" TEXT} | {"child" "=" child-handle} | {"content" "=" TEXT}
+child-handle = {"child_id" "=" TEXT} {"target" "=" TEXT}

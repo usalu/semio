@@ -239,14 +239,14 @@ mod retained_tests {
     fn vcs_retained_live_source_has_no_nested_executor_or_guarded_await() {
         let source = include_str!("../../🦀️.rs");
         let vcs = &source[source.find("pub mod vcs_integration").unwrap()..source.find("//#endregion 🔖️VersionGraph").unwrap()];
-        let production = &vcs[..vcs.find("#[cfg(test)]\n    mod retained_tests").unwrap()];
+        let production = &vcs[..vcs.find("#[cfg(test)]\n    include!(\"🧪️tests/🔬️vcs-integration-retained/🦀️.rs\");").unwrap()];
         assert!(!production.contains("block_on("));
         assert!(!production.contains("submit_blocking"));
         assert!(!production.contains("ask_blocking"));
         assert!(!production.contains("loop {"));
         assert!(production.contains("VcsStoreAcquire"));
         assert!(production.contains("VcsStoreLease"));
-        assert!(production.contains("std::mem::size_of::<HashMutation>()"));
+        assert!(production.contains("size_of::<HashMutation>()"));
         assert!(production.contains("let derived_author_items = request.authors.len();"));
         assert!(production.contains(".and_then(|value| value.checked_add(derived_author_items))"));
         assert!(production.contains("derived_author_owner_bytes"));

@@ -1,37 +1,20 @@
-plugin registry catalog refreshed (59 plugin crates, 58 playgrounds, 22 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated
-.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json
-[framework/surface/rs] pkg/framework_surface_bg.wasm up to date → skipping wasm-pack build
-[framework/editor/rs] pkg/framework_editor_bg.wasm up to date → skipping wasm-pack build
-[framework/surface/rs] pkg/framework_surface_bg.wasm up to date → skipping wasm-pack build
-[os/flow/core] FLOW_CORE_SKIP_WASM_BUILD=1 → skipping wasm-pack build
+[stale] animate: unactivated — staged 2026-09-23T12:47:33.859Z but absent from the activation receipt — run: bun nx run @semio-tech/framework-os-dev:activate-s-react-dev
+[stale] animate: unactivated — staged 2026-09-23T12:47:33.859Z but absent from the activation receipt — run: bun nx run @semio-tech/framework-os-dev:activate-s-react-dev
+[lazy-activate] materialize animate via @semio-tech/animate-plugin:materialize-dev
 
-  VITE v7.3.6  ready in 5954 ms
+  VITE v7.3.6  ready in 3381 ms
 
   ➜  Local:   http://127.0.0.1:7402/
-[BABEL] Note: The code generator has deoptimised the styling of /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx as it exceeds the max of 500KB.
-4:52:21 PM [vite] (client) warning: 
-/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts
-6  |    if (typeof WebAssembly === "undefined") return null;
-7  |    try {
-8  |      const module = await import(RUST_SYNC_WORKER_MODULE_SPECIFIER);
+2:53:15 PM [vite] (client) warning: 
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts
+92 |    if (typeof WebAssembly === "undefined") return null;
+93 |    try {
+94 |      const module = await import(RUST_SYNC_WORKER_MODULE_SPECIFIER);
    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-9  |      await module.default();
-10 |      rustHost = new module.BackboneWorkerHost();
+95 |      await module.default();
+96 |      rustHost = new module.BackboneWorkerHost();
 The above dynamic import cannot be analyzed by Vite.
 See https://github.com/rollup/plugins/tree/master/packages/dynamic-import-vars#limitations for supported dynamic import formats. If this is intended to be left as-is, you can use the /* @vite-ignore */ comment inside the import() call to suppress this warning.
 
   Plugin: vite:import-analysis
-  File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts
-4:52:27 PM [vite] (client) warning: 
-/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts
-8  |    if (typeof WebAssembly === "undefined") return null;
-9  |    try {
-10 |      const module = await import(RUST_SYNC_WORKER_MODULE_SPECIFIER);
-   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-11 |      await module.default();
-12 |      rustHost = new module.BackboneWorkerHost();
-The above dynamic import cannot be analyzed by Vite.
-See https://github.com/rollup/plugins/tree/master/packages/dynamic-import-vars#limitations for supported dynamic import formats. If this is intended to be left as-is, you can use the /* @vite-ignore */ comment inside the import() call to suppress this warning.
-
-  Plugin: vite:import-analysis
-  File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts?worker_file&type=module
+  File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts:29079:47

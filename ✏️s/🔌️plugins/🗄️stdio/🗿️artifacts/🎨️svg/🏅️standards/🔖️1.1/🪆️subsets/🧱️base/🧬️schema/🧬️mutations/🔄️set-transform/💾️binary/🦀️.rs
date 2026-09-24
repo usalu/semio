@@ -1,6 +1,6 @@
 //! 💾️ Operation-specific binary payload codec for set-transform/SetTransform.
 use super::SetTransformPayload;
-pub const BINARY_TAG: u32 = 9;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "set-transform");
 pub fn encode_payload(value: &SetTransformPayload) -> Result<Vec<u8>, String> {
     Ok(pack::to_json_string(value).into_bytes())
 }

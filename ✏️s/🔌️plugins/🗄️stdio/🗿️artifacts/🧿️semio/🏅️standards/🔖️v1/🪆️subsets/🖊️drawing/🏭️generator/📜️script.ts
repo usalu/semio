@@ -112,7 +112,7 @@ const manifests = (): void => {
         privacy: "no-personal-data",
       },
       comparisonProfile: "xml-element-tree",
-      toleranceProfile: "exact",
+      toleranceProfile: "drawing-exact",
       reproducible: true,
       family: "drawing-svg-carrier",
       notes: `Authored (before, after) SVG pair for \`${kind}\`. The pair is the expectation; quick-xml reads both halves.`,
@@ -131,9 +131,19 @@ const manifests = (): void => {
 };
 //#endregion 🧾️Manifests
 
+//#region 🧩️Carrier
+/** 🧩️ Builds the standalone json-rust carrier engine and writes its reviewed JSON-carrier pair into the committed fixtures. */
+function carrier(): number {
+  const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
+  if (build.status !== 0) return build.status ?? 1;
+  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
+}
+//#endregion 🧩️Carrier
+
 //#region 🚀️Main
 const command = process.argv[2];
 if (command === "generate") generate();
 else if (command === "manifests") manifests();
-else { console.error("usage: 📜️script.ts <generate|manifests>"); process.exit(2); }
+else if (command === "carrier") process.exit(carrier());
+else { console.error("usage: 📜️script.ts <generate|manifests|carrier>"); process.exit(2); }
 //#endregion 🚀️Main

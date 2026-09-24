@@ -4,7 +4,7 @@
 //! third-party library — never by executing note's own (currently non-building) production
 //! serializers, and never by "applying" a mutation in code: both states of every recipe are
 //! independently authored in `recipes()` below, exactly the shape `…💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️markup/🏭️generator/📜️script.ts`
-//! and `…✳️cad/🔬️probes/🔮️oracle/🦀️.rs` (the sibling this file's structure mirrors)
+//! and `…✳️cad/🔬️probes/📖️reader/🦀️.rs` (the sibling this file's structure mirrors)
 //! already use.
 //!
 //! `dxf` 0.6 both WRITES (`Drawing::save`) and READS (`Drawing::load`) DXF R12: only `Ink` blocks'
@@ -31,7 +31,7 @@ use std::collections::BTreeMap;
 
 //#region 🧾️Json
 /// 🧾️ The smallest JSON writer that can express a probe report — same shape as
-/// `…✳️cad/🔬️probes/🔮️oracle/🦀️.rs`'s own, copied rather than shared because these two
+/// `…✳️cad/🔬️probes/📖️reader/🦀️.rs`'s own, copied rather than shared because these two
 /// crates must never depend on each other (each is its own `[workspace]`).
 #[derive(Clone, Debug, PartialEq)]
 enum Json {

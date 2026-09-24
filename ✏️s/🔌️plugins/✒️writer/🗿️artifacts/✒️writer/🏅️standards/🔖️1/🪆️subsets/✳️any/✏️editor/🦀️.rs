@@ -1387,7 +1387,11 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             // 🙈️ Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,
             // and dev-only whole-document JSON setters.
             .action_with(writer_hidden_operation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), "typography"))
-            .action_with(writer_hidden_operation("setText", LocalizedLabel::native("Set Text", "Text festlegen"), "sparkles"))
+            // 🔧️ Palette-reachable Artifact-lane mutation: typing still uses hidden `textEdit`, but a
+            // human (and the outcome-1 sweep) must be able to stage a whole-buffer replace from the
+            // Actions rail. `formatDocument` stays the formatter and correctly no-ops on an already
+            // canonical buffer (ticket 26/09/18 S14).
+            .action_with(ActionDefinition::new("setText", LocalizedLabel::native("Set Text", "Text festlegen"), ActionKind::Mutation, "sparkles").with_category("transform"))
             .action_with(writer_hidden_view("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), "camera"))
             .action_with(writer_hidden_operation("commitRename", LocalizedLabel::native("Commit Rename", "Umbenennung übernehmen"), "sparkles").with_category("transform"))
             .action_with(writer_hidden_operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), "sparkles"))
@@ -1439,6 +1443,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("dag.jack", LocalizedLabel::native("Dag Jack", "Dag Jack")),
                 ]).default_value(&"jack"),
             ])
+            .action_args("setText", vec![ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()])
             .action_args("setSnapshotJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON"))])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Fixture JSON", "Fixture-JSON"))])
             .keybinding("mod+z", "undo")

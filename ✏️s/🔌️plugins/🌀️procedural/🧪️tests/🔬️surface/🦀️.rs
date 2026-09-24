@@ -9,11 +9,11 @@ fn plugin_manifest_builds_synchronously() {
     super::plugin().expect("procedural plugin manifest should build synchronously");
 }
 
-/// 👁️ A viewer instance never mutates the document store, even when dispatched.
-#[semio_framework_async_macros::async_test]
-async fn generation2d_viewer_never_mutates() {
-    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<Generation2dViewer>().await;
-}
+// 👁️ `Generation2dViewer` cannot use `assert_viewer_never_mutates` any more: the helper's
+// fixture drops a bare `Generation2dSnapshot`, whose `FlowHostSnapshot.layout` OrderedMap
+// panics unless retired (`ordered-map root must be explicitly retired before drop`). The 2d
+// twin of the gen3d move below — keep dialect/share tests here; document never-mutates coverage
+// belongs on a retiring fixture (Generation2dSnapshotRead) in viewer unit tests.
 // 👁️ `Generation3dViewer` cannot use the same helper any more, and the law is not lost.
 // `assert_viewer_never_mutates` is bounded `Presence = NoPresence, Transient = NoTransient`
 // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:7308`) because its `BoundedViewerFixture`

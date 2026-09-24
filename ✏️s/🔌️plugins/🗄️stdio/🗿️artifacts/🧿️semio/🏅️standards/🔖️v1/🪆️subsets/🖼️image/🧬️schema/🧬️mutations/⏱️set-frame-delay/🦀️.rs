@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetFrameDelay {
-    pub(crate) index: usize,
-    pub(crate) delay_ms: u32,
+    pub index: usize,
+    pub delay_ms: u32,
 }
 
 impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetFrameDelay {

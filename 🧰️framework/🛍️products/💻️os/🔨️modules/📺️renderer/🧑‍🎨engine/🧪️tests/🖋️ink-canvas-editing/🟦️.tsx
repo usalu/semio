@@ -11,7 +11,7 @@ import { InkCanvasHost } from "../../🧱️elements/🖋️InkCanvasHost/🟦�
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const law = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️fixtures/🖋️ink-canvas-editing/🔣️.json"), "utf8")) as any;
+const law = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖋️ink-canvas-editing/🔣️.json"), "utf8")) as any;
 
 function actionEvents(actions: readonly any[]): any[] {
   return actions.filter((action) => action.action === "inkApplyEvents").map((action) => ({ phase: action.args.phase, events: JSON.parse(action.args.eventsJson) }));

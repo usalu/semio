@@ -32,9 +32,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     serializer_entry::<FormsSnapshot, export::json::v_rfc8259::any::FormsIntoJson>(FORMS_DIALECT),
                     deserializer_entry::<FormsSnapshot, import::json::v_rfc8259::any::JsonIntoForms>(FORMS_DIALECT),
                     serializer_entry::<FormsSnapshot, export::csv::v_rfc4180::any::FormsIntoCsv>(FORMS_DIALECT),
-                    deserializer_entry::<FormsSnapshot, import::csv::v_rfc4180::any::CsvIntoForms>(FORMS_DIALECT),
                     serializer_entry::<FormsSnapshot, export::xlsx::v_ecma_376::any::FormsIntoXlsx>(FORMS_DIALECT),
-                    deserializer_entry::<FormsSnapshot, import::xlsx::v_ecma_376::any::XlsxIntoForms>(FORMS_DIALECT),
                     serializer_entry::<FormsSnapshot, export::zip::v2_0::any::FormsIntoZip>(FORMS_DIALECT),
                     deserializer_entry::<FormsSnapshot, import::zip::v2_0::any::ZipIntoForms>(FORMS_DIALECT),
                 ]

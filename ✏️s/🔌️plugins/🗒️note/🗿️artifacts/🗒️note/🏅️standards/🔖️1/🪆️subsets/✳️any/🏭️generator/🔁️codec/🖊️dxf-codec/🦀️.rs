@@ -21,7 +21,7 @@ fn ink_lines(doc: &NoteDoc) -> Vec<([f64; 2], [f64; 2])> {
 
 /// ⏱️ Pins the `dxf` crate's wall-clock header stamps (`$TDCREATE`/`$TDUCREATE`/`$TDUPDATE`/
 /// `$TDUUPDATE`, all group code 40) to a fixed Julian day, exactly the trick
-/// `…✳️cad/🔬️probes/🔮️oracle/🦀️.rs::pin_wall_clock` already proved necessary and
+/// `…✳️cad/🔬️probes/📖️reader/🦀️.rs::pin_wall_clock` already proved necessary and
 /// correct for this same crate: the edit goes through the LIBRARY'S OWN text, re-parsed by
 /// `Drawing::load` to confirm it is still valid DXF, never patched into opaque bytes.
 fn pin_wall_clock(drawing: &Drawing) -> Result<Drawing, String> {

@@ -346,8 +346,8 @@
         },
         {
           "mutationId": "move-grip2d",
-          "sourceMutationDirectoryName": "📍move-grip-2d",
-          "mutationDirectoryName": "📍move-grip-2d",
+          "sourceMutationDirectoryName": "📍move-grip2d",
+          "mutationDirectoryName": "📍move-grip2d",
           "scenarios": [
             {
               "id": "swings-north-grip-along-the-rim",
@@ -357,8 +357,8 @@
         },
         {
           "mutationId": "move-grip3d",
-          "sourceMutationDirectoryName": "🧭move-grip-3d",
-          "mutationDirectoryName": "🧭move-grip-3d",
+          "sourceMutationDirectoryName": "🧭move-grip3d",
+          "mutationDirectoryName": "🧭move-grip3d",
           "scenarios": [
             {
               "id": "repositions-north-grip-in-world",
@@ -456,8 +456,8 @@
         },
         {
           "mutationId": "resize-grip3d",
-          "sourceMutationDirectoryName": "📏resize-grip-3d",
-          "mutationDirectoryName": "📏resize-grip-3d",
+          "sourceMutationDirectoryName": "📏resize-grip3d",
+          "mutationDirectoryName": "📏resize-grip3d",
           "scenarios": [
             {
               "id": "widens-north-grip-radius",
@@ -489,8 +489,8 @@
         },
         {
           "mutationId": "update-part2d",
-          "sourceMutationDirectoryName": "🖌️update-part-2d",
-          "mutationDirectoryName": "🖌️update-part-2d",
+          "sourceMutationDirectoryName": "🖌️update-part2d",
+          "mutationDirectoryName": "🖌️update-part2d",
           "scenarios": [
             {
               "id": "circle-to-rectangle",
@@ -500,8 +500,8 @@
         },
         {
           "mutationId": "update-part3d",
-          "sourceMutationDirectoryName": "🧊update-part-3d",
-          "mutationDirectoryName": "🧊update-part-3d",
+          "sourceMutationDirectoryName": "🧊update-part3d",
+          "mutationDirectoryName": "🧊update-part3d",
           "scenarios": [
             {
               "id": "reorients-and-rescales-part",

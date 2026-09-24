@@ -1,0 +1,22 @@
+C8 request (2026-09-24 ~05:00) — guest rebuild after a framework fix in semio-framework-plugin.
+Crates: gis (semio-s-plugin-gis) and draw (semio-s-plugin-draw) FIRST; then writer, puzzle, stdio, note (every guest links 🔌️plugin/🦀️.rs).
+Why: `commitCheckpoint` trapped the guest (`resolve_ready: future was not ready on first poll`) — a reserved commit was one
+  future with a yield per composed child, bridged by resolve_ready at JobCompleted. Now the commit is a queued app-owned job
+  (`FrameworkReservedCommit`) advanced one ready unit per reactor turn through the typed-operation continuation, with
+  progress + cancellation. Files: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs, …/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs.
+  Native laws green: `cargo test -p semio-framework-plugin --lib` 835/835 (2 timing laws pass serially).
+Need: activated s-react-dev lane for gis2d (my serve) and the hub catalog you publish with writer/draw/puzzle built from the same guests.
+Please append the result paths here.
+C8 addendum (04:38): a second guest-side fix landed in the same crate (⚛️reactor/🔄️turn/🦀️.rs + ⚛️reactor/🪟️surfaces/🦀️.rs: remote merge re-projects every surface). Please build from a tree that includes it (any build started after this line).
+
+[w1 2026-09-24 06:22:06] status: gis staged 05:22 (pre-p5 hash), draw describe FAILED 06:08 on a peer compile break in stdio-semio
+  (missing semio-s-artifact-stdio-png dep, fixed by a peer 06:12). Because p5's structural pack-schema hash landed 06:11,
+  gis+draw are re-queued (describe → materialize-dev → activate s react dev), then catalog A
+  (stdio,gis,note,draw,writer,puzzle → .🧬semio/🌐hub/w1-catalog-a) builds from the same post-06:12 tree. Paths are appended here when done.
+
+[w1 2026-09-24 08:29] DONE (tree incl. C8 reserved-commit + surface re-projection, p5 structural hash, T3 gis io 07:2x):
+  gis  describe+materialize-dev 08:28 wasm 04844275baacc67f39742009d5ebbe17e00405e3fed19af3bd2889ad85710120 (== committed 🔣️.json == shared wasm-dev == dist == staged)
+  draw describe+materialize-dev 08:18 wasm 1e2767e133f7822985e2258129d9e64a28d5badfeb8f44ce66db1573eae77f63 (all four equal)
+  activation gis2d 08:29: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/gis2d/activation/🔣️receipt.json
+  activation s     08:29: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/activation/🔣️receipt.json (60 components)
+  catalog A (stdio,gis,note,draw,writer,puzzle) publishing since 08:29 -> .🧬semio/🌐hub/w1-catalog-a (appended here when done)

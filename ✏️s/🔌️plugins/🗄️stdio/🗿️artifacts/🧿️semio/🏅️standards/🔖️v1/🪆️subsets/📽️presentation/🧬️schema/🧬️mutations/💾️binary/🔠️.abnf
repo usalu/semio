@@ -2,6 +2,6 @@
 ; authoritative `📡️.protocol.semio` for the conformance-tested version.
 document       = format tag payload
 format         = %x01                  ; OP_BINARY_FORMAT
-tag            = OCTET                 ; SemioPresentationMutation variant ordinal (see OP_KEYWORDS)
+tag            = OCTET                 ; the kind's record tag in 📡️.protocol.semio
 payload        = *OCTET                ; the variant's own "key=value ..." argument text,
                                         ; see component.rs's OpBinary::encode_op

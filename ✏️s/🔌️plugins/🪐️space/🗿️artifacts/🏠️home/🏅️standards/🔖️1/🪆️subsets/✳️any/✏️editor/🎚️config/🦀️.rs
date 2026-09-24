@@ -66,7 +66,7 @@ struct DirectoryReadModelWire {
 }
 
 /// 📇️ Encodes a `DirectoryReadModel` as the `directory_json` DSL field's wire value.
-fn directory_to_json(model: &store::os_directory::DirectoryReadModel) -> String {
+pub(crate) fn directory_to_json(model: &store::os_directory::DirectoryReadModel) -> String {
     let wire = DirectoryReadModelWire {
         spaces: model
             .spaces

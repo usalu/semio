@@ -7,9 +7,7 @@ async fn snapshot_pack_round_trips_with_composed_children() {
     let steps = vec![FormStep { id: "s1".into(), title: "Step".into(), description: None, blocks: Vec::new() }];
     let (structure, results) = forms_children_from_steps(&steps);
     let snapshot = FormsSnapshot { schema: FORMS_DOCUMENT_SCHEMA.into(), id: "forms".into(), version: "1".into(), title: None, structure, results };
-    let encoded = store::ArtifactPack::encode_pack(&snapshot);
-    let decoded = <FormsSnapshot as store::ArtifactPack>::decode_pack(&encoded).expect("decodes");
-    assert_eq!(decoded, snapshot);
+    store::os_store::test_support::assert_pack_schema_identity(&snapshot);
 }
 
 #[semio_framework_async_macros::async_test]

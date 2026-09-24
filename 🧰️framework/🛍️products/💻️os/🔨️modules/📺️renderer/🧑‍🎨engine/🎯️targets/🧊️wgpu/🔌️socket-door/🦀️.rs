@@ -626,6 +626,6 @@ pub mod browser {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../🧪️tests/🔌️wgpu-socket-door/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

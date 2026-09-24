@@ -298,6 +298,24 @@ pub const METHOD_PROMPTS_LIST: &str = "prompts/list";
 pub const METHOD_PROMPTS_GET: &str = "prompts/get";
 pub const METHOD_PING: &str = "ping";
 pub const METHOD_NOTIFICATIONS_CANCELLED: &str = "notifications/cancelled";
+
+/// 🛑️ Out-of-band `notifications/cancelled`: a transport whose serve loop dispatches one request at a
+/// time hands every inbound line here BEFORE queueing it, or the cancel would only be read after the
+/// call it names had already finished. `true` means the line was that notification and is consumed —
+/// a notification is never answered, so nothing is lost by not dispatching it again.
+pub fn intercept_cancellation(line: &str) -> bool {
+    if !line.contains(METHOD_NOTIFICATIONS_CANCELLED) {
+        return false;
+    }
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(line.trim()) else { return false };
+    if value.get("method").and_then(serde_json::Value::as_str) != Some(METHOD_NOTIFICATIONS_CANCELLED) || value.get("id").is_some_and(|id| !id.is_null()) {
+        return false;
+    }
+    if let Some(request_id) = value.get("params").and_then(|params| params.get("requestId")) {
+        crate::notify::cancel_request(request_id);
+    }
+    true
+}
 //#endregion 🔖️Methods
 
 //#region 🔖️ToolNameCharset
@@ -1130,8 +1148,7 @@ impl McpServer {
             return None;
         }
         let slot = self.notifications.clone()?;
-        let request_id = request.id.as_ref().map(|id| serde_json::to_value(id).unwrap_or(serde_json::Value::Null));
-        Some(crate::notify::ProgressBinding { token, request_id, slot })
+        Some(crate::notify::ProgressBinding { token, slot })
     }
 
     fn handle_tools_call(&self, request: &JsonRpcRequest) -> DispatchOutcome {
@@ -1141,6 +1158,7 @@ impl McpServer {
         // 📈️ Held across the whole call: every job the tool mints while this guard is alive is bound
         // to the client's token, so its progress is PUSHED as `notifications/progress` instead of
         // only being readable by polling `job_get`.
+        let _request = crate::notify::enter_request_scope(request.id.as_ref().map(|id| serde_json::to_value(id).unwrap_or(serde_json::Value::Null)).as_ref());
         let _progress = crate::notify::enter_progress_scope(self.progress_binding(request, params));
         // 💬️ The ONE real dispatch point every tool call passes through — so the shell's agent
         // panel shows the agent's actual calls, in order, with their real arguments and outcomes,
@@ -1184,11 +1202,8 @@ impl McpServer {
     /// asked to stop. A request that minted no job, or one already finished, is a silent no-op —
     /// the spec forbids answering a notification either way.
     fn handle_notifications_cancelled(&self, request: &JsonRpcRequest) -> DispatchOutcome {
-        let Some(request_id) = request.params.as_ref().and_then(|params| params.get("requestId")) else {
-            return DispatchOutcome::NoResponse;
-        };
-        for job_id in crate::notify::jobs_for_request(request_id) {
-            let _ = crate::ui::job_registry().request_cancel(&job_id);
+        if let Some(request_id) = request.params.as_ref().and_then(|params| params.get("requestId")) {
+            crate::notify::cancel_request(request_id);
         }
         DispatchOutcome::NoResponse
     }

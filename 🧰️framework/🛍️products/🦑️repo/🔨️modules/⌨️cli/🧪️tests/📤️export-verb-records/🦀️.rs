@@ -9,7 +9,7 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The frozen repository every scenario exports.
     fn records(ctx: &Context) -> Result<String, String> {
-        Ok(ctx.fixture_json("local://🗄️repo-records.json")?.to_string())
+        Ok(ctx.fixture_json("shared://📤️export-verb-records/🗄️repo-records.json")?.to_string())
     }
 
     /// 📦️ The batch the verb would append.

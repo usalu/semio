@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeHandleKindColor",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-handle-kind-color",
-  "binaryTag": null,
+  "binaryTag": 11,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

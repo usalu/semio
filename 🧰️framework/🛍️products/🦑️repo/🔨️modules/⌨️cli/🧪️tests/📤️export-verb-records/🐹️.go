@@ -16,7 +16,7 @@ import (
 
 // 📥️ The frozen repository every scenario exports.
 func records(ctx *host.Context) (string, error) {
-	raw, err := ctx.FixtureBytes("local://🗄️repo-records.json")
+	raw, err := ctx.FixtureBytes("shared://📤️export-verb-records/🗄️repo-records.json")
 	if err != nil {
 		return "", err
 	}

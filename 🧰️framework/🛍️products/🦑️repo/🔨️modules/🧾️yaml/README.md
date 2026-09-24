@@ -12,6 +12,6 @@ one deterministic, key-sorted rendering chosen for diffability.
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
 `🧪️test` harness; the `yaml` package is registered as the third-party reference for decoding in
-`🔮️oracle/🔣️.json`, and the owned encoder is held by a metamorphic law recorded there.
+`🔮️oracles/🔣️.json`, and the owned encoder is held by a metamorphic law recorded there.
 
 `🔁️codec-roundtrip`, `🕳️empty-container-encoding`.

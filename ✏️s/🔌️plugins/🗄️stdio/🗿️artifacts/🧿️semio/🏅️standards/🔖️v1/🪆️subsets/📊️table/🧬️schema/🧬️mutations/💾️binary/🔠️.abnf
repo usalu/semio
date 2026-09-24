@@ -3,5 +3,5 @@
 ; op frame.
 op-frame    = format tag payload
 format      = OCTET               ; OP_BINARY_FORMAT, currently 1
-tag         = OCTET                ; variant ordinal, 0-7 (see OP_KEYWORDS)
+tag         = OCTET                ; the kind's record tag in 📡️.protocol.semio
 payload     = *OCTET               ; the variant's own argument tail, UTF-8 text-op-args bytes

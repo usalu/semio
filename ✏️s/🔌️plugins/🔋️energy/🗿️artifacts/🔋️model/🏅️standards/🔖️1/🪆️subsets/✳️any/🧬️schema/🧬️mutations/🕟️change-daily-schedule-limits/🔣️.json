@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeDailyScheduleLimits",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-daily-schedule-limits",
-  "binaryTag": null,
+  "binaryTag": 259,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

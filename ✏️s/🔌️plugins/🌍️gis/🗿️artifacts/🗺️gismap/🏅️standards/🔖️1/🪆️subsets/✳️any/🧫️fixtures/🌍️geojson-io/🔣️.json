@@ -1,0 +1,402 @@
+{
+  "subjectSchema": "../../🧬️schema/🔣️.json",
+  "geojsonSchema": "../../../../../../../../../🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema/🔣️.json",
+  "_comment": "🌍️ Language-agnostic gismap ↔ GeoJSON (RFC 7946) vectors. `export`: the map features (positions, routes, regions) and the exact FeatureCollection the export leaf writes. `import`: a GeoJSON text and the exact map features the import leaf produces (multi-part geometries split to `<id>#<n>`, null geometry dropped, numeric ids as text, missing ids `feature-<n>`, repeated ids within a family `#<n>`, property members named like geometry members dropped).",
+  "export": [
+    {
+      "id": "positions-routes-regions-and-a-geometryless-region",
+      "map": {
+        "positions": [
+          {
+            "id": "p0",
+            "data": {
+              "id": "p0",
+              "lon": 5.5818,
+              "lat": 50.603,
+              "alt": 112.5,
+              "label": "Botanique"
+            }
+          }
+        ],
+        "routes": [
+          {
+            "id": "r0",
+            "data": {
+              "id": "r0",
+              "points": [
+                [
+                  5.5818,
+                  50.603
+                ],
+                [
+                  5.5901,
+                  50.6099
+                ]
+              ],
+              "kind": "reuse"
+            }
+          }
+        ],
+        "regions": [
+          {
+            "id": "g0",
+            "data": {
+              "id": "g0",
+              "ring": [
+                [
+                  5.58,
+                  50.6
+                ],
+                [
+                  5.58,
+                  50.62
+                ],
+                [
+                  5.6,
+                  50.62
+                ],
+                [
+                  5.6,
+                  50.6
+                ]
+              ],
+              "holes": [
+                [
+                  [
+                    5.585,
+                    50.605
+                  ],
+                  [
+                    5.595,
+                    50.605
+                  ],
+                  [
+                    5.595,
+                    50.615
+                  ],
+                  [
+                    5.585,
+                    50.615
+                  ]
+                ]
+              ],
+              "name": "Park"
+            }
+          },
+          {
+            "id": "g1",
+            "data": {
+              "id": "g1",
+              "name": "no geometry yet"
+            }
+          }
+        ]
+      },
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "id": "p0",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.5818,
+                50.603,
+                112.5
+              ]
+            },
+            "properties": {
+              "label": "Botanique"
+            }
+          },
+          {
+            "type": "Feature",
+            "id": "r0",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  5.5818,
+                  50.603
+                ],
+                [
+                  5.5901,
+                  50.6099
+                ]
+              ]
+            },
+            "properties": {
+              "kind": "reuse"
+            }
+          },
+          {
+            "type": "Feature",
+            "id": "g0",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5.58,
+                    50.6
+                  ],
+                  [
+                    5.6,
+                    50.6
+                  ],
+                  [
+                    5.6,
+                    50.62
+                  ],
+                  [
+                    5.58,
+                    50.62
+                  ],
+                  [
+                    5.58,
+                    50.6
+                  ]
+                ],
+                [
+                  [
+                    5.585,
+                    50.605
+                  ],
+                  [
+                    5.585,
+                    50.615
+                  ],
+                  [
+                    5.595,
+                    50.615
+                  ],
+                  [
+                    5.595,
+                    50.605
+                  ],
+                  [
+                    5.585,
+                    50.605
+                  ]
+                ]
+              ]
+            },
+            "properties": {
+              "name": "Park"
+            }
+          },
+          {
+            "type": "Feature",
+            "id": "g1",
+            "geometry": null,
+            "properties": {
+              "name": "no geometry yet"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "import": [
+    {
+      "id": "multipart-null-numeric-and-repeated-ids",
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "id": 12,
+            "geometry": {
+              "type": "MultiPoint",
+              "coordinates": [
+                [
+                  6.1,
+                  49.6
+                ],
+                [
+                  6.2,
+                  49.7,
+                  300.0
+                ]
+              ]
+            },
+            "properties": {
+              "kind": "stop",
+              "lat": 0
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+              "note": "dropped: no map geometry"
+            }
+          },
+          {
+            "type": "Feature",
+            "id": "a",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ]
+              ]
+            },
+            "properties": null
+          },
+          {
+            "type": "Feature",
+            "id": "a",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ]
+              ]
+            },
+            "properties": {}
+          },
+          {
+            "type": "Feature",
+            "id": "a",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  1,
+                  1
+                ],
+                [
+                  2,
+                  2
+                ]
+              ]
+            },
+            "properties": {}
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                3,
+                4
+              ]
+            },
+            "properties": null
+          }
+        ]
+      },
+      "map": {
+        "positions": [
+          {
+            "id": "12#0",
+            "data": {
+              "id": "12#0",
+              "kind": "stop",
+              "lon": 6.1,
+              "lat": 49.6
+            }
+          },
+          {
+            "id": "12#1",
+            "data": {
+              "id": "12#1",
+              "kind": "stop",
+              "lon": 6.2,
+              "lat": 49.7,
+              "alt": 300.0
+            }
+          },
+          {
+            "id": "feature-5",
+            "data": {
+              "id": "feature-5",
+              "lon": 3.0,
+              "lat": 4.0
+            }
+          }
+        ],
+        "routes": [
+          {
+            "id": "a",
+            "data": {
+              "id": "a",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0,
+                  1.0
+                ]
+              ]
+            }
+          },
+          {
+            "id": "a#1",
+            "data": {
+              "id": "a#1",
+              "points": [
+                [
+                  1.0,
+                  1.0
+                ],
+                [
+                  2.0,
+                  2.0
+                ]
+              ]
+            }
+          }
+        ],
+        "regions": [
+          {
+            "id": "a",
+            "data": {
+              "id": "a",
+              "ring": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0,
+                  0.0
+                ],
+                [
+                  1.0,
+                  1.0
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

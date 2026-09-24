@@ -2909,6 +2909,8 @@ struct Puzzle3dContextSelection {
     attraction_ids: Vec<String>,
     target_volume_ids: Vec<String>,
     reference_ids: Vec<String>,
+    /// 🎯️ The pointer's hit alone is the subject, so no selection read may widen it again.
+    hit_subject: bool,
 }
 
 impl Puzzle3dContextSelection {
@@ -2924,11 +2926,12 @@ impl Puzzle3dContextSelection {
     }
 
     /// 🎯️ `surface.hits` is the entity the pointer is actually over, `surface.selection` the entities the
-    /// document already holds selected. The hit WINS when it names a granularity the selection does not
-    /// carry, so a right-click on an unselected object opens that object's menu instead of the empty menu
-    /// that made the shell fallback take over the viewport (`📓️2026-09-11-wave-B1-battery-extension.md`
-    /// §5 defect 8). A hit inside the current selection changes nothing — the whole selection stays the
-    /// menu's subject, so "Delete (3 objects)" never silently narrows to the one row under the cursor.
+    /// document already holds selected. A hit OUTSIDE the selection is the menu's whole subject, so a
+    /// right-click on an unselected object opens that object's menu instead of the empty menu that made the
+    /// shell fallback take over the viewport (`📓️2026-09-11-wave-B1-battery-extension.md` §5 defect 8), and a
+    /// right-click on a vortex of the selected object opens the vortex's menu, not the object's. A hit
+    /// inside the current selection changes nothing — the whole selection stays the menu's subject, so
+    /// "Delete (3 objects)" never silently narrows to the one row under the cursor.
     fn from_surface(surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Self {
         let mut out = Self::default();
         let Some(surface) = surface else {
@@ -2940,13 +2943,22 @@ impl Puzzle3dContextSelection {
                 bucket.extend(ids);
             }
         }
-        for hit in &surface.hits {
-            let id = hit.id.clone();
-            if let Some(bucket) = out.bucket(hit.domain.as_str()).filter(|bucket| bucket.is_empty()) {
-                bucket.push(id);
-            }
+        // 🎯️ Hosts list every target under the pointer, most specific first, and only that one is the subject.
+        let mut hits = Self::default();
+        if let Some(hit) = surface.hits.iter().find(|hit| hits.bucket(hit.domain.as_str()).is_some()) {
+            hits.bucket(hit.domain.as_str()).into_iter().for_each(|bucket| bucket.push(hit.id.clone()));
         }
-        out
+        let hit_selected = |selected: &[String], hit: &[String]| hit.iter().all(|id| selected.contains(id));
+        let inside = hit_selected(&out.object_ids, &hits.object_ids)
+            && hit_selected(&out.vortex_ids, &hits.vortex_ids)
+            && hit_selected(&out.attraction_ids, &hits.attraction_ids)
+            && hit_selected(&out.target_volume_ids, &hits.target_volume_ids)
+            && hit_selected(&out.reference_ids, &hits.reference_ids);
+        if surface.hits.is_empty() || inside {
+            return out;
+        }
+        hits.hit_subject = true;
+        hits
     }
 
     /// 🕹️ Fills in the granularities the CLIENT surface never sends. `World3dHost` only puts its
@@ -2956,6 +2968,9 @@ impl Puzzle3dContextSelection {
     /// additive: whatever the surface DID supply keeps priority (a right-click on an unselected
     /// entity still targets what was clicked).
     fn fill_from_interaction(&mut self, interaction: &Puzzle3dInteractionSnapshot) {
+        if self.hit_subject {
+            return;
+        }
         for (bucket, ids) in [
             (&mut self.object_ids, interaction.selected_object_ids()),
             (&mut self.vortex_ids, interaction.selected_vortex_ids()),
@@ -3684,7 +3699,7 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
         "addBrushObject" => add_brush_object::add_brush_object(ctx, args),
         "cycleBrushCandidate" | "cycleBrushCandidateBack" => cycle_candidate::cycle_candidate(ctx, action, args),
         "openVortexSuggestions" => open_vortex_suggestions::open_vortex_suggestions(ctx, args),
-        "closeVortexSuggestions" => close_vortex_suggestions::close_vortex_suggestions(ctx),
+        "closeVortexSuggestions" => close_vortex_suggestions::close_vortex_suggestions(ctx, args),
         "hoverSuggestion" => hover_suggestion::hover_suggestion(ctx, args),
         "acceptSuggestion" => accept_suggestion::accept_suggestion(ctx, args),
         "targetBrushSuggestions" => target_brush_suggestions::target_brush_suggestions(ctx, args),
@@ -6756,7 +6771,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dAcceptSuggestionStage::PublishAttraction => {
                 let target = self.target_id.take().ok_or_else(|| Fault::from("puzzle3d-accept-target-owner"))?;
-                let object_id = self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-accept-object-owner"))?;
+                let object_id = self.object_id.clone().ok_or_else(|| Fault::from("puzzle3d-accept-object-owner"))?;
                 let source = format!("{object_id}:v{}", self.candidate.take().ok_or_else(|| Fault::from("puzzle3d-accept-candidate-owner"))?.source_vortex_index);
                 self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices(format!("attraction-{target}-{source}"), target, source, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
                 self.stage = Puzzle3dAcceptSuggestionStage::PublishResult;
@@ -6764,7 +6779,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dAcceptSuggestionStage::PublishResult => {
                 self.stage = Puzzle3dAcceptSuggestionStage::Complete;
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), config_mutations: Vec::new(), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("acceptSuggestion")), ..Default::default() }))
+                let placed = self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-accept-object-owner"))?;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: std::mem::take(&mut self.mutations),
+                    config_mutations: Vec::new(),
+                    ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("acceptSuggestion")),
+                    interaction_writes: vec![InteractionWrite::replace(PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_GRANULARITY_OBJECT, [placed])],
+                    ..Default::default()
+                }))
             }
             Puzzle3dAcceptSuggestionStage::Complete => Err(Fault::from("puzzle3d-accept-complete-repolled")),
             Puzzle3dAcceptSuggestionStage::Closing => Err(Fault::from("puzzle3d-accept-closing")),

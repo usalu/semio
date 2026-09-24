@@ -276,7 +276,7 @@
       },
       "comparisonProfile": "semantic-note-dxf-ink-v1",
       "reproducible": true,
-      "family": "dxf+svg",
+      "family": "dxf-svg",
       "notes": "Witnesses edit-block-ink-stroke via the dxf+svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     }
   ]

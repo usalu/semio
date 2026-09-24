@@ -32,7 +32,10 @@ async fn trusted_publication_owner_process_crash_releases_exact_lock() {
         let root = std::path::PathBuf::from(root);
         let data = TrustedCatalogDataRoot::open_server_owned(&root).unwrap();
         let _owner = data.acquire_publication(&context).await.unwrap();
-        std::fs::write(root.join("holder-ready.json"), fixture["process"]["holder"].as_str().unwrap()).unwrap();
+        let ready = root.join("holder-ready.json");
+        let tmp = root.join("holder-ready.json.tmp");
+        std::fs::write(&tmp, fixture["process"]["holder"].as_str().unwrap()).unwrap();
+        std::fs::rename(&tmp, &ready).unwrap();
         std::future::pending::<()>().await;
         return;
     }
@@ -77,7 +80,6 @@ async fn trusted_publication_owner_process_crash_releases_exact_lock() {
     assert_eq!(fixture["process"]["competing"], "contended");
     assert_eq!(fixture["process"]["afterCrash"], "acquired");
     assert_eq!(fixture["process"]["current"], "unchanged");
-    println!("[DEBUG] publication cross-process fence: holder=acquired competing=contended crash=reaped next=acquired current=unchanged");
 }
 
 #[tokio::test]

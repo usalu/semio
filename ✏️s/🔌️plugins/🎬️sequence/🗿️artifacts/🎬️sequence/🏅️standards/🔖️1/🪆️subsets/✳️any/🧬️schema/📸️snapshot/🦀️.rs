@@ -9,8 +9,9 @@ use framework_schema::ArtifactSchema;
 /// fields are replaced by a fixed composed `s.stdio.semio.flow` CHILD slot — the sequence plugin no
 /// longer defines its own step-DAG content model, it composes stdio's `flow` subset instead.
 /// `#[child(...)]` drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
+#[dsl(extension = "sequence")]
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceSnapshot {
     #[state(artifact)]

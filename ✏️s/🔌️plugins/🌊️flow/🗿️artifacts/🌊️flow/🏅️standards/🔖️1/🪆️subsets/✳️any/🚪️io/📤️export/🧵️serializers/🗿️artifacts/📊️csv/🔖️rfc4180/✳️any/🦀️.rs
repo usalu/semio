@@ -1,9 +1,0 @@
-//! Serialize flow to stdio.csv.
-use crate::FlowSnapshot;
-use semio_s_artifact_stdio_csv::CsvSnapshot;
-
-pub fn register() {}
-
-pub fn serialize(from: &FlowSnapshot) -> Result<CsvSnapshot, store::PackError> {
-    dsl::FromValue::from_value(dsl::ToValue::to_value(from)).map_err(|e| store::PackError::Schema(e.to_string()))
-}

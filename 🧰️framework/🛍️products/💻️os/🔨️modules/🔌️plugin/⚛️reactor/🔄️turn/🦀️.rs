@@ -334,6 +334,18 @@ async fn dirty_background_surfaces<PA: crate::PluginApp>(runtime: &crate::plugin
     Ok(())
 }
 
+/// 📡️ Dirties every surface of `instance` after remote edits were merged into its document.
+async fn dirty_document_surfaces<PA: crate::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance: u32, dirty: &mut DirtyPollOwners) -> Result<(), semio_framework::Fault> {
+    for surface in crate::plugin_runtime::plugin_instance_document_surfaces(runtime, instance).await {
+        let surface = ui_contract::SurfaceId::try_from(surface)
+            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
+        dirty
+            .try_surface(instance, surface)
+            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
+    }
+    Ok(())
+}
+
 fn redirty_acknowledged_deferred_surfaces(patches: &patches::PatchTracker, dirty: &mut DirtyPollOwners) -> Result<usize, semio_framework::Fault> {
     let mut taken = 0usize;
     while let Some(surface) = patches.take_deferred_ready() {
@@ -780,20 +792,8 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                             Ok(bytes) => Ok(bytes.clone()),
                             Err(fault) => Err(fault.clone()),
                         };
-                        let output = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_complete_reserved_spawned_job(runtime, instance, job, reserved_output));
-                        for frame_bytes in output.frames {
-                            route_app_frame(instance, &frame_bytes, &mut document_backbone_effects);
-                        }
-                        for one in &output.effects {
-                            if let Ok(effect) = decode_wire_effect(one) {
-                                push_admitted_effect(&mut document_backbone_effects, instance, effect);
-                            }
-                        }
-                        for one in &output.events {
-                            if let Ok(event) = decode_wire_app_event(one) {
-                                document_backbone_effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
-                            }
-                        }
+                        let output = crate::plugin_runtime::plugin_complete_reserved_spawned_job(runtime, instance, job, reserved_output).await;
+                        route_exchange_output(instance, output, &mut document_backbone_effects);
                     }
                 }
                 REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(job), outcome));
@@ -809,7 +809,11 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             }
             Event::Message { source: MessageEndpoint::Backbone { uri }, payload } => {
                 let output = crate::plugin_runtime::plugin_receive_document_backbone(runtime, &uri, &payload).await?;
-                dirty_background_surfaces(runtime, output.instance_id, &mut dirty).await?;
+                if output.document_changed {
+                    dirty_document_surfaces(runtime, output.instance_id, &mut dirty).await?;
+                } else {
+                    dirty_background_surfaces(runtime, output.instance_id, &mut dirty).await?;
+                }
                 for frame in output.frames {
                     route_app_frame(output.instance_id, &frame, &mut document_backbone_effects);
                 }
@@ -1529,6 +1533,12 @@ fn fill_turn_patch_page<PA: crate::app::PluginApp>(
     Ok((page, receipt))
 }
 
+#[cfg(target_arch = "wasm32")]
+const PROCESS_POOL_PUMPS_PER_TURN: usize = 64;
+/// ⏱️ Wall-clock bound on process-pool pumping per reactor turn on wasm.
+#[cfg(target_arch = "wasm32")]
+const PROCESS_POOL_WALL_MS: u64 = 2;
+
 /// 🏃️ Runs queued process-pool job steps inside this turn on wasm, where the pool has no threads and
 /// a step submitted by a mounted worker session (retained commands, framework reserved routes) only
 /// executes when the pool is pumped. Before this the only pump was the cooperative-maintenance cadence,
@@ -1542,17 +1552,18 @@ pub(crate) fn pump_process_worker_pool() -> bool {
                 return false;
             }
             let deadline = std::time::Instant::now() + std::time::Duration::from_millis(PROCESS_POOL_WALL_MS);
-            let mut pumps = 0;
+            let mut pumps = 0usize;
             while pumps < PROCESS_POOL_PUMPS_PER_TURN && pool.has_pending_work() && std::time::Instant::now() < deadline {
-                let Some(now_ms) = semio_framework_job::default_now_ms() else { break };
-                pool.pump(now_ms);
+                pool.pump(semio_framework_job::default_now_ms().unwrap_or(1_000_000 + pumps as u64));
                 pumps += 1;
             }
             pool.has_pending_work()
         })
     }
     #[cfg(not(target_arch = "wasm32"))]
-    false
+    {
+        false
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1727,12 +1738,6 @@ pub const fn more_work_drive_budget_ms(grant_wall_ms: u64, guest_turn_cost_ms: u
         grant_wall_ms
     }
 }
-#[cfg(target_arch = "wasm32")]
-const PROCESS_POOL_PUMPS_PER_TURN: usize = 64;
-/// ⏱️ Wall-clock bound on process-pool pumping per reactor turn on wasm.
-#[cfg(target_arch = "wasm32")]
-const PROCESS_POOL_WALL_MS: u64 = 2;
-
 /// 🔁️ Drives the retained-surface reconcile ladder inside ONE turn: steps whatever the guest can step
 /// by itself, extracts every ready output a free publication slot will take, and answers how many
 /// opportunities it actually spent.

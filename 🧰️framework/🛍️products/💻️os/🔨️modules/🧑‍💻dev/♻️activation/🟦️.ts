@@ -1,5 +1,6 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
-import { randomUUID } from "node:crypto";
+import { readdir as readdirAsync, readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -23,7 +24,7 @@ export function playgroundSessionViteAlias(stagingRoot: string, variant: string)
   return { find: PLAYGROUND_SESSION_VITE_SPECIFIER, replacement: playgroundSessionStagedOutputPath(stagingRoot, variant) };
 }
 
-export type ActivationArtifact = { readonly pluginId: string; readonly artifactSha256: string };
+export type ActivationArtifact = { readonly pluginId: string; readonly artifactSha256: string; readonly sourceContentSha256?: string };
 export type ActivationReceipt = {
   readonly schema: "semio.dev.activation/v1";
   readonly variant: string;
@@ -39,7 +40,8 @@ export function parseActivationReceipt(value: unknown): ActivationReceipt {
   if (!keys(value, ["schema", "variant", "profile", "plugins"]) || value.schema !== "semio.dev.activation/v1" || typeof value.variant !== "string" || !identity.test(value.variant) || !["dev", "release"].includes(String(value.profile)) || !Array.isArray(value.plugins)) throw new Error("Invalid activation receipt");
   const seen = new Set<string>();
   for (const row of value.plugins) {
-    if (!keys(row, ["pluginId", "artifactSha256", "rebuiltAt"]) || typeof row.pluginId !== "string" || !identity.test(row.pluginId) || typeof row.artifactSha256 !== "string" || !/^[a-f0-9]{64}$/.test(row.artifactSha256) || !Number.isSafeInteger(row.rebuiltAt) || Number(row.rebuiltAt) < 1) throw new Error("Invalid activation plugin");
+    const rowKeys = Object.keys(row as object).sort().join();
+    if ((rowKeys !== "artifactSha256,pluginId,rebuiltAt" && rowKeys !== "artifactSha256,pluginId,rebuiltAt,sourceContentSha256") || typeof (row as any).pluginId !== "string" || !identity.test((row as any).pluginId) || typeof (row as any).artifactSha256 !== "string" || !/^[a-f0-9]{64}$/.test((row as any).artifactSha256) || !Number.isSafeInteger((row as any).rebuiltAt) || Number((row as any).rebuiltAt) < 1 || ((row as any).sourceContentSha256 !== undefined && (typeof (row as any).sourceContentSha256 !== "string" || !/^[a-f0-9]{64}$/.test((row as any).sourceContentSha256)))) throw new Error("Invalid activation plugin");
     if (seen.has(row.pluginId)) throw new Error(`Duplicate activation plugin: ${row.pluginId}`);
     seen.add(row.pluginId);
   }
@@ -53,7 +55,13 @@ export function nextActivationReceipt(variant: string, profile: "dev" | "release
   if (!Number.isSafeInteger(now)) throw new Error("Invalid activation clock");
   const prior = new Map(previous?.plugins.map((row) => [row.pluginId, row]));
   const timestamp = Math.max(now, 1, ...[...prior.values()].map((row) => row.rebuiltAt + 1));
-  return parseActivationReceipt({ schema: "semio.dev.activation/v1", variant, profile, plugins: [...completed].sort((a, b) => a.pluginId < b.pluginId ? -1 : a.pluginId > b.pluginId ? 1 : 0).map((row) => ({ ...row, rebuiltAt: prior.get(row.pluginId)?.artifactSha256 === row.artifactSha256 ? prior.get(row.pluginId)!.rebuiltAt : timestamp })) });
+  return parseActivationReceipt({ schema: "semio.dev.activation/v1", variant, profile, plugins: [...completed].sort((a, b) => a.pluginId < b.pluginId ? -1 : a.pluginId > b.pluginId ? 1 : 0).map((row) => {
+    const previous = prior.get(row.pluginId);
+    const same = previous?.artifactSha256 === row.artifactSha256 && previous?.sourceContentSha256 === row.sourceContentSha256;
+    const plugin: Record<string, unknown> = { pluginId: row.pluginId, artifactSha256: row.artifactSha256, rebuiltAt: same ? previous!.rebuiltAt : timestamp };
+    if (row.sourceContentSha256) plugin.sourceContentSha256 = row.sourceContentSha256;
+    return plugin;
+  }) });
 }
 
 /** 📖️ Reads only explicit activation completion, never the existence or mtime of cached outputs. */
@@ -225,13 +233,17 @@ export type StagedModuleFacts = Readonly<{
   stagedAtMs?: number;
   newestSourceMs?: number;
   newestSourcePath?: string;
+  /** 🔖️ SHA-256 of the plugin-owner source tree (plugin paths only — framework changes never enter). */
+  sourceContentSha256?: string;
+  /** 🔖️ Source content hash recorded when the staged module / receipt row was published. */
+  stagedSourceContentSha256?: string;
   receiptArtifactSha256?: string;
   installedPackageHash?: string;
 }>;
 
 export type StagedModuleVerdict = Readonly<{
   pluginId: string;
-  kind: "fresh" | "unstaged" | "unactivated" | "unpublished" | "source-newer";
+  kind: "fresh" | "unstaged" | "unactivated" | "unpublished" | "source-changed";
   detail?: string;
 }>;
 
@@ -243,7 +255,8 @@ function stagedInstant(value: number): string {
 /** 🔎️ Decides one staged component's freshness from already-collected facts — pure, so the serve-start
  * pass and the activation-receipt watcher share ONE rule and a fixture can drive every outcome.
  * Precedence is most-fundamental-first: nothing staged beats no receipt row, which beats an extension
- * that was materialized but never published, which beats sources newer than the staged bytes. */
+ * that was materialized but never published, which beats a plugin-owner content-hash mismatch.
+ * Mtime never decides freshness (framework clocks and restages would false-stale). */
 export function stagedModuleVerdict(facts: StagedModuleFacts): StagedModuleVerdict {
   if (facts.stagedAtMs === undefined) return { pluginId: facts.pluginId, kind: "unstaged", detail: "no staged module directory" };
   if (facts.activationTracked) {
@@ -252,8 +265,10 @@ export function stagedModuleVerdict(facts: StagedModuleFacts): StagedModuleVerdi
       return { pluginId: facts.pluginId, kind: "unpublished", detail: `installed ${facts.installedPackageHash ?? "(nothing)"} ≠ activated ${facts.receiptArtifactSha256}` };
     }
   }
-  if (facts.newestSourceMs !== undefined && facts.newestSourceMs > facts.stagedAtMs) {
-    return { pluginId: facts.pluginId, kind: "source-newer", detail: `staged ${stagedInstant(facts.stagedAtMs)} < ${facts.newestSourcePath ?? "source"} ${stagedInstant(facts.newestSourceMs)}` };
+  if (facts.sourceContentSha256 && facts.stagedSourceContentSha256) {
+    if (facts.sourceContentSha256 !== facts.stagedSourceContentSha256) {
+      return { pluginId: facts.pluginId, kind: "source-changed", detail: `source ${facts.sourceContentSha256.slice(0, 12)}… ≠ staged ${facts.stagedSourceContentSha256.slice(0, 12)}…` };
+    }
   }
   return { pluginId: facts.pluginId, kind: "fresh" };
 }
@@ -306,4 +321,336 @@ export function stagedModuleMtime(moduleDirectory: string): number | undefined {
   }
   return newest;
 }
+
+/** 🔖️ Content hash of one plugin-owner source tree — same walk bounds as {@link newestComponentSourceMtime},
+ * keyed only on plugin sources (never framework). Empty trees yield the empty-input SHA-256. */
+export function componentSourceContentHash(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES): string {
+  return buildComponentSourceStatIndex(sourceRoot, maximumEntries).contentSha256;
+}
+
+
+/** 🔖 Sibling marker next to a staged module recording the plugin-source content hash used to build it. */
+export const STAGED_SOURCE_CONTENT_HASH_FILE = ".source-content-sha256";
+
+/** 🔖 Sibling marker next to a staged module recording the per-file source stat index used for boot freshness. */
+export const STAGED_SOURCE_STAT_INDEX_FILE = ".source-stat-index.json";
+
+export type SourceStatFileEntry = Readonly<{
+  readonly path: string;
+  readonly size: number;
+  readonly mtimeNs: string;
+  readonly sha256: string;
+}>;
+
+export type SourceStatIndex = Readonly<{
+  readonly schema: "semio.dev.source-stat-index/v1";
+  readonly contentSha256: string;
+  readonly files: readonly SourceStatFileEntry[];
+}>;
+
+export type BootSourceHashResolution = Readonly<{
+  readonly sourceContentSha256: string;
+  readonly stagedSourceContentSha256?: string;
+  readonly newestSourceMs?: number;
+  readonly newestSourcePath?: string;
+  readonly hashedFileCount: number;
+  readonly reusedFileCount: number;
+}>;
+
+/** 📖 Reads the staged source-content hash marker, if present and well-formed. */
+export function readStagedSourceContentHash(moduleDirectory: string): string | undefined {
+  try {
+    const value = readFileSync(join(moduleDirectory, STAGED_SOURCE_CONTENT_HASH_FILE), "utf8").trim();
+    return /^[a-f0-9]{64}$/.test(value) ? value : undefined;
+  } catch { return undefined; }
+}
+
+/** 🔖 Writes the staged source-content hash marker for one module directory. */
+export function writeStagedSourceContentHash(moduleDirectory: string, sourceContentSha256: string): void {
+  if (!/^[a-f0-9]{64}$/.test(sourceContentSha256)) throw new Error("Invalid source content hash");
+  mkdirSync(moduleDirectory, { recursive: true });
+  const temporary = join(moduleDirectory, `.source-content-${sourceContentSha256.slice(0, 8)}-${randomUUID()}.stage`);
+  try {
+    writeFileSync(temporary, sourceContentSha256 + "\n");
+    renameSync(temporary, join(moduleDirectory, STAGED_SOURCE_CONTENT_HASH_FILE));
+  } finally { rmSync(temporary, { force: true }); }
+}
+
+function fileMtimeNs(stats: { mtimeNs?: bigint; mtimeMs: number }): string {
+  if (typeof stats.mtimeNs === "bigint") return stats.mtimeNs.toString();
+  return String(BigInt(Math.round(stats.mtimeMs * 1_000_000)));
+}
+
+/** 🕰 Lists plugin-owner source files under one root (same bounds as content hashing). */
+export function listComponentSourceFiles(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES): readonly string[] {
+  if (!existsSync(sourceRoot)) return [];
+  let visited = 0;
+  const pending = [sourceRoot];
+  const files: string[] = [];
+  while (pending.length > 0) {
+    const directory = pending.pop()!;
+    for (const entry of readableDirectoryEntries(directory)) {
+      if (++visited > maximumEntries) return files.sort();
+      if (entry.isSymbolicLink()) continue;
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        if (!UNWATCHED_COMPONENT_SOURCE_DIRECTORIES.includes(entry.name)) pending.push(path);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      if (directory === sourceRoot && GENERATED_COMPONENT_OWNER_FILES.includes(entry.name)) continue;
+      files.push(path);
+    }
+  }
+  return files.sort();
+}
+
+export async function listComponentSourceFilesAsync(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES): Promise<readonly string[]> {
+  if (!existsSync(sourceRoot)) return [];
+  let visited = 0;
+  const pending = [sourceRoot];
+  const files: string[] = [];
+  while (pending.length > 0) {
+    const directory = pending.pop()!;
+    let entries: import("node:fs").Dirent<string>[];
+    try {
+      entries = await readdirAsync(directory, { withFileTypes: true, encoding: "utf8" });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (++visited > maximumEntries) return files.sort();
+      if (entry.isSymbolicLink()) continue;
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        if (!UNWATCHED_COMPONENT_SOURCE_DIRECTORIES.includes(entry.name)) pending.push(path);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      if (directory === sourceRoot && GENERATED_COMPONENT_OWNER_FILES.includes(entry.name)) continue;
+      files.push(path);
+    }
+  }
+  return files.sort();
+}
+
+
+function relativeSourcePath(sourceRoot: string, absolutePath: string): string {
+  return absolutePath.slice(sourceRoot.length).replace(/^[/\\]+/, "").split(/[/\\]/).join("/");
+}
+
+function aggregateSourceContentHash(entries: readonly { readonly path: string; readonly sha256: string }[]): string {
+  const hash = createHash("sha256");
+  for (const entry of [...entries].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))) {
+    hash.update(entry.path);
+    hash.update("\0");
+    hash.update(entry.sha256);
+    hash.update("\0");
+  }
+  return hash.digest("hex");
+}
+
+/** 🔖 Builds the per-file source stat index and aggregate content hash for one plugin owner tree. */
+export function buildComponentSourceStatIndex(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES): SourceStatIndex {
+  const files: SourceStatFileEntry[] = [];
+  for (const absolute of listComponentSourceFiles(sourceRoot, maximumEntries)) {
+    let stats: ReturnType<typeof statSync>;
+    let bytes: Buffer;
+    try {
+      stats = statSync(absolute);
+      bytes = readFileSync(absolute);
+    } catch { continue; }
+    files.push({
+      path: relativeSourcePath(sourceRoot, absolute),
+      size: stats.size,
+      mtimeNs: fileMtimeNs(stats),
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    });
+  }
+  return {
+    schema: "semio.dev.source-stat-index/v1",
+    contentSha256: aggregateSourceContentHash(files),
+    files,
+  };
+}
+
+/** 📖 Reads the staged source-stat index, if present and well-formed. */
+export function readStagedSourceStatIndex(moduleDirectory: string): SourceStatIndex | undefined {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(join(moduleDirectory, STAGED_SOURCE_STAT_INDEX_FILE), "utf8"));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return undefined;
+    const row = parsed as Record<string, unknown>;
+    if (row.schema !== "semio.dev.source-stat-index/v1") return undefined;
+    if (typeof row.contentSha256 !== "string" || !/^[a-f0-9]{64}$/.test(row.contentSha256)) return undefined;
+    if (!Array.isArray(row.files)) return undefined;
+    const files: SourceStatFileEntry[] = [];
+    for (const item of row.files) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return undefined;
+      const file = item as Record<string, unknown>;
+      if (typeof file.path !== "string" || file.path.length === 0) return undefined;
+      if (typeof file.size !== "number" || !Number.isInteger(file.size) || file.size < 0) return undefined;
+      if (typeof file.mtimeNs !== "string" || !/^[0-9]+$/.test(file.mtimeNs)) return undefined;
+      if (typeof file.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(file.sha256)) return undefined;
+      files.push({ path: file.path, size: file.size, mtimeNs: file.mtimeNs, sha256: file.sha256 });
+    }
+    return { schema: "semio.dev.source-stat-index/v1", contentSha256: row.contentSha256, files };
+  } catch { return undefined; }
+}
+
+/** 🔖 Writes the staged source-stat index for one module directory. */
+export function writeStagedSourceStatIndex(moduleDirectory: string, index: SourceStatIndex): void {
+  if (index.schema !== "semio.dev.source-stat-index/v1") throw new Error("Invalid source stat index schema");
+  if (!/^[a-f0-9]{64}$/.test(index.contentSha256)) throw new Error("Invalid source content hash");
+  mkdirSync(moduleDirectory, { recursive: true });
+  const temporary = join(moduleDirectory, `.source-stat-${index.contentSha256.slice(0, 8)}-${randomUUID()}.stage`);
+  try {
+    writeFileSync(temporary, `${JSON.stringify(index)}\n`);
+    renameSync(temporary, join(moduleDirectory, STAGED_SOURCE_STAT_INDEX_FILE));
+  } finally { rmSync(temporary, { force: true }); }
+}
+
+/** 🔖 Persists both the aggregate content-hash marker and the per-file stat index for one staged module. */
+export function writeStagedSourceFreshness(moduleDirectory: string, sourceRoot: string): string {
+  const index = buildComponentSourceStatIndex(sourceRoot);
+  writeStagedSourceContentHash(moduleDirectory, index.contentSha256);
+  writeStagedSourceStatIndex(moduleDirectory, index);
+  return index.contentSha256;
+}
+
+/**
+ * 🕰 Boot freshness: stat-walk the owner tree, reuse per-file digests when (size, mtimeNs) match
+ * the staged index, and rehash only added/changed files. Missing index falls back to a full content hash.
+ */
+export function resolveBootSourceContentHashes(options: {
+  readonly sourceRoot: string;
+  readonly moduleDirectory: string;
+  readonly receiptSourceContentSha256?: string;
+}): BootSourceHashResolution {
+  const stagedSourceContentSha256 = readStagedSourceContentHash(options.moduleDirectory) ?? options.receiptSourceContentSha256;
+  const index = readStagedSourceStatIndex(options.moduleDirectory);
+  if (!index) {
+    const built = buildComponentSourceStatIndex(options.sourceRoot);
+    let newestSourceMs: number | undefined;
+    let newestSourcePath: string | undefined;
+    for (const absolute of listComponentSourceFiles(options.sourceRoot)) {
+      try {
+        const stats = statSync(absolute);
+        if (newestSourceMs === undefined || stats.mtimeMs > newestSourceMs) {
+          newestSourceMs = stats.mtimeMs;
+          newestSourcePath = absolute;
+        }
+      } catch { continue; }
+    }
+    return {
+      sourceContentSha256: built.contentSha256,
+      stagedSourceContentSha256,
+      newestSourceMs,
+      newestSourcePath,
+      hashedFileCount: built.files.length,
+      reusedFileCount: 0,
+    };
+  }
+  const prior = new Map(index.files.map((file) => [file.path, file]));
+  const absolutes = listComponentSourceFiles(options.sourceRoot);
+  const next: SourceStatFileEntry[] = [];
+  let hashedFileCount = 0;
+  let reusedFileCount = 0;
+  let newestSourceMs: number | undefined;
+  let newestSourcePath: string | undefined;
+  for (const absolute of absolutes) {
+    let stats: ReturnType<typeof statSync>;
+    try { stats = statSync(absolute); } catch { continue; }
+    const relativePath = relativeSourcePath(options.sourceRoot, absolute);
+    const mtimeNs = fileMtimeNs(stats);
+    if (newestSourceMs === undefined || stats.mtimeMs > newestSourceMs) {
+      newestSourceMs = stats.mtimeMs;
+      newestSourcePath = absolute;
+    }
+    const previous = prior.get(relativePath);
+    if (previous && previous.size === stats.size && previous.mtimeNs === mtimeNs) {
+      next.push(previous);
+      reusedFileCount += 1;
+      continue;
+    }
+    let bytes: Buffer;
+    try { bytes = readFileSync(absolute); } catch { continue; }
+    next.push({
+      path: relativePath,
+      size: stats.size,
+      mtimeNs,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    });
+    hashedFileCount += 1;
+  }
+  return {
+    sourceContentSha256: aggregateSourceContentHash(next),
+    stagedSourceContentSha256,
+    newestSourceMs,
+    newestSourcePath,
+    hashedFileCount,
+    reusedFileCount,
+  };
+}
+
+/** 🕰 Async boot freshness for one plugin — scheduled so callers can `Promise.all` across plugins. */
+export async function resolveBootSourceContentHashesAsync(options: {
+  readonly sourceRoot: string;
+  readonly moduleDirectory: string;
+  readonly receiptSourceContentSha256?: string;
+}): Promise<BootSourceHashResolution> {
+  const stagedSourceContentSha256 = readStagedSourceContentHash(options.moduleDirectory) ?? options.receiptSourceContentSha256;
+  const index = readStagedSourceStatIndex(options.moduleDirectory);
+  if (!index) {
+    const built = buildComponentSourceStatIndex(options.sourceRoot);
+    return {
+      sourceContentSha256: built.contentSha256,
+      stagedSourceContentSha256,
+      hashedFileCount: built.files.length,
+      reusedFileCount: 0,
+    };
+  }
+  const prior = new Map(index.files.map((file) => [file.path, file]));
+  const absolutes = await listComponentSourceFilesAsync(options.sourceRoot);
+  const parts = await Promise.all(absolutes.map(async (absolute) => {
+    let stats: Awaited<ReturnType<typeof statAsync>>;
+    try { stats = await statAsync(absolute); } catch { return undefined; }
+    const relativePath = relativeSourcePath(options.sourceRoot, absolute);
+    const mtimeNs = fileMtimeNs(stats);
+    const previous = prior.get(relativePath);
+    if (previous && previous.size === stats.size && previous.mtimeNs === mtimeNs) {
+      return { entry: previous, hashed: false as const, mtimeMs: stats.mtimeMs, absolute };
+    }
+    let bytes: Buffer;
+    try { bytes = Buffer.from(await readFileAsync(absolute)); } catch { return undefined; }
+    return {
+      entry: { path: relativePath, size: stats.size, mtimeNs, sha256: createHash("sha256").update(bytes).digest("hex") },
+      hashed: true as const,
+      mtimeMs: stats.mtimeMs,
+      absolute,
+    };
+  }));
+  const next: SourceStatFileEntry[] = [];
+  let hashedFileCount = 0;
+  let reusedFileCount = 0;
+  let newestSourceMs: number | undefined;
+  let newestSourcePath: string | undefined;
+  for (const part of parts) {
+    if (!part) continue;
+    next.push(part.entry);
+    if (part.hashed) hashedFileCount += 1; else reusedFileCount += 1;
+    if (newestSourceMs === undefined || part.mtimeMs > newestSourceMs) {
+      newestSourceMs = part.mtimeMs;
+      newestSourcePath = part.absolute;
+    }
+  }
+  return {
+    sourceContentSha256: aggregateSourceContentHash(next),
+    stagedSourceContentSha256,
+    newestSourceMs,
+    newestSourcePath,
+    hashedFileCount,
+    reusedFileCount,
+  };
+}
+
 //#endregion 🔖️StagedModuleFreshness

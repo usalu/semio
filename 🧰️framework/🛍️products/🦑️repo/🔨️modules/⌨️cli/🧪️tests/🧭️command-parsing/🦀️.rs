@@ -9,7 +9,7 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The committed vectors every scenario reads.
     fn vectors(ctx: &Context) -> Result<Vec<Json>, String> {
-        Ok(ctx.fixture_json("local://🔣️argv-vectors.json")?.array("vectors"))
+        Ok(ctx.fixture_json("shared://🧭️command-parsing/🔣️argv-vectors.json")?.array("vectors"))
     }
 
     /// 📜️ A JSON string array as a `Vec<String>`.

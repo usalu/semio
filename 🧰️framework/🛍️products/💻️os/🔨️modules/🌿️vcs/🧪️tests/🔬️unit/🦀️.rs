@@ -299,11 +299,13 @@ async fn content_addressed_entity_and_mint_helpers_are_deterministic() {
     assert_eq!(edit_scoped_id("edit-1", 0).await, edit_scoped_id("edit-1", 0).await);
     assert_ne!(edit_scoped_id("edit-1", 0).await, edit_scoped_id("edit-1", 1).await);
     assert!(edit_scoped_id("edit-1", 0).await.starts_with("scoped-"));
-    assert_eq!(mint_edit_id(Some("alice"), 3, b"fwd").await, mint_edit_id(Some("alice"), 3, b"fwd").await);
-    assert_ne!(mint_edit_id(Some("alice"), 3, b"fwd").await, mint_edit_id(Some("bob"), 3, b"fwd").await);
+    assert_eq!(mint_edit_id(7, 3, b"fwd").await, mint_edit_id(7, 3, b"fwd").await);
+    assert_ne!(mint_edit_id(7, 3, b"fwd").await, mint_edit_id(8, 3, b"fwd").await);
     assert_eq!(mint_change_id(&["e1".into(), "e2".into()], Some("msg")).await, mint_change_id(&["e1".into(), "e2".into()], Some("msg")).await);
     assert_eq!(mint_alternative_id("main", &["ck1".into()]).await, mint_alternative_id("main", &["ck1".into()]).await);
-    assert_eq!(mint_mutation_id(b"op-bytes").await, mint_mutation_id(b"op-bytes").await);
+    assert_eq!(mint_mutation_id(b"op-bytes", (7, 1, 0)).await, mint_mutation_id(b"op-bytes", (7, 1, 0)).await);
+    assert_ne!(mint_mutation_id(b"op-bytes", (7, 1, 0)).await, mint_mutation_id(b"op-bytes", (7, 1, 1)).await);
+    assert_ne!(mint_mutation_id(b"op-bytes", (7, 1, 0)).await, mint_mutation_id(b"op-bytes", (8, 1, 0)).await);
     assert_eq!(create_document_vcs_id("draft").await, create_document_vcs_id("draft").await);
     assert!(create_document_vcs_id("draft").await.starts_with("draft-"));
 }

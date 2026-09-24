@@ -8,8 +8,8 @@ export type { ChangePartKindVariant } from "./🔀️change-part-kind-variant/�
 export type { ChangePartKindDescription } from "./📃️change-part-kind-description/🟦️";
 export type { ChangePartKindIcon } from "./🖼️change-part-kind-icon/🟦️";
 export type { ChangePartKindUnit } from "./📐change-part-kind-unit/🟦️";
-export type { UpdatePart2d } from "./🖌️update-part-2d/🟦️";
-export type { UpdatePart3d } from "./🧊update-part-3d/🟦️";
+export type { UpdatePart2d } from "./🖌️update-part2d/🟦️";
+export type { UpdatePart3d } from "./🧊update-part3d/🟦️";
 export type { CreateRepresentation } from "./🧱create-representation/🟦️";
 export type { DeleteRepresentation } from "./🗑️delete-representation/🟦️";
 export type { RenameRepresentation } from "./✒️rename-representation/🟦️";
@@ -28,9 +28,9 @@ export type { ChangeGripKindColor } from "./🎨change-grip-kind-color/🟦️";
 export type { ChangeGripKindDefaultRopeKind } from "./🪢change-grip-kind-default-rope-kind/🟦️";
 export type { CreateGrip } from "./🌿create-grip/🟦️";
 export type { DeleteGrip } from "./🕳️delete-grip/🟦️";
-export type { MoveGrip2d } from "./📍move-grip-2d/🟦️";
-export type { MoveGrip3d } from "./🧭move-grip-3d/🟦️";
-export type { ResizeGrip3d } from "./📏resize-grip-3d/🟦️";
+export type { MoveGrip2d } from "./📍move-grip2d/🟦️";
+export type { MoveGrip3d } from "./🧭move-grip3d/🟦️";
+export type { ResizeGrip3d } from "./📏resize-grip3d/🟦️";
 export type { ChangeGripGripKind } from "./🧷change-grip-grip-kind/🟦️";
 export type { AddCompatibilityRule } from "./➕add-compatibility-rule/🟦️";
 export type { RemoveCompatibilityRule } from "./✂️remove-compatibility-rule/🟦️";
@@ -51,8 +51,8 @@ export type Block5dMutation =
   | { mutation: "changePartKindDescription" } & import("./📃️change-part-kind-description/🟦️").ChangePartKindDescription
   | { mutation: "changePartKindIcon" } & import("./🖼️change-part-kind-icon/🟦️").ChangePartKindIcon
   | { mutation: "changePartKindUnit" } & import("./📐change-part-kind-unit/🟦️").ChangePartKindUnit
-  | { mutation: "updatePart2d" } & import("./🖌️update-part-2d/🟦️").UpdatePart2d
-  | { mutation: "updatePart3d" } & import("./🧊update-part-3d/🟦️").UpdatePart3d
+  | { mutation: "updatePart2d" } & import("./🖌️update-part2d/🟦️").UpdatePart2d
+  | { mutation: "updatePart3d" } & import("./🧊update-part3d/🟦️").UpdatePart3d
   | { mutation: "createRepresentation" } & import("./🧱create-representation/🟦️").CreateRepresentation
   | { mutation: "deleteRepresentation" } & import("./🗑️delete-representation/🟦️").DeleteRepresentation
   | { mutation: "renameRepresentation" } & import("./✒️rename-representation/🟦️").RenameRepresentation
@@ -71,9 +71,9 @@ export type Block5dMutation =
   | { mutation: "changeGripKindDefaultRopeKind" } & import("./🪢change-grip-kind-default-rope-kind/🟦️").ChangeGripKindDefaultRopeKind
   | { mutation: "createGrip" } & import("./🌿create-grip/🟦️").CreateGrip
   | { mutation: "deleteGrip" } & import("./🕳️delete-grip/🟦️").DeleteGrip
-  | { mutation: "moveGrip2d" } & import("./📍move-grip-2d/🟦️").MoveGrip2d
-  | { mutation: "moveGrip3d" } & import("./🧭move-grip-3d/🟦️").MoveGrip3d
-  | { mutation: "resizeGrip3d" } & import("./📏resize-grip-3d/🟦️").ResizeGrip3d
+  | { mutation: "moveGrip2d" } & import("./📍move-grip2d/🟦️").MoveGrip2d
+  | { mutation: "moveGrip3d" } & import("./🧭move-grip3d/🟦️").MoveGrip3d
+  | { mutation: "resizeGrip3d" } & import("./📏resize-grip3d/🟦️").ResizeGrip3d
   | { mutation: "changeGripGripKind" } & import("./🧷change-grip-grip-kind/🟦️").ChangeGripGripKind
   | { mutation: "addCompatibilityRule" } & import("./➕add-compatibility-rule/🟦️").AddCompatibilityRule
   | { mutation: "removeCompatibilityRule" } & import("./✂️remove-compatibility-rule/🟦️").RemoveCompatibilityRule

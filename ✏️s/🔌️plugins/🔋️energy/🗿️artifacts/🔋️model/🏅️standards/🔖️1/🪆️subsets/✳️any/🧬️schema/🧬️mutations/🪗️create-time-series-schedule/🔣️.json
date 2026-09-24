@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateTimeSeriesSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-time-series-schedule",
-  "binaryTag": null,
+  "binaryTag": 272,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

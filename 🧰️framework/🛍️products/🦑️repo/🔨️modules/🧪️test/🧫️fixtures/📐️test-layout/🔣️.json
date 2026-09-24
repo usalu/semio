@@ -160,6 +160,106 @@
       ]
     },
     {
+      "id": "go-in-package-tests",
+      "sources": [
+        {
+          "path": "🧩️domain/📦️packages/🐹️go/🐹️.go",
+          "source": "package domain\n\nfunc Widget() bool { return true }\n\nfunc TestSelector(selector string) bool { return selector != \"\" }\n"
+        },
+        {
+          "path": "🧩️domain/📦️packages/🐹️go/🔌️helpers.go",
+          "source": "package domain\n\nimport \"testing\"\n\nfunc TestHidden(t *testing.T) {}\n"
+        },
+        {
+          "path": "🧩️domain/📦️packages/🐹️go/🔬️_test.go",
+          "source": "package domain\n\nimport \"testing\"\n\nfunc TestWidget(t *testing.T) {\n\tif !Widget() {\n\t\tt.Fatal(\"widget\")\n\t}\n}\n"
+        },
+        {
+          "path": "🧩️domain/📦️packages/🐹️go/🔭️exhaustive_test.go",
+          "source": "package domain_test\n\nimport \"testing\"\n\nfunc BenchmarkWidget(b *testing.B) {}\n"
+        },
+        {
+          "path": "🧩️domain/📦️packages/🐹️go/🧪️_test.go",
+          "source": "package domain\n\nimport \"testing\"\n\nfunc TestMarked(t *testing.T) {}\n"
+        },
+        {
+          "path": "🧩️orphan/🔬️_test.go",
+          "source": "package orphan\n\nimport \"testing\"\n\nfunc TestOrphan(t *testing.T) {}\n"
+        },
+        {
+          "path": "🧩️domain/🧪️tests/🧪️case/🔬️_test.go",
+          "source": "package domain\n\nimport \"testing\"\n\nfunc TestCase(t *testing.T) {}\n"
+        }
+      ],
+      "expected": [
+        {
+          "code": "inline-test-body",
+          "path": "🧩️domain/📦️packages/🐹️go/🔌️helpers.go",
+          "line": 5
+        },
+        {
+          "code": "legacy-test-filename",
+          "path": "🧩️domain/📦️packages/🐹️go/🧪️_test.go",
+          "line": null
+        },
+        {
+          "code": "inline-test-body",
+          "path": "🧩️orphan/🔬️_test.go",
+          "line": 5
+        },
+        {
+          "code": "inline-test-body",
+          "path": "🧩️domain/🧪️tests/🧪️case/🔬️_test.go",
+          "line": 5
+        },
+        {
+          "code": "test-implementation-filename",
+          "path": "🧩️domain/🧪️tests/🧪️case/🔬️_test.go",
+          "line": null
+        }
+      ]
+    },
+    {
+      "id": "registered-story-kind-is-not-a-legacy-test-filename",
+      "sources": [
+        {
+          "path": "🧩️domain/📖️stories/🎭️overview/🧪️.story.tsx",
+          "source": "export default { title: \"Overview\" };\nexport const Overview = {};"
+        },
+        {
+          "path": "🧩️domain/🧪️helpers.ts",
+          "source": "export const helper = true;"
+        }
+      ],
+      "expected": [
+        {
+          "code": "legacy-test-filename",
+          "path": "🧩️domain/🧪️helpers.ts",
+          "line": null
+        }
+      ]
+    },
+    {
+      "id": "test-runner-configuration-configures-its-delivery-package",
+      "sources": [
+        {
+          "path": "🧩️domain/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+          "source": "import { defineConfig } from \"vitest/config\";\nexport default defineConfig({ test: { include: [\"../../🧪️tests/**/🟦️.ts\"] } });"
+        },
+        {
+          "path": "🧩️domain/🎯️targets/⚛️react/🧪️tests/🧭️case/🟦️.ts",
+          "source": "export const widget = true;"
+        }
+      ],
+      "expected": [
+        {
+          "code": "test-owner-delivery-scope",
+          "path": "🧩️domain/🎯️targets/⚛️react/🧪️tests/🧭️case/🟦️.ts",
+          "line": null
+        }
+      ]
+    },
+    {
       "id": "external-wiring",
       "sources": [
         {

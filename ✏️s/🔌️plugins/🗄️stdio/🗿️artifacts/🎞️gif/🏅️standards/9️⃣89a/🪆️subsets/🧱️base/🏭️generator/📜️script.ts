@@ -43,6 +43,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -173,7 +174,7 @@ async function manifests(): Promise<void> {
       engineFamily: "gif",
       engineVersion: "0.13",
       command: "bun 🏭️generator/📜️script.ts generate",
-      platform: process.platform,
+      platform: currentPlatform(),
     },
     reproducible: true,
   };
@@ -395,7 +396,7 @@ print(kind + ': written')
         units: { length: "unitless", angle: "degree" },
         files,
         provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-        generator: { oracle: "gif-89a-extension-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts extensions", platform: process.platform },
+        generator: { oracle: "gif-89a-extension-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts extensions", platform: currentPlatform() },
         comparisonProfile: "semantic-gif-89a-extension-v1",
         reproducible: true,
         family: "mechanical",
@@ -465,7 +466,7 @@ print(kind + ': written')
       units: { length: "unitless", angle: "degree" },
       files,
       provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-      generator: { oracle: "giflib-gif-screen-cli", packageVersion: "6.1", engineFamily: "giflib", engineVersion: "6.1", command: "bun 📜️script.ts aspect", platform: process.platform },
+      generator: { oracle: "giflib-gif-screen-cli", packageVersion: "6.1", engineFamily: "giflib", engineVersion: "6.1", command: "bun 📜️script.ts aspect", platform: currentPlatform() },
       comparisonProfile: "semantic-gif-screen-v1",
       reproducible: true,
       family: "mechanical",

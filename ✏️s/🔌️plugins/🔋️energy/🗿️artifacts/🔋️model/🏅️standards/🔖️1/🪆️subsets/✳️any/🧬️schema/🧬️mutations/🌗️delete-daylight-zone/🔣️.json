@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteDaylightZone",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-daylight-zone",
-  "binaryTag": null,
+  "binaryTag": 152,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

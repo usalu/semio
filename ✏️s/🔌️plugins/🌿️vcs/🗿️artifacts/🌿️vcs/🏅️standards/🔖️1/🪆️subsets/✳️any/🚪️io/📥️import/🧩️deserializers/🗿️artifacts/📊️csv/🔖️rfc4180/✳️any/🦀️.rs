@@ -1,12 +1,7 @@
-//! 🚪️ vcs <- csv — foreign `Deserializer<VcsSnapshot>` (ticket
-//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Pre-migration behavior
-//! preserved verbatim (a plain structural `DslValue` coercion): `CsvSnapshot`'s `records` have no
-//! counterpart on `VcsSnapshot`, so only `schema` survives, hence `IoFidelity::Lossy`. The old
-//! hand-rolled channel took an already-typed `&CsvSnapshot`; this leaf additionally decodes the
-//! foreign payload's own pack bytes first, as the `FROM: CSV_DIALECT` coordinate requires.
-
+//! 🌿️ vcs ← csv — a table whose header names `VCS_RECORD_COLUMNS` (any order, any producer); its first
+//! value row becomes the snapshot. The inverse of the sibling export.
+use crate::standards::v1::subsets::any::io::vcs_from_record;
 use crate::VcsSnapshot;
-use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -20,11 +15,12 @@ impl Deserializer<VcsSnapshot> for CsvIntoVcs {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn deserialize(payload: &IoPayload) -> IoResult<VcsSnapshot> {
+        let error = |message: String| IoError { message: format!("CsvIntoVcs: {message}"), diagnostics: Vec::new() };
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "CsvIntoVcs: expected a binary csv payload".to_string(), diagnostics: Vec::new() });
+            return Err(error("expected a binary csv payload".into()));
         };
-        let csv = <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("CsvIntoVcs: csv decode failed: {error}"), diagnostics: Vec::new() })?;
-        let snapshot = VcsSnapshot::from_value(csv.to_value()).map_err(|error| IoError { message: format!("CsvIntoVcs: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(snapshot))
+        let csv = <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| error(e.to_string()))?;
+        let row = |at: usize| csv.records.get(at).map(|record| record.fields.iter().map(|field| field.value.clone()).collect::<Vec<_>>()).ok_or_else(|| error(format!("the table has no row {at}")));
+        Ok(IoOutcome::clean(vcs_from_record(&row(0)?, &row(1)?).map_err(error)?))
     }
 }

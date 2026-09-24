@@ -10,7 +10,7 @@ mod subject {
     use semio_framework_repo_hooks::{dispatch_hook, parse_repo_config, record_session_hook, resolve_log_session_id, validate_hook_event, HookContext, InertEnvironment, InertTestFileResolver, LoggingConfig, MemorySessionStore, SessionMeta};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
 
-    const VECTORS: &str = "local://📓️sessions.json";
+    const VECTORS: &str = "shared://📓️session-logging/📓️sessions.json";
 
     fn vectors(ctx: &Context) -> Result<Value, String> {
         let bytes = ctx.fixture_bytes(VECTORS)?;

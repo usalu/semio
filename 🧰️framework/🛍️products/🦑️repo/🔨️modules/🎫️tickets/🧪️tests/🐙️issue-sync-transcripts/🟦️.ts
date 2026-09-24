@@ -18,7 +18,7 @@ type Script = { createdIssueUrl?: string; issueState?: string; milestone?: numbe
 /** 🎞️ The vector file of this case. */
 type Vectors = { goal: string; issueUrl: string; title: string; prompt: string; summary: string; labels: string[]; scripts: Record<string, Script> };
 
-const VECTORS = "local://🐙️transcripts.json";
+const VECTORS = "shared://🐙️issue-sync-transcripts/🐙️transcripts.json";
 
 function vectors(ctx: AdapterContext): Vectors {
   return JSON.parse(readFileSync(ctx.fixture(VECTORS), "utf8")) as Vectors;

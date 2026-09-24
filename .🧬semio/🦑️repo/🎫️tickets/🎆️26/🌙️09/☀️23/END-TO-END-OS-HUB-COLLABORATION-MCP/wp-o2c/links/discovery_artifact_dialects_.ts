@@ -1,0 +1,1 @@
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗿️artifact/🗣️dialects/🟦️.ts

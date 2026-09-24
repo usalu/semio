@@ -11365,14 +11365,76 @@ pub fn dwg_geometry_to_path_segments(geometry: &DwgGeometry) -> Option<Vec<DwgPa
             DwgPathSegment::Move { to: [control_points[0][0], control_points[0][1]] },
             DwgPathSegment::Cubic { ctrl1: [control_points[1][0], control_points[1][1]], ctrl2: [control_points[2][0], control_points[2][1]], to: [control_points[3][0], control_points[3][1]] },
         ]),
-        DwgGeometry::Circle { center, radius, .. } => Some(vec![
-            DwgPathSegment::Move { to: [center[0] + radius, center[1]] },
-            DwgPathSegment::Arc { rx: *radius, ry: *radius, rotation: 0.0, large_arc: true, sweep: true, to: [center[0] - radius, center[1]] },
-            DwgPathSegment::Arc { rx: *radius, ry: *radius, rotation: 0.0, large_arc: true, sweep: true, to: [center[0] + radius, center[1]] },
-            DwgPathSegment::Close,
-        ]),
-        _ => None,
+        DwgGeometry::Circle { center, radius, normal } => {
+            let mirror = planar_ocs_mirror(normal)?;
+            let at = |x: f64, y: f64| [mirror * x, y];
+            Some(vec![
+                DwgPathSegment::Move { to: at(center[0] + radius, center[1]) },
+                DwgPathSegment::Arc { rx: *radius, ry: *radius, rotation: 0.0, large_arc: true, sweep: mirror > 0.0, to: at(center[0] - radius, center[1]) },
+                DwgPathSegment::Arc { rx: *radius, ry: *radius, rotation: 0.0, large_arc: true, sweep: mirror > 0.0, to: at(center[0] + radius, center[1]) },
+                DwgPathSegment::Close,
+            ])
+        }
+        DwgGeometry::Line { start, end } => Some(vec![DwgPathSegment::Move { to: [start[0], start[1]] }, DwgPathSegment::Line { to: [end[0], end[1]] }]),
+        DwgGeometry::Polyline3d { closed, vertices } => {
+            let (first, rest) = vertices.split_first()?;
+            let mut segments = vec![DwgPathSegment::Move { to: [first[0], first[1]] }];
+            segments.extend(rest.iter().map(|v| DwgPathSegment::Line { to: [v[0], v[1]] }));
+            if *closed {
+                segments.push(DwgPathSegment::Close);
+            }
+            Some(segments)
+        }
+        DwgGeometry::Arc { center, radius, start_angle, end_angle, normal } => {
+            let mirror = planar_ocs_mirror(normal)?;
+            elliptic_arc_segments(mirror, [center[0], center[1]], [*radius, 0.0], 1.0, *start_angle, *end_angle)
+        }
+        DwgGeometry::Ellipse { center, major_axis, ratio, start_param, end_param, normal } => {
+            let mirror = planar_ocs_mirror(normal)?;
+            elliptic_arc_segments(mirror, [center[0], center[1]], [major_axis[0], major_axis[1]], *ratio, *start_param, *end_param)
+        }
+        DwgGeometry::Point { .. } | DwgGeometry::Spline { .. } | DwgGeometry::Text { .. } | DwgGeometry::Face3d { .. } | DwgGeometry::PolyfaceMesh { .. } => None,
     }
+}
+
+/// 🧭️ The x factor mapping an entity's object coordinate system onto the world XY plane (DWG's
+/// arbitrary-axis algorithm): `1` for the `+Z` extrusion, `−1` for `−Z` (its OCS x axis is world −x);
+/// `None` for any tilted plane, which a 2D path cannot carry.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn planar_ocs_mirror(normal: &[f64; 3]) -> Option<f64> {
+    let length = (normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]).sqrt();
+    if length < 1e-12 || (normal[0] / length).abs() > 1e-9 || (normal[1] / length).abs() > 1e-9 {
+        return None;
+    }
+    Some(normal[2].signum())
+}
+
+/// 🌀️ The counter-clockwise (in OCS) elliptic arc from parameter `start` to `end` of the ellipse
+/// `centre + major·cos t + ratio·perp(major)·sin t`, as SVG-style arc segments (a full turn is two
+/// halves); a circular arc is the `ratio = 1` case with angles as parameters.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn elliptic_arc_segments(mirror: f64, centre: [f64; 2], major: [f64; 2], ratio: f64, start: f64, end: f64) -> Option<Vec<DwgPathSegment>> {
+    let rx = (major[0] * major[0] + major[1] * major[1]).sqrt();
+    if rx < 1e-12 || ratio <= 0.0 {
+        return None;
+    }
+    let tau = std::f64::consts::TAU;
+    let sweep = (end - start).rem_euclid(tau);
+    let sweep = if sweep < 1e-12 { tau } else { sweep };
+    let point = |t: f64| [mirror * (centre[0] + major[0] * t.cos() - ratio * major[1] * t.sin()), centre[1] + major[1] * t.cos() + ratio * major[0] * t.sin()];
+    let rotation = mirror * major[1].atan2(major[0]).to_degrees();
+    let arc = |to: f64, span: f64| DwgPathSegment::Arc { rx, ry: ratio * rx, rotation, large_arc: span > std::f64::consts::PI, sweep: mirror > 0.0, to: point(to) };
+    let mut segments = vec![DwgPathSegment::Move { to: point(start) }];
+    if sweep > std::f64::consts::PI {
+        segments.push(arc(start + sweep / 2.0, sweep / 2.0));
+        segments.push(arc(start + sweep, sweep / 2.0));
+    } else {
+        segments.push(arc(start + sweep, sweep));
+    }
+    if (sweep - tau).abs() < 1e-12 {
+        segments.push(DwgPathSegment::Close);
+    }
+    Some(segments)
 }
 
 /// ✏️ Converts drawing entities back to path segments, one path per entity.

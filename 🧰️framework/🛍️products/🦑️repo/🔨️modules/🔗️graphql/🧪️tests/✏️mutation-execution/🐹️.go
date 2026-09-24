@@ -32,7 +32,7 @@ func newContext(ctx *host.Context) (*graphql.RecordingContext, error) {
 
 // 📥️ Reads the write script.
 func readScript(ctx *host.Context) (script, error) {
-	raw, err := ctx.FixtureBytes("local://🔣️mutations.json")
+	raw, err := ctx.FixtureBytes("shared://✏️mutation-execution/🔣️mutations.json")
 	if err != nil {
 		return script{}, err
 	}

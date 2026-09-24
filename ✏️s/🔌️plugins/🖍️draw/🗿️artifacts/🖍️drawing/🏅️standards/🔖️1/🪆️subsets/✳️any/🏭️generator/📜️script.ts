@@ -13,33 +13,34 @@
 // it. They ride this subset's JSON carrier instead, where `DrawingSnapshot::layers` is an INLINE
 // `Vec<DrawingLayerNode>` and every one of the three is a carrier-level fact.
 //
-// `🦀️json-engine` depends on `serde_json` and nothing else: it applies each mutation as an edit to the
-// carrier and reads it back through the same third-party library. It refuses to write a pair whose
+// `🧩️json` depends on `json` (json-rust) and nothing else — never `serde_json`, which the draw plugin
+// itself links: it applies each mutation as an edit to the carrier and reads it back through the same
+// third-party library. It refuses to write a pair whose
 // projection does not move, so a no-op cannot be committed as a fixture that would pass forever.
 //
-//   bun 📜️script.ts generate [--out <dir>]   # builds the engine and writes the fixture pairs
-//   bun 📜️script.ts manifests                 # prints the fixtureManifests entries
+//   bun 📜️script.ts generate [--out <dir>]   # builds the engine and writes the reviewed fixture pairs
+//   bun 📜️script.ts manifests                 # refreshes digests and provenance of this oracle's fixture manifests
 //
 // @see ../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️fem-carrier-reader-retrofit.md
 
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
 const ENGINE = join(HERE, "🧩️json", "📦️packages", "🦀️rust");
-const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
-const ORACLE_ID = "serde-json-drawing-carrier-reader";
-const COMPARISON_PROFILE = "semantic-drawing-carrier-v1";
-/** 🧾️ Kept in step with `🧩️json/🦀️.rs::KINDS`. */
-const KINDS: readonly string[] = ["set-layer-locked", "set-layer-blend-mode", "rename-layer"];
+const SUBSETS_DIR = join(HERE, "..", "..");
+const CATALOGS = ["🏷️metadata", "🎨️style"].map((subset) => join(SUBSETS_DIR, subset, "🔮️oracles", "🔣️.json"));
+const ORACLE_ID = "json-rust-drawing-carrier-reader";
+const GENERATOR = { oracle: ORACLE_ID, packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "bun ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate" } as const;
 //#endregion 🧬️Contract
 
 //#region 🔨️Build
@@ -62,40 +63,29 @@ function generate(outRoot: string): number {
 }
 
 async function manifests(): Promise<void> {
-  const entries = [];
-  for (const kind of KINDS) {
-    const dir = join(FIXTURES_DIR, kind);
-    if (!existsSync(dir)) throw new Error(`missing fixture directory for ${kind} — run generate first`);
-    const files = [];
-    for (const [role, name] of [["expected-before-json", "before.json"], ["expected-after-json", "after.json"]] as const) {
-      const path = join(dir, name);
-      files.push({ role, path: `../🧫️fixtures/${kind}/${name}`, mediaType: "application/json", sha256: await sha256(path), bytes: readFileSync(path).length });
+  let refreshed = 0;
+  for (const catalogPath of CATALOGS) {
+    const catalog = JSON.parse(readFileSync(catalogPath, "utf8")) as { fixtureManifests?: { generator?: { oracle?: string }; files: { path: string; sha256: string; bytes: number }[] }[] };
+    for (const entry of (catalog.fixtureManifests ?? []).filter((candidate) => candidate.generator?.oracle === ORACLE_ID)) {
+      for (const file of entry.files) {
+        const path = join(dirname(catalogPath), file.path);
+        file.sha256 = await sha256(path);
+        file.bytes = readFileSync(path).length;
+      }
+      entry.generator = { ...GENERATOR, platform: currentPlatform() };
+      refreshed += 1;
     }
-    entries.push({
-      schema: "semio.repository-test.fixture/v2",
-      id: `carrier-${kind}`,
-      class: "third-party-generated",
-      target: { artifact: "s.draw.drawing", standard: "1", subset: "any" },
-      mutation: kind,
-      outcome: "applied",
-      units: { length: "unitless", angle: "radian" },
-      files,
-      provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-      generator: { oracle: ORACLE_ID, packageVersion: "1", engineFamily: "serde-json", engineVersion: "1", command: "bun ✏️s/🔌️plugins/🖍️drawing/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate", platform: process.platform },
-      comparisonProfile: COMPARISON_PROFILE,
-      reproducible: true,
-      family: "mechanical",
-      notes: `A deterministic two-layer drawing document with the ${kind} mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. SVG, which this subset's other reader judges, has no representation for this field. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
-    });
+    writeFileSync(catalogPath, `${JSON.stringify(catalog, null, 2)}\n`);
   }
-  console.log(JSON.stringify(entries, null, 2));
+  if (refreshed === 0) throw new Error(`no fixture manifest names ${ORACLE_ID}`);
+  console.log(`${refreshed} fixture manifest(s) refreshed`);
 }
 //#endregion 🚪️Commands
 
 //#region 🚀️Entry
 const [command, ...rest] = process.argv.slice(2);
 const outFlagIndex = rest.indexOf("--out");
-const outRoot = outFlagIndex >= 0 ? rest[outFlagIndex + 1]! : (process.env.SEMIO_FIXTURE_OUT ?? FIXTURES_DIR);
+const outRoot = outFlagIndex >= 0 ? rest[outFlagIndex + 1]! : (process.env.SEMIO_FIXTURE_OUT ?? SUBSETS_DIR);
 if (command === "generate") process.exit(generate(outRoot));
 else if (command === "manifests") await manifests();
 else {

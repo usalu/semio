@@ -115,11 +115,8 @@ fn now_us() -> Option<u64> {
     semio_framework_job::default_now_us()
 }
 
-/// ⏱️ The share of one interactive step the browser frame caller may spend driving the frame build
-/// before it must hand the rest of its tick to the present half. Half of the ratified
-/// [`INTERACTIVE_STEP_CEILING_US`] — the other half belongs to `present_snapshot`, whose own prepared
-/// GPU opportunities are priced separately. Derived rather than chosen so it cannot drift away from
-/// the one ceiling every interactive site is measured against.
+/// ⏱️ One frame-build step's grant: the interactive lane's fuel and wall budget, charged per retained
+/// Worker turn by [`ActiveFrameBuild::step`].
 fn batch_params(operation: OperationId, generation: Generation, cancel: CancelToken) -> BatchJobParams {
     BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { site: "os_renderer_frame_build", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US }, now_us }
 }

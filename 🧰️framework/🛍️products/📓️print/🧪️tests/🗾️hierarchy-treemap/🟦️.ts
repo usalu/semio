@@ -14,7 +14,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "hierarchy-treemap";
-const FIXTURE = "local://hierarchy-treemap.tex";
+const FIXTURE = "shared://🗾️hierarchy-treemap/hierarchy-treemap.tex";
 const DECIMALS = 6;
 
 type Row = readonly [id: string, parent: string, value: number];

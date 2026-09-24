@@ -14,7 +14,7 @@ seq:
     doc: "OP_BINARY_FORMAT, currently 1"
   - id: tag
     type: u1
-    doc: "SemioAudioMutation variant ordinal, 0-9 — see ../../🦀️.rs's OP_KEYWORDS"
+    doc: "the kind's record tag in 📡️.protocol.semio"
   - id: payload
     size-eos: true
     doc: |

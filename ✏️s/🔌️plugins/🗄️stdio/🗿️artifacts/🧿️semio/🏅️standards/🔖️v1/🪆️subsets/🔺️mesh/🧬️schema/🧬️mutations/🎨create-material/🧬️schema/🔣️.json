@@ -14,49 +14,7 @@
   },
   "$defs": {
     "SemioMaterial": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "baseColor": {
-          "$ref": "#/$defs/SemioRgba"
-        },
-        "metallic": {
-          "type": "number"
-        },
-        "roughness": {
-          "type": "number"
-        }
-      }
-    },
-    "SemioRgba": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "r",
-        "g",
-        "b",
-        "a"
-      ],
-      "properties": {
-        "r": {
-          "type": "number"
-        },
-        "g": {
-          "type": "number"
-        },
-        "b": {
-          "type": "number"
-        },
-        "a": {
-          "type": "number"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/snapshot.json#/definitions/SemioMaterial"
     }
   }
 }

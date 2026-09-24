@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetLayoutMaster {
-    pub(crate) id: String,
-    pub(crate) master_id: String,
+    pub id: String,
+    pub master_id: String,
 }
 
 impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for SetLayoutMaster {

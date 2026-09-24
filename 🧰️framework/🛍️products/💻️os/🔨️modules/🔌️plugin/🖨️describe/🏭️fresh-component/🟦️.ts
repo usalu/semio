@@ -321,9 +321,9 @@ export async function produceFreshComponentV1<T>(
  * root, sibling of the tracked `🛂️manifest.json` — NOT `🤖️generated/`, which is gitignored). One
  * shared function so every migrated plugin crate's own `describe` command stays a thin two-line
  * wrapper around it rather than duplicating the build+emit sequence 33 times. */
-export function describePluginComponent(repoRoot: string, packageName: string, ownerRoot: string, rootCdylib = false, control: DescriptorEmissionControlV1 = {}): number {
+export function describePluginComponent(repoRoot: string, packageName: string, ownerRoot: string, control: DescriptorEmissionControlV1 = {}): number {
   const artifactRoot = cargoTargetRoot(repoRoot);
-  const component = buildPluginComponent(repoRoot, packageName, rootCdylib);
+  const component = buildPluginComponent(repoRoot, packageName);
   const scratch = mkdtempSync(join(artifactRoot, ".semio-describe-core-"));
   try {
     const core = extractPluginCore(repoRoot, component, scratch, packageName.replace(/-/g, "_"));
@@ -344,7 +344,7 @@ export function describePluginComponent(repoRoot: string, packageName: string, o
  * separate artifact and never a descriptor source). */
 export function describeExtensionComponent(repoRoot: string, rsDir: string, control: DescriptorEmissionControlV1 = {}): number {
   const manifest = parseExtensionCargoManifest(join(resolve(rsDir), "Cargo.toml"), repoRoot);
-  return describePluginComponent(repoRoot, manifest.packageName, resolve(rsDir, "..", ".."), false, control);
+  return describePluginComponent(repoRoot, manifest.packageName, resolve(rsDir, "..", ".."), control);
 }
 /** 🧬️ The exact bag handed to `createFreshComponentTests` — `typeof` of the live bindings, so it cannot drift. */
 export type FreshComponentTestDependencies = Readonly<{

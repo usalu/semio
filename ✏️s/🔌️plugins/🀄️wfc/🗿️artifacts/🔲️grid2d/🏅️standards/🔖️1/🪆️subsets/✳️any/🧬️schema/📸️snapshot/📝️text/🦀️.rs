@@ -259,6 +259,10 @@ impl store::ArtifactPack for Grid2dSnapshot {
         let parsed = <Grid2dSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         grid2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        <Grid2dSnapshotDsl as store::ArtifactPack>::record_spec()
+    }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 

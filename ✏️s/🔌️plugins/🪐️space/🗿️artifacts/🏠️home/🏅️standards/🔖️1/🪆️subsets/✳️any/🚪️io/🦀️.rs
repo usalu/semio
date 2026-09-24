@@ -1,10 +1,10 @@
 //! 🚪️ IO s.home (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"]
+    &["stdio.json", "stdio.txt", "stdio.zip"]
 }
 pub fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"]
+    &["stdio.json", "stdio.txt", "stdio.zip"]
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -13,10 +13,8 @@ pub mod derived_composition {
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.space.home", standard: StandardId("1"), subset: SubsetId("*") };
-    const DEP_CSV: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-    const DEP_XLSX: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
 
     pub struct SHomeComposerComposition;
@@ -26,7 +24,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_CSV, DEP_JSON, DEP_TXT, DEP_XLSX, DEP_ZIP]
+            &[DIALECT, DEP_JSON, DEP_TXT, DEP_ZIP]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -39,15 +37,6 @@ pub mod derived_composition {
                     let analysis = SHomeAnalyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
-                    }
-                }
-                if source.dialect == DEP_CSV {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::csv::v_rfc4180::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
                 if source.dialect == DEP_JSON {
@@ -65,15 +54,6 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_XLSX {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::xlsx::v_ecma_376::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -153,22 +133,6 @@ pub mod io_registry {
             Ok(ComposedArtifact { dialect: EXPORT_ZIP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
-    const EXPORT_CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
-    fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_CSV_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
-    fn compose_export_xlsx(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx::v_ecma_376::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_XLSX_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
@@ -185,8 +149,6 @@ pub mod io_registry {
                 vec![
                     composer_entry_of::<SHomeAnyComposer>(),
                     ComposerEntry { writes: EXPORT_ZIP_DIALECT, reads: &[HOME_DIALECT], compose: compose_export_zip },
-                    ComposerEntry { writes: EXPORT_CSV_DIALECT, reads: &[HOME_DIALECT], compose: compose_export_csv },
-                    ComposerEntry { writes: EXPORT_XLSX_DIALECT, reads: &[HOME_DIALECT], compose: compose_export_xlsx },
                     ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[HOME_DIALECT], compose: compose_export_json },
                 ]
             })

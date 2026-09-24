@@ -1,10 +1,8 @@
-//! 🚪️ forms -> csv — foreign `Serializer<FormsSnapshot>` (ticket
-//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Real, meaningful export: one
-//! row per question, flattened in step order (`id`/`stepId`/`label`/`kind`/`required`) — the same
-//! projection `crate::forms_results_from_steps` already derives for the
-//! `results` composed child, built directly here to avoid a `s.stdio.semio.table` round trip.
-//! `IoFidelity::Lossy`: drops `schema`/`id`/`version`/`title` and every per-question config field
-//! (`options`/`condition`/`params`/`default`/…) — a flat grid has no place for them.
+//! 📋️ forms -> csv — the question grid: a header row, then one row per question
+//! (`id`/`stepId`/`label`/`kind`/`required`) in step order, written by stdio's own RFC 4180 codec.
+//!
+//! 🔖 `IoFidelity::Lossy`: step titles, logic, options and results have no column, so there is no
+//! csv import — the document itself travels as json, txt or zip.
 
 use crate::{forms_steps, FormsSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
@@ -18,25 +16,29 @@ fn field(value: String) -> CsvField {
     CsvField { value, quoted: false }
 }
 
+/// 📋️ The question grid rows, header first — shared by the csv and xlsx exports.
+pub fn question_grid(from: &FormsSnapshot) -> Vec<Vec<String>> {
+    let mut rows = vec![["id", "stepId", "label", "kind", "required"].into_iter().map(String::from).collect()];
+    for step in forms_steps(from) {
+        for block in step.blocks {
+            rows.push(vec![block.id, step.id.clone(), block.label, block.kind, block.required.map(|value| value.to_string()).unwrap_or_default()]);
+        }
+    }
+    rows
+}
+
 pub struct FormsIntoCsv;
 
 impl Serializer<FormsSnapshot> for FormsIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn serialize(from: &FormsSnapshot) -> IoResult<IoPayload> {
-        let mut records = vec![CsvRecord { fields: ["id", "stepId", "label", "kind", "required"].into_iter().map(|header| field(header.to_string())).collect() }];
-        for step in forms_steps(from) {
-            for block in step.blocks {
-                records.push(CsvRecord { fields: vec![field(block.id), field(step.id.clone()), field(block.label), field(block.kind), field(block.required.map(|value| value.to_string()).unwrap_or_default())] });
-            }
-        }
+        let records = question_grid(from).into_iter().map(|row| CsvRecord { fields: row.into_iter().map(field).collect() }).collect();
         let csv = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records };
         Ok(IoOutcome::clean(IoPayload::Binary(store::ArtifactPack::encode_pack(&csv))))
     }
 }
 
-//#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests

@@ -35,17 +35,17 @@
       "license": "public-domain (synthetic, no third-party content embedded)"
     },
     "generator": {
-      "oracle": "serde-json-semio-document-carrier-reader",
-      "packageVersion": "1",
-      "engineFamily": "serde-json",
-      "engineVersion": "1",
+      "oracle": "json-rust-semio-document-carrier-reader",
+      "packageVersion": "0.12",
+      "engineFamily": "json-rust",
+      "engineVersion": "0.12",
       "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
-      "platform": "darwin"
+      "platform": "darwin-arm64"
     },
     "comparisonProfile": "semantic-semio-document-carrier-v1",
     "reproducible": true,
     "family": "mechanical",
-    "notes": "A deterministic two-image document with the insert-image mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed."
+    "notes": "A deterministic two-image document with the insert-image mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed."
   },
   {
     "schema": "semio.repository-test.fixture/v2",
@@ -83,17 +83,17 @@
       "license": "public-domain (synthetic, no third-party content embedded)"
     },
     "generator": {
-      "oracle": "serde-json-semio-document-carrier-reader",
-      "packageVersion": "1",
-      "engineFamily": "serde-json",
-      "engineVersion": "1",
+      "oracle": "json-rust-semio-document-carrier-reader",
+      "packageVersion": "0.12",
+      "engineFamily": "json-rust",
+      "engineVersion": "0.12",
       "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
-      "platform": "darwin"
+      "platform": "darwin-arm64"
     },
     "comparisonProfile": "semantic-semio-document-carrier-v1",
     "reproducible": true,
     "family": "mechanical",
-    "notes": "A deterministic two-image document with the remove-image mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed."
+    "notes": "A deterministic two-image document with the remove-image mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed."
   },
   {
     "schema": "semio.repository-test.fixture/v2",
@@ -131,17 +131,17 @@
       "license": "public-domain (synthetic, no third-party content embedded)"
     },
     "generator": {
-      "oracle": "serde-json-semio-document-carrier-reader",
-      "packageVersion": "1",
-      "engineFamily": "serde-json",
-      "engineVersion": "1",
+      "oracle": "json-rust-semio-document-carrier-reader",
+      "packageVersion": "0.12",
+      "engineFamily": "json-rust",
+      "engineVersion": "0.12",
       "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts carrier",
-      "platform": "darwin"
+      "platform": "darwin-arm64"
     },
     "comparisonProfile": "semantic-semio-document-carrier-v1",
     "reproducible": true,
     "family": "mechanical",
-    "notes": "A deterministic two-image document with the set-image-bytes mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed."
+    "notes": "A deterministic two-image document with the set-image-bytes mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. Neither the docx nor the markdown carrier preserves an image's raw bytes. Observability is checked before a pair is written, and a pair that does not move is refused rather than committed."
   },
   {
     "schema": "semio.repository-test.fixture/v2",

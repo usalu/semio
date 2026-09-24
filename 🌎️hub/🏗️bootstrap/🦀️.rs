@@ -108,7 +108,7 @@ use semio_hub::lag_rebootstrap::{
     RebootstrapTransferControl, VerifiedRebootstrapSource, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, REBOOTSTRAP_DEADLINE_MS,
 };
 use semio_hub::local_bootstrap::{serve_local_bootstrap, InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS};
-use semio_hub::stores::HubInstance;
+use semio_hub::stores::{HubAuthModule, HubDirectoryModule, HubInstance, HubModules};
 use serde::{Deserialize, Serialize};
 use server::contract::{Principal, SessionId};
 use server::gateway::{Server as FrameworkServer, ServerState};
@@ -603,10 +603,13 @@ impl DocumentOpenCatalogAuthorityV1 for VerifiedTrustedCatalog {
 /// machine spends on other work, so a hub on a busy machine refused a catalog that a hub on an idle
 /// machine loaded fine (measured 2026-09-21 by M8 with a warm 612 MB catalog, and again by CE2 on
 /// two consecutive 7621 starts while 17 rustc ran). The load reports progress per package phase and
-/// checkpoints per 64 KiB hashed chunk, so this span passing means the load has genuinely stopped —
-/// which is the only thing that must not hold the port hostage. The number is unchanged from the
-/// total budget it replaces: nothing here is a lengthened timeout.
-const TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS: u64 = 30_000;
+/// checkpoints per 64 KiB hashed chunk, and those checkpoints only restamp the span when THIS task
+/// is scheduled — under fleet load the async runtime can starve the load for tens of seconds between
+/// two live chunks (measured 2026-09-22 by HC1 on 7682, and 2026-09-23 by M10b on 7681 at load ≈ 67
+/// with a three-package catalog whose largest component is ≈ 48 MB). Thirty seconds therefore named
+/// a busy scheduler as a wedged load. Five minutes is still a no-progress bound: a load that reaches
+/// no checkpoint for that long has genuinely stopped, and eight stall-retries still apply above.
+const TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS: u64 = 300_000;
 
 /// 📚️ What the startup trusted-catalog load produced. Three outcomes, not two, because "the load
 /// ran out of budget" and "this data root has no catalog" are different facts and the hub owes an
@@ -660,13 +663,26 @@ async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Op
     let Some(providers) = providers else {
         return Ok(StartupArtifactAuthority::Absent);
     };
-    let control = StartupCatalogControl::new(tracer.clone());
-    let context = OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &control)?;
-    let loaded = match TrustedCatalogLoader::load_current(data_dir, providers, &context).await {
-        Ok(loaded) => loaded,
-        Err(AuthorityError::Stalled | AuthorityError::Cancelled) => return Ok(StartupArtifactAuthority::Stalled),
-        Err(error) => return Err(error),
-    };
+    let mut loaded = None;
+    for attempt in 0..8u8 {
+        let control = StartupCatalogControl::new(tracer.clone());
+        let context = OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &control)?;
+        match TrustedCatalogLoader::load_current(data_dir, providers, &context).await {
+            Ok(value) => {
+                loaded = Some(value);
+                break;
+            }
+            Err(AuthorityError::Stalled | AuthorityError::Cancelled) if attempt + 1 < 8 => {
+                let mut record = TraceRecord::new("server.catalog.publication", TraceOutcome::Ok);
+                record.detail = Some(format!("startup-load-stall-retry attempt={}", attempt + 1));
+                tracer.emit(record);
+                continue;
+            }
+            Err(AuthorityError::Stalled | AuthorityError::Cancelled) => return Ok(StartupArtifactAuthority::Stalled),
+            Err(error) => return Err(error),
+        }
+    }
+    let loaded = loaded.expect("trusted catalog startup load attempts exhausted without a terminal outcome");
     let Some(catalog) = loaded else {
         return Ok(StartupArtifactAuthority::Absent);
     };
@@ -754,6 +770,7 @@ impl PresenceIdentityV1 {
             ui: None,
             tool_run: None,
             principal_kind: Some(self.principal_kind),
+            active_tool: None,
         })
         .await
     }
@@ -1046,6 +1063,7 @@ const SOCKET_GRANT_LEDGER_CAPACITY: usize = 4_096;
 const SOCKET_GRANT_BINDING_PENDING_CAPACITY: usize = 64;
 const PRESENCE_LEASE_TTL_MS: u64 = 15_000;
 const SOCKET_PROTOCOL_V1: &str = "semio.socket.v1";
+const SESSION_PROTOCOL_V1: &str = "semio.session.v1";
 const DOCUMENT_OPEN_PLAN_REQUEST_MAX_BYTES: usize = 8 * 1024;
 const DOCUMENT_OPEN_PLAN_DEADLINE_MS: u64 = 10_000;
 const DOCUMENT_OPEN_PLAN_EXCHANGE_REQUEST_MAX_BYTES: usize = 8 * 1024;
@@ -1163,10 +1181,19 @@ enum SocketGrantStateV1 {
     Consumed,
 }
 
+/// @emoji 🔑 What a pending socket record answers to: a directory socket's one-use capability digest,
+/// or — for a document socket — only the credential binding its upgrade re-authenticates. A document
+/// socket is admitted by its session or share credential, so no secret is ever minted for it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SocketGrantKeyV1 {
+    Capability([u8; 32]),
+    CredentialBinding,
+}
+
 #[derive(Clone)]
 struct SocketGrantRecordV1 {
     selector: String,
-    secret_digest: [u8; 32],
+    key: SocketGrantKeyV1,
     audience: SocketAudienceV1,
     actor_id: String,
     subject: SocketSubjectV1,
@@ -1288,13 +1315,41 @@ impl SocketGrantLedgerV1 {
         }
     }
 
+    /// 🎫️ A directory socket's pending grant, answering only to `capability`. Document audiences are
+    /// refused: they are admitted by credential binding through [`Self::admit_document`].
     fn issue(&self, capability: &SocketGrantCapability, audience: SocketAudienceV1, actor_id: String, subject: SocketSubjectV1, issued_at_ms: i64, expires_at_ms: i64) -> Result<(), SocketGrantLedgerErrorV1> {
-        self.issue_with_document_plan(capability, audience, actor_id, subject, issued_at_ms, expires_at_ms, None)
+        if matches!(audience, SocketAudienceV1::Document(_)) {
+            return Err(SocketGrantLedgerErrorV1::Rejected);
+        }
+        self.insert_pending(capability.selector().to_string(), SocketGrantKeyV1::Capability(capability.secret_digest()), audience, actor_id, subject, issued_at_ms, expires_at_ms, None)
     }
 
-    fn issue_with_document_plan(
+    /// 📝️ A document socket's pending admission: keyed by nothing but its credential binding, consumed
+    /// by the upgrade that re-authenticates that credential. Returns the ledger selector.
+    fn admit_document(&self, audience: SocketAudienceV1, actor_id: String, subject: SocketSubjectV1, issued_at_ms: i64, expires_at_ms: i64, document_plan: Arc<DocumentOpenPlanAuthorityV1>) -> Result<String, SocketGrantLedgerErrorV1> {
+        if !matches!(audience, SocketAudienceV1::Document(_)) {
+            return Err(SocketGrantLedgerErrorV1::Rejected);
+        }
+        let selector = directory::os_identity::time_ordered_id();
+        self.insert_pending(selector.clone(), SocketGrantKeyV1::CredentialBinding, audience, actor_id, subject, issued_at_ms, expires_at_ms, Some(document_plan))?;
+        Ok(selector)
+    }
+
+    #[cfg(test)]
+    fn admit_document_without_plan_for_test(&self, audience: SocketAudienceV1, actor_id: String, subject: SocketSubjectV1, issued_at_ms: i64, expires_at_ms: i64) -> Result<String, SocketGrantLedgerErrorV1> {
+        if !matches!(audience, SocketAudienceV1::Document(_)) {
+            return Err(SocketGrantLedgerErrorV1::Rejected);
+        }
+        let selector = directory::os_identity::time_ordered_id();
+        self.insert_pending(selector.clone(), SocketGrantKeyV1::CredentialBinding, audience, actor_id, subject, issued_at_ms, expires_at_ms, None)?;
+        Ok(selector)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn insert_pending(
         &self,
-        capability: &SocketGrantCapability,
+        selector: String,
+        key: SocketGrantKeyV1,
         audience: SocketAudienceV1,
         actor_id: String,
         subject: SocketSubjectV1,
@@ -1310,22 +1365,25 @@ impl SocketGrantLedgerV1 {
         {
             return Err(SocketGrantLedgerErrorV1::Capacity);
         }
-        let selector = capability.selector().to_string();
         if inner.records.contains_key(&selector) {
             return Err(SocketGrantLedgerErrorV1::Rejected);
         }
         for binding in bindings {
             inner.pending_by_binding.entry(binding).or_default().insert(selector.clone());
         }
-        inner.records.insert(selector.clone(), SocketGrantRecordV1 { selector, secret_digest: capability.secret_digest(), audience, actor_id, subject, document_plan, issued_at_ms, expires_at_ms, state: SocketGrantStateV1::Pending });
+        inner.records.insert(selector.clone(), SocketGrantRecordV1 { selector, key, audience, actor_id, subject, document_plan, issued_at_ms, expires_at_ms, state: SocketGrantStateV1::Pending });
         Ok(())
+    }
+
+    fn capability_matches(record: &SocketGrantRecordV1, capability: &SocketGrantCapability) -> bool {
+        matches!(record.key, SocketGrantKeyV1::Capability(digest) if semio_hub::directory::constant_time_digest_eq(&digest, &capability.secret_digest()))
     }
 
     fn pending(&self, capability: &SocketGrantCapability, audience: &SocketAudienceV1, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
         let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
         Self::sweep_expired(&mut inner, at_ms);
         let record = inner.records.get(capability.selector()).ok_or(SocketGrantLedgerErrorV1::Rejected)?;
-        if record.state != SocketGrantStateV1::Pending || record.audience != *audience || !semio_hub::directory::constant_time_digest_eq(&record.secret_digest, &capability.secret_digest()) {
+        if record.state != SocketGrantStateV1::Pending || record.audience != *audience || !Self::capability_matches(record, capability) {
             return Err(SocketGrantLedgerErrorV1::Rejected);
         }
         Ok(record.clone())
@@ -1335,10 +1393,25 @@ impl SocketGrantLedgerV1 {
         let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
         Self::sweep_expired(&mut inner, at_ms);
         let record = inner.records.get(capability.selector()).ok_or(SocketGrantLedgerErrorV1::Rejected)?;
-        if record.state != SocketGrantStateV1::Pending || !matches!(record.audience, SocketAudienceV1::Directory { .. }) || !semio_hub::directory::constant_time_digest_eq(&record.secret_digest, &capability.secret_digest()) {
+        if record.state != SocketGrantStateV1::Pending || !matches!(record.audience, SocketAudienceV1::Directory { .. }) || !Self::capability_matches(record, capability) {
             return Err(SocketGrantLedgerErrorV1::Rejected);
         }
         Ok(record.clone())
+    }
+
+    /// 🧭️ The oldest pending document grant issued to this session or share binding for exactly this
+    /// audience; its actor is the one the upgrade is admitted as.
+    fn pending_document_binding(&self, audience: &SocketAudienceV1, binding: &SocketBindingKeyV1, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
+        let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
+        Self::sweep_expired(&mut inner, at_ms);
+        let record = inner
+            .records
+            .values()
+            .filter(|record| record.state == SocketGrantStateV1::Pending && record.key == SocketGrantKeyV1::CredentialBinding && record.audience == *audience && record.subject.binding() == *binding)
+            .min_by(|left, right| (left.issued_at_ms, &left.selector).cmp(&(right.issued_at_ms, &right.selector)))
+            .cloned()
+            .ok_or(SocketGrantLedgerErrorV1::Rejected)?;
+        Ok(record)
     }
 
     fn consume(&self, candidate: &SocketGrantRecordV1, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
@@ -1354,7 +1427,7 @@ impl SocketGrantLedgerV1 {
             || record.actor_id != candidate.actor_id
             || record.subject != candidate.subject
             || record.document_plan != candidate.document_plan
-            || record.secret_digest != candidate.secret_digest
+            || record.key != candidate.key
             || record.issued_at_ms != candidate.issued_at_ms
             || record.expires_at_ms <= at_ms
         {
@@ -1371,7 +1444,7 @@ impl SocketGrantLedgerV1 {
         let notify = Arc::new(tokio::sync::Notify::new());
         let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
         let stored = inner.records.get(&record.selector).ok_or(SocketGrantLedgerErrorV1::Rejected)?;
-        if stored.state != SocketGrantStateV1::Consumed || stored.secret_digest != record.secret_digest || stored.audience != record.audience || stored.subject != record.subject || stored.document_plan != record.document_plan {
+        if stored.state != SocketGrantStateV1::Consumed || stored.key != record.key || stored.audience != record.audience || stored.subject != record.subject || stored.document_plan != record.document_plan {
             return Err(SocketGrantLedgerErrorV1::Rejected);
         }
         for binding in record.bindings() {
@@ -1390,7 +1463,7 @@ impl SocketGrantLedgerV1 {
         let Ok(inner) = self.inner.lock() else { return false };
         inner.records.get(&record.selector).is_some_and(|stored| {
             stored.state == SocketGrantStateV1::Consumed
-                && stored.secret_digest == record.secret_digest
+                && stored.key == record.key
                 && stored.audience == record.audience
                 && stored.subject == record.subject
                 && stored.document_plan == record.document_plan
@@ -1829,7 +1902,7 @@ impl DocumentOpenPlanLedgerV1 {
         self.exchange_record(receipt, current, now_ms, |authority, _| Ok((socket_grant_selector.to_string(), authority.clone())))
     }
 
-    fn exchange_to_socket_grant(&self, receipt: &str, current: &DocumentOpenPlanAuthorityV1, now_ms: u64, socket_grants: &SocketGrantLedgerV1) -> Result<SocketGrantReceiptV1, DocumentOpenPlanErrorCodeV1> {
+    fn exchange_to_socket_grant(&self, receipt: &str, current: &DocumentOpenPlanAuthorityV1, now_ms: u64, socket_grants: &SocketGrantLedgerV1) -> Result<DocumentSocketGrantReceiptV1, DocumentOpenPlanErrorCodeV1> {
         self.exchange_record(receipt, current, now_ms, |authority, plan_expires_at_ms| {
             let issued_at_ms = i64::try_from(now_ms).map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?;
             let plan_expires_at_ms = i64::try_from(plan_expires_at_ms).map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?;
@@ -1840,15 +1913,12 @@ impl DocumentOpenPlanLedgerV1 {
             if expires_at_ms <= issued_at_ms {
                 return Err(DocumentOpenPlanErrorCodeV1::Expired);
             }
-            let capability = SocketGrantCapability::mint().map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?;
-            let selector = capability.selector().to_string();
             let audience = SocketAudienceV1::Document(authority.scope.clone());
-            socket_grants.issue_with_document_plan(&capability, audience, authority.server_actor_id.clone(), authority.subject.clone(), issued_at_ms, expires_at_ms, Some(Arc::new(authority.clone()))).map_err(|error| match error {
+            let selector = socket_grants.admit_document(audience, authority.server_actor_id.clone(), authority.subject.clone(), issued_at_ms, expires_at_ms, Arc::new(authority.clone())).map_err(|error| match error {
                 SocketGrantLedgerErrorV1::Capacity => DocumentOpenPlanErrorCodeV1::DeadlineExceeded,
                 SocketGrantLedgerErrorV1::Rejected => DocumentOpenPlanErrorCodeV1::Denied,
             })?;
-            let response = SocketGrantReceiptV1 { schema: "semio.hub.socket-grant/v1", protocol: SOCKET_PROTOCOL_V1, grant: capability.expose_once(), actor_id: authority.server_actor_id.clone(), expires_at_ms };
-            Ok((selector, response))
+            Ok((selector, DocumentSocketGrantReceiptV1 { schema: DOCUMENT_SOCKET_GRANT_SCHEMA_V1, protocol: SESSION_PROTOCOL_V1, actor_id: authority.server_actor_id.clone(), expires_at_ms }))
         })
     }
 
@@ -2013,6 +2083,11 @@ struct HubState {
     /// fires it; the loop observes the wake-up and closes the connection on its own next tick —
     /// this map never itself closes a socket, only signals the session that owns it to.
     session_kicks: Arc<ShardedMap<String, Arc<tokio::sync::Notify>>>,
+    /// @emoji 🚪️ Every upgraded socket (document and directory) holds one admission from here for
+    /// its whole life. `axum`'s graceful shutdown never waits for an upgraded connection, so `main`
+    /// closes them through this owner and waits for the last admission before it shuts the
+    /// `Database` down and closes its storage.
+    socket_drain: Arc<HubSocketDrainV1>,
     socket_grants: Arc<SocketGrantLedgerV1>,
     document_open_plans: Arc<DocumentOpenPlanLedgerV1>,
     socket_binding_gates: Arc<SocketBindingGatesV1>,
@@ -2191,6 +2266,7 @@ impl HubState {
                 ui: input.ui,
                 tool_run: input.tool_run,
                 principal_kind: Some(slot.principal_kind),
+                active_tool: input.active_tool,
             })
         });
         let Some(normalized) = normalized else { return PresenceLeaseTransition::NoChange };
@@ -2918,6 +2994,21 @@ struct SocketGrantReceiptV1 {
     expires_at_ms: i64,
 }
 
+/// @emoji 📝️ Schema of [`DocumentSocketGrantReceiptV1`] — `os.directory#/$defs/DocumentSocketGrantReceiptV1`.
+const DOCUMENT_SOCKET_GRANT_SCHEMA_V1: &str = "semio.hub.document-socket-grant/v1";
+
+/// @emoji 📝️ The answer to a document open-plan exchange: the actor the next `semio.session.v1`
+/// upgrade of the same credential is admitted as, and until when. It carries no secret — the
+/// credential itself is what the upgrade presents.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DocumentSocketGrantReceiptV1 {
+    schema: &'static str,
+    protocol: &'static str,
+    actor_id: String,
+    expires_at_ms: i64,
+}
+
 fn socket_issue_bearer(headers: &HeaderMap) -> Result<String, StatusCode> {
     let values = headers.get_all(axum::http::header::AUTHORIZATION);
     if values.iter().count() != 1 {
@@ -2934,12 +3025,14 @@ fn socket_issue_bearer(headers: &HeaderMap) -> Result<String, StatusCode> {
     Ok(capability.to_string())
 }
 
+/// @emoji 🙋️ The hub actor id bound to one credential: a session or a share token hashes to the same
+/// actor on every open-plan, socket grant and socket upgrade, so no caller ever names its actor.
 fn socket_actor_id(material: &[u8; 32], stable_session: bool) -> String {
     let mut digest = Sha256::new();
     digest.update(b"semio/hub/socket/actor/v1\0");
-    digest.update(if stable_session { b"session" } else { b"share" });
+    digest.update(if stable_session { b"session".as_slice() } else { b"share".as_slice() });
     digest.update(material);
-    format!("hub.v1.{}", semio_framework_hash::hex_lower(&digest.finalize()))
+    format!("hub.v1.{}", os_directory::hex_lower(&digest.finalize()))
 }
 
 fn socket_text_bounded(value: &str) -> bool {
@@ -2959,7 +3052,7 @@ async fn socket_binding_validity(state: &HubState, subject: &SocketSubjectV1, au
     }
 }
 
-async fn issue_socket_grant(state: &HubState, subject: SocketSubjectV1, audience: SocketAudienceV1, stable_actor_material: Option<[u8; 32]>) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
+async fn issue_socket_grant(state: &HubState, subject: SocketSubjectV1, audience: SocketAudienceV1, actor_id: String) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
     let binding = subject.binding();
     let _admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&subject, &audience)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
     let validity = socket_binding_validity(state, &subject, &audience).await;
@@ -2977,7 +3070,6 @@ async fn issue_socket_grant(state: &HubState, subject: SocketSubjectV1, audience
     if expires_at_ms <= now {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let actor_id = socket_actor_id(&stable_actor_material.unwrap_or_else(|| capability.secret_digest()), stable_actor_material.is_some());
     state.socket_grants.issue(&capability, audience.clone(), actor_id.clone(), subject, now, expires_at_ms).map_err(|error| match error {
         SocketGrantLedgerErrorV1::Capacity => StatusCode::SERVICE_UNAVAILABLE,
         SocketGrantLedgerErrorV1::Rejected => StatusCode::UNAUTHORIZED,
@@ -2999,10 +3091,19 @@ async fn issue_socket_grant(state: &HubState, subject: SocketSubjectV1, audience
     Ok(Json(SocketGrantReceiptV1 { schema: "semio.hub.socket-grant/v1", protocol: SOCKET_PROTOCOL_V1, grant: capability.expose_once(), actor_id, expires_at_ms }))
 }
 
-async fn authenticate_document_socket_subject(state: &HubState, scope: &DocumentScope, headers: &HeaderMap) -> Result<(SocketSubjectV1, Option<[u8; 32]>), DocumentOpenPlanErrorCodeV1> {
+async fn authenticate_document_socket_subject(state: &HubState, scope: &DocumentScope, headers: &HeaderMap) -> Result<(SocketSubjectV1, String), DocumentOpenPlanErrorCodeV1> {
     let bearer = socket_issue_bearer(headers).map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?;
-    let capability = HubCapability::parse(&bearer).map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?;
-    let (subject, stable_actor_material) = match capability {
+    authenticate_document_credential(state, scope, &bearer).await
+}
+
+/// @emoji 🪪️ One document credential — session or share token — to its socket subject and the actor a
+/// grant issued now would carry: a session's actor is bound to the session (stable across plans, so
+/// per-actor undo spans reconnects), a share holder's actor is minted per plan (two viewers of one link
+/// stay two presences). The socket upgrade resolves the same subject and admits the pending grant
+/// issued to its binding, so the actor always comes from the hub, never from the caller.
+async fn authenticate_document_credential(state: &HubState, scope: &DocumentScope, bearer: &str) -> Result<(SocketSubjectV1, String), DocumentOpenPlanErrorCodeV1> {
+    let capability = HubCapability::parse(bearer).map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?;
+    let (subject, actor_id) = match capability {
         HubCapability::Session(capability) => {
             let session = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&capability))
                 .await
@@ -3014,9 +3115,9 @@ async fn authenticate_document_socket_subject(state: &HubState, scope: &Document
                 .map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?
                 .map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?
                 .ok_or(DocumentOpenPlanErrorCodeV1::Denied)?;
-            let material = session.secret_digest;
+            let actor_id = socket_actor_id(&session.secret_digest, true);
             let subject = SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: Some(role), expires_at_ms: session.expires_at, session_kind: session.session_kind, device_instance_id: session.device_instance_id };
-            (subject, Some(material))
+            (subject, actor_id)
         }
         HubCapability::Share(capability) => {
             let share = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_share_binding(&scope, &capability))
@@ -3024,11 +3125,15 @@ async fn authenticate_document_socket_subject(state: &HubState, scope: &Document
                 .map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?
                 .map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?
                 .ok_or(DocumentOpenPlanErrorCodeV1::Denied)?;
-            (SocketSubjectV1::Share { share_id: share.id, selector: share.selector, scope: scope.clone(), expires_at_ms: share.expires_at }, None)
+            let mut ephemeral_actor_material = [0u8; 32];
+            directory::os_identity::fill_entropy(&mut ephemeral_actor_material).map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?;
+            let actor_id = socket_actor_id(&ephemeral_actor_material, false);
+            ephemeral_actor_material.fill(0);
+            (SocketSubjectV1::Share { share_id: share.id, selector: share.selector, scope: scope.clone(), expires_at_ms: share.expires_at }, actor_id)
         }
         HubCapability::Invite(_) => return Err(DocumentOpenPlanErrorCodeV1::Denied),
     };
-    Ok((subject, stable_actor_material))
+    Ok((subject, actor_id))
 }
 
 type DocumentOpenPlanRouteError = (StatusCode, DirectoryJson<DocumentOpenPlanErrorV1>);
@@ -3079,7 +3184,7 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
     if !state.readiness.features.open_plan {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::CatalogUnavailable));
     }
-    let (subject, stable_actor_material) = authenticate_document_socket_subject(&state, &scope, &headers).await.map_err(document_open_plan_exchange_error)?;
+    let (subject, server_actor_id) = authenticate_document_socket_subject(&state, &scope, &headers).await.map_err(document_open_plan_exchange_error)?;
     let audience = SocketAudienceV1::Document(scope.clone());
     let _admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&subject, &audience)).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
     match subject.revalidate(state.directory.as_ref(), &audience, now_ms()).await {
@@ -3115,13 +3220,6 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
     client_instance_id_digest.update(b"semio/hub/document-open/client-instance/v1\0");
     client_instance_id_digest.update(intent.client_instance_id.as_bytes());
     let client_instance_id_digest = client_instance_id_digest.finalize();
-    let mut ephemeral_actor_material = [0u8; 32];
-    let (actor_material, stable_session) = if let Some(material) = stable_actor_material {
-        (material, true)
-    } else {
-        directory::os_identity::fill_entropy(&mut ephemeral_actor_material).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
-        (ephemeral_actor_material, false)
-    };
     let authority = DocumentOpenPlanAuthorityV1 {
         scope: scope.clone(),
         descriptor,
@@ -3136,10 +3234,9 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
         checkpoint,
         revalidation: DocumentOpenRevalidationV1 { directory_revision, membership_generation: directory_revision, session_generation, share_generation },
         subject: subject.clone(),
-        server_actor_id: socket_actor_id(&actor_material, stable_session),
+        server_actor_id,
         client_instance_id_digest,
     };
-    ephemeral_actor_material.fill(0);
     authority.validate().map_err(document_open_plan_exchange_error)?;
     #[cfg(test)]
     if let Some(gate) = &state.document_open_plan_issue_gate {
@@ -3187,7 +3284,7 @@ async fn issue_document_open_plan(
     .unwrap_or_else(|_| Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)))
 }
 
-async fn issue_document_plan_socket_grant_inner(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<Json<SocketGrantReceiptV1>, DocumentOpenPlanRouteError> {
+async fn issue_document_plan_socket_grant_inner(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<Json<DocumentSocketGrantReceiptV1>, DocumentOpenPlanRouteError> {
     let content_types = headers.get_all(axum::http::header::CONTENT_TYPE);
     if !socket_text_bounded(&space_id)
         || !socket_text_bounded(&document_id)
@@ -3439,7 +3536,7 @@ async fn issue_document_plan_socket_grant(
     Path((space_id, document_id)): Path<(String, String)>,
     State(state): State<HubState>,
     request: axum::extract::Request,
-) -> Result<Json<SocketGrantReceiptV1>, DocumentOpenPlanRouteError> {
+) -> Result<Json<DocumentSocketGrantReceiptV1>, DocumentOpenPlanRouteError> {
     if uri.query().is_some() {
         return Err(document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied));
     }
@@ -3459,10 +3556,10 @@ async fn issue_directory_socket_grant(headers: HeaderMap, State(state): State<Hu
     let capability = SessionCapability::parse(&socket_issue_bearer(&headers)?).map_err(|_| StatusCode::UNAUTHORIZED)?;
     let session =
         tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&capability)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.ok_or(StatusCode::UNAUTHORIZED)?;
-    let material = session.secret_digest;
+    let actor_id = socket_actor_id(&session.secret_digest, true);
     let audience = SocketAudienceV1::Directory { auth_session_id: session.id.clone(), authorization_generation: session.authorization_generation };
     let subject = SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: None, expires_at_ms: session.expires_at, session_kind: session.session_kind, device_instance_id: session.device_instance_id };
-    issue_socket_grant(&state, subject, audience, Some(material)).await
+    issue_socket_grant(&state, subject, audience, actor_id).await
 }
 
 async fn issue_scoped_directory_socket_grant(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
@@ -3483,9 +3580,9 @@ async fn issue_scoped_directory_socket_grant(Path((space_id, document_id)): Path
         Ok(Ok(None)) => return Err(StatusCode::NOT_FOUND),
         Ok(Err(_)) | Err(_) => return Err(StatusCode::SERVICE_UNAVAILABLE),
     }
-    let material = session.secret_digest;
+    let actor_id = socket_actor_id(&session.secret_digest, true);
     let subject = SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: Some(role), expires_at_ms: session.expires_at, session_kind: session.session_kind, device_instance_id: session.device_instance_id };
-    issue_socket_grant(&state, subject, SocketAudienceV1::DirectoryScoped(scope), Some(material)).await
+    issue_socket_grant(&state, subject, SocketAudienceV1::DirectoryScoped(scope), actor_id).await
 }
 
 #[derive(Serialize)]
@@ -4588,22 +4685,29 @@ async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRec
     SocketBindingValidityV1::Active
 }
 
-async fn consume_socket_grant(state: &HubState, headers: &HeaderMap, audience: SocketAudienceV1, surface: Option<&str>) -> Result<SocketGrantAdmissionV1, StatusCode> {
+async fn consume_scoped_directory_socket_grant(state: &HubState, headers: &HeaderMap, scope: DocumentScope) -> Result<SocketGrantAdmissionV1, StatusCode> {
     let capability = socket_grant_from_protocol_header(headers)?;
-    let candidate = state.socket_grants.pending(&capability, &audience, now_ms()).map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let candidate = state.socket_grants.pending(&capability, &SocketAudienceV1::DirectoryScoped(scope), now_ms()).map_err(|_| StatusCode::UNAUTHORIZED)?;
     let _binding_gates = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&candidate.subject, &candidate.audience)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
     let validity = socket_binding_validity(state, &candidate.subject, &candidate.audience).await;
     match validity {
-        SocketBindingValidityV1::Active => match document_plan_socket_validity(state, &candidate, surface).await {
-            SocketBindingValidityV1::Active => state.socket_grants.consume(&candidate, now_ms()).map(|record| SocketGrantAdmissionV1 { record }).map_err(|_| StatusCode::UNAUTHORIZED),
-            SocketBindingValidityV1::Unauthorized => {
-                state.socket_grants.reject_pending(&candidate.selector);
-                Err(StatusCode::UNAUTHORIZED)
-            }
-            SocketBindingValidityV1::Unavailable => Err(StatusCode::SERVICE_UNAVAILABLE),
-        },
+        SocketBindingValidityV1::Active => state.socket_grants.consume(&candidate, now_ms()).map(|record| SocketGrantAdmissionV1 { record }).map_err(|_| StatusCode::UNAUTHORIZED),
         SocketBindingValidityV1::Unauthorized => Err(StatusCode::UNAUTHORIZED),
         SocketBindingValidityV1::Unavailable => Err(StatusCode::SERVICE_UNAVAILABLE),
+    }
+}
+
+/// @emoji 🧭️ Admits a document upgrade whose credential resolved to `subject`: the oldest pending
+/// document grant of that binding and audience, revalidated against its sealed plan, consumed once.
+async fn consume_document_socket_grant(state: &HubState, subject: &SocketSubjectV1, audience: SocketAudienceV1, surface: Option<&str>) -> Result<SocketGrantAdmissionV1, (StatusCode, &'static str)> {
+    let candidate = state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).map_err(|_| (StatusCode::UNAUTHORIZED, "socket-grant-pending"))?;
+    match document_plan_socket_validity(state, &candidate, surface).await {
+        SocketBindingValidityV1::Active => state.socket_grants.consume(&candidate, now_ms()).map(|record| SocketGrantAdmissionV1 { record }).map_err(|_| (StatusCode::UNAUTHORIZED, "socket-grant-consume")),
+        SocketBindingValidityV1::Unauthorized => {
+            state.socket_grants.reject_pending(&candidate.selector);
+            Err((StatusCode::UNAUTHORIZED, "socket-grant-401"))
+        }
+        SocketBindingValidityV1::Unavailable => Err((StatusCode::SERVICE_UNAVAILABLE, "socket-grant-503")),
     }
 }
 
@@ -4625,28 +4729,69 @@ struct DocumentWsV1Query {
     surface: Option<String>,
 }
 
-/// @emoji 📝️ The document lane's admission span (`server.document.socket`): one record per
-/// upgrade attempt carrying the space and document it was for, the session that asked and how the
-/// admission ended. The session's own lifetime is reported by `handle_ws`, which closes a second
-/// span when the socket goes away.
-async fn document_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(String, String)>, Query(query): Query<DocumentWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+fn credential_from_protocol_header(headers: &HeaderMap) -> Result<String, StatusCode> {
+    if headers.contains_key(axum::http::header::AUTHORIZATION) {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let values = headers.get_all(axum::http::header::SEC_WEBSOCKET_PROTOCOL);
+    if values.iter().count() != 1 {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let offered = values.iter().next().and_then(|value| value.to_str().ok()).ok_or(StatusCode::UNAUTHORIZED)?;
+    if offered.len() > AUTH_TEXT_MAX_BYTES {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let (protocol, token) = offered.split_once(", ").ok_or(StatusCode::UNAUTHORIZED)?;
+    if protocol != SESSION_PROTOCOL_V1 || token.is_empty() || token.contains(',') {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    Ok(token.to_string())
+}
+
+/// @emoji 📝️ The one document socket, `/scopes/{space}%2F{document}/document/ws?surface=`. The
+/// credential — a session or a share token — rides `Sec-WebSocket-Protocol: semio.session.v1, <token>`;
+/// it resolves to its subject exactly as the open-plan issuer did, and the upgrade consumes the pending
+/// plan grant issued to that binding, whose actor the socket is then bound to. Nothing about identity
+/// is read from the URL: an unknown query field is refused.
+async fn document_ws_v1(ws: WebSocketUpgrade, Path(scope_path): Path<String>, Query(query): Query<DocumentWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+    let Some((space_id, document_id)) = scope_path.split_once('/').map(|(space_id, document_id)| (space_id.to_string(), document_id.to_string())).filter(|(space_id, document_id)| !space_id.is_empty() && !document_id.is_empty() && !space_id.contains('/')) else {
+        return StatusCode::BAD_REQUEST.into_response();
+    };
     let span = state.span("server.document.socket").space(space_id.clone()).artifact(document_id.clone());
+    let credential = match credential_from_protocol_header(&headers) {
+        Ok(credential) => credential,
+        Err(status) => {
+            span.refused("credential-protocol");
+            return status.into_response();
+        }
+    };
     let surface = query.surface.unwrap_or_default();
     if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) || surface.len() > AUTH_TEXT_MAX_BYTES {
         span.refused("bounds");
         return StatusCode::BAD_REQUEST.into_response();
     }
     let scope = DocumentScope::new(&space_id, &document_id);
-    let admission = match consume_socket_grant(&state, &headers, SocketAudienceV1::Document(scope), Some(&surface)).await {
+    let (subject, _) = match authenticate_document_credential(&state, &scope, &credential).await {
+        Ok(resolved) => resolved,
+        Err(DocumentOpenPlanErrorCodeV1::DeadlineExceeded) => {
+            span.refused("credential-unavailable");
+            return StatusCode::SERVICE_UNAVAILABLE.into_response();
+        }
+        Err(_) => {
+            span.refused("credential");
+            return StatusCode::UNAUTHORIZED.into_response();
+        }
+    };
+    let admission = match consume_document_socket_grant(&state, &subject, SocketAudienceV1::Document(scope), Some(&surface)).await {
         Ok(admission) => admission,
-        Err(status) => {
-            span.refused(&format!("socket-grant-{}", status.as_u16()));
-            return (status, "socket grant rejected").into_response();
+        Err((status, refusal)) => {
+            span.refused(refusal);
+            return status.into_response();
         }
     };
     let session_span = state.span("server.document.socket").space(space_id.clone()).artifact(document_id.clone()).principal(admission.record.subject.trace_principal());
     span.ok();
-    ws.protocols([SOCKET_PROTOCOL_V1])
+    ws.protocols([SESSION_PROTOCOL_V1])
         .on_upgrade(move |socket| async move {
             handle_ws(socket, space_id, document_id, surface, state, admission).await;
             session_span.cancelled("closed");
@@ -4654,68 +4799,6 @@ async fn document_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Pat
         .into_response()
 }
 
-/// @emoji 🧭️ Stamps the DOCUMENT's own id onto one outbound wire frontier.
-///
-/// The hub keys documents internally by [`db_artifact_id`] — `v1:<len>:<len>:<space><document>` —
-/// because the db and fanout catalogs are flat and a bare document id is not unique across spaces.
-/// The db engine stamps that key into every `Frontier` it returns and the replication wire carries
-/// it through unchanged, so until this projection existed every `Welcome`, `Ack`, `Commands` and
-/// rebootstrap control named the hub's private key where the client's own `documentId` belongs. A
-/// client that checks the identity it asked for against the identity it was handed — the store
-/// worker's `validateArtifactBootstrapIdentity` does exactly that — refuses a pair the hub itself
-/// produced. This is the single boundary where the internal key becomes the client's identity
-/// again, and [`wire_frontier_to_db`] is its exact inverse on the way in.
-fn project_wire_frontier(frontier: &mut RuntimeFrontierSummary, document_id: &str) {
-    frontier.document_id = ProtocolArtifactId(document_id.to_string());
-}
-
-/// @emoji 🧭️ Every frontier one outbound frame carries, projected onto the document's own id. A
-/// frame with no frontier is returned untouched and uncloned by the caller.
-fn project_server_frame(frame: &mut ServerFrame, document_id: &str) {
-    match frame {
-        ServerFrame::Welcome { server_frontier, bootstrap, .. } => {
-            project_wire_frontier(server_frontier, document_id);
-            if let protocol::Bootstrap::ArtifactBootstrap(artifact) = bootstrap {
-                project_wire_frontier(&mut artifact.baseline_frontier, document_id);
-                project_wire_frontier(&mut artifact.required_tail_frontier, document_id);
-            }
-        }
-        ServerFrame::Commands { frontier, .. } | ServerFrame::Ack { frontier, .. } => project_wire_frontier(frontier, document_id),
-        ServerFrame::RebootstrapRequired { control } => project_wire_frontier(&mut control.baseline_frontier, document_id),
-        ServerFrame::SnapshotChunk { .. }
-        | ServerFrame::SnapshotDone { .. }
-        | ServerFrame::Preview { .. }
-        | ServerFrame::Presence { .. }
-        | ServerFrame::CreditGrant { .. }
-        | ServerFrame::Error { .. }
-        | ServerFrame::Session { .. }
-        | ServerFrame::ArtifactBootstrapChunk { .. }
-        | ServerFrame::ArtifactBootstrapDone { .. } => {}
-    }
-}
-
-/// @emoji 🧭️ Whether one frame carries a frontier at all, so the projection clones only when it has
-/// something to rewrite.
-const fn frame_carries_frontier(frame: &ServerFrame) -> bool {
-    matches!(frame, ServerFrame::Welcome { .. } | ServerFrame::Commands { .. } | ServerFrame::Ack { .. } | ServerFrame::RebootstrapRequired { .. })
-}
-
-/// @emoji 🧭️ The inverse of [`project_wire_frontier`]: one frontier a CLIENT sent, named by the
-/// document id it opened, re-keyed onto this hub's internal db id before any db layer compares it
-/// (`db_sync` refuses a hello whose advertised frontier does not name its own document). A frontier
-/// naming anything other than the socket's own document is refused rather than re-keyed — the hub
-/// must never accept an identity claim it then overwrites.
-fn wire_frontier_to_db(frontier: &mut RuntimeFrontierSummary, document_id: &str, db_id: &ProtocolArtifactId) -> bool {
-    if frontier.document_id.0 != document_id {
-        return false;
-    }
-    frontier.document_id = db_id.clone();
-    true
-}
-
-/// @emoji 📬️ Encodes one outbound frame for the socket of `document_id`. This is the hub's ONLY
-/// frame-encoding door on purpose: every frontier leaving it is named by the document the client
-/// opened, never by [`db_artifact_id`]'s internal key.
 async fn encode(frame: &ServerFrame, document_id: &str) -> Message {
     if frame_carries_frontier(frame) {
         let mut projected = frame.clone();
@@ -4729,63 +4812,6 @@ async fn error_frame(code: &str, message: impl Into<String>) -> Message {
     encode(&ServerFrame::Error { code: code.to_string(), message: message.into() }, "").await
 }
 
-struct SocketRebootstrapControl;
-
-impl RebootstrapTransferControl for SocketRebootstrapControl {
-    fn now_ms(&self) -> u64 {
-        now_ms().max(0) as u64
-    }
-
-    fn is_cancelled(&self) -> bool {
-        false
-    }
-
-    fn report(&self, _progress: RebootstrapProgress) {}
-}
-
-fn wire_rebootstrap(control: &os_directory::RebootstrapRequired) -> protocol::RebootstrapRequired {
-    protocol::RebootstrapRequired {
-        space_id: control.scope.space_id.clone(),
-        document_id: control.scope.document_id.clone(),
-        checkpoint_id: control.checkpoint_id.0,
-        descriptor_hash: control.descriptor_digest_v1.0,
-        baseline_frontier: RuntimeFrontierSummary {
-            document_id: ProtocolArtifactId(control.baseline_frontier.document_id.clone()),
-            head_edit_ordinal: control.baseline_frontier.head_edit_ordinal,
-            head_edit_id: control.baseline_frontier.head_edit_id.clone(),
-            last_commit_seq: control.baseline_frontier.last_commit_seq,
-            chain_hash: control.baseline_frontier.chain_hash.0,
-        },
-    }
-}
-
-async fn verified_rebootstrap_control(state: &HubState, scope: &DocumentScope) -> Option<os_directory::RebootstrapRequired> {
-    let control = SocketRebootstrapControl;
-    let deadline = control.now_ms().saturating_add(REBOOTSTRAP_DEADLINE_MS);
-    state.rebootstrap.control(scope, &RebootstrapContext::new(deadline, &control)).await.ok()
-}
-
-async fn send_socket_document_rebootstrap(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, scope: &DocumentScope) -> SocketBindingValidityV1 {
-    let _admission = match socket_live_authority(state, record, live_id).await {
-        Ok(admission) => admission,
-        Err(validity) => return validity,
-    };
-    #[cfg(test)]
-    if let Some(gate) = &state.live_gate {
-        gate.socket_rebootstrap_read.add_permits(1);
-    }
-    let control = match tokio::time::timeout(std::time::Duration::from_secs(2), verified_rebootstrap_control(state, scope)).await {
-        Ok(control) => control,
-        Err(_) => return SocketBindingValidityV1::Unavailable,
-    };
-    if let Some(control) = control {
-        let frame = encode(&ServerFrame::RebootstrapRequired { control: wire_rebootstrap(&control) }, &scope.document_id).await;
-        if !matches!(tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(frame)).await, Ok(Ok(()))) {
-            return SocketBindingValidityV1::Unavailable;
-        }
-    }
-    SocketBindingValidityV1::Active
-}
 
 /// @emoji 🧭️ Best-effort `RuntimeFrontierSummary` for an `Ack` when the triggering `submit` itself
 /// failed — re-reads the document's current (unaffected) frontier so the client still learns
@@ -4802,78 +4828,12 @@ fn engine_frontier_to_wire(frontier: &db::db_engine::Frontier, head_edit_id: Str
     RuntimeFrontierSummary { document_id: frontier.document.clone(), head_edit_ordinal: frontier.head_seq, head_edit_id, last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
 }
 
-/// @emoji ⚖️ `OS_HUB_MERGE_POLICY=laissez-faire|normal|vigilant` (default `normal`) — read once at
-/// startup into `HubState.merge_policy` (see its own doc). An unrecognized value is a non-fatal
-/// misconfiguration (logged, falls back to the default) rather than refusing to boot, matching this
-/// crate's generally-forgiving stance on env parsing elsewhere in `main`.
-fn merge_policy_from_env(tracer: &Tracer) -> protocol::MergePolicy {
-    match std::env::var("OS_HUB_MERGE_POLICY").ok().as_deref() {
-        None => protocol::MergePolicy::default(),
-        Some("laissez-faire") => protocol::MergePolicy::LaissezFaire,
-        Some("normal") => protocol::MergePolicy::Normal,
-        Some("vigilant") => protocol::MergePolicy::Vigilant,
-        Some(other) => {
-            let mut record = TraceRecord::new("server.boot", TraceOutcome::Refused);
-            record.detail = Some(format!("unknown-merge-policy:{other}"));
-            tracer.emit(record);
-            protocol::MergePolicy::default()
-        }
-    }
-}
-
-/// @emoji 🗄️ Opens this process's [`HubInstance`] — the server product's four durable storage roles
-/// plus the command bus and the saga runner over them — rooted at `{data_dir}/instance`.
-///
-/// It goes through the framework's own [`FrameworkServer`] builder rather than calling
-/// `HubInstance::open` directly, because the bus, the policy engine and the saga runner are
-/// assembled there: opening the stores by hand would give hub four files and none of the machinery
-/// that makes writing to them exactly-once.
-async fn instance_state(data_dir: &std::path::Path) -> Result<ServerState<HubInstance>, HubError> {
-    let root = data_dir.join("instance");
-    let profile = StorageProfile::Embedded { data_dir: root.to_string_lossy().into_owned() };
-    let server = FrameworkServer::<HubInstance>::builder(profile)
-        .identity("os-hub", env!("CARGO_PKG_VERSION"))
-        .build()
-        .await
-        .map_err(|error| HubError::InstanceStorage(format!("{error:?}")))?;
-    Ok(server.state().clone())
-}
-
-/// @emoji 🧾️ `ApplyOutcome::Rejected.messages`'s canonical JSON payload, encoded from the
-/// first-party `ToValue` shape shared by every replication wire consumer.
-fn encode_messages(messages: &[protocol::MutationMessage]) -> Vec<u8> {
-    let value = DslValue::Array(messages.iter().map(ToValue::to_value).collect());
-    directory::os_pack::json::to_json_string(&value).into_bytes()
-}
-
-/// @emoji 🧾️ Every `protocol::MutationMessage` `error` carries, if any — non-empty only for
-/// `db::DbError::Rejected` (the outcome-step gate `db_artifact::ArtifactEngine::submit` returns per
-/// contract §C9); every other `DbError` variant has nothing to add here.
-fn messages_for_error(error: &db::DbError) -> Vec<u8> {
-    match error {
-        db::DbError::Rejected { messages, .. } => encode_messages(messages),
-        _ => Vec::new(),
-    }
-}
-
-/// @emoji ✍️ Submits `envelopes` as one `db_artifact::CommandBatch` through `handle`, returning the
-/// `Ack` to send the submitter plus (on acceptance) the `Commands` frame to fan out to every other
-/// session on the same document. `Fsync` durability: a hub session's `submit` genuinely committing
-/// is the promise `AckStage::Persisted` makes to the client. `policy` is `HubState.merge_policy`
-/// (contract §C9) — the outcome-step gate `handle.submit` runs before any WAL append.
-///
-/// 🎯️ Design choice (accepted-but-degraded messages have no relay carrier yet): when `policy`
-/// admits a batch whose worst graded level is still `Warning`-or-above (a "degraded merge", contract
-/// §C5), `receipt.messages` is non-empty but neither `ApplyOutcome::Accepted` nor
-/// `ServerFrame::Commands` (both fieldless/message-less in the CURRENTLY LANDED `📡️wire` shape —
-/// verified against `📡️spr/📡️wire/🦀️.rs`) has anywhere to carry them to the submitter's
-/// peers. `📡️wire` is lane 1-C's lease, already landed `ApplyOutcome::Rejected{reason, messages}`
-/// for this exact contract clause's rejected half; widening `Accepted`/`Commands` further is a wire
-/// change this lane is not authorized to make unilaterally (per the worker brief's "if you must
-/// touch a file outside your lease, STOP and report instead"), so `receipt.messages` is deliberately
-/// dropped here rather than silently faked onto a field that doesn't exist — see this ticket's
-/// report for the gap.
+/// @emoji 📨️ Submits one batch and returns its `Ack` plus the `Commands` relay for peers. The caller
+/// holds the document's write gate, so the frontier read first is exactly the one the submit starts
+/// from: a receipt that does not advance `commit_seq` is the engine's idempotent replay of an
+/// already-committed `command_id` — acknowledged again for the resending client, never relayed as new.
 async fn submit_commands(handle: &db::ArtifactHandle, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>, policy: protocol::MergePolicy) -> (ServerFrame, Option<ServerFrame>) {
+    let committed_before = handle.frontier().await.map(|frontier| frontier.commit_seq).ok();
     let batch = match db::document::CommandBatch::new(envelopes.clone()).await {
         Ok(batch) => batch,
         Err(error) => {
@@ -4885,8 +4845,8 @@ async fn submit_commands(handle: &db::ArtifactHandle, actor: &ActorId, batch_id:
         Ok(Ok(receipt)) => {
             let frontier = engine_frontier_to_wire(&receipt.frontier, receipt.command_id.0.clone());
             let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() };
-            let commands = ServerFrame::Commands { envelopes, origin: actor.clone(), frontier };
-            (ack, Some(commands))
+            let advanced = committed_before.is_some_and(|before| receipt.frontier.commit_seq > before);
+            (ack, advanced.then(|| ServerFrame::Commands { envelopes, origin: actor.clone(), frontier }))
         }
         Ok(Err(error)) | Err(error) => {
             let frontier = best_effort_frontier(handle).await;
@@ -4933,11 +4893,19 @@ async fn handle_client_frame(
     sender: &mut SplitSink<WebSocket, Message>,
 ) -> bool {
     match frame {
-        ClientFrame::Commands { batch_id, envelopes } => {
+        ClientFrame::Commands { batch_id, mut envelopes } => {
             if envelopes.iter().any(|envelope| &envelope.actor != actor) {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "socket subject actor mismatch".into(), messages: Vec::new() }) }], frontier };
                 return sender.send(encode(&ack, document_id).await).await.is_ok();
+            }
+            if envelopes.iter().any(|envelope| envelope.document_id.0 != document_id) {
+                let frontier = best_effort_frontier(handle).await;
+                let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "envelope document does not match this socket".into(), messages: Vec::new() }) }], frontier };
+                return sender.send(encode(&ack, document_id).await).await.is_ok();
+            }
+            for envelope in &mut envelopes {
+                envelope.document_id = db_id.clone();
             }
             if let Some(reason) = admit_writes(gate, principal, tenant, db_id, &envelopes, now_ms().max(0) as u64).await {
                 let frontier = best_effort_frontier(handle).await;
@@ -4983,6 +4951,10 @@ async fn handle_client_frame(
 
 async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, surface: String, state: HubState, socket_admission: SocketGrantAdmissionV1) {
     let (mut sender, mut receiver) = socket.split();
+    let Some(mut drain) = state.socket_drain.admit() else {
+        let _ = tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(hub_shutdown_close_frame())).await;
+        return;
+    };
     let socket_grant = socket_admission.record;
 
     let hello = match tokio::time::timeout(std::time::Duration::from_secs(2), receiver.next()).await {
@@ -5439,6 +5411,10 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                 }
             }
             _ = kick.notified() => break,
+            () = drain.closing() => {
+                let _ = tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(hub_shutdown_close_frame())).await;
+                break;
+            }
             _ = async {
                 socket_live.notify.notified().await
             } => {
@@ -5471,6 +5447,220 @@ struct AuthedUser {
     expires_at: i64,
     authorization_generation: u64,
     capability: SessionCapability,
+}
+
+
+
+/// @emoji 🗄️ Opens this process's [`HubInstance`] — the server product's four durable storage roles
+/// plus the command bus and the saga runner over them — rooted at `{data_dir}/instance`.
+///
+/// It goes through the framework's own [`FrameworkServer`] builder rather than calling
+/// `HubInstance::open` directly, because the bus, the policy engine and the saga runner are
+/// assembled there: opening the stores by hand would give hub four files and none of the machinery
+/// that makes writing to them exactly-once.
+/// Auth and directory modules register on the framework gateway; the document socket is not a
+/// framework route here, because hub's own router owns `/scopes/{scope}/document/ws`.
+async fn compose_hub_server(data_dir: &std::path::Path, directory: Arc<HubDirectories>) -> Result<(ServerState<HubInstance>, Router), HubError> {
+    let root = data_dir.join("instance");
+    let profile = StorageProfile::Embedded { data_dir: root.to_string_lossy().into_owned() };
+    let server = FrameworkServer::<HubInstance>::builder(profile)
+        .identity("os-hub", env!("CARGO_PKG_VERSION"))
+        .module(HubModules::Auth(HubAuthModule::new(directory)))
+        .module(HubModules::Directory(HubDirectoryModule::new()))
+        .build()
+        .await
+        .map_err(|error| HubError::InstanceStorage(format!("{error:?}")))?;
+    Ok((server.state().clone(), server.router()))
+}
+
+async fn instance_state(data_dir: &std::path::Path) -> Result<ServerState<HubInstance>, HubError> {
+    let root = data_dir.join("instance");
+    let profile = StorageProfile::Embedded { data_dir: root.to_string_lossy().into_owned() };
+    let server = FrameworkServer::<HubInstance>::builder(profile)
+        .identity("os-hub", env!("CARGO_PKG_VERSION"))
+        .build()
+        .await
+        .map_err(|error| HubError::InstanceStorage(format!("{error:?}")))?;
+    Ok(server.state().clone())
+}
+
+
+
+/// @emoji ⚖️ `OS_HUB_MERGE_POLICY=laissez-faire|normal|vigilant` (default `normal`) — read once at
+/// startup into `HubState.merge_policy` (see its own doc). An unrecognized value is a non-fatal
+/// misconfiguration (logged, falls back to the default) rather than refusing to boot, matching this
+/// crate's generally-forgiving stance on env parsing elsewhere in `main`.
+fn merge_policy_from_env(tracer: &Tracer) -> protocol::MergePolicy {
+    match std::env::var("OS_HUB_MERGE_POLICY").ok().as_deref() {
+        None => protocol::MergePolicy::default(),
+        Some("laissez-faire") => protocol::MergePolicy::LaissezFaire,
+        Some("normal") => protocol::MergePolicy::Normal,
+        Some("vigilant") => protocol::MergePolicy::Vigilant,
+        Some(other) => {
+            let mut record = TraceRecord::new("server.boot", TraceOutcome::Refused);
+            record.detail = Some(format!("unknown-merge-policy:{other}"));
+            tracer.emit(record);
+            protocol::MergePolicy::default()
+        }
+    }
+}
+
+
+
+fn wire_rebootstrap(control: &os_directory::RebootstrapRequired) -> protocol::RebootstrapRequired {
+    protocol::RebootstrapRequired {
+        space_id: control.scope.space_id.clone(),
+        document_id: control.scope.document_id.clone(),
+        checkpoint_id: control.checkpoint_id.0,
+        descriptor_hash: control.descriptor_digest_v1.0,
+        baseline_frontier: RuntimeFrontierSummary {
+            document_id: ProtocolArtifactId(control.baseline_frontier.document_id.clone()),
+            head_edit_ordinal: control.baseline_frontier.head_edit_ordinal,
+            head_edit_id: control.baseline_frontier.head_edit_id.clone(),
+            last_commit_seq: control.baseline_frontier.last_commit_seq,
+            chain_hash: control.baseline_frontier.chain_hash.0,
+        },
+    }
+}
+
+
+
+struct SocketRebootstrapControl;
+
+impl RebootstrapTransferControl for SocketRebootstrapControl {
+    fn now_ms(&self) -> u64 {
+        now_ms().max(0) as u64
+    }
+
+    fn is_cancelled(&self) -> bool {
+        false
+    }
+
+    fn report(&self, _progress: RebootstrapProgress) {}
+}
+
+async fn verified_rebootstrap_control(state: &HubState, scope: &DocumentScope) -> Option<os_directory::RebootstrapRequired> {
+    let control = SocketRebootstrapControl;
+    let deadline = control.now_ms().saturating_add(REBOOTSTRAP_DEADLINE_MS);
+    state.rebootstrap.control(scope, &RebootstrapContext::new(deadline, &control)).await.ok()
+}
+
+
+async fn send_socket_document_rebootstrap(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, scope: &DocumentScope) -> SocketBindingValidityV1 {
+    let _admission = match socket_live_authority(state, record, live_id).await {
+        Ok(admission) => admission,
+        Err(validity) => return validity,
+    };
+    #[cfg(test)]
+    if let Some(gate) = &state.live_gate {
+        gate.socket_rebootstrap_read.add_permits(1);
+    }
+    let control = match tokio::time::timeout(std::time::Duration::from_secs(2), verified_rebootstrap_control(state, scope)).await {
+        Ok(control) => control,
+        Err(_) => return SocketBindingValidityV1::Unavailable,
+    };
+    if let Some(control) = control {
+        let frame = encode(&ServerFrame::RebootstrapRequired { control: wire_rebootstrap(&control) }, &scope.document_id).await;
+        if !matches!(tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(frame)).await, Ok(Ok(()))) {
+            return SocketBindingValidityV1::Unavailable;
+        }
+    }
+    SocketBindingValidityV1::Active
+}
+
+
+
+
+/// @emoji 🧾️ `ApplyOutcome::Rejected.messages`'s canonical JSON payload, encoded from the
+/// first-party `ToValue` shape shared by every replication wire consumer.
+fn encode_messages(messages: &[protocol::MutationMessage]) -> Vec<u8> {
+    let value = DslValue::Array(messages.iter().map(ToValue::to_value).collect());
+    directory::os_pack::json::to_json_string(&value).into_bytes()
+}
+
+
+
+/// @emoji 🧾️ Every `protocol::MutationMessage` `error` carries, if any — non-empty only for
+/// `db::DbError::Rejected` (the outcome-step gate `db_artifact::ArtifactEngine::submit` returns per
+/// contract §C9); every other `DbError` variant has nothing to add here.
+fn messages_for_error(error: &db::DbError) -> Vec<u8> {
+    match error {
+        db::DbError::Rejected { messages, .. } => encode_messages(messages),
+        _ => Vec::new(),
+    }
+}
+
+
+
+/// @emoji 🧭️ Stamps the DOCUMENT's own id onto one outbound wire frontier.
+///
+/// The hub keys documents internally by [`db_artifact_id`] — `v1:<len>:<len>:<space><document>` —
+/// because the db and fanout catalogs are flat and a bare document id is not unique across spaces.
+/// The db engine stamps that key into every `Frontier` it returns and the replication wire carries
+/// it through unchanged, so until this projection existed every `Welcome`, `Ack`, `Commands` and
+/// rebootstrap control named the hub's private key where the client's own `documentId` belongs. A
+/// client that checks the identity it asked for against the identity it was handed — the store
+/// worker's `validateArtifactBootstrapIdentity` does exactly that — refuses a pair the hub itself
+/// produced. This is the single boundary where the internal key becomes the client's identity
+/// again, and [`wire_frontier_to_db`] is its exact inverse on the way in.
+fn project_wire_frontier(frontier: &mut RuntimeFrontierSummary, document_id: &str) {
+    frontier.document_id = ProtocolArtifactId(document_id.to_string());
+}
+
+
+
+/// @emoji 🧭️ Every frontier one outbound frame carries, projected onto the document's own id. A
+/// frame with no frontier is returned untouched and uncloned by the caller.
+fn project_server_frame(frame: &mut ServerFrame, document_id: &str) {
+    match frame {
+        ServerFrame::Welcome { server_frontier, bootstrap, .. } => {
+            project_wire_frontier(server_frontier, document_id);
+            if let protocol::Bootstrap::ArtifactBootstrap(artifact) = bootstrap {
+                project_wire_frontier(&mut artifact.baseline_frontier, document_id);
+                project_wire_frontier(&mut artifact.required_tail_frontier, document_id);
+            }
+        }
+        ServerFrame::Commands { frontier, envelopes, .. } => {
+            project_wire_frontier(frontier, document_id);
+            for envelope in envelopes {
+                envelope.document_id = ProtocolArtifactId(document_id.to_string());
+            }
+        }
+        ServerFrame::Ack { frontier, .. } => project_wire_frontier(frontier, document_id),
+        ServerFrame::RebootstrapRequired { control } => project_wire_frontier(&mut control.baseline_frontier, document_id),
+        ServerFrame::SnapshotChunk { .. }
+        | ServerFrame::SnapshotDone { .. }
+        | ServerFrame::Preview { .. }
+        | ServerFrame::Presence { .. }
+        | ServerFrame::CreditGrant { .. }
+        | ServerFrame::Error { .. }
+        | ServerFrame::Session { .. }
+        | ServerFrame::ArtifactBootstrapChunk { .. }
+        | ServerFrame::ArtifactBootstrapDone { .. } => {}
+    }
+}
+
+
+
+/// @emoji 🧭️ Whether one frame carries a frontier at all, so the projection clones only when it has
+/// something to rewrite.
+const fn frame_carries_frontier(frame: &ServerFrame) -> bool {
+    matches!(frame, ServerFrame::Welcome { .. } | ServerFrame::Commands { .. } | ServerFrame::Ack { .. } | ServerFrame::RebootstrapRequired { .. })
+}
+
+
+
+/// @emoji 🧭️ The inverse of [`project_wire_frontier`]: one frontier a CLIENT sent, named by the
+/// document id it opened, re-keyed onto this hub's internal db id before any db layer compares it
+/// (`db_sync` refuses a hello whose advertised frontier does not name its own document). A frontier
+/// naming anything other than the socket's own document is refused rather than re-keyed — the hub
+/// must never accept an identity claim it then overwrites.
+fn wire_frontier_to_db(frontier: &mut RuntimeFrontierSummary, document_id: &str, db_id: &ProtocolArtifactId) -> bool {
+    if frontier.document_id.0 != document_id {
+        return false;
+    }
+    frontier.document_id = db_id.clone();
+    true
 }
 
 async fn resolve_bearer_user(state: &HubState, token: Option<&str>) -> Option<AuthedUser> {
@@ -7329,7 +7519,7 @@ async fn directory_scoped_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_i
         return StatusCode::BAD_REQUEST.into_response();
     }
     let scope = DocumentScope::new(space_id, document_id);
-    let admission = match consume_socket_grant(&state, &headers, SocketAudienceV1::DirectoryScoped(scope.clone()), None).await {
+    let admission = match consume_scoped_directory_socket_grant(&state, &headers, scope.clone()).await {
         Ok(admission) => admission,
         Err(status) => {
             span.refused(&format!("socket-grant-{}", status.as_u16()));
@@ -7462,6 +7652,10 @@ async fn send_socket_directory_rebootstrap(
 
 async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<DocumentScope>, state: HubState, admission: SocketGrantAdmissionV1) {
     let (mut sender, mut receiver) = socket.split();
+    let Some(mut drain) = state.socket_drain.admit() else {
+        let _ = tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(hub_shutdown_close_frame())).await;
+        return;
+    };
     let SocketGrantAdmissionV1 { record } = admission;
     let hello = match tokio::time::timeout(std::time::Duration::from_secs(2), receiver.next()).await {
         Ok(Some(Ok(Message::Binary(bytes)))) => decode_client_frame(&bytes).await.ok().map(|(_, frame)| frame),
@@ -7550,6 +7744,10 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
     let mut authorization_tick = tokio::time::interval(std::time::Duration::from_secs(1));
     loop {
         tokio::select! {
+            () = drain.closing() => {
+                let _ = tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(hub_shutdown_close_frame())).await;
+                break;
+            }
             invalidation = delivery_invalidations.recv() => match invalidation {
                 Ok(_) => {
                     if state.directory_service.delivery_epoch(delivery_space_id) != delivery_epoch {
@@ -10130,11 +10328,11 @@ fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: For
         )
         .route("/spaces/{space_id}/documents/{id}/open-plan", post(issue_document_open_plan))
         .route("/spaces/{space_id}/documents/{id}/socket-grants", post(issue_document_plan_socket_grant))
+        .route("/scopes/{scope}/document/ws", get(document_ws_v1))
         .route("/spaces/{space_id}/documents/{id}/execution-target/manifest", post(issue_document_execution_target_manifest))
         .route("/spaces/{space_id}/documents/{id}/execution-target/component", post(issue_document_execution_target_component))
         .route("/spaces/{space_id}/documents/{id}/execution-target/descriptor", post(issue_document_execution_target_descriptor))
         .route("/spaces/{space_id}/documents/{id}/execution-target/browser-actor", post(issue_document_execution_target_browser_actor))
-        .route("/spaces/{space_id}/documents/{id}/socket/v1", get(document_ws_v1))
         // 🐙️ w4-h: router-wide CORS grant — see `cors_middleware`'s doc comment (`🔖️Directory` region)
         // for why this must cover the whole router, not just `/directory/*`.
         // 🚦️ Inside the CORS layer, so a refused request never reaches a handler and its `429`
@@ -10286,6 +10484,122 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirector
         }
         other => Err(HubError::UnknownDirectoryBackend(other.to_string())),
     }
+}
+
+/// @emoji ⏳️ How long `main` waits for upgraded sockets to finish their own close path (directory
+/// session close, presence leave, color release) after it told them to close.
+const SOCKET_DRAIN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// @emoji ⏳️ How long `main` gives the `Database` to retire every document authority before it
+/// closes the storage anyway. Closing the storage is what releases the cross-process WAL writer
+/// fence (Postgres advisory lock, Neo4j lease), so it runs even when this deadline elapsed.
+const DATABASE_SHUTDOWN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(10);
+
+/// @emoji 🚪️ The one owner of every upgraded socket's lifetime. `axum`'s graceful shutdown stops
+/// accepting and waits for HTTP responses, but an upgraded connection has left `hyper`'s connection
+/// tracking, so without this owner a document socket keeps its `ArtifactHandle` (and with it the
+/// document's WAL writer) until the process dies.
+struct HubSocketDrainV1 {
+    closing: tokio::sync::watch::Sender<bool>,
+    live: std::sync::atomic::AtomicUsize,
+    idle: tokio::sync::Notify,
+}
+
+impl Default for HubSocketDrainV1 {
+    fn default() -> Self {
+        Self { closing: tokio::sync::watch::Sender::new(false), live: std::sync::atomic::AtomicUsize::new(0), idle: tokio::sync::Notify::new() }
+    }
+}
+
+impl HubSocketDrainV1 {
+    /// @emoji 🎟️ Admits one freshly upgraded socket; `None` once shutdown has begun.
+    fn admit(self: &Arc<Self>) -> Option<HubSocketDrainAdmissionV1> {
+        self.live.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        let admission = HubSocketDrainAdmissionV1 { drain: self.clone(), closing: self.closing.subscribe() };
+        if *admission.closing.borrow() {
+            return None;
+        }
+        Some(admission)
+    }
+
+    /// @emoji 📣️ Tells every admitted socket to close and refuses every later one. Idempotent.
+    fn begin(&self) {
+        self.closing.send_replace(true);
+    }
+
+    /// @emoji ⏳️ Waits until the last admission dropped or `deadline` elapsed; answers how many
+    /// sockets are still live.
+    async fn drained(&self, deadline: std::time::Duration) -> usize {
+        let wait = async {
+            loop {
+                let notified = self.idle.notified();
+                tokio::pin!(notified);
+                notified.as_mut().enable();
+                if self.live.load(std::sync::atomic::Ordering::Acquire) == 0 {
+                    return;
+                }
+                notified.await;
+            }
+        };
+        let _ = tokio::time::timeout(deadline, wait).await;
+        self.live.load(std::sync::atomic::Ordering::Acquire)
+    }
+}
+
+/// @emoji 🎫️ One live socket's hold on [`HubSocketDrainV1`]; dropping it is that socket's exit.
+struct HubSocketDrainAdmissionV1 {
+    drain: Arc<HubSocketDrainV1>,
+    closing: tokio::sync::watch::Receiver<bool>,
+}
+
+impl HubSocketDrainAdmissionV1 {
+    /// @emoji 📣️ Resolves once the hub began shutting down.
+    async fn closing(&mut self) {
+        let _ = self.closing.wait_for(|closing| *closing).await;
+    }
+}
+
+impl Drop for HubSocketDrainAdmissionV1 {
+    fn drop(&mut self) {
+        if self.drain.live.fetch_sub(1, std::sync::atomic::Ordering::AcqRel) == 1 {
+            self.drain.idle.notify_waiters();
+        }
+    }
+}
+
+/// @emoji 🔌️ The close code a socket receives when the hub shuts down: 1012 "service restart",
+/// which every client treats as transient and redials (only 4401 is terminal). Pinned by
+/// `🧫️fixtures/🤝️two-client-document-v1` `shutdown.closeCode`.
+const HUB_SHUTDOWN_CLOSE_CODE: u16 = 1012;
+
+/// @emoji 🔌️ The close frame carrying [`HUB_SHUTDOWN_CLOSE_CODE`].
+fn hub_shutdown_close_frame() -> Message {
+    Message::Close(Some(CloseFrame { code: HUB_SHUTDOWN_CLOSE_CODE, reason: "hub-shutdown".into() }))
+}
+
+/// @emoji 🔚️ Retires the hub's `Database` and closes its storage. The `Database` is shut down once
+/// `main` is its last owner (every socket and task that held a clone has drained by then); the
+/// storage close that follows releases every WAL writer on the backend itself — the Postgres
+/// advisory lock's session ends and the Neo4j lease is marked released — and resolves only after
+/// the backend confirmed it, so a restart right after this process exits reopens the same documents
+/// immediately. Contract: `🛢️db/🗄️storage/🔐️writer/🧬️schema/🔣️.json#/$defs/WalWriterFenceV1`.
+async fn close_hub_database(db: Arc<db::Database>, deadline: std::time::Duration) -> Result<(), HubError> {
+    let started = std::time::Instant::now();
+    let control = db::DatabaseShutdownControl::for_timeout(deadline);
+    let storage = db.storage().await;
+    let mut owner = db;
+    let shutdown = loop {
+        match Arc::try_unwrap(owner) {
+            Ok(mut database) => break database.shutdown(&control).await,
+            Err(retained) if started.elapsed() < deadline => {
+                owner = retained;
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            }
+            Err(retained) => break Err(db::DbError::Conflict(format!("hub database still shared by {} owners at shutdown", Arc::strong_count(&retained) - 1))),
+        }
+    };
+    let close = storage.close().await;
+    shutdown.and(close).map_err(HubError::Db)
 }
 
 /// @emoji 🛑️ Which termination signal an orchestrator sent. `docker stop`, `systemctl stop` and a
@@ -10499,7 +10813,10 @@ async fn main() -> Result<(), HubError> {
     // 🗄️ Hub as instance #1 of the server product. Its four roles open under `{OS_HUB_DATA}/instance`
     // — inside the same root the directory, the artifact CAS and the extension mirror live in, so one
     // backup or one `rm -rf` covers the whole hub and no second data location has to be documented.
-    let instance = instance_state(&data_dir).await?;
+    // Auth + directory modules are registered on the framework gateway here; hub's own router, which
+    // owns the document socket, merges with that router below.
+    let (instance, framework_router) = compose_hub_server(&data_dir, directory.clone()).await?;
+    let socket_drain = Arc::new(HubSocketDrainV1::default());
     tracer.emit({
         let mut record = TraceRecord::new("server.boot", TraceOutcome::Ok);
         record.detail = Some(format!("instance-storage={}", data_dir.join("instance").display()));
@@ -10508,7 +10825,7 @@ async fn main() -> Result<(), HubError> {
     let state = HubState {
         tracer,
         instance,
-        db,
+        db: db.clone(),
         artifact_cas,
         directory: directory.clone(),
         rebootstrap,
@@ -10558,6 +10875,7 @@ async fn main() -> Result<(), HubError> {
         presence_clock: None,
         session_colors: Arc::new(ShardedMap::new()),
         session_kicks: Arc::new(ShardedMap::new()),
+        socket_drain: socket_drain.clone(),
         socket_grants: Arc::new(SocketGrantLedgerV1::default()),
         document_open_plans: Arc::new(DocumentOpenPlanLedgerV1::default()),
         socket_binding_gates,
@@ -10587,38 +10905,45 @@ async fn main() -> Result<(), HubError> {
         &readiness_trace_detail(&state.readiness, &addr, bind_scope),
     );
     let shutdown_tracer = state.tracer.clone();
-    let server = std::future::IntoFuture::into_future(
-        axum::serve(listener, router(state, cross_origin, forwarded_tls).into_make_service_with_connect_info::<SocketAddr>()).with_graceful_shutdown(async move {
-            let signal = termination_signal(&shutdown_tracer).await;
-            let mut record = TraceRecord::new("server.readiness", TraceOutcome::Cancelled);
-            record.detail = Some(format!("{}-received-draining-in-flight-work", signal.name()));
-            shutdown_tracer.emit(record);
-        }),
-    );
-    tokio::pin!(server);
-    let result = if let Some(mut bootstrap_task) = bootstrap_task {
-        tokio::select! {
-            result = &mut server => {
-                bootstrap_control.cancel();
-                if let Some(transport) = local_bootstrap {
-                    let _ = transport.shutdown().await;
+    let close_tracer = state.tracer.clone();
+    let signal_drain = socket_drain.clone();
+    let result = {
+        let server = std::future::IntoFuture::into_future(
+            axum::serve(listener, framework_router.merge(router(state, cross_origin, forwarded_tls)).into_make_service_with_connect_info::<SocketAddr>()).with_graceful_shutdown(async move {
+                let signal = termination_signal(&shutdown_tracer).await;
+                let mut record = TraceRecord::new("server.readiness", TraceOutcome::Cancelled);
+                record.detail = Some(format!("{}-received-draining-in-flight-work", signal.name()));
+                shutdown_tracer.emit(record);
+                signal_drain.begin();
+            }),
+        );
+        tokio::pin!(server);
+        if let Some(mut bootstrap_task) = bootstrap_task {
+            tokio::select! {
+                result = &mut server => {
+                    bootstrap_control.cancel();
+                    if let Some(transport) = local_bootstrap {
+                        let _ = transport.shutdown().await;
+                    }
+                    bootstrap_task.abort();
+                    let _ = bootstrap_task.await;
+                    result.map_err(HubError::Io)
                 }
-                bootstrap_task.abort();
-                let _ = bootstrap_task.await;
-                result.map_err(HubError::Io)
-            }
-            result = &mut bootstrap_task => {
-                bootstrap_control.cancel();
-                match result {
-                    Ok(Ok(())) => Err(HubError::UnsafeAuthConfiguration("local bootstrap endpoint closed".into())),
-                    Ok(Err(error)) => Err(HubError::Directory(error)),
-                    Err(_) => Err(HubError::UnsafeAuthConfiguration("local bootstrap service stopped".into())),
+                result = &mut bootstrap_task => {
+                    bootstrap_control.cancel();
+                    match result {
+                        Ok(Ok(())) => Err(HubError::UnsafeAuthConfiguration("local bootstrap endpoint closed".into())),
+                        Ok(Err(error)) => Err(HubError::Directory(error)),
+                        Err(_) => Err(HubError::UnsafeAuthConfiguration("local bootstrap service stopped".into())),
+                    }
                 }
             }
+        } else {
+            server.await.map_err(HubError::Io)
         }
-    } else {
-        server.await.map_err(HubError::Io)
     };
+    socket_drain.begin();
+    let retained_sockets = socket_drain.drained(SOCKET_DRAIN_DEADLINE).await;
     admin_operation_tasks.shutdown().await;
     #[cfg(feature = "native-artifact-execution")]
     artifact_creation_tasks.shutdown().await;
@@ -10634,8 +10959,16 @@ async fn main() -> Result<(), HubError> {
     // in-flight requests committed on their way out, so nothing is left acknowledged-but-undelivered
     // in the outbox across the restart.
     saga_drain.shutdown().await;
+    let database_close_result = close_hub_database(db, DATABASE_SHUTDOWN_DEADLINE).await;
+    let mut record = TraceRecord::new("server.shutdown", if retained_sockets == 0 && database_close_result.is_ok() { TraceOutcome::Ok } else { TraceOutcome::Failed });
+    record.detail = Some(match &database_close_result {
+        Ok(()) => format!("retained-sockets={retained_sockets} database=closed"),
+        Err(error) => format!("retained-sockets={retained_sockets} database={error}"),
+    });
+    close_tracer.emit(record);
     result?;
-    inference_close_result
+    inference_close_result?;
+    database_close_result
 }
 //#endregion 🔖️Main
 
@@ -10658,4 +10991,8 @@ mod test_artifact_root;
 #[cfg(all(test, feature = "sqlite"))]
 #[path = "../🧪️tests/🔬️bin-unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "../🧪️tests/🤝️two-client-document/🦀️.rs"]
+mod two_client_document;
 //#endregion 🔖️Tests

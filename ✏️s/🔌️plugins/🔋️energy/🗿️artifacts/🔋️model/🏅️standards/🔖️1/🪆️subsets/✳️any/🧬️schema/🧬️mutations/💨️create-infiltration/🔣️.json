@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateInfiltration",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-infiltration",
-  "binaryTag": null,
+  "binaryTag": 100,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

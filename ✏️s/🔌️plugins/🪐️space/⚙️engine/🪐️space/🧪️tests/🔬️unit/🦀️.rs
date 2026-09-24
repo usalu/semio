@@ -25,6 +25,13 @@ pub(crate) mod context {
     pub(crate) async fn dispatch(app: &mut SpaceVcsApp, command: SpaceCommand) -> semio_framework_plugin::InvocationResult {
         app.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("dispatch")
     }
+
+    /// 🔁️ Dispatches one retained tool command and settles its publication — the admission receipt
+    /// alone publishes nothing.
+    pub(crate) async fn dispatch_settled(app: &mut SpaceVcsApp, command: SpaceCommand) {
+        dispatch(app, command).await;
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await.expect("typed operation publication");
+    }
     
     /// 🕹️ Routes through `SpaceCommand::dispatch` (the `app_commands!`-generated, framework-fixed
     /// 3-arg path — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), NOT
@@ -183,6 +190,9 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
         assert!(prepare_space_config(&base, admitted).is_ok());
     }
     assert_eq!(SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024, 263_168);
+    let active = SpaceConfigMutation::SetActiveNode { node_id: Some("node-1".into()) };
+    let candidate = space_config_candidate_bytes(space_config_bytes(&base).expect("base config"), space_config_mutation_bytes(&active).expect("active node"));
+    assert!(candidate <= 4_096, "one real session config turn must fit the host's fixed 4 KiB typed-operation page grant, priced {candidate}");
 }
 //#endregion 🧪️RetainedConfigOracle
 use crate::demo_space_projection;
@@ -243,12 +253,12 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         .filter(|contract| contract.lanes == [semio_framework_plugin::ArtifactToolPublicationLane::HostOnly])
         .map(|contract| contract.tool_id.to_string())
         .collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 40, bounded: 15, batch: 25, migrated: 15, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
+    assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 40, bounded: 16, batch: 24, migrated: 16, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
     assert_eq!(bounded_ids.len(), SPACE_BOUNDED_TOOL_IDS.len());
     // 📣️ `presenceHeartbeat` joined the HostOnly lane (see `SpaceCommandJobFactory`'s own
     // `PUBLICATION_CONTRACTS` and the committed `🧫️retained-command-limits` fixture): seven now.
     assert_eq!(host_only_ids.len(), 7);
-    assert_eq!(SPACE_BATCH_ONLY_TOOL_IDS.len(), 25);
+    assert_eq!(SPACE_BATCH_ONLY_TOOL_IDS.len(), 24);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -284,7 +294,8 @@ async fn demo_document_has_instances_and_edges() {
     let projection = demo_space_projection().await;
     assert!(projection.graph.nodes.len() >= 5);
     assert!(!projection.graph.edges.is_empty());
-    assert!(semio_framework_os::validate_workflow(&projection.graph).ok);
+    let validation = semio_framework_os::validate_workflow(&projection.graph);
+    assert!(validation.ok, "demo workflow must validate: {:?}", validation.errors);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -332,11 +343,13 @@ async fn commit_checkpoint_round_trips_projection() {
     // `VcsArtifactApp::new` faults in the `interactive-job.catalog-authority` proof join
     // (`generated_migrated=false`, `migrated={}`) while it is constructed.
     let mut app = context::app_with_registry().await;
-    app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_laws::meta("local")).await.expect("spawn");
+    context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
     let commit_args = pack::json_to_dsl_value(&pack::json!({ "message": "snapshot" }));
-    app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
+    let admitted = app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("commit publication");
     assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), before);
+    plugin_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -348,19 +361,23 @@ async fn checkout_checkpoint_restores_projection() {
     // (`generated_migrated=false`, `migrated={}`) while it is constructed.
     let mut app = context::app_with_registry().await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
-    app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_laws::meta("local")).await.expect("spawn");
+    context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
     let commit_args = pack::json_to_dsl_value(&pack::json!({ "message": "after-first-spawn" }));
-    app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
+    let admitted = app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("commit publication");
     let after_first = app.snapshot().expect("projection").graph.nodes.len();
     assert!(after_first > before);
     let files = app.document_pack().await.expect("document pack");
     let parsed: store::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::parse_document_pack(&files.pack, &files.spr).await.expect("parse document pack");
     let checkpoint_id = parsed.envelope.vcs.checkpoints[0].id.clone();
-    app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_laws::meta("local")).await.expect("spawn2");
+    store::os_store::test_support::retire_parsed_document(parsed);
+    context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
     assert!(app.snapshot().expect("projection").graph.nodes.len() > after_first);
     let checkout_args = pack::json_to_dsl_value(&pack::json!({ "checkpointId": checkpoint_id }));
-    app.handle_action("checkoutCheckpoint", Some(&checkout_args), &plugin_laws::meta("local")).await.expect("checkout");
+    let admitted = app.handle_action("checkoutCheckpoint", Some(&checkout_args), &plugin_laws::meta("local")).await.expect("checkout");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("checkout publication");
     assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), after_first);
+    plugin_laws::close_registered_fixture_app(&mut app);
 }
 
 /// 🧪️ The definitional proof: two independent instances start from `SpaceApp::initial_snapshot()`

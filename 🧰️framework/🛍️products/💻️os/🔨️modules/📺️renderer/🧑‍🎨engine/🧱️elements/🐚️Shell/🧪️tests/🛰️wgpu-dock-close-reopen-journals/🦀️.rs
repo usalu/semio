@@ -21,6 +21,7 @@ use super::command_registry_tests::test_app;
 use super::*;
 use semio_framework::manifest::Keybinding;
 use semio_framework::{ActionDefinition, ActionKind, AppDefinition, WindowKinds};
+use ui_wgpu::wgpu::InputState;
 
 /// 🪟️ The journey's own two world panes and the window kind both instantiate — a Row of two
 /// single-tab stacks, which is what makes the caps read `dock.tab.0.…` and `dock.tab.1.…`.
@@ -104,7 +105,7 @@ fn plan(shell: &mut ShellState) {
 #[test]
 fn the_close_cap_closes_exactly_the_clicked_window_and_refocuses_the_survivor() {
     let mut shell = journey_shell(Vec::new());
-    let outcome = semio_framework_async::block_on(shell.handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.close"))));
+    let outcome = semio_framework_async::block_on(shell.handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.close")), &InputState::<ActionDescriptor>::default()));
     assert_eq!(shell.dock.collect_window_ids(), vec![PERSPECTIVE.to_string()], "🪟️ one window closed, the other stayed");
     assert_eq!(shell.active_window_id.as_deref(), Some(PERSPECTIVE), "🪟️ focus moved to the survivor, as React's `remaining[0]` does");
     assert!(outcome.is_ok(), "🕒️ the close returns its interaction owner without awaiting the guest journal");
@@ -165,7 +166,7 @@ fn a_window_options_popup_dismissal_preserves_the_immediate_close_cap_gesture() 
 #[test]
 fn the_reopen_scan_after_a_close_lands_on_a_tab_select_that_closes_nothing() {
     let mut shell = journey_shell(Vec::new());
-    let _ = semio_framework_async::block_on(shell.handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.close"))));
+    let _ = semio_framework_async::block_on(shell.handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.close")), &InputState::<ActionDescriptor>::default()));
     let rows = published_dock_tab_rows(&shell);
     let scanned = rows.first().cloned().expect("🛰️ the survivor still publishes its tab");
     assert_eq!(scanned, format!("dock.tab..{PERSPECTIVE}"), "🛰️ the reopen scan resolves a SELECT target: {rows:?}");
@@ -173,7 +174,7 @@ fn the_reopen_scan_after_a_close_lands_on_a_tab_select_that_closes_nothing() {
 
     let before = shell.dock.collect_window_ids();
     shell.deferred_actions.clear();
-    let outcome = semio_framework_async::block_on(shell.handle_shell_hit(&HitTarget::<ActionDescriptor> { rect: CANVAS, event: None, control_id: Some(scanned), kind: HitKind::Window, drag_axis: None, drag_data: None }));
+    let outcome = semio_framework_async::block_on(shell.handle_shell_hit(&HitTarget::<ActionDescriptor> { rect: CANVAS, event: None, control_id: Some(scanned), kind: HitKind::Window, drag_axis: None, drag_data: None }, &InputState::<ActionDescriptor>::default()));
     assert!(outcome.is_ok(), "🛰️ the reopen step crosses no dispatch funnel");
     assert_eq!(shell.dock.collect_window_ids(), before, "🛰️ …and closes nothing: the dock survives the whole cap sequence");
     assert!(shell.deferred_actions.is_empty(), "🕒️ the survivor was already active, so not even an activation is owed");
@@ -233,7 +234,7 @@ fn the_focus_cap_journals_no_shell_command_and_only_its_activation() {
     shell.arm_window_activation_note();
     shell.deferred_actions.clear();
 
-    let outcome = semio_framework_async::block_on(shell.handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.focus"))));
+    let outcome = semio_framework_async::block_on(shell.handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.focus")), &InputState::<ActionDescriptor>::default()));
     assert!(outcome.is_ok(), "🕒️ the Focus chip crosses no dispatch funnel of its own");
     assert!(shell.deferred_actions.is_empty(), "🕒️ …and arms nothing by itself");
     assert_eq!(shell.active_window_id.as_deref(), Some(TOP), "🪟️ it DID activate the tab's window, exactly as React's `activateWindow` does");

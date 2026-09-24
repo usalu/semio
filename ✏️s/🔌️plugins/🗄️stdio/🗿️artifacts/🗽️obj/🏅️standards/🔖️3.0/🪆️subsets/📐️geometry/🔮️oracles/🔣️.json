@@ -94,9 +94,19 @@
       "homepage": "https://threejs.org",
       "rationale": "📖️ A SECOND reader for this subset, on the ground the first one cannot reach.\n\n`tobj` is a MESH reader: it resolves faces into vertex buffers and discards `mtllib`, `usemtl` and smoothing-group statements entirely. That is why ten of this subset's kinds were recorded `-uncarried` against it — honest about tobj, and not a claim about OBJ readers in general.\n\n`three`'s OBJLoader parses those statements and keeps them: `materialLibraries` on the parsed group, the material NAME per child, and `flatShading` derived from `s off`.\n\nMEASURED before registering, and the measurement decided the scope — twice, because the first measurement was too narrow.\n\n`set-mtllib`, `set-usemtl` and `set-smoothing-groups` move this reader's projection directly.\n\nThe six v/vt/vn insert-and-remove kinds were first tested by appending an UNREFERENCED element and found invisible, which is true and was mistaken for the whole answer. OBJ face indices are ABSOLUTE: inserting or removing at the FRONT of a v/vt/vn list changes what every subsequent index resolves to, so the mutation reaches the resolved geometry and this reader sees it. All six are now carried, and the projection was widened to include resolved positions, normals and uvs.\n\nThe limit that remains is worth stating rather than hiding: an insertion PAST the last referenced element still would not move this projection. These fixtures exercise the front, where the kind is observable through a mesh loader. A document-preserving OBJ parser would cover both, and none was available offline — npm, PyPI and the vendored cargo registry were all checked.\n\n`set-unknown-statements` is carried too, and how took a second look. OBJLoader does skip a line it does not recognise — but `unknown_statements` is defined by what THIS SUBSET'S codec models, not by what three does. The codec models v/vt/vn/f/g/o/mtllib/usemtl/s; `l` (polyline) and `p` (point) fall outside it and land in `unknown_statements`, and three parses both into Line and Points objects. The fixture uses `l`.\n\nMeasured alongside the instances that do NOT work, so the claim is not wider than the evidence: a `#` comment and a genuinely unrecognised directive (`zz custom 42`) are both invisible to this reader. The kind is carried for statements three models and not for the rest, and a fixture exercising a comment would not be evidence.\n\nFixtures are handcrafted OBJ text, which this repository already admits (svg and xml were built the same way) and which the goal statement names explicitly. The judge is third-party and nothing here predicts its answer.",
       "productionDebt": {
-        "reason": "three is already a production-runtime dependency of ✏️s/🔌️plugins/📐️cad, 🧩️puzzle and the os renderer, so this oracle is not isolated from production the way an independent reader would be.",
-        "consequence": "A bug shared between three's OBJLoader and a production consumer of three elsewhere would not be caught by this oracle alone. This subset's own production OBJ codec is separate Rust, so for THIS subject three is genuinely an independent second reading; the debt is about three's cross-repo reach.",
-        "owner": "✏️s/🔌️plugins/📐️cad"
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️unified-gumball/🧪️.story.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx"
+        ],
+        "owner": "✏️s/🔌️plugins/📐️cad",
+        "plan": "three is already a production-runtime dependency of ✏️s/🔌️plugins/📐️cad, 🧩️puzzle and the os renderer, so this oracle is not isolated from production the way an independent reader would be. A bug shared between three's OBJLoader and a production consumer of three elsewhere would not be caught by this oracle alone. This subset's own production OBJ codec is separate Rust, so for THIS subject three is genuinely an independent second reading; the debt is about three's cross-repo reach."
       }
     }
   ],
@@ -1790,7 +1800,7 @@
         }
       ],
       "provenance": {
-        "source": "handcrafted",
+        "source": "authored",
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
@@ -1799,7 +1809,7 @@
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
       "reproducible": true,
@@ -1839,7 +1849,7 @@
         }
       ],
       "provenance": {
-        "source": "handcrafted",
+        "source": "authored",
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
@@ -1848,7 +1858,7 @@
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
       "reproducible": true,
@@ -1888,7 +1898,7 @@
         }
       ],
       "provenance": {
-        "source": "handcrafted",
+        "source": "authored",
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
@@ -1897,7 +1907,7 @@
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
       "reproducible": true,
@@ -1937,7 +1947,7 @@
         }
       ],
       "provenance": {
-        "source": "handcrafted",
+        "source": "authored",
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
@@ -1946,7 +1956,7 @@
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
       "reproducible": true,
@@ -1986,7 +1996,7 @@
         }
       ],
       "provenance": {
-        "source": "handcrafted",
+        "source": "authored",
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
@@ -1995,7 +2005,7 @@
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
       "reproducible": true,
@@ -2035,7 +2045,7 @@
         }
       ],
       "provenance": {
-        "source": "handcrafted",
+        "source": "authored",
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
@@ -2044,7 +2054,7 @@
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
       "reproducible": true,
@@ -2084,7 +2094,7 @@
         }
       ],
       "provenance": {
-        "source": "handcrafted",
+        "source": "authored",
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
@@ -2093,7 +2103,7 @@
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
       "reproducible": true,
@@ -2133,7 +2143,7 @@
         }
       ],
       "provenance": {
-        "source": "handcrafted",
+        "source": "authored",
         "license": "public-domain (synthetic, no third-party content embedded)"
       },
       "generator": {
@@ -2142,7 +2152,7 @@
         "engineFamily": "threejs",
         "engineVersion": "0.182.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-obj-document-v1",
       "reproducible": true,

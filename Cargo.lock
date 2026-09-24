@@ -361,7 +361,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "31b698c5f9a010f6573133b09e0de5408834d0c82f8d7475a89fc1867a71cd90"
 dependencies = [
  "axum-core",
- "base64",
+ "base64 0.22.1",
  "bytes",
  "form_urlencoded",
  "futures-util",
@@ -428,6 +428,12 @@ dependencies = [
  "rand 0.8.6",
  "tokio",
 ]
+
+[[package]]
+name = "base64"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
 name = "base64"
@@ -1979,6 +1985,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "geojson"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "510c094bfc76ea34d02eee00833254945b70491d79a9c0b050abed6eaa799ffb"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tinyvec",
+]
+
+[[package]]
 name = "gethostname"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2100,10 +2119,13 @@ version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3ce1918195723ce6ac74e80542c5a96a40c2b26162c1957a5cd70799b8cacf7"
 dependencies = [
+ "base64 0.13.1",
  "byteorder",
  "gltf-json",
+ "image",
  "lazy_static",
  "serde_json",
+ "urlencoding",
 ]
 
 [[package]]
@@ -2349,7 +2371,7 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8c673304cec6e0dfd3b4f71fccecd45646899aa70279b62d3f933842abc4ac5"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "hayro-interpret",
  "image",
  "kurbo 0.12.0",
@@ -4230,7 +4252,7 @@ version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "092791278e026273c1b65bbdcfbba3a300f2994c896bd01ab01da613c29c46f1"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "indexmap",
  "quick-xml 0.39.4",
  "serde",
@@ -5119,7 +5141,7 @@ dependencies = [
 name = "semio-framework"
 version = "0.1.0"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "semio-framework-actor",
  "semio-framework-async-macros",
  "semio-framework-hash",
@@ -5283,7 +5305,7 @@ dependencies = [
 name = "semio-framework-compiler"
 version = "0.1.0"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "rustybuzz",
  "semio-framework-os-kernel",
 ]
@@ -5376,7 +5398,7 @@ dependencies = [
 name = "semio-framework-io-base64"
 version = "0.1.0"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "serde_json",
 ]
 
@@ -5540,7 +5562,7 @@ dependencies = [
 name = "semio-framework-os-flow"
 version = "0.1.0"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "getrandom 0.3.4",
  "js-sys",
  "semio-framework",
@@ -5722,7 +5744,7 @@ dependencies = [
 name = "semio-framework-os-renderer-wgpu"
 version = "0.1.0"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "getrandom 0.3.4",
  "image",
  "js-sys",
@@ -6462,6 +6484,7 @@ dependencies = [
  "rusqlite",
  "semio-framework",
  "semio-framework-async",
+ "semio-framework-dispatch-macros",
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
@@ -6531,6 +6554,7 @@ dependencies = [
 name = "semio-s-artifact-architect-program"
 version = "0.1.0"
 dependencies = [
+ "csv",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-graph",
@@ -6756,6 +6780,7 @@ dependencies = [
 name = "semio-s-artifact-fem-2d"
 version = "0.1.0"
 dependencies = [
+ "csv",
  "semio-framework",
  "semio-framework-async",
  "semio-framework-async-macros",
@@ -6783,6 +6808,7 @@ dependencies = [
 name = "semio-s-artifact-fem-3d"
 version = "0.1.0"
 dependencies = [
+ "csv",
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
@@ -6841,6 +6867,7 @@ dependencies = [
 name = "semio-s-artifact-forms-forms"
 version = "0.1.0"
 dependencies = [
+ "csv",
  "semio-framework",
  "semio-framework-artifact-playbook-playbook",
  "semio-framework-async-macros",
@@ -6856,8 +6883,11 @@ dependencies = [
  "semio-s-artifact-stdio-csv",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-semio",
+ "semio-s-artifact-stdio-xlsx",
+ "semio-s-artifact-stdio-zip",
  "serde",
  "serde_json",
+ "zip 6.0.0",
 ]
 
 [[package]]
@@ -6865,6 +6895,7 @@ name = "semio-s-artifact-gis-gismap"
 version = "0.1.0"
 dependencies = [
  "geo",
+ "geojson",
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
@@ -6893,6 +6924,7 @@ dependencies = [
 name = "semio-s-artifact-gis-gisterrain"
 version = "0.1.0"
 dependencies = [
+ "gltf",
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
@@ -6979,6 +7011,7 @@ dependencies = [
 name = "semio-s-artifact-lowpoly-lowpoly"
 version = "0.1.0"
 dependencies = [
+ "gltf",
  "semio-framework",
  "semio-framework-3d",
  "semio-framework-async-macros",
@@ -7430,8 +7463,11 @@ dependencies = [
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
+ "semio-s-artifact-stdio-semio",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
+ "semio-s-plugin-flow-extension-draw",
+ "semio-s-plugin-flow-extension-math",
  "serde",
  "serde_json",
 ]
@@ -7534,6 +7570,7 @@ dependencies = [
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
+ "semio-s-artifact-stdio-semio",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "serde",
@@ -7613,6 +7650,7 @@ dependencies = [
  "serde",
  "serde_json",
  "wasm-bindgen",
+ "zip 6.0.0",
 ]
 
 [[package]]
@@ -7913,7 +7951,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-contract"
 version = "0.1.0"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "semio-framework-hash",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -8108,6 +8146,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-json"
 version = "0.1.0"
 dependencies = [
+ "geojson",
  "semio-framework-async-macros",
  "semio-framework-hash",
  "semio-framework-job",
@@ -8278,8 +8317,10 @@ dependencies = [
 name = "semio-s-artifact-stdio-semio"
 version = "0.1.0"
 dependencies = [
+ "hayro",
  "num-rational",
  "parry3d",
+ "resvg",
  "semio-framework",
  "semio-framework-3d",
  "semio-framework-async-macros",
@@ -8558,6 +8599,7 @@ dependencies = [
 name = "semio-s-artifact-vcs-vcs"
 version = "0.1.0"
 dependencies = [
+ "csv",
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
@@ -8575,6 +8617,7 @@ dependencies = [
  "semio-s-artifact-stdio-zip",
  "serde",
  "serde_json",
+ "zip 6.0.0",
 ]
 
 [[package]]
@@ -8654,6 +8697,7 @@ name = "semio-s-artifact-wfc-grid2d"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-geometry",
  "semio-framework-graph",
@@ -9215,6 +9259,8 @@ dependencies = [
  "semio-s-artifact-stdio-csv",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-semio",
+ "semio-s-artifact-stdio-xlsx",
+ "semio-s-artifact-stdio-zip",
  "serde",
  "serde_json",
 ]
@@ -10368,7 +10414,7 @@ version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee6798b1838b6a0f69c007c133b8df5866302197e404e8b6ee8ed3e3a5e68dc6"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "bytes",
  "crc",
  "crossbeam-queue",
@@ -10442,7 +10488,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db58fcd5a53cf07c184b154801ff91347e4c30d17a3562a635ff028ad5deda46"
 dependencies = [
  "atoi",
- "base64",
+ "base64 0.22.1",
  "bitflags 2.11.1",
  "byteorder",
  "crc",
@@ -10833,6 +10879,7 @@ version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e61e67053d25a4e82c844e8424039d9745781b3fc4f32b8d55ed50f5f667ef3"
 dependencies = [
+ "serde_core",
  "tinyvec_macros",
 ]
 
@@ -11352,7 +11399,7 @@ version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e46b811837ade1f0243ef0d8bf3fb06d166443090eac22c28643f374c2ccdc9d"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "comemo",
  "ecow",
  "flate2",
@@ -11569,7 +11616,7 @@ version = "2.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02d1a66277ed75f640d608235660df48c8e3c19f3b4edb6a263315626cc3c01d"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "flate2",
  "log",
  "once_cell",
@@ -11604,7 +11651,7 @@ version = "0.45.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "80be9b06fbae3b8b303400ab20778c80bbaf338f563afe567cf3c9eea17b47ef"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "data-url",
  "flate2",
  "fontdb",
@@ -11631,7 +11678,7 @@ version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e419dff010bb12512b0ae9e3d2f318dfbdf0167fde7eb05465134d4e8756076f"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "data-url",
  "flate2",
  "fontdb",
@@ -12115,7 +12162,7 @@ version = "47.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65db2eb1bfc5371a3b4107dbf539d0b93d05016fc29625b1648146b47db02071"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "directories-next",
  "log",
  "postcard",

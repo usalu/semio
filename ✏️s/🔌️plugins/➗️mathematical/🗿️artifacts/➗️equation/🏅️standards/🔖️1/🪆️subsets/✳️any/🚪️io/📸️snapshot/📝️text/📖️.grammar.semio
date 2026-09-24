@@ -4,22 +4,12 @@ extension equation
 use family-scene
 start document
 
-# Grammar for `EquationSnapshot::print_dsl`/`parse_dsl` (🦀️.rs `print_equation_snapshot_body`/
-# `parse_equation_snapshot_body`): a hex/bracket `key=value` line codec, one required line per field.
-# `graph` and `geometry` carry the content of the three composed children (their shared
-# `EquationWorkingScene`); the handles alone name the children but never their content.
+# Real grammar for `EquationSnapshot::print_dsl`/`parse_dsl`: the derived spec-driven text of
+# `EquationPackRecord` (📸️snapshot/💾️binary/🦀️.rs), the same record the pack encodes: the three
+# composed child handles plus the authored `equation` and the live `graph`/`geometry` scene their
+# shared `EquationWorkingScene` owns, each as a dynamic value literal (`{ key=value … }`, `[ … ]`).
+# Fields are space-separated `key=value` tokens in any order; an absent optional field is omitted.
 artifact-mark = "semio mathematical.equation.dsl v1"
-document = artifact-mark notation-line results-line computed-line equation-line graph-line geometry-line
-
-notation-line = "notation" "=" child-handle
-results-line = "results" "=" child-handle
-computed-line = "computed" "=" child-handle
-equation-line = "equation" "=" hex
-graph-line = "graph" "=" hex
-geometry-line = "geometry" "=" hex
-
-child-handle = "[" hex "," hex "]"
-
-# `hex` is the framework's built-in macro: lowercase-hex UTF-8 bytes. `equation`, `graph` and
-# `geometry` hex-encode first-party JSON of `EquationExprSnapshot`, `EquationGraph` and
-# `EquationGeometry`; a child handle hex-encodes its `child_id` and its target `ArtifactRef` URI.
+document = artifact-mark field*
+field = {"notation" "=" child-handle} | {"results" "=" child-handle} | {"computed" "=" child-handle} | {"equation" "=" VALUE} | {"graph" "=" VALUE} | {"geometry" "=" VALUE}
+child-handle = {"child_id" "=" TEXT} {"target" "=" TEXT}

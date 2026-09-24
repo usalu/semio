@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution. `CadMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "_comment": "🧩️ This subset's own contribution. `CadMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one. 🪆️ The five object-lifecycle kinds (create-object, delete-object, move-objects, rotate-objects, scale-objects) carry NO committed (before, mutation, diff, outcome, after) quintet, and that is a property of the vocabulary rather than missing work. The state they read is the addressed pane's composed s.stdio.semio.model child MATERIALIZATION (store::ArtifactChild::local_owner), which is deliberately absent from every wire codec — that type's own doc says it is intentionally absent from equality, debug, DSL, pack and JSON identity. A committed before-snapshot can therefore only describe a pane whose child handle carries no owner, in which every one of these verbs is a mutation.no-op — a vector the differential reference in 🧪️tests/📐️mutate-cad-1/🐍️.py refuses by construction (\"the committed vector declares this kind applied, yet the document did not move\"). Their specification lives instead in the Rust laws beside each leaf (🧬️schema/🧬️mutations/<kind>/🧪️tests/), which build the materialization in process and assert apply, inverse, no-op and target-missing against it. Registering a wire vector for them needs a persisted child resolver first (store::LinkResolver / ChildStoreFactory); once the pane content is on the wire an ordinary quintet becomes expressible and these five rows gain scenarios like every other kind.",
   "oracles": [
     {
       "id": "cad-python-independent",
@@ -136,12 +136,6 @@
           ]
         },
         {
-          "mutationId": "create-object",
-          "sourceMutationDirectoryName": "🆕create-object",
-          "mutationDirectoryName": "🆕create-object",
-          "scenarios": []
-        },
-        {
           "mutationId": "create-shape-model",
           "sourceMutationDirectoryName": "🧱create-shape-model",
           "mutationDirectoryName": "🧱create-shape-model",
@@ -208,12 +202,6 @@
           ]
         },
         {
-          "mutationId": "delete-object",
-          "sourceMutationDirectoryName": "❌delete-object",
-          "mutationDirectoryName": "❌delete-object",
-          "scenarios": []
-        },
-        {
           "mutationId": "delete-shape-model",
           "sourceMutationDirectoryName": "🧨delete-shape-model",
           "mutationDirectoryName": "🧨delete-shape-model",
@@ -234,12 +222,6 @@
               "directoryName": "🏚️vacates-the-structure-classic-slot"
             }
           ]
-        },
-        {
-          "mutationId": "move-objects",
-          "sourceMutationDirectoryName": "🚚move-objects",
-          "mutationDirectoryName": "🚚move-objects",
-          "scenarios": []
         },
         {
           "mutationId": "move-reference",
@@ -284,18 +266,6 @@
               "directoryName": "🔄️swaps-the-shape-reference-list"
             }
           ]
-        },
-        {
-          "mutationId": "rotate-objects",
-          "sourceMutationDirectoryName": "🌀rotate-objects",
-          "mutationDirectoryName": "🌀rotate-objects",
-          "scenarios": []
-        },
-        {
-          "mutationId": "scale-objects",
-          "sourceMutationDirectoryName": "⚖️scale-objects",
-          "mutationDirectoryName": "⚖️scale-objects",
-          "scenarios": []
         }
       ],
       "kinds": [
@@ -319,7 +289,13 @@
         "replace-reference-media",
         "replace-references"
       ],
-      "_comment": "🪆️ The five object-lifecycle kinds (create-object, delete-object, move-objects, rotate-objects, scale-objects) carry NO committed (before, mutation, diff, outcome, after) quintet, and that is a property of the vocabulary rather than missing work. The state they read is the addressed pane's composed s.stdio.semio.model child MATERIALIZATION (store::ArtifactChild::local_owner), which is deliberately absent from every wire codec — that type's own doc says it is intentionally absent from equality, debug, DSL, pack and JSON identity. A committed before-snapshot can therefore only describe a pane whose child handle carries no owner, in which every one of these verbs is a mutation.no-op — a vector the differential reference in 🧪️tests/📐️mutate-cad-1/🐍️.py refuses by construction (\"the committed vector declares this kind applied, yet the document did not move\"). Their specification lives instead in the Rust laws beside each leaf (🧬️schema/🧬️mutations/<kind>/🧪️tests/), which build the materialization in process and assert apply, inverse, no-op and target-missing against it. Registering a wire vector for them needs a persisted child resolver first (store::LinkResolver / ChildStoreFactory); once the pane content is on the wire an ordinary quintet becomes expressible and these five rows gain scenarios like every other kind."
+      "deferredKinds": [
+        "create-object",
+        "delete-object",
+        "move-objects",
+        "rotate-objects",
+        "scale-objects"
+      ]
     }
   ],
   "mutationManifests": [

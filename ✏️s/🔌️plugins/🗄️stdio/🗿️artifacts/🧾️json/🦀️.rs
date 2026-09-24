@@ -107,13 +107,13 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .try_build()
 }
 
-/// 🛡️ The 🛜️i-json subset's `SubsetValidatorEntry`, built once — see `declaration()`'s own doc for
+/// 🛡️ The 🛜️i-json and 🌍️geojson subsets' `SubsetValidatorEntry`s, built once — see `declaration()`'s own doc for
 /// why this is a fresh `subset_validator_entry_of::<JsonIJsonValidator>()` call rather than a reuse
 /// of `subsets::i_json::io::derived_composition`'s private `validator_entry()`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn pilot_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v_rfc8259::subsets::i_json::io::JsonIJsonValidator>()]).as_slice()
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v_rfc8259::subsets::i_json::io::JsonIJsonValidator>(), semio_framework_plugin::subset_validator_entry_of::<standards::v_rfc8259::subsets::geojson::io::JsonGeoJsonValidator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -327,6 +327,21 @@ pub mod standards {
                             }
                         }
                     }
+                }
+            }
+            #[path = "."]
+            pub mod geojson {
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
                 }
             }
             #[path = "."]

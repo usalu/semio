@@ -18,76 +18,7 @@
   },
   "$defs": {
     "SemioAudioSnapshot": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema",
-        "sampleRate"
-      ],
-      "properties": {
-        "schema": {
-          "type": "string"
-        },
-        "sampleRate": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "format": {
-          "$ref": "#/$defs/SemioAudioFormat"
-        },
-        "channels": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/SemioAudioChannel"
-          }
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/SemioAudioTag"
-          }
-        }
-      }
-    },
-    "SemioAudioFormat": {
-      "type": "string",
-      "enum": [
-        "pcm8",
-        "pcm16",
-        "pcm24",
-        "pcm32",
-        "float32",
-        "float64"
-      ]
-    },
-    "SemioAudioChannel": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "samples": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          }
-        }
-      }
-    },
-    "SemioAudioTag": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "key",
-        "value"
-      ],
-      "properties": {
-        "key": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/audio/snapshot.json"
     }
   }
 }

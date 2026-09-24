@@ -13,7 +13,7 @@ breach identifier grammar, the analysis that finds breaches, the autofix that re
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
 `🧪️test` harness; Node `zlib` and `crypto` are registered as the standards reference for the cache
-envelope in `🔮️oracle/🔣️.json`, and the owned law itself is a recorded no-oracle decision.
+envelope in `🔮️oracles/🔣️.json`, and the owned law itself is a recorded no-oracle decision.
 
 `📚️statute-catalog`, `🔍️analyze-breaches`, `🩹️autofix-roundtrip`, `🙈️ignore-directives`,
 `🗜️breach-cache-envelope`.

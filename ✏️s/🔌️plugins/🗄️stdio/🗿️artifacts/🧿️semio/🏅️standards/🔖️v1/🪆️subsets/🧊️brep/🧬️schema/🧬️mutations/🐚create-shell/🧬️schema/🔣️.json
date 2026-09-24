@@ -20,20 +20,7 @@
   },
   "$defs": {
     "BrepShellFace": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "face",
-        "orientation"
-      ],
-      "properties": {
-        "face": {
-          "type": "string"
-        },
-        "orientation": {
-          "type": "boolean"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/BrepShellFace"
     }
   }
 }

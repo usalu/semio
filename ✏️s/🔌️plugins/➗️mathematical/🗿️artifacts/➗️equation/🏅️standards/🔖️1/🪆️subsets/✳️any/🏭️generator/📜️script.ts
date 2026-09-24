@@ -6,38 +6,38 @@
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // 🏭️ Third-party fixture generator for the complete `{graph, geometry, equation}` equation JSON
-// carrier. Its standalone Rust workspace links only `serde_json`, never production mutation code.
+// carrier. Its standalone Rust workspace links only `json` (json-rust), never production mutation
+// code and never `serde_json`, which the production plugin itself links.
 //
-//   bun 📜️script.ts generate [--out <dir>]   # writes the fixture pair
-//   bun 📜️script.ts manifests                 # prints the fixtureManifests entry
+//   bun 📜️script.ts generate [--out <dir>]   # writes the reviewed fixture pairs
+//   bun 📜️script.ts manifests                 # refreshes digests and provenance of this oracle's fixture manifests
 //
 // @see ../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️remaining-sixty-anatomy.md
 
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
 const ENGINE = join(HERE, "🧩️json", "📦️packages", "🦀️rust");
 const TARGET = cargoTargetDirectory(getWorkspaceRoot());
-const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
-const CATALOG = join(HERE, "..", "🔮️oracles", "🔣️.json");
-const ORACLE_ID = "serde-json-equation-carrier-reader";
-const COMPARISON_PROFILE = "semantic-equation-carrier-v1";
-const KINDS: readonly string[] = ["change-coefficient", "change-graph-directed", "connect-nodes", "disconnect-nodes", "insert-point", "move-point", "remove-point", "replace-graph", "replace-points", "update-graph-algorithm"];
+const OWNER = join(HERE, "..", "..", "➗️equation");
+const FIXTURES_DIR = join(OWNER, "🧫️fixtures");
+const CATALOG = join(OWNER, "🔮️oracles", "🔣️.json");
+const ORACLE_ID = "json-rust-equation-carrier-reader";
+const GENERATOR = { oracle: ORACLE_ID, packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "bun ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate" } as const;
 //#endregion 🧬️Contract
 
 //#region 🔨️Build
 function build(): void {
-  // 🏭️`--offline`: the engine is its own standalone workspace; the shared build-dir/target-dir
-  // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any override here.
   const result = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(ENGINE, "Cargo.toml")], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
 }
@@ -56,37 +56,19 @@ function generate(outRoot: string): number {
 }
 
 async function manifests(): Promise<void> {
-  const entries = [];
-  for (const kind of KINDS) {
-    const dir = join(FIXTURES_DIR, kind);
-    if (!existsSync(dir)) throw new Error(`missing fixture directory for ${kind} — run generate first`);
-    const files = [];
-    for (const [role, name] of [["expected-before-json", "before.json"], ["expected-after-json", "after.json"]] as const) {
-      const path = join(dir, name);
-      files.push({ role, path: `../🧫️fixtures/${kind}/${name}`, mediaType: "application/json", sha256: await sha256(path), bytes: readFileSync(path).length });
+  const catalog = JSON.parse(readFileSync(CATALOG, "utf8")) as { fixtureManifests?: { generator?: { oracle?: string }; files: { path: string; sha256: string; bytes: number }[] }[] };
+  const owned = (catalog.fixtureManifests ?? []).filter((entry) => entry.generator?.oracle === ORACLE_ID);
+  if (owned.length === 0) throw new Error(`no fixture manifest names ${ORACLE_ID}`);
+  for (const entry of owned) {
+    for (const file of entry.files) {
+      const path = join(dirname(CATALOG), file.path);
+      file.sha256 = await sha256(path);
+      file.bytes = readFileSync(path).length;
     }
-    entries.push({
-      schema: "semio.repository-test.fixture/v2",
-      id: `carrier-${kind}`,
-      class: "third-party-generated",
-      target: { artifact: "s.mathematical.equation", standard: "1", subset: "any" },
-      mutation: kind,
-      outcome: "applied",
-      units: { length: "unitless", angle: "radian" },
-      files,
-      provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-      generator: { oracle: ORACLE_ID, packageVersion: "1", engineFamily: "serde-json", engineVersion: "1", command: "bun ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate", platform: process.platform },
-      comparisonProfile: COMPARISON_PROFILE,
-      reproducible: true,
-      family: "equation-json-carrier",
-      notes: `Deterministic complete equation carrier pair for ${kind}, independently written and projected through serde_json. The generator asserts that every before/after semantic projection differs.`,
-    });
+    entry.generator = { ...GENERATOR, platform: currentPlatform() };
   }
-  const catalog = JSON.parse(readFileSync(CATALOG, "utf8"));
-  const keep = (catalog.fixtureManifests ?? []).filter((entry: { family?: string }) => entry.family !== "equation-json-carrier" && entry.id !== "carrier-change-coefficient");
-  catalog.fixtureManifests = [...keep, ...entries];
   writeFileSync(CATALOG, `${JSON.stringify(catalog, null, 2)}\n`);
-  console.log(`${entries.length} fixture manifest(s) registered in 🔣️oracle.json`);
+  console.log(`${owned.length} fixture manifest(s) refreshed in ${CATALOG}`);
 }
 //#endregion 🚪️Commands
 

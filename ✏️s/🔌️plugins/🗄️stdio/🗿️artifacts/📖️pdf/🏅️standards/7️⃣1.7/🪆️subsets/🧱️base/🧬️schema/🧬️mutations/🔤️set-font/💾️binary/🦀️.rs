@@ -1,6 +1,6 @@
 //! 🔤️ Direct binary identity for `set-font`.
 
-pub const TAG: u8 = 24;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-font");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetFont;

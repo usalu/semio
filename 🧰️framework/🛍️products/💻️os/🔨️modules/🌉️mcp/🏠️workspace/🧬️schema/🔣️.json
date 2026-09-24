@@ -214,6 +214,53 @@
           }
         }
       }
+    },
+    "SessionActivationPhaseV1": {
+      "description": "One phase of activating a plugin session and reading its document: the component is resolved, read, content-hashed, its compiled code loaded or compiled in an isolated worker, its guest opened, then the document read. Every job that activates a session reports these (inference_run's artifact binding, artifact_create). A phase a warm session already passed is skipped, never reported twice; every phase is interruptible.",
+      "enum": ["resolving-component", "reading-component", "hashing-component", "loading-compiled-code", "compiling-component", "opening-guest", "reading-document"]
+    },
+    "SessionActivationPhaseRowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "position"],
+      "properties": {
+        "phase": { "$ref": "#/$defs/SessionActivationPhaseV1" },
+        "position": { "type": "number", "minimum": 0, "exclusiveMaximum": 1, "description": "Where the phase starts within an activation; each job maps it onto its own progress span." }
+      }
+    },
+    "SessionActivationPhasesV1": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": { "$ref": "#/$defs/SessionActivationPhaseRowV1" }
+    },
+    "ComponentCompileCancellationLawV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "law", "cancelAnswerCeilingMs", "cases"],
+      "properties": {
+        "$schema": { "type": "string", "minLength": 1 },
+        "law": { "type": "string", "minLength": 1 },
+        "cancelAnswerCeilingMs": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "description": "Replayed in order against one component: a case that compiles leaves the compiled code for the next.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["requesters", "cancel", "expected"],
+            "properties": {
+              "requesters": { "type": "integer", "minimum": 1, "maximum": 8, "description": "Requesters of the same content hash joined to one compile." },
+              "cancel": { "type": "array", "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 7 }, "description": "Indices of the requesters that cancel mid-compile." },
+              "expected": {
+                "enum": ["ABORTED", "DETACHED", "COMPILED", "WARM"],
+                "description": "ABORTED: every requester cancelled, the one worker was killed and reaped, and no compiled code or scratch output remains. DETACHED: the cancelling requesters were answered CANCELLED within the ceiling while the rest received the compiled code from the same single worker. COMPILED: an uncancelled cold compile ran one worker and left compiled code. WARM: the compiled code is served without starting a worker."
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

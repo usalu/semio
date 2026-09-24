@@ -38,7 +38,7 @@ Feature: The plot grammar binds every encoding channel and puts a row where the 
   @level-quick
   @mode-conformance
   Scenario: Every declared encoding channel binds, and only the channels an option list names
-    Given the committed probe document local://plot-grammar.tex and the channel vocabulary
+    Given the committed probe document shared://🪶️plot-grammar/plot-grammar.tex and the channel vocabulary
       | channels                                                                        |
       | x;y;x2;y2;angle;radius;size;shape;fill;stroke;opacity;text;dash;width;order;detail |
     Then an option list that names no channel binds none of them
@@ -50,7 +50,7 @@ Feature: The plot grammar binds every encoding channel and puts a row where the 
   @level-quick
   @mode-differential
   Scenario: A numeric channel is placed by a linear scale over the column extent, as d3-scale does
-    Given the committed probe document local://plot-grammar.tex and the numeric columns
+    Given the committed probe document shared://🪶️plot-grammar/plot-grammar.tex and the numeric columns
       | x       | y       | xDomain | yDomain | xRange | yRange |
       | 1;2;3;4;5 | 4;7;3;8;5 | 1;5     | 0;8     | 8;78   | 8;38   |
     Then the compiled probe and d3-scale place every row at the same millimetre
@@ -59,7 +59,7 @@ Feature: The plot grammar binds every encoding channel and puts a row where the 
   @level-quick
   @mode-differential
   Scenario: A non-numeric channel is placed on the centre of its band, as d3-scale's band scale does
-    Given the committed probe document local://plot-grammar.tex and the categorical column
+    Given the committed probe document shared://🪶️plot-grammar/plot-grammar.tex and the categorical column
       | x         | y         | yDomain | xRange | yRange |
       | A;B;C;D;E | 2;3;5;4;6 | 0;6     | 8;78   | 8;38   |
     Then the compiled probe and d3-scale place every row at the same millimetre
@@ -68,7 +68,7 @@ Feature: The plot grammar binds every encoding channel and puts a row where the 
   @level-quick
   @mode-differential
   Scenario: The TypeScript twin resolves the same specification onto the same points
-    Given the committed probe document local://plot-grammar.tex and the shared specification
+    Given the committed probe document shared://🪶️plot-grammar/plot-grammar.tex and the shared specification
       | width | height | marginTop | marginRight | marginBottom | marginLeft | xColumn | yColumn | xDomain | yDomain |
       | 80    | 40     | 8         | 2           | 2            | 8          | t       | val     | 1;5     | 0;8     |
     Then the twin's render plan and the compiled probe place every row at the same millimetre

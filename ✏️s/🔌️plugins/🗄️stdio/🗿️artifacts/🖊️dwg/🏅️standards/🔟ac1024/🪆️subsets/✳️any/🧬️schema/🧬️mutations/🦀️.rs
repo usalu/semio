@@ -61,7 +61,7 @@ pub fn inverse_dwg_mutation(base: &DwgSnapshot, mutation: &DwgMutation) -> Vec<D
 //#endregion 🔖️Mutations
 
 //#region 🔖️Codecs
-crate::impl_serde_op_codec!(DwgMutation, "dwg-mutation");
+crate::impl_serde_op_codec!(DwgMutation, "dwg-mutation", protocol = include_str!("💾️binary/📡️.protocol.semio"));
 //#endregion 🔖️Codecs
 
 //#region 🔖️Kinds

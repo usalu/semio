@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveOutputVariable",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-output-variable",
-  "binaryTag": null,
+  "binaryTag": 7,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

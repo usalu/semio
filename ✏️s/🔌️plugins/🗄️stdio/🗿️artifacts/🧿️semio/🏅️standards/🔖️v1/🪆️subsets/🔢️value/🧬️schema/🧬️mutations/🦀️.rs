@@ -441,6 +441,19 @@ fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Se
 }
 //#endregion 🔖️OpBinaryPrimitives
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioValueMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_SET_VALUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-value");
+const TAG_SET_MAP_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-map-entry");
+const TAG_REMOVE_MAP_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-map-entry");
+const TAG_INSERT_LIST_ITEM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-list-item");
+const TAG_REMOVE_LIST_ITEM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-list-item");
+const TAG_SET_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-node");
+const TAG_REMOVE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-node");
+//#endregion 🏷️WireTags
+
 /// 🧪️ Real binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from the `print_op().into_bytes()` text-as-binary shortcut this facet started with.
@@ -451,14 +464,14 @@ fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Se
 impl protocol::OpBinary for SemioValueMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => 0,
-            SemioValueMutation::SetValue(set_value::SetValue { .. }) => 1,
-            SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { .. }) => 2,
-            SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { .. }) => 3,
-            SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { .. }) => 4,
-            SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { .. }) => 5,
-            SemioValueMutation::SetNode(set_node::SetNode { .. }) => 6,
-            SemioValueMutation::RemoveNode(remove_node::RemoveNode { .. }) => 7,
+            SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => TAG_SET_SNAPSHOT,
+            SemioValueMutation::SetValue(set_value::SetValue { .. }) => TAG_SET_VALUE,
+            SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { .. }) => TAG_SET_MAP_ENTRY,
+            SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { .. }) => TAG_REMOVE_MAP_ENTRY,
+            SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { .. }) => TAG_INSERT_LIST_ITEM,
+            SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { .. }) => TAG_REMOVE_LIST_ITEM,
+            SemioValueMutation::SetNode(set_node::SetNode { .. }) => TAG_SET_NODE,
+            SemioValueMutation::RemoveNode(remove_node::RemoveNode { .. }) => TAG_REMOVE_NODE,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -502,43 +515,43 @@ impl protocol::OpBinary for SemioValueMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            0 => {
+            TAG_SET_SNAPSHOT => {
                 let snapshot = dec_semio_value_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
-            1 => {
+            TAG_SET_VALUE => {
                 let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(SemioValueMutation::SetValue(set_value::SetValue { path, value }))
             }
-            2 => {
+            TAG_SET_MAP_ENTRY => {
                 let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
                 let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value }))
             }
-            3 => {
+            TAG_REMOVE_MAP_ENTRY => {
                 let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
                 Ok(SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path, key }))
             }
-            4 => {
+            TAG_INSERT_LIST_ITEM => {
                 let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path, index, value }))
             }
-            5 => {
+            TAG_REMOVE_LIST_ITEM => {
                 let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 Ok(SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path, index }))
             }
-            6 => {
+            TAG_SET_NODE => {
                 let id = ValueId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?);
                 let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(SemioValueMutation::SetNode(set_node::SetNode { id, value }))
             }
-            7 => {
+            TAG_REMOVE_NODE => {
                 let id = ValueId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?);
                 Ok(SemioValueMutation::RemoveNode(remove_node::RemoveNode { id }))
             }

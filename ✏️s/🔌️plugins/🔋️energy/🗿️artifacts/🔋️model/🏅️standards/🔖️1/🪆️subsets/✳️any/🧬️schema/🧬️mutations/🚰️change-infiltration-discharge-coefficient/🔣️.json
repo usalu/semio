@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeInfiltrationDischargeCoefficient",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-discharge-coefficient",
-  "binaryTag": null,
+  "binaryTag": 119,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -12,7 +12,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "transform-statistics";
-const FIXTURE = "local://transform-statistics.tex";
+const FIXTURE = "shared://📋️transform-statistics/transform-statistics.tex";
 const DECIMALS = 6;
 
 /** 🧫️ The three groups of the shipped `demo-distribution` table, in table order. */

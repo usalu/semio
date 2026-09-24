@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeSolarThermalSystemTilt",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-solar-thermal-system-tilt",
-  "binaryTag": null,
+  "binaryTag": 224,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

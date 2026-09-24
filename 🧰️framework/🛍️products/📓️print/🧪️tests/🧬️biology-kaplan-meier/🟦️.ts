@@ -10,7 +10,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "biology-kaplan-meier";
-const FIXTURE = "local://biology-kaplan-meier.tex";
+const FIXTURE = "shared://🧬️biology-kaplan-meier/biology-kaplan-meier.tex";
 const DECIMALS = 5;
 const WIDTH = 60;
 const HEIGHT = 40;

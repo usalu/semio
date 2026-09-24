@@ -10,8 +10,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct InsertChannel {
-    pub(crate) index: usize,
-    pub(crate) channel: SemioAudioChannel,
+    pub index: usize,
+    pub channel: SemioAudioChannel,
 }
 
 impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for InsertChannel {

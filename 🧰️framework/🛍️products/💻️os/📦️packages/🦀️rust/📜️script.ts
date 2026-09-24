@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv, { type ValidateFunction } from "ajv";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, runProbe, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
 import { blake3Hex } from "../../../../🔨️modules/🔏️hash/🟦️.ts";
 
@@ -364,9 +364,26 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     assert(validate(fixture), JSON.stringify(validate.errors));
     const remoteOwner = join(owner, "🧫️fixtures/🌐️remote-guard");
     const remoteFixture = JSON.parse(readFileSync(join(remoteOwner, "🔣️.json"), "utf8"));
-    const validateRemote = ownedExport(this.repoRoot, "db.storage.writer", "RemoteGuardV1");
+    const validateRemote = ownedExport(this.repoRoot, "db.storage.writer", "WalWriterFenceV1");
     assert(validateRemote(remoteFixture), JSON.stringify(validateRemote.errors));
     assert.deepEqual(remoteFixture.mutations, ["create", "append", "sync", "seal", "truncateTail", "delete"]);
+    for (const row of remoteFixture.postgres.lockKeys) {
+      const digest = createHash("sha256").update(Buffer.concat([Buffer.from(remoteFixture.postgres.lockNamespace, "utf8"), Buffer.from([0]), Buffer.from(row.document, "utf8")])).digest();
+      assert.equal(digest.readBigInt64BE(0).toString(), row.key, `postgres advisory-lock key oracle for ${row.document}`);
+    }
+    assert(remoteFixture.neo4j.renewEveryMs * 2 < remoteFixture.neo4j.leaseTtlMs, "a Neo4j writer lease must survive one missed renewal");
+    for (const backend of ["sqlite", "postgres", "neo4j"]) assert(remoteFixture.laws.filter((law: { backends: string[] }) => law.backends.includes(backend)).length >= 4, `${backend} runs every shared fence law`);
+    const sourceOf = (path: string) => readFileSync(join(owner, "..", path, "🦀️.rs"), "utf8");
+    for (const [marker, path] of [
+      ["pg_try_advisory_lock($1)", "🐘️postgres"],
+      ["fn fenced_wal_mutation", "🐘️postgres"],
+      [`"${remoteFixture.postgres.lockNamespace}"`, "🐘️postgres"],
+      ["CYPHER_WAL_WRITER_FENCE", "🌐️neo4j"],
+      ["fn fenced_wal_mutation", "🌐️neo4j"],
+      [`WAL_WRITER_LEASE_TTL_MS: i64 = ${remoteFixture.neo4j.leaseTtlMs.toLocaleString("en-US").replaceAll(",", "_")}`, "🌐️neo4j"],
+    ] as const)
+      assert(sourceOf(path).includes(marker), `missing cross-process writer fence primitive ${marker} in ${path}`);
+    console.log(`wal-writer-fence-oracle: AJV=1 lockKeys=${remoteFixture.postgres.lockKeys.length} laws=${remoteFixture.laws.length}`);
     const memoryOwner = join(owner, "..", "🧫️fixtures", "🧮️memory-backing");
     const memoryFixture = JSON.parse(readFileSync(join(memoryOwner, "🔣️.json"), "utf8"));
     const validateMemory = ownedExport(this.repoRoot, "db.storage", "MemoryBackingV1");
@@ -481,7 +498,7 @@ class WalWriterAuthorityCheckScript extends BundleScript {
       assert(walSource.includes(marker), "missing retained WAL-open owner primitive: " + marker);
     assert(!walSource.includes("release_failed_open"), "WAL open rejection must not await and flatten its writer release");
     const artifactSource = readFileSync(join(owner, "..", "..", "🗿️artifact", "🦀️.rs"), "utf8");
-    for (const marker of ["enum ArtifactEngineOpenRejected", "RetainedWal", "has_retained_writer", "Future<Output = Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected>>"])
+    for (const marker of ["enum ArtifactEngineOpenRejected", "RetainedWal", "has_retained_writer", "Future<Output = Result<Box<ArtifactEngine<A, V>>, ArtifactEngineOpenRejected>>"])
       assert(artifactSource.includes(marker), "missing engine retained-open propagation: " + marker);
     const engineSource = readFileSync(join(owner, "..", "..", "⚙️engine", "🦀️.rs"), "utf8");
     for (const marker of ["enum DatabaseDocumentOpenRejected", "Result<ArtifactHandle, DatabaseDocumentOpenRejected>", "rejected.retry_close().await"]) assert(engineSource.includes(marker), "missing database retained-open propagation: " + marker);
@@ -555,7 +572,7 @@ class WalWriterAuthorityCheckScript extends BundleScript {
       );
     }
     console.log(
-      `wal-writer-authority-independent-oracle: AJV=6 exact-u64=1 cases=${fixture.cases.length} mutations=${fixture.mutations.length} remote=${remoteFixture.cases.length} writer-slots=${memoryFixture.writerTable.slots} retained-result=1 directory-barriers=4 wal-open-owner=1 backend-pool-use=${poolUseFixture.cases.length} physical-opening=${poolUseFixture.opening.length}`,
+      `wal-writer-authority-independent-oracle: AJV=6 exact-u64=1 cases=${fixture.cases.length} mutations=${fixture.mutations.length} fence-laws=${remoteFixture.laws.length} writer-slots=${memoryFixture.writerTable.slots} retained-result=1 directory-barriers=4 wal-open-owner=1 backend-pool-use=${poolUseFixture.cases.length} physical-opening=${poolUseFixture.opening.length}`,
     );
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     for (const marker of ["struct WalWriterPermit", "struct WalWriterTable", "struct WalFileWriterGuard", "try_lock()", "checked_add(1)", "active_operation", "fn release_step"])
@@ -600,7 +617,8 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     ])
       assert(releaseSource.includes(marker), `missing bounded deferred refusal primitive: ${marker}`);
     assert.equal((storageSource.match(/writer::release::notify_faults/g) ?? []).length, 0, "public DB handback paths must not invoke writer wakers directly");
-    assert(storageSource.includes("wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_retry_epoch"), "missing mounted stale-controller refusal law");
+    const retainedFixtureLaws = readFileSync(join(owner, "..", "🧪️tests", "🔬️db-io-retained-fixtures", "🦀️.rs"), "utf8");
+    assert(retainedFixtureLaws.includes("fn wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_retry_epoch()"), "missing mounted stale-controller refusal law");
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,
@@ -663,6 +681,19 @@ class WalWriterAuthorityCheckScript extends BundleScript {
       },
     });
     for (const receipt of receipts) console.log(`wal-writer-authority-native-receipt: ${JSON.stringify(receipt)}`);
+  }
+}
+
+/** 🐳️ The cross-process WAL writer fence laws against live servers: every lane of
+ * `db_storage::writer::fence_conformance` (SQLite, plus PostgreSQL and Neo4j, each on its own
+ * disposable `docker run --rm` container cross-checked through `psql` / `cypher-shell`). A running
+ * Docker daemon is the only prerequisite, which is why the server lanes are `#[ignore]`d elsewhere. */
+class WalWriterFenceLiveScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("wal-writer-fence-live takes no arguments");
+    const probe = runProbe("docker", ["info", "--format", "{{.ServerVersion}}"], { cwd: this.repoRoot });
+    if (probe.status !== 0) throw new Error("wal-writer-fence-live needs a running Docker daemon; every server lane starts its own postgres:17-alpine / neo4j:5-community container");
+    await runCargo(["test", "--manifest-path", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml"), "--features", "sqlite,postgres,neo4j", "--lib", "db_storage::writer::fence_conformance", "--", "--include-ignored", "--test-threads=1"], this.root);
   }
 }
 
@@ -2133,6 +2164,7 @@ router.register("wal-recovery-check", WalRecoveryCheckScript);
 router.register("wal-capacity-check", WalCapacityCheckScript);
 router.register("wal-committed-transactions-check", WalCommittedTransactionsCheckScript);
 router.register("wal-writer-authority-check", WalWriterAuthorityCheckScript);
+router.register("wal-writer-fence-live", WalWriterFenceLiveScript);
 router.register("database-history-completion-check", DatabaseHistoryCompletionCheckScript);
 router.register("database-catalog-read-ownership-check", DatabaseCatalogReadOwnershipCheckScript);
 router.register("database-capability-completion-check", DatabaseCapabilityCompletionCheckScript);

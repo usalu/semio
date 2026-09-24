@@ -70,7 +70,7 @@ describe("scope-safe Shell presence", () => {
     const validate = (value: typeof fixture): boolean =>
       value.cases.every((row) => binding(row)) && close(value.close) && value.rejected.every((row) => rejection(row));
     expect(validate(fixture), JSON.stringify([binding.errors, close.errors, rejection.errors])).toBe(true);
-    expect(fixture.cases.map((row) => documentRuntimeKeyV1({ kind: "hub", ...row.scope }))).toEqual(fixture.cases.map((row) => row.runtimeKey));
+    expect(fixture.cases.map((row) => documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...row.scope }))).toEqual(fixture.cases.map((row) => row.runtimeKey));
     expect(fixture.routes).toEqual(fixture.cases.map((row) => `actor://${row.runtimeKey}`));
   });
 

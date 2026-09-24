@@ -3,45 +3,35 @@ protocol gis.gismap.mutations
 version 1
 schema gis.gismap
 start record
+framing record
 
-record CreatePosition tag 1
-  field index varint
-
-record DeletePosition tag 2
-  field id utf8
-
-record ReplacePositionData tag 3
-  field id utf8
-  field new_data bytes
-
-record ReorderPositions tag 4
-  field id utf8
-  field to_index varint
-
-record CreateRoute tag 5
-  field index varint
-
-record DeleteRoute tag 6
-  field id utf8
-
-record ReplaceRouteData tag 7
-  field id utf8
-  field new_data bytes
-
-record ReorderRoutes tag 8
-  field id utf8
-  field to_index varint
-
-record CreateRegion tag 9
-  field index varint
-
-record DeleteRegion tag 10
-  field id utf8
-
-record ReplaceRegionData tag 11
-  field id utf8
-  field new_data bytes
-
-record ReorderRegions tag 12
-  field id utf8
-  field to_index varint
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record create-position tag=0
+field payload bytes
+record delete-position tag=1
+field payload bytes
+record replace-position-data tag=2
+field payload bytes
+record reorder-positions tag=3
+field payload bytes
+record create-route tag=4
+field payload bytes
+record delete-route tag=5
+field payload bytes
+record replace-route-data tag=6
+field payload bytes
+record reorder-routes tag=7
+field payload bytes
+record create-region tag=8
+field payload bytes
+record delete-region tag=9
+field payload bytes
+record replace-region-data tag=10
+field payload bytes
+record reorder-regions tag=11
+field payload bytes

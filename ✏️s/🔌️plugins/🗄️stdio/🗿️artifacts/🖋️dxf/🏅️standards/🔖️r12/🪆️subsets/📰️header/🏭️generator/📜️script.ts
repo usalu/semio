@@ -45,6 +45,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -194,7 +195,7 @@ async function manifestForSingle(recipe: Recipe, outDir: string): Promise<Record
     family: "mechanical",
     files: [{ role: "primary-dxf", path: `${FIXTURE_PATH_PREFIX}${name}/${filename}`, mediaType: "image/vnd.dxf", sha256: await sha256(bytes), bytes: bytes.length }],
     provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-    generator: { oracle: CROSS_SEMIO_ORACLE_ID, packageVersion: "0.6", engineFamily: "dxf-rs", engineVersion: "0.6", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only ${recipe.id}`, platform: process.platform },
+    generator: { oracle: CROSS_SEMIO_ORACLE_ID, packageVersion: "0.6", engineFamily: "dxf-rs", engineVersion: "0.6", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/📜️script.ts generate --only ${recipe.id}`, platform: currentPlatform() },
     reproducible: true,
   };
 }

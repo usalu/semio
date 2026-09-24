@@ -335,6 +335,11 @@ impl FaultStorage {
     pub async fn capabilities(&self) -> StorageCapabilities {
         self.inner.capabilities().await
     }
+
+    /// 🔚️ Faults never script a close; it closes the wrapped backend.
+    pub async fn close(&self) -> Result<(), DbError> {
+        self.inner.close().await
+    }
 }
 
 impl WalStorage for FaultStorage {
@@ -409,6 +414,10 @@ impl WalStorage for FaultStorage {
 }
 
 impl SnapshotStorage for FaultStorage {
+    fn publication_scope(&self) -> usize {
+        self.inner.publication_scope()
+    }
+
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         self.inner.snapshot().await.write_generation(document, generation, bytes).await
     }

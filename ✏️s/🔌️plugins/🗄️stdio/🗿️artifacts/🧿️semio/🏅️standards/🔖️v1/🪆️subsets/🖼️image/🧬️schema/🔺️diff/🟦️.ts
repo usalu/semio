@@ -4,7 +4,7 @@ import type { SemioColorspace, SemioImageFrame, SemioImageMetadataEntry } from "
 
 export interface SemioImageFrameDiff {
   delayMs?: number;
-  rgba8?: string;
+  rgba8?: number[];
 }
 export interface IndexModified<D> { index: number; diff: D }
 export interface IndexAdded<T> { index: number; item: T }
@@ -27,7 +27,7 @@ export interface SemioImageDiff {
   colorspace?: SemioColorspace;
   bitDepth?: number;
   /** tri-state: absent = unchanged, null = cleared, string = set (hex) */
-  icc?: string | null;
+  icc?: number[] | null;
   frames?: SemioImageFramesDiff;
   metadata?: SemioImageMetadataDiff;
 }

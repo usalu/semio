@@ -2,8 +2,10 @@ use super::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+/// 🧵️ Each law owns its pool: the process entry-point pool belongs to the process's real entry
+/// point (the CLI), and a law that claimed it with its own sizing would refuse every other one.
 fn entrypoint_pool() -> Arc<semio_framework_async::WorkerPool> {
-    Arc::new(semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)))
+    Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)))
 }
 
 fn pages(bytes: &[u8]) -> DbIoPages {
@@ -84,6 +86,9 @@ async fn sim_runtime_clock_advances_monotonically_and_only_explicitly() {
 
 #[semio_framework_async_macros::async_test]
 async fn explore_interleavings_every_permutation_of_disjoint_writes_converges_to_the_same_state() {
+    if !crate::db_storage::process_isolated_law("db_fault_testing::tests::explore_interleavings_every_permutation_of_disjoint_writes_converges_to_the_same_state") {
+        return;
+    }
     let document = protocol::ArtifactId("explore-doc".to_string());
     // 🪡 Hoisted out of the sync closure below: `explore_interleavings` takes `impl FnMut(u64) -> T`
     // (deliberately sync — it drives a deterministic sim clock), so `.await` cannot live inside it.
@@ -217,6 +222,9 @@ async fn fault_storage_cas_conflict_injection_rejects_without_touching_the_inner
 //#region 🔖️CrashHarness
 #[semio_framework_async_macros::async_test]
 async fn crash_harness_recovers_cleanly_after_every_injected_write_failure() {
+    if !crate::db_storage::process_isolated_law("db_fault_testing::tests::crash_harness_recovers_cleanly_after_every_injected_write_failure") {
+        return;
+    }
     let report = CrashHarness::run_crash_after_every_write(9001, 4).await;
     assert!(report.writes_tested >= 4, "at least one write boundary per committed submit plus genesis must be tested");
     assert!(report.is_clean().await, "recovery must never fail or corrupt state after any single injected write failure: {report:?}");
@@ -243,11 +251,17 @@ async fn document_wal_open_recovers_from_a_torn_write_by_truncating_the_tail() {
 //#region 🔖️Laws
 #[semio_framework_async_macros::async_test]
 async fn law_replay_deterministic() {
+    if !crate::db_storage::process_isolated_law("db_fault_testing::tests::law_replay_deterministic") {
+        return;
+    }
     assert_replay_deterministic(entrypoint_pool(), 11, 5).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn law_snapshot_plus_suffix_equals_replay() {
+    if !crate::db_storage::process_isolated_law("db_fault_testing::tests::law_snapshot_plus_suffix_equals_replay") {
+        return;
+    }
     assert_snapshot_plus_suffix_equals_replay(12, 4, 3).await;
     assert_snapshot_plus_suffix_equals_replay(13, 0, 3).await;
 }
@@ -264,6 +278,9 @@ async fn law_inverse_undo_roundtrip() {
 
 #[semio_framework_async_macros::async_test]
 async fn law_sync_convergence() {
+    if !crate::db_storage::process_isolated_law("db_fault_testing::tests::law_sync_convergence") {
+        return;
+    }
     assert_sync_convergence(16, 10).await;
 }
 
@@ -274,6 +291,9 @@ async fn law_fencing_excludes_stale_writer_memory() {
 
 #[semio_framework_async_macros::async_test]
 async fn law_fencing_excludes_stale_writer_fs() {
+    if !crate::db_storage::process_isolated_law("db_fault_testing::tests::law_fencing_excludes_stale_writer_fs") {
+        return;
+    }
     let root = temp_dir("fencing-fs").await;
     let storage = db_actor::block_on(db_storage::FsStorage::open(entrypoint_pool(), &root)).expect("open fs storage");
     assert_fencing_excludes_stale_writer(&storage).await;

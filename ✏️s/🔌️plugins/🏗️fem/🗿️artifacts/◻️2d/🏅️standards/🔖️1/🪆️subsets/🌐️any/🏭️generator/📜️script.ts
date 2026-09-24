@@ -44,6 +44,7 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 
 // 🩹️ Defensive: three's PLY/GLTF exporters need these off-browser; STL/OBJ do not, in principle, but
 // the mesh pilot's spike found them cheap insurance and the cost of carrying them is one shim block.
@@ -424,7 +425,7 @@ async function main(argv: readonly string[]): Promise<number> {
   // kinds and nothing else: a material's Young's modulus, a support's restrained DOFs, a load case's
   // self-weight flag and the analysis settings do not move a single triangle. Those 26 kinds ride this
   // subset's JSON carrier instead, which — unlike its csv/md/txt leaves, which wrap the DSL text in a
-  // single blob — is the real structured tree. `🦀️json-engine` writes and reads it through `serde_json`
+  // single blob — is the real structured tree. `🧩️json` writes and reads it through `json` (json-rust)
   // and nothing of ours.
   if (command === "carrier" || command === "carrier-manifests") {
     const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
@@ -456,11 +457,11 @@ async function main(argv: readonly string[]): Promise<number> {
         units: { length: "metre", angle: "radian" },
         files,
         provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-        generator: { oracle: "serde-json-fem2d-carrier-reader", packageVersion: "1", engineFamily: "serde-json", engineVersion: "1", command: "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier", platform: process.platform },
+        generator: { oracle: "json-rust-fem2d-carrier-reader", packageVersion: "0.12", engineFamily: "json-rust", engineVersion: "0.12", command: "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier", platform: currentPlatform() },
         comparisonProfile: "semantic-fem2d-carrier-v1",
         reproducible: true,
         family: "mechanical",
-        notes: `A deterministic fem2d model carrying at least two of every collection, with the ${kind} mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
+        notes: `A deterministic fem2d model carrying at least two of every collection, with the ${kind} mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.`,
       });
     }
     process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);

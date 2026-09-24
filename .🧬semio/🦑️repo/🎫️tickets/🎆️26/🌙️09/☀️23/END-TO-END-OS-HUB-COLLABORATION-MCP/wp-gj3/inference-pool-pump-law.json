@@ -1,0 +1,15 @@
+{
+  "id": "inference-pool-pump-until-settled",
+  "title": "Interactive inference must pump the cooperative wasm pool past a UI frame slice",
+  "rootCause": "A single PROCESS_POOL_WALL_MS=2 / 64-pump window left WorkerJobPoll::Submitted; step-job re-observed Submitted forever after the first MCP notifications/progress (0.05).",
+  "reactorTurn": { "maxPumps": 64, "wallMs": 2 },
+  "inferenceCrossing": { "minPumps": 1024, "wallMs": null },
+  "missingClockMustNotSkipPump": true,
+  "snapshot": {
+    "schema": "s.wfc.bitmap",
+    "seed": 11,
+    "input": { "width": 4, "height": 4 },
+    "output": { "width": 6, "height": 4, "periodic": true }
+  },
+  "expectSolveSecondsMax": 30
+}

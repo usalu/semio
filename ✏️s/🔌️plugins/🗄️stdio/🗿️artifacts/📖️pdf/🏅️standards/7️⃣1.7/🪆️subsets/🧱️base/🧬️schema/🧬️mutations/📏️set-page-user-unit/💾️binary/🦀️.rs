@@ -1,6 +1,6 @@
 //! 📏️ Direct binary identity for `set-page-user-unit`.
 
-pub const TAG: u8 = 17;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-page-user-unit");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetPageUserUnit;

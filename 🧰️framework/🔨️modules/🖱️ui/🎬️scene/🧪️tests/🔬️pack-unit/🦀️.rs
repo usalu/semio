@@ -76,7 +76,7 @@ fn truncated_input_errs_not_panics() {
 fn viewport_projection_pack_round_trips_every_shared_mode_orientation_pair() {
     use semio_framework_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionPreferences, Viewport3dProjectionSpec};
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️viewport/🧪️tests/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️viewport/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
     let preferences: Viewport3dProjectionPreferences = serde_json::from_value(fixture["defaultPreferences"].clone()).unwrap();
     let bytes = to_bytes(&preferences).unwrap();
     assert_eq!(from_bytes::<Viewport3dProjectionPreferences>(&bytes).unwrap(), preferences);

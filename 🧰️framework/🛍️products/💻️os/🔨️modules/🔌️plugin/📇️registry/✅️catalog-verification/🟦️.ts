@@ -54,7 +54,7 @@ export function auditNavbarExampleArtifactPayload(manifest: PluginManifest, asse
 
 export class RegistryTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
+    const { rest } = resolveTestLevel(segments, "quick");
     await runVitest(this.root, rest, "./🧪️tests/🎚️config/🟦️.ts");
   }
 }

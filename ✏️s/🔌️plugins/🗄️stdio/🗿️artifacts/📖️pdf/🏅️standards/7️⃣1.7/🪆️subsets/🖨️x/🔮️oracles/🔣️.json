@@ -471,7 +471,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -520,7 +520,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -569,7 +569,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -618,7 +618,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -667,7 +667,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -716,7 +716,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -765,7 +765,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -814,7 +814,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -863,7 +863,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -912,7 +912,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -961,7 +961,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -1010,7 +1010,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-conformance-x-v1",
       "reproducible": true,
@@ -1059,7 +1059,7 @@
         "engineFamily": "pypdf",
         "engineVersion": "6.14.2",
         "command": "bun 📜️script.ts encryption",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-encryption-v1",
       "reproducible": true,
@@ -1108,7 +1108,7 @@
         "engineFamily": "pypdf",
         "engineVersion": "6.14.2",
         "command": "bun 📜️script.ts encryption",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-encryption-v1",
       "reproducible": true,

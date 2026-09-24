@@ -69,6 +69,7 @@ db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️module
 # and the four durable storage roles it closes the product's ports over. The crate's lib is named
 # `server`, so hub writes `use server::gateway::ServerInstance;`.
 semio-framework-server = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
 
 # 🔌️ Directory backend drivers — optional, enabled only by this crate's same-named feature (see
 # `[features]` above and `connect_db`/`connect_directory` in `🏗️bootstrap/🦀️.rs`).

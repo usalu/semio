@@ -7,7 +7,7 @@
   "aggregateVariant": "MoveObjects",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "move-objects",
-  "binaryTag": null,
+  "binaryTag": 21,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

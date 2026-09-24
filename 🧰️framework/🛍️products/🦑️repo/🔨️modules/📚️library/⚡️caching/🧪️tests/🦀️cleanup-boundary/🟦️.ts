@@ -5,8 +5,8 @@ import { dirname, join } from "node:path";
 
 /** 🦀️ Native Cargo leaves finish without launching detached storage management behind Nx. */
 export async function testCargoCleanupBoundary(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-  assert.deepEqual(require("jsonschema").validate(fixture, JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"))).errors, []);
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🦀️cleanup-boundary/🔣️.json"), "utf8"));
+  assert.deepEqual(require("jsonschema").validate(fixture, JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🦀️cleanup-boundary/📐️schema/🔣️.json"), "utf8"))).errors, []);
   const project = JSON.parse(readFileSync(join(import.meta.dir, "../../📋️project.json"), "utf8")), [owner, target] = fixture.rootTarget.split(":");
   assert.equal(project.name, owner); assert.equal(project.targets[target].cache, false);
   assert.equal(project.targets[target].options.command, "bun ./📜️script.ts cache-prune");

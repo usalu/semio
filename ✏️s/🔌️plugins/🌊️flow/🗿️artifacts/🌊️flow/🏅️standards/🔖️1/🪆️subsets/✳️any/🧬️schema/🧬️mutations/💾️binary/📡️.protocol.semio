@@ -3,14 +3,31 @@ protocol flow.mutations
 version 1
 schema flow.flow.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real `FlowMutation` op frame (`dsl::tagged_value_binary`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`, then
+# the variant's `ToValue` tree without its variant name, as one framework wire value (`pack_rt::encode_wire_value`).
+# Each record is one mutation kind at its wire tag; this file is the only source of those tags.
+header fixed 2
+field format u8
+field tag varint
+record create-widget tag=0
+field payload bytes
+record delete-widget tag=1
+field payload bytes
+record reorder-widgets tag=2
+field payload bytes
+record replace-widget tag=3
+field payload bytes
+record connect-widgets tag=4
+field payload bytes
+record disconnect-widgets tag=5
+field payload bytes
+record reorder-synapses tag=6
+field payload bytes
+record update-synapse-endpoints tag=7
+field payload bytes
+record move-widgets tag=8
+field payload bytes
+record duplicate-widget tag=9
+field payload bytes

@@ -5,21 +5,33 @@ schema stdio.semio.flow
 start body
 framing record
 
-# P2 pilot (flow): REAL binary op frame, replacing the old `print_op().into_bytes()`
-# text-as-binary shortcut (`🧬️mutations/🦀️.rs`'s old `OpBinary::encode_op`).
-# `SemioFlowMutation` is a genuine data-carrying enum whose variants embed nested
-# `FlowNode`/`FlowEdge`/`SemioFlowSnapshot` payloads — no `dsl::DslField` impl exists
-# for any of them (hand-rolled per this subset's own `🔺️diff`/`🧬️mutations` convention), so the
-# generic derive-based `format u8 | ordinal varint | record body` layout doesn't apply. Handcrafted
-# instead: `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioFlowMutation`
-# variant ordinal, `🧬️mutations/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`, same 0-12
-# ordering as `parse_flow_mutation`'s keyword match) as two REAL fixed fields, then the
-# variant's own `key=value ...` argument payload as one opaque trailing `bytes` chain — the same
-# honest boundary the sibling `../../🔺️diff/💾️binary/📡️.protocol.semio` uses (filed once,
-# applies to both facets — see this wave's report `mechanism_gaps`,
-# `protocol-array-of-records`/`protocol-prim-ref-recursion`).
+# Real `SemioFlowMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record set-snapshot tag=0
+field payload bytes
+record insert-node tag=1
+field payload bytes
+record remove-node tag=2
+field payload bytes
+record set-node-kind tag=3
+field payload bytes
+record set-node-label tag=4
+field payload bytes
+record set-node-position tag=5
+field payload bytes
+record set-node-param tag=6
+field payload bytes
+record remove-node-param tag=7
+field payload bytes
+record insert-edge tag=8
+field payload bytes
+record remove-edge tag=9
+field payload bytes
+record set-edge-endpoints tag=10
+field payload bytes
+record set-edge-kind tag=11
+field payload bytes

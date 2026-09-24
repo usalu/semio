@@ -1,6 +1,6 @@
 //! 🎚️ Direct binary identity for `remove-ext-g-state`.
 
-pub const TAG: u8 = 31;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "remove-ext-g-state");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::RemoveExtGState;

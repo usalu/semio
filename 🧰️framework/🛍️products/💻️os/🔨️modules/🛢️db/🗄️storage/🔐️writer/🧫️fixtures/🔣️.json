@@ -8,7 +8,7 @@
   "guardRetirement": { "operation": 7, "contender": 8, "stages": ["pending-operation", "unlock-error", "unlock-progress", "terminal"], "terminal": [false, false, false, true] },
   "backendPressure": { "capacity": 64, "retainedWhenFull": true, "terminalAfterCapacityReturns": true },
   "fairRetirement": { "pinnedSlot": 0, "releasingSlot": 1, "maximumOpportunities": 32, "pinnedRetained": true, "releasingRetired": true },
-  "maintenanceFairness": { "classes": ["lost-owner", "page", "platform", "retry", "rejected-backend", "backend-close", "task-close"], "continuouslyReady": [0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6], "firstClassFaults": [0, 1, 2, 3, 4, 5, 6] },
+  "maintenanceFairness": { "classes": ["lost-owner", "page", "platform", "retry", "rejected-backend", "task-close"], "continuouslyReady": [0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5], "firstClassFaults": [0, 1, 2, 3, 4, 5] },
   "releaseSignal": { "firstEpoch": "0", "writers": [{ "backendGeneration": "1", "writerGeneration": "1", "terminalEpoch": "1" }, { "backendGeneration": "1", "writerGeneration": "2", "terminalEpoch": "2" }, { "backendGeneration": "2", "writerGeneration": "1", "terminalEpoch": "3" }], "staleRequestAccepted": false, "oldWaitSurvivesReuse": true, "requestCompletesRelease": false, "maximumEpoch": "18446744073709551615" },
   "mutations": ["create", "append", "sync", "seal", "truncate", "delete"],
   "cases": [

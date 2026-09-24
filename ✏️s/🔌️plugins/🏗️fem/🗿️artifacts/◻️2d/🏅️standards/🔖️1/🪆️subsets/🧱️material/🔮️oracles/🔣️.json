@@ -7,7 +7,7 @@
       "id": "fem2d-1-material",
       "capability": "fem2d-1-mutate",
       "standardDirectoryName": "🔖️1",
-      "subsetDirectoryName": "✳️material",
+      "subsetDirectoryName": "🧱️material",
       "vectors": [
         {
           "mutationId": "create-material",

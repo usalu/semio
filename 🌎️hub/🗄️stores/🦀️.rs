@@ -26,6 +26,7 @@
 //! conformance suite exists to prevent.
 
 use std::collections::{BTreeMap, HashMap};
+use std::sync::Arc;
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 
@@ -34,26 +35,24 @@ use serde::{Deserialize, Serialize};
 use tokio::io::AsyncWriteExt;
 
 use protocol::codec::ids::ContentHash;
-use server::contract::{ActorKey, CommandEnvelope, CommandReceipt, EventRecord, IdempotencyKey, ModuleManifest, Principal, Revision, SessionId};
+use server::contract::{ActorKey, CommandEnvelope, CommandReceipt, EventRecord, IdempotencyKey, ModuleManifest, PolicyGrant, PolicyPoint, PolicyTemplate, Principal, Rejection, Revision, SessionId};
+use semio_framework_dispatch_macros::dyn_enum_close;
+use server::authority::{ActorState, Decision, DecisionContext, Decider};
 use server::gateway::{InstanceStores, NoDocumentAuthority, NoQueryHandler, ServerInstance, ServerModule};
 use server::policy::{Credential, PrincipalResolver, Resolved};
 use server::storage::{AuthorityStore, BlobStore, Lease, OutboxEntry, ProjectionStore, SessionRecord, SessionStore, StorageError, StorageProfile};
+use server::{__semio_dispatch_Decider, __semio_dispatch_PrincipalResolver};
+
+use crate::directory::{HubCapability, HubDirectories, HubDirectory};
 
 //#region 🔖️Instance
-/// 🪪️ The hub deployment of the server product.
+/// 📚️ The hub deployment of the server product.
 ///
 /// Ten associated types, and every one of them is hub's own answer rather than a framework default.
-/// Six are already the real thing — the four storage roles are implemented in this file and are
-/// durable under `StorageProfile::Embedded`; `Queries` and `Documents` name the framework's explicit
-/// "this instance hosts none" types, which is a statement, not a stub: `NoDocumentAuthority` is
-/// uninhabited, so `/scopes/{scope}/document/ws` answers `notFound` by construction until hub's
-/// replication engine is wired into that port.
-///
-/// The four remaining sets — [`HubModules`], [`HubDeciders`], [`HubSagas`], [`HubResolvers`] — are
-/// uninhabited for the same reason and in the same shape: hub's 48 routes, its authorization
-/// predicates and its subsystems have not moved behind the module/decider/resolver ports yet, and
-/// naming an empty set says so precisely. Each becomes an enum over real variants as the subsystems
-/// move, and `ServerInstance` is the only place that has to learn about it.
+/// The four storage roles are durable under `StorageProfile::Embedded`. Documents are
+/// [`NoDocumentAuthority`]: hub's own router owns `/scopes/{scope}/document/ws`, because only its
+/// socket handler carries grant admission, presence leases and live revocation. [`HubModules`], [`HubDeciders`] and
+/// [`HubResolvers`] close auth and directory behind the module / decider / resolver ports.
 pub struct HubInstance;
 
 impl ServerInstance for HubInstance {
@@ -86,33 +85,143 @@ impl ServerInstance for HubInstance {
     }
 }
 
-/// 🕳️ Hub's module set, while no subsystem has moved behind [`ServerModule`] yet. Uninhabited on
-/// purpose: an instance with no modules registers none, and the day `🔐️auth` becomes the first one
-/// this is the enum that gains its variant.
-pub enum HubModules {}
+/// 🔐️ Auth module: session bearer resolution and the credential/session policy templates.
+#[derive(Clone)]
+pub struct HubAuthModule {
+    directory: Arc<HubDirectories>,
+}
+
+impl HubAuthModule {
+    /// 🔌️ Bind the directory the session ladder consults.
+    pub fn new(directory: Arc<HubDirectories>) -> Self {
+        Self { directory }
+    }
+}
+
+/// 📔️ Directory module: the directory command decider and its admission template.
+#[derive(Clone)]
+pub struct HubDirectoryModule;
+
+impl HubDirectoryModule {
+    /// 🏭️ A directory module with no extra handles — decisions are pure over the envelope.
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Default for HubDirectoryModule {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// 🧩️ Hub's module set: auth and directory are the first subsystems behind [`ServerModule`].
+pub enum HubModules {
+    Auth(HubAuthModule),
+    Directory(HubDirectoryModule),
+}
 
 impl ServerModule for HubModules {
     type Instance = HubInstance;
 
     async fn manifest(&self) -> ModuleManifest {
-        match *self {}
+        match self {
+            Self::Auth(_) => ModuleManifest {
+                id: "hub.auth".into(),
+                policies: vec![PolicyTemplate {
+                    name: "authenticated".into(),
+                    auto_apply: true,
+                    grants: vec![PolicyGrant { point: PolicyPoint::Subscription, resource: "*".into(), action: "subscribe".into() }],
+                }],
+                ..Default::default()
+            },
+            Self::Directory(_) => ModuleManifest {
+                id: "hub.directory".into(),
+                policies: vec![PolicyTemplate {
+                    name: "directory-member".into(),
+                    auto_apply: false,
+                    grants: vec![PolicyGrant { point: PolicyPoint::CommandAdmission, resource: "directory/*".into(), action: "*".into() }],
+                }],
+                ..Default::default()
+            },
+        }
+    }
+
+    async fn deciders(&self) -> Vec<HubDeciders> {
+        match self {
+            Self::Auth(_) => Vec::new(),
+            Self::Directory(_) => vec![HubDeciders::Directory(HubDirectoryDecider)],
+        }
+    }
+
+    async fn resolvers(&self) -> Vec<HubResolvers> {
+        match self {
+            Self::Auth(module) => vec![HubResolvers::Session(HubSessionResolver { directory: Arc::clone(&module.directory) })],
+            Self::Directory(_) => Vec::new(),
+        }
     }
 }
 
-/// 🕳️ Hub's decider set, while its command handling still lives in `🏗️bootstrap`.
-pub enum HubDeciders {}
+/// ⚖️ Directory command decider — pure fold of one [`CommandEnvelope`] into directory facts.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct HubDirectoryDecider;
 
-impl server::authority::Decider for HubDeciders {
+impl Decider for HubDirectoryDecider {
     async fn actor_kind(&self) -> &str {
-        match *self {}
+        "directory"
     }
 
-    async fn decide(&self, _state: &server::authority::ActorState, _command: &CommandEnvelope, _context: &server::authority::DecisionContext) -> server::authority::Decision {
-        match *self {}
+    async fn decide(&self, _state: &ActorState, command: &CommandEnvelope, context: &DecisionContext) -> Decision {
+        if command.target.kind != "directory" {
+            return Decision::Reject(Rejection::Invalid { detail: "hub directory decider only serves directory actors".into() });
+        }
+        let event = EventRecord {
+            stream: command.target.clone(),
+            seq: 0,
+            hlc: context.now.clone(),
+            kind: command.kind.clone(),
+            payload: command.payload.clone(),
+        };
+        Decision::Emit { events: vec![event], effects: Vec::new() }
     }
 
-    async fn evolve(&self, _state: &mut server::authority::ActorState, _event: &EventRecord) {
-        match *self {}
+    async fn evolve(&self, state: &mut ActorState, event: &EventRecord) {
+        state.bytes = event.payload.clone();
+    }
+}
+
+/// 🎫️ Session bearer resolver — the first rung of hub's authentication ladder.
+#[derive(Clone)]
+pub struct HubSessionResolver {
+    directory: Arc<HubDirectories>,
+}
+
+impl PrincipalResolver for HubSessionResolver {
+    async fn name(&self) -> &str {
+        "hub.session"
+    }
+
+    async fn resolve(&self, credential: &Credential) -> Option<Resolved> {
+        let bearer = credential.bearer.as_deref()?;
+        let HubCapability::Session(capability) = HubCapability::parse(bearer).ok()? else {
+            return None;
+        };
+        let session = self.directory.authenticate_session(&capability).await.ok().flatten()?;
+        let via = if session.session_kind.is_agent() { "hub.session.agent" } else { "hub.session" };
+        Some(Resolved {
+            principal: Principal::User { id: session.user_id },
+            session: Some(SessionId(session.id)),
+            device: None,
+            via: via.into(),
+            actor: None,
+        })
+    }
+}
+
+dyn_enum_close! {
+    /// ⚖️ Hub's closed decider set.
+    pub enum HubDeciders: Decider {
+        Directory(HubDirectoryDecider),
     }
 }
 
@@ -125,21 +234,13 @@ impl server::authority::Saga for HubSagas {
     }
 }
 
-/// 🕳️ Hub's authentication ladder, while its credential handling still lives in `🏗️bootstrap`.
-/// An empty ladder is not an open door: `ResolverChain` falls back to the anonymous principal, and
-/// every policy decision is taken against that.
-pub enum HubResolvers {}
-
-impl PrincipalResolver for HubResolvers {
-    async fn resolve(&self, _credential: &Credential) -> Option<Resolved> {
-        match *self {}
-    }
-
-    async fn name(&self) -> &str {
-        match *self {}
+dyn_enum_close! {
+    /// 🎫️ Hub's closed authentication ladder.
+    pub enum HubResolvers: PrincipalResolver {
+        Session(HubSessionResolver),
     }
 }
-//#endregion 🔖️Instance
+//#endregion Instance
 
 //#region 🔖️Journal
 /// 📜️ An append-only journal of one store's facts, one JSON record per line.

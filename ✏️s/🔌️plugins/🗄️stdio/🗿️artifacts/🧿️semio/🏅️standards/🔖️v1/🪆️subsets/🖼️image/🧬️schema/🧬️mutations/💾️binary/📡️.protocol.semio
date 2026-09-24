@@ -5,20 +5,33 @@ schema s.stdio.semio.image
 start body
 framing record
 
-# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION image wave: REAL binary op frame,
-# replacing the old `print_op().into_bytes()` text-as-binary shortcut
-# (`🧬️mutations/🦀️.rs`'s old `OpBinary::encode_op`). `SemioImageMutation` is a genuine
-# data-carrying enum whose `SetSnapshot` variant embeds a nested `SemioImageSnapshot` payload — no
-# `dsl::DslField` impl exists for it (hand-rolled per this subset's own `📸️snapshot`/`🔺️diff`
-# convention, `icc: Option<Vec<u8>>` being a bare-`Option` field the derive machinery cannot bind),
-# so the generic derive-based `format u8 | ordinal varint | record body` layout doesn't apply.
-# Handcrafted instead: `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the
-# `SemioImageMutation` variant ordinal, `🧬️mutations/🦀️.rs`'s `OP_KEYWORDS`/
-# `variant_ordinal`, 0-12 matching `parse_image_mutation`'s keyword match) as two REAL fixed
-# fields, then the variant's own argument payload as one opaque trailing `bytes` chain — the same
-# honest boundary the sibling `../../🔺️diff/💾️binary/📡️.protocol.semio` uses.
+# Real `SemioImageMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record set-snapshot tag=0
+field payload bytes
+record set-dimensions tag=1
+field payload bytes
+record set-colorspace tag=2
+field payload bytes
+record set-bit-depth tag=3
+field payload bytes
+record set-icc tag=4
+field payload bytes
+record insert-frame tag=5
+field payload bytes
+record remove-frame tag=6
+field payload bytes
+record move-frame tag=7
+field payload bytes
+record set-frame-delay tag=8
+field payload bytes
+record set-frame-pixels tag=9
+field payload bytes
+record set-metadata-entry tag=10
+field payload bytes
+record remove-metadata-entry tag=11
+field payload bytes

@@ -17,6 +17,10 @@ name = "semio_framework_os_kernel"
 crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
+[[test]]
+name = "pack_schema_hash"
+path = "../../🔨️modules/🎒️pack/🌱️value/🧪️tests/🔬️schema-hash/🦀️.rs"
+
 [features]
 protocol-laws = ["record-codec-laws"]
 record-codec-laws = ["semio-framework-pack/corruption-testing"]
@@ -41,6 +45,11 @@ worker = ["sync"]
 # 🧬️ Keeps the boundary/protocol type-generation capability explicit at this layer. The current
 # wire declarations are owned by `semio-framework`, so enabling this feature adds no dependency.
 typegen = []
+# ⌨️ The native command-line binaries (`pack`, `spr`, `semio`). Their `cli` modules are mounted only
+# off wasm32 (`os_pack::cli`, `os_spr::cli` need the native file layer), so the bins are opt-in: a
+# wasm32 test build of this crate (`--target wasm32-wasip2 --test pack_schema_hash`) never tries to
+# link them, and a native caller asks for them with `--features native-bin`.
+native-bin = []
 
 [dependencies]
 dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
@@ -122,14 +131,17 @@ semio-framework-actor = { workspace = true, optional = true }
 [[bin]]
 name = "pack"
 path = "../../🔨️modules/🎒️pack/⌨️cli/💾️binary/🦀️.rs"
+required-features = ["native-bin"]
 
 [[bin]]
 name = "spr"
 path = "../../🔨️modules/📡️spr/⌨️cli/💾️binary/🦀️.rs"
+required-features = ["native-bin"]
 
 [[bin]]
 name = "semio"
 path = "../../🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs"
+required-features = ["native-bin"]
 
 [dev-dependencies]
 blake3 = "1.8.2"

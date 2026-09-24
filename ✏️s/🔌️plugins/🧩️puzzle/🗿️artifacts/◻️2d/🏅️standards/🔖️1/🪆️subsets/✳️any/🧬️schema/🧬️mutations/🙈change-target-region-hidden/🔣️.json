@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeTargetRegionHidden",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-target-region-hidden",
-  "binaryTag": null,
+  "binaryTag": 31,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

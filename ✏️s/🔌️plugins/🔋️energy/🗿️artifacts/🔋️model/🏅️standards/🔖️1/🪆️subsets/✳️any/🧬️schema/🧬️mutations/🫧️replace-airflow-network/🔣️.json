@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceAirflowNetwork",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-airflow-network",
-  "binaryTag": null,
+  "binaryTag": 5,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

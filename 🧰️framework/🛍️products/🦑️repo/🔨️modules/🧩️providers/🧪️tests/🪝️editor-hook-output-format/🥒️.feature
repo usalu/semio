@@ -15,7 +15,7 @@ Feature: All eight editor providers agree on how a hook result reaches the edito
   @level-fundamental
   @mode-differential
   Scenario: Every editor formats every fixture result into the same record
-    Given the hook output vectors local://🪝️hook-outputs.json
+    Given the hook output vectors shared://🪝️editor-hook-output-format/🪝️hook-outputs.json
     When each of the eight editor providers formats every fixture result
     Then every implementation projects the same parsed record for every editor and every result
 
@@ -23,7 +23,7 @@ Feature: All eight editor providers agree on how a hook result reaches the edito
   @level-fundamental
   @mode-differential
   Scenario: Every editor derives the same native event name for every neutral hook event
-    Given the hook output vectors local://🪝️hook-outputs.json
+    Given the hook output vectors shared://🪝️editor-hook-output-format/🪝️hook-outputs.json
     When each editor is asked for the native event name of every hook event, with and without a subagent parent
     Then every implementation projects the same name, including the empty name for an event the editor does not surface
 
@@ -31,6 +31,6 @@ Feature: All eight editor providers agree on how a hook result reaches the edito
   @level-fundamental
   @mode-error
   Scenario: A native event an editor does not know is an error, never a silently defaulted hook event
-    Given the hook output vectors local://🪝️hook-outputs.json
+    Given the hook output vectors shared://🪝️editor-hook-output-format/🪝️hook-outputs.json
     When each editor resolves every fixture native event against its declared tool kind
     Then every implementation projects the same resolved hook event, or the same refusal

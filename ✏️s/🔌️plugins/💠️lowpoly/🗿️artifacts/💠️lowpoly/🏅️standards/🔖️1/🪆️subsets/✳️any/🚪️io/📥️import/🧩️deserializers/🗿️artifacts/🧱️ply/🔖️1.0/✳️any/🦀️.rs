@@ -1,13 +1,10 @@
 //! lowpoly <- ply
 //!
-//! Two paths over the real `engine::decode_ply` (ascii and both binary encodings):
-//! 1. 🔒️ Lossless: the export leaf's hex-embedded lowpoly DSL `comment` is read back when present.
-//! 2. 🕸️ Geometry: otherwise the `vertex` element's `x`/`y`/`z` columns plus the `face` element's
+//! Geometry over the real `engine::decode_ply` (ascii and both binary encodings): the `vertex` element's `x`/`y`/`z` columns plus the `face` element's
 //!    `vertex_indices` (or `vertex_index`) list become ONE lowpoly object, n-gons kept. A file
 //!    without faces is rejected loudly.
 use crate::io::mesh_geometry::{compact_part, snapshot_from_parts, text_error};
-use crate::schema::snapshot::text::parse_dsl;
-use crate::schema::snapshot::{dec_str, LowpolySnapshot};
+use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_ply::engine::decode_ply;
 use semio_s_artifact_stdio_ply::schema::snapshot::{PlyElement, PlyValue};
 use semio_s_artifact_stdio_ply::PlySnapshot;
@@ -15,11 +12,6 @@ use semio_s_artifact_stdio_ply::PlySnapshot;
 pub fn register() {}
 
 pub fn deserialize(from: &PlySnapshot) -> Result<LowpolySnapshot, store::TextError> {
-    let prefix = crate::io::export::serializers::artifacts::ply::v1_0::any::LOWPOLY_DSL_COMMENT_PREFIX;
-    if let Some(hex) = from.comments.iter().find_map(|c| c.strip_prefix(prefix)) {
-        let text = dec_str(hex).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
-        return parse_dsl(&text);
-    }
     snapshot_from_ply_geometry(from)
 }
 

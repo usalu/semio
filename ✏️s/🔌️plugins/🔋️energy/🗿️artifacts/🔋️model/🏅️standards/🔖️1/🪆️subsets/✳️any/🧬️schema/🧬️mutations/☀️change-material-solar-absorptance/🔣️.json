@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeMaterialSolarAbsorptance",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-material-solar-absorptance",
-  "binaryTag": null,
+  "binaryTag": 68,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -3073,13 +3073,14 @@ function runCargoLint(packages, cwd, extraArgs, env) {
 function withViteConfigLoader(args) {
     if (args.includes("--configLoader"))
         return __spreadArray([], args, true);
+    var loader = typeof globalThis.Bun === "object" ? "native" : "bundle";
     var out = __spreadArray([], args, true);
     var viteIdx = out.indexOf("vite");
     if (viteIdx >= 0) {
-        out.splice(viteIdx + 1, 0, "--configLoader", "bundle");
+        out.splice(viteIdx + 1, 0, "--configLoader", loader);
         return out;
     }
-    return __spreadArray(["--configLoader", "bundle"], out, true);
+    return __spreadArray(["--configLoader", loader], out, true);
 }
 function bunArgsForVite(args) {
     return args.includes("vite") ? withViteConfigLoader(args) : __spreadArray([], args, true);

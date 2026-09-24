@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::playbook::commands::move_block::MoveBlock;
 use crate::editor::playbook::commands::remove_block::RemoveBlock;
-use crate::editor::playbook::unit_tests::context::{dispatch, playbook_app, playbook_app_with_registry};
+use crate::editor::playbook::unit_tests::context::{dispatch, playbook_app};
 use crate::editor::playbook::PlaybookCommand;
 use AddBlock;
 
@@ -19,7 +19,7 @@ async fn add_block_action_appends_block() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_block_materializes_declared_kind_default() {
-    let mut app = playbook_app_with_registry().await;
+    let mut app = playbook_app().await;
     dispatch(&mut app, PlaybookCommand::AddStep(crate::editor::playbook::commands::add_step::AddStep {})).await;
     dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None })).await;
     let projection = app.snapshot().expect("materialize projection");

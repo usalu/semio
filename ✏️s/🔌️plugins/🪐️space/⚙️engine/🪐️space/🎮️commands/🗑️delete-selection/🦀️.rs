@@ -13,7 +13,7 @@ pub struct DeleteSelection {}
 /// 🕹️ Reads the `graph` domain's current selection instead of a deleted config field — no
 /// `SetSelection` config mutation needed afterwards, the framework auto-prunes the deleted ids out of
 /// `graph`'s selection via `interaction_topology`.
-async fn delete_selected(config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+pub(crate) async fn delete_selected(config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let artifact_mutations = selected.iter().cloned().map(|node_id| WorkflowMutation::RemoveNode(RemoveNode { node_id })).collect();
     let mut config_mutations = Vec::new();
     if config.active_node_id.as_ref().is_some_and(|id| selected.contains(id)) {

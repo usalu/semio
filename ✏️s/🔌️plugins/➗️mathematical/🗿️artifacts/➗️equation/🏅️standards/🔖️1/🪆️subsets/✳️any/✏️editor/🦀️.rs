@@ -636,10 +636,14 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
         (extent == self.extent).then_some(extent)
     }
 
+    /// 🧮️ One bounded microturn. The job owns its command and snapshot for the whole operation and the
+    /// framework measures [`Self::extent`] once in its preflight phase, so a turn never re-derives it:
+    /// doing so cloned the whole working scene and re-parsed the edit JSON on every per-item turn,
+    /// which made each microturn cost O(document) and the operation quadratic.
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<EquationPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<EquationPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation: _operation } = *input;
-        if equation_command_extent(command, snapshot) != Some(self.extent) || self.cursor > self.extent {
-            return Err(Fault::from("equation-command-extent-drift"));
+        if self.cursor > self.extent {
+            return Err(Fault::from("equation-command-extent-overflow"));
         }
         // 🎬️ One step, no scene: the whole-document replacement is a host-applied effect.
         if let EquationCommand::SetActiveExample(payload) = command {

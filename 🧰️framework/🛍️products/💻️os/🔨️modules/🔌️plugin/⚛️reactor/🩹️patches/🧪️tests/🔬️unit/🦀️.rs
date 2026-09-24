@@ -1384,6 +1384,7 @@ fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_ha
 fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    let baseline_fixed = ui_contract::UiResidentPermit::fixed_backing_bytes().expect("resident ledger");
     let tracker = PatchTracker::new();
     for round in 0..200u32 {
         tracker.begin("41:puzzle3d-main".into(), tree_with_owned_child(&round.to_string())).unwrap_or_else(|_| panic!("round {round} admits its publication: {}", tracker.debug_state()));
@@ -1400,7 +1401,8 @@ fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
     close_instance_to_empty(&tracker, 41);
     let after = semio_framework_ui_runtime::surface_reconcile_registry_census();
     assert_eq!(after.resident_slots, baseline.resident_slots, "resident slots leaked across 200 publications: {after:?} against {baseline:?}");
-    assert_eq!(after.resident_bytes, baseline.resident_bytes, "resident credit leaked across 200 publications: {after:?} against {baseline:?}");
+    let after_fixed = ui_contract::UiResidentPermit::fixed_backing_bytes().expect("resident ledger");
+    assert_eq!(after.resident_bytes - after_fixed, baseline.resident_bytes - baseline_fixed, "resident credit leaked across 200 publications (the reconcile runtime backing registers once, on the first reservation, and is fixed thereafter): {after:?} against {baseline:?}");
     assert_eq!(after.handback_free, baseline.handback_free, "handback slots leaked across 200 publications: {after:?} against {baseline:?}");
     eprintln!("[DEBUG] 200 publications returned every reservation: {after:?}");
 }

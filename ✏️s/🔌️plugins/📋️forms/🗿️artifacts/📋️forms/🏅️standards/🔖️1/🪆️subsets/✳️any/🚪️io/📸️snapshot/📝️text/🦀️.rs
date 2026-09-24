@@ -13,113 +13,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::FormsSnapshot;
 
-//#region 🔖️ChildCodecPrimitives
-/// 🧪️ Real hex/bracket child-handle codec (mirrors `➗️mathematical`'s/`📐️cad`'s own `enc_child`/
-/// `dec_child`) — a handle is exactly two strings (`child_id`, the target's `ArtifactRef`
-/// flattened via `to_uri()`), never the child's own content.
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-fn enc_opt_str(s: &Option<String>) -> String {
-    match s {
-        Some(v) => enc_str(v),
-        None => "-".to_string(),
-    }
-}
-fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
-    if s == "-" {
-        Ok(None)
-    } else {
-        Ok(Some(dec_str(s)?))
-    }
-}
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
-}
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
-}
-fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
-fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
-    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
-    let parts: Vec<&str> = inner.splitn(2, ',').collect();
-    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
-}
-//#endregion 🔖️ChildCodecPrimitives
-
-//#region 🔖️TextPrimitives
-fn print_forms_snapshot_body(s: &FormsSnapshot) -> String {
-    format!("schema={}\nid={}\nversion={}\ntitle={}\nstructure={}\nresults={}", enc_str(&s.schema), enc_str(&s.id), enc_str(&s.version), enc_opt_str(&s.title), enc_child(&s.structure), enc_child(&s.results))
-}
-fn parse_forms_snapshot_body(body: &str) -> Result<FormsSnapshot, String> {
-    let mut schema = None;
-    let mut id = None;
-    let mut version = None;
-    let mut title = None;
-    let mut structure = None;
-    let mut results = None;
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("schema=") {
-            if schema.is_some() { return Err("duplicate Forms schema".into()); }
-            schema = Some(dec_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("id=") {
-            if id.is_some() { return Err("duplicate Forms id".into()); }
-            id = Some(dec_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("version=") {
-            if version.is_some() { return Err("duplicate Forms version".into()); }
-            version = Some(dec_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("title=") {
-            if title.is_some() { return Err("duplicate Forms title".into()); }
-            title = Some(dec_opt_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("structure=") {
-            if structure.is_some() { return Err("duplicate Forms structure".into()); }
-            structure = Some(dec_child(rest)?);
-        } else if let Some(rest) = line.strip_prefix("results=") {
-            if results.is_some() { return Err("duplicate Forms results".into()); }
-            results = Some(dec_child(rest)?);
-        } else {
-            return Err(format!("forms snapshot: unknown line {line:?}"));
-        }
-    }
-    let snapshot = FormsSnapshot {
-        schema: schema.ok_or_else(|| "forms snapshot: missing schema line".to_string())?,
-        id: id.ok_or_else(|| "forms snapshot: missing id line".to_string())?,
-        version: version.ok_or_else(|| "forms snapshot: missing version line".to_string())?,
-        title: title.unwrap_or(None),
-        structure: structure.ok_or_else(|| "forms snapshot: missing structure line".to_string())?,
-        results: results.ok_or_else(|| "forms snapshot: missing results line".to_string())?,
-    };
-    snapshot.validate()?;
-    Ok(snapshot)
-}
-//#endregion 🔖️TextPrimitives
-
 //#region 🔖️HandcraftedArtifactDsl
-/// ✉️ Real hex/bracket text primitives, hand-rolled directly on `FormsSnapshot` — the previous
-/// codec bridged through the shared `semio_framework_artifact_playbook_playbook::PlaybookSpec` grammar (whose `steps` field
-/// mapped 1:1 onto this struct's old bare `steps` field); that bridge cannot express a composed
-/// child slot (no `dsl::DslField` impl reachable from this crate for `ArtifactChild<S>`), so this
-/// upgrade drops it in favor of the same `enc_child`/`dec_child` pattern `➗️mathematical`/`📐️cad`/
-/// `✒️writer` established once their own snapshot gained a real child slot.
+/// ✉️ `ArtifactDsl` over the derived spec-driven text of `FormsSnapshot::__dsl_spec()`, the same record
+/// the pack encodes; a parsed document must also pass `FormsSnapshot::validate`.
 impl store::ArtifactDsl for FormsSnapshot {
     const EXTENSION: &'static str = "forms";
     fn envelope_id() -> &'static str {
@@ -135,10 +31,13 @@ impl store::ArtifactDsl for FormsSnapshot {
             },
             Err(_) => text,
         };
-        parse_forms_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let snapshot = Self::__dsl_from_record(&record)?;
+        snapshot.validate().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))?;
+        Ok(snapshot)
     }
     fn print_dsl(&self) -> String {
-        let body = print_forms_snapshot_body(self);
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -227,8 +126,7 @@ condition {
 ] ]"##;
 
 /// 📖️ Parses `.forms` DSL text into a `FormsSnapshot` — `FormsSnapshot`'s OWN persisted wire
-/// format (hand-rolled directly on the composed `structure`/`results` child slots since ticket
-/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM; see `📸️snapshot/🧬️schema`'s `🔖️HandcraftedArtifactCodecs`).
+/// format, the derived text of its own `dsl::DslRecord` spec.
 pub fn parse_dsl(text: &str) -> Result<FormsSnapshot, store::TextError> {
     <FormsSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }

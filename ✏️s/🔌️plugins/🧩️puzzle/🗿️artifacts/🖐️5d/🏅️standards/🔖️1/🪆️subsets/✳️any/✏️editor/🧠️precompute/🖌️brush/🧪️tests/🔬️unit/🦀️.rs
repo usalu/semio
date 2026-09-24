@@ -79,3 +79,67 @@ fn the_armed_brush_traces_every_candidate_in_both_windows_and_leaving_aborts_it(
     assert_eq!(committed(&app), before, "and left no undo entry behind");
     close_app(&mut app);
 }
+
+fn select_view() -> semio_framework_plugin::ViewModel {
+    window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID)
+}
+
+/// 🎣️ The world pane's published `suggestionMenu` record, read off a real render of the world body.
+fn suggestion_menu(app: &mut Puzzle5dApp) -> serde_json::Value {
+    let rendered = crate::editor::puzzle5d::unit_tests::context::render_body_with_view(app, world3d::BODY_KEY, &select_view());
+    let scene: serde_json::Value = serde_json::from_str(&rendered).expect("world scene json");
+    let interaction: serde_json::Value = serde_json::from_str(scene["scene"]["interactionJson"].as_str().expect("the world scene carries interactionJson")).expect("interactionJson parses");
+    interaction["suggestionMenu"].clone()
+}
+
+/// 🎣️ LAW (grip context menu): opening the suggestion SUBMENU on a grip — no brush armed — starts the read-only
+/// search right away, the menu lists the free candidates it found (each with its trace key), accepting one places
+/// exactly one part fastened to that grip, and closing the menu aborts the search.
+#[test]
+fn the_grip_suggestion_submenu_searches_without_the_brush_and_accepts_a_candidate() {
+    let mut app = app_with_registry();
+    let projection = projection_of(&app);
+    let parts = projection["parts"].as_array().map_or(0, Vec::len);
+    let grip = projection["parts"].as_array().and_then(|parts| parts.first()).and_then(|part| Some(puzzle5d_grip_full_id(part["id"].as_str()?, part["grips"].as_array()?.first()?["id"].as_str()?))).expect("a grip");
+    let opened = dispatch_armed(&mut app, "openVortexSuggestions", Some(&dsl::json!({ "fullId": grip.as_str(), "x": 10.0, "y": 20.0, "submenu": true })), world3d::WINDOW_KIND_ID, "select").expect("openVortexSuggestions");
+    let starts: Vec<(String, serde_json::Value)> = opened
+        .requested_effects
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::DispatchAction { action, args, .. } => Some((action.clone(), args.as_ref().map_or(serde_json::Value::Null, serde_json::Value::from))),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        starts.iter().any(|(action, args)| action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID && args[semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID] == serde_json::json!(UTILITY_ID)),
+        "opening the menu starts the search itself, without waiting for a refresh poll: {starts:?}"
+    );
+    for (action, args) in starts {
+        tool_run_action(&mut app, &action, args);
+    }
+    let mut listed = serde_json::Value::Null;
+    for _ in 0..FILL_RUN_TURNS {
+        for effect in semio_framework::io::resolve_ready(app.pending_effects(Some(&select_view()))) {
+            if let Effect::DispatchAction { action, args, .. } = effect {
+                tool_run_action(&mut app, &action, args.as_ref().map_or(serde_json::Value::Null, serde_json::Value::from));
+            }
+        }
+        listed = suggestion_menu(&mut app);
+        if listed["candidates"].as_array().is_some_and(|rows| !rows.is_empty()) || settled(app.tool_run_presence().as_ref()) {
+            break;
+        }
+        host_turn(&mut app);
+    }
+    assert_eq!(listed["submenu"], serde_json::json!(true), "the menu is presented as the context menu's submenu: {listed}");
+    assert_eq!(listed["vortexFullId"], serde_json::json!(grip), "the menu lists candidates for its own grip: {listed}");
+    let rows = listed["candidates"].as_array().cloned().unwrap_or_default();
+    assert!(!rows.is_empty(), "the search found free candidates without the brush armed: {listed}; presence {:?}", app.tool_run_presence());
+    assert!(rows.iter().all(|row| row["key"].is_u64()), "every row names its trace record: {listed}");
+    dispatch_armed(&mut app, "hoverSuggestion", Some(&dsl::json!({ "index": 0 })), world3d::WINDOW_KIND_ID, "select").expect("hoverSuggestion");
+    dispatch_armed(&mut app, "acceptSuggestion", Some(&dsl::json!({ "index": 0, "fullId": grip.as_str() })), world3d::WINDOW_KIND_ID, "select").expect("acceptSuggestion");
+    let placed = projection_of(&app);
+    assert_eq!(placed["parts"].as_array().map_or(0, Vec::len), parts + 1, "accepting places exactly one part");
+    assert!(placed["fasteners"].as_array().is_some_and(|rows| rows.iter().any(|row| row["source"].as_str() == Some(grip.as_str()) || row["target"].as_str() == Some(grip.as_str()))), "the placed part is fastened to the menu's grip");
+    assert_eq!(suggestion_menu(&mut app), serde_json::Value::Null, "accepting closes the menu");
+    close_app(&mut app);
+}

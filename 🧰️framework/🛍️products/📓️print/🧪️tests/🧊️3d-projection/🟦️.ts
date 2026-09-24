@@ -13,7 +13,7 @@ glMatrix.setMatrixArrayType(Array);
 
 // #region 🧫️Vectors
 const CASE = "3d-projection";
-const FIXTURE = "local://3d-projection.tex";
+const FIXTURE = "shared://🧊️3d-projection/3d-projection.tex";
 const DECIMALS = 5;
 
 /** 🔢️ Rounds an oracle's numbers onto the emission grid the comparison uses. */

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeSeed",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-seed",
-  "binaryTag": null,
+  "binaryTag": 0,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

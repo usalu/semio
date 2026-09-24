@@ -11,6 +11,6 @@ owner-scoped goal identifier, and the goal tree the CLI renders.
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
-`🧪️test` harness; the third-party references are registered in `🔮️oracle/🔣️.json`.
+`🧪️test` harness; the third-party references are registered in `🔮️oracles/🔣️.json`.
 
-`🪪️goal-id-scheme`, `📄️goal-document-codec`, `🔓️goal-lifecycle`, `🌳️goal-tree-rendering`.
+`🪪️goal-id-scheme`, `🎯️goal-document-codec`, `🔓️goal-lifecycle`, `🌳️goal-tree-rendering`.

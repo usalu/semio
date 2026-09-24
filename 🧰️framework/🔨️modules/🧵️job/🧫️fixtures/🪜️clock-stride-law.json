@@ -1,0 +1,12 @@
+{
+  "law": "A step's per-unit deadline check reads the real clock about once per target interval instead of once per unit and overshoots its deadline by at most one read interval. A step begins at its driver's entry reading, so the first in-step call costs no read and the calibrated stride carries from step to step; outside the job's own strided reads a worker step reads the clock exactly twice, on entry and on exit, and every trace event and next-step decision reuses those readings.",
+  "targetReadIntervalUs": 64,
+  "maximumStride": 4096,
+  "cases": [
+    { "name": "cheap units", "unitCostUs": 2, "windowUs": 2000, "maxReads": 40, "maxOvershootUs": 66 },
+    { "name": "medium units", "unitCostUs": 50, "windowUs": 2000, "maxReads": 42, "maxOvershootUs": 50 },
+    { "name": "units dearer than the interval", "unitCostUs": 500, "windowUs": 8000, "maxReads": 17, "maxOvershootUs": 500 }
+  ],
+  "newStep": { "windows": 3, "readsForTheFirstCall": 0 },
+  "stepReadsOutsideTheJob": 2
+}

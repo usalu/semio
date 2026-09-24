@@ -1,12 +1,14 @@
 use semio_hub::directory::CommandResult;
 
+/// 🧪️ A document socket grant without the open-plan route: the credential's subject and actor, a
+/// descriptor-only plan-free admission for socket laws that are not about plan revalidation.
 #[cfg(test)]
-async fn issue_document_socket_grant_fixture(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
+async fn issue_document_socket_grant_fixture(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DocumentSocketGrantReceiptV1>, StatusCode> {
     if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) {
         return Err(StatusCode::BAD_REQUEST);
     }
     let scope = DocumentScope::new(space_id, document_id);
-    let (subject, stable_actor_material) = authenticate_document_socket_subject(&state, &scope, &headers).await.map_err(|error| match error {
+    let (subject, actor_id) = authenticate_document_socket_subject(&state, &scope, &headers).await.map_err(|error| match error {
         DocumentOpenPlanErrorCodeV1::DeadlineExceeded => StatusCode::SERVICE_UNAVAILABLE,
         _ => StatusCode::UNAUTHORIZED,
     })?;
@@ -14,7 +16,18 @@ async fn issue_document_socket_grant_fixture(Path((space_id, document_id)): Path
     if descriptor.is_none() {
         return Err(StatusCode::NOT_FOUND);
     }
-    issue_socket_grant(&state, subject, SocketAudienceV1::Document(scope), stable_actor_material).await
+    let audience = SocketAudienceV1::Document(scope);
+    let _admission = state.socket_binding_gates.acquire_record(&subject, &audience).await;
+    if socket_binding_validity(&state, &subject, &audience).await != SocketBindingValidityV1::Active {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let now = now_ms();
+    let binding_expiry = match &subject {
+        SocketSubjectV1::Session { expires_at_ms, .. } | SocketSubjectV1::Share { expires_at_ms, .. } => *expires_at_ms,
+    };
+    let expires_at_ms = now.checked_add(SOCKET_GRANT_TTL_MS).ok_or(StatusCode::SERVICE_UNAVAILABLE)?.min(binding_expiry);
+    state.socket_grants.admit_document_without_plan_for_test(audience, actor_id.clone(), subject, now, expires_at_ms).map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+    Ok(Json(DocumentSocketGrantReceiptV1 { schema: DOCUMENT_SOCKET_GRANT_SCHEMA_V1, protocol: SESSION_PROTOCOL_V1, actor_id, expires_at_ms }))
 }
 
 #[cfg(test)]

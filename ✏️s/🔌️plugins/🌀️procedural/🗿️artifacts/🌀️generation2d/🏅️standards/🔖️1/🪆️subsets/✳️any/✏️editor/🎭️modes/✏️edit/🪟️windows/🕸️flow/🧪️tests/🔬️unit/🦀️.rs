@@ -20,7 +20,7 @@ async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
     close(app);
     let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<NodeGraphScene>(&json).expect("node-graph scene decodes off the rendered surface");
     assert!(
-        scene.host_snapshot_json.as_deref().is_some_and(|host_snapshot| host_snapshot.contains("flow.fixture") || host_snapshot.contains("flow.host_snapshot")),
+        scene.host_snapshot_json.as_deref().is_some_and(|host_snapshot| host_snapshot.contains("flow.host_snapshot")),
         "flow-backed scene must carry a host snapshot"
     );
     assert!(scene.capabilities_json.as_deref().is_some_and(|capabilities| capabilities.contains("flow")));

@@ -1,40 +1,77 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members as new_app_with_registry};
-    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
-    
-    pub type PlaybookApp = VcsArtifactApp<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
-    
-    /// 🧪️ An app instance with its concrete command registry and retained job proofs.
-    pub async fn playbook_app() -> PlaybookApp {
-        new_app_with_registry::<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(playbook_manifest_for_tests).await
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, project_and_retire_fixture_tree, settle_history_verb, settle_registered_typed_operation};
+    use semio_framework_plugin::{App, EditorApp, Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+
+    pub type MountedPlaybookApp = VcsArtifactApp<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+
+    /// 🔒️ A mounted, self-closing playbook app: bound to the `meta("local")` instance the way the live
+    /// host binds it before its first dispatch (`interactive-job.live-instance`), and retired through the
+    /// bounded close protocol on drop (`artifact store reached Drop without its exact terminal-empty
+    /// shallow-shell witness`). A panicking test leaves the witness alone so its first failure stays reported.
+    pub struct PlaybookApp(MountedPlaybookApp);
+
+    impl std::ops::Deref for PlaybookApp {
+        type Target = MountedPlaybookApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
     }
-    
+
+    impl std::ops::DerefMut for PlaybookApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for PlaybookApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
+
+    /// 🧪️ A bound app instance with its concrete command registry, retained job proofs and composed member roster.
+    pub async fn playbook_app() -> PlaybookApp {
+        let mut app = new_app_with_registry_and_members::<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(playbook_manifest_for_tests).await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        PlaybookApp(app)
+    }
+
     /// 🧪️ Adapts `create_playbook_play_app`'s `AppDefinition` (contract §2.4) into the `App {
-    /// definition, examples }` shape `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
-    /// still expect — framework test context gap, not modifiable here (`🧰️framework/**` is outside this
-    /// packet's lease).
+    /// definition, examples }` shape the registry-backed fixture constructors expect.
     pub fn playbook_manifest_for_tests() -> App {
         App { definition: create_playbook_play_app(), examples: Vec::new() }
     }
-    
-    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
-    /// `kind` default declared on `addBlock` materializes host-side.
-    pub async fn playbook_app_with_registry() -> PlaybookApp {
-        new_app_with_registry::<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(playbook_manifest_for_tests).await
-    }
-    
+
+    /// 🚚️ Dispatches one typed command, settles its retained operation and applies any `LoadDocument`
+    /// effect exactly as the host would; a mounted app's `result.mutations` is always empty.
     pub async fn dispatch(app: &mut PlaybookApp, command: PlaybookCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        let mut result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.expect("retained playbook operation settles");
+        result.requested_effects.extend(receipt.effects);
+        for effect in &result.requested_effects {
+            if let Effect::LoadDocument { pack, spr } = effect {
+                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+            }
+        }
+        result
     }
-    
+
+    /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) through admission, commit and publication.
+    pub async fn history_verb(app: &mut PlaybookApp, action: &str) {
+        settle_history_verb(&mut app.0, action, meta("local").instance_id).await;
+    }
+
     pub async fn render(app: &mut PlaybookApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("render json")
+        project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 }
 
 use super::*;
-use crate::editor::playbook::unit_tests::context::{dispatch, playbook_app};
+use crate::editor::playbook::unit_tests::context::{dispatch, playbook_app, playbook_manifest_for_tests};
 use crate::op::AddBlock;
 use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::{MediaClass, MediaForm};
@@ -79,7 +116,8 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 }
 
 /// 🌐️ The language-neutral job catalog has the same row order through an owned minimal
-/// parser and the test-only third-party JSON oracle, then matches the schema-generated command enum.
+/// parser and the test-only third-party JSON oracle, matches the schema-generated command enum, and
+/// names exactly the retained tool roster.
 #[semio_framework_async_macros::async_test]
 async fn interactive_job_catalog_matches_owned_and_json_oracle_projections() {
     let source = include_str!("../../🧫️fixtures/🧫️interactive-jobs/🔣️.json");
@@ -95,6 +133,11 @@ async fn interactive_job_catalog_matches_owned_and_json_oracle_projections() {
     let generated = every_command().into_iter().map(|command| command.command_id().to_string()).collect::<Vec<_>>();
     assert_eq!(owned, oracle);
     assert_eq!(owned, generated);
+    let mut retained = PLAYBOOK_RETAINED_TOOL_IDS.iter().map(|id| id.to_string()).collect::<Vec<_>>();
+    let mut catalog = owned;
+    retained.sort_unstable();
+    catalog.sort_unstable();
+    assert_eq!(catalog, retained, "every playbook verb is a retained Migrated tool");
 }
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
@@ -173,7 +216,7 @@ async fn interaction_topology_covers_every_step_and_block() {
 /// ever dropped again — a declaration-only assertion would not catch a regression in `local_read`.
 #[semio_framework_async_macros::async_test]
 async fn set_contributions_boots_because_presence_declares_its_retirement_owners() {
-    use semio_framework_plugin::{ArtifactApp, PluginApp};
+    use semio_framework_plugin::ArtifactApp;
 
     assert!(
         <EditorApp<PlaybookPlayApp> as ArtifactApp>::build_presence_local_root_retirement_factory().is_some(),
@@ -184,25 +227,16 @@ async fn set_contributions_boots_because_presence_declares_its_retirement_owners
         "playbook must declare a peer presence retirement owner"
     );
 
-    // 🔌️ `meta("local")` names instance 1, and a typed command is refused
-    // (`interactive-job.live-instance`) until that instance is the mounted one — so the instance is
-    // bound exactly as the live host binds it before its first dispatch.
     let mut app = playbook_app().await;
-    app.bind_instance_id(semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
-    let outcome = app
-        .dispatch_typed(
-            PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "{}".to_string() }),
-            &semio_framework_plugin::artifact_app_laws::meta("local"),
-        )
-        .await;
+    let outcome = app.dispatch_typed(PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "{}".to_string() }), &artifact_app_laws::meta("local")).await;
     assert!(outcome.is_ok(), "setContributions must not be refused at boot: {:?}", outcome.err());
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::settle_registered_typed_operation(&mut *app, artifact_app_laws::meta("local").instance_id).await.expect("setContributions publishes");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = playbook_app().await;
-    artifact_app_laws::assert_undo_redo_round_trip(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}), |app| app.snapshot().expect("materialize projection").steps().len(), 1, 2).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut *app, PlaybookCommand::AddStep(add_step::AddStep {}), |app| app.snapshot().expect("materialize projection").steps().len(), 1, 2).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -220,9 +254,9 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 /// `interactive-job.catalog-authority` proof join before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<PlaybookPlayApp>, _, _, _>(
+    artifact_app_laws::assert_two_registered_instances_converge_with_members::<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _, _>(
         "mem://playbook-convergence",
-        || async { crate::editor::playbook::unit_tests::context::playbook_manifest_for_tests() },
+        || async { playbook_manifest_for_tests() },
         PlaybookCommand::AddStep(add_step::AddStep {}),
         PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }),
         |app| {
@@ -329,7 +363,7 @@ fn every_retained_tool_id_is_migrated_contracted_and_backed_by_store_owners() {
 #[test]
 fn command_from_action_resolves_every_declared_verb() {
     use semio_framework_plugin::ArtifactEditor;
-    for tool_id in PLAYBOOK_RETAINED_TOOL_IDS.iter().chain(["updatePlaybook"].iter()) {
+    for tool_id in PLAYBOOK_RETAINED_TOOL_IDS {
         let command = PlaybookPlayApp::command_from_action(tool_id, None).unwrap_or_else(|error| panic!("{tool_id} has no bridge: {error:?}"));
         assert_eq!(command.command_id(), *tool_id);
     }

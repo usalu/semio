@@ -72,7 +72,17 @@ export interface Puzzle5dWorldWindowConfig {
   voxelDims: [number, number, number];
 }
 
+/** The grip suggestion menu this window has open: a floating popup, or the context menu's "suggest" submenu. `vortexFullId` is the world host's name for the grip full id. */
+export interface Puzzle5dSuggestionMenu {
+  x: number;
+  y: number;
+  windowId: string;
+  vortexFullId: string;
+  submenu: boolean;
+}
+
 export interface Puzzle5dWindowTransient {
+  suggestionMenu?: Puzzle5dSuggestionMenu | null;
   engagementInput: string;
   brushCandidateIndex: number;
 }

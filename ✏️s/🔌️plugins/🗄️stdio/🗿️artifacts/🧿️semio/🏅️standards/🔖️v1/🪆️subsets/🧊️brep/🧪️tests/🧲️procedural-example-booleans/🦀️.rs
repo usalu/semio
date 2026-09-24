@@ -145,6 +145,7 @@ fn sphere_box_fuse_example_is_a_closed_oriented_solid() {
     let sphere = make_sphere(&mut body, radius, &mut rec).expect("sphere");
     let cube = make_box(&mut body, size, size, size, &mut rec).expect("box");
     let fused = boolean_solid(&mut body, sphere, cube, BooleanOp::Unite, 1e-6, &mut rec).expect("fuse");
+    assert_eq!(body.solid_faces(fused).len(), 7, "OCCT (brepjs-opencascade) fuses the same operands into 7 faces, one sphere and six planes — a missing face is a lost boolean piece");
     let sphere_volume = 4.0 / 3.0 * PI * radius.powi(3);
     let expected = sphere_volume + size.powi(3) - sphere_volume / 8.0;
     assert_boolean_result(&body, fused, expected, 5e-3, "sphere-box-fuse");
@@ -162,4 +163,22 @@ fn sphere_cut_with_torus_example_is_a_closed_oriented_solid() {
     assert_boolean_result(&body, carved, expected, 5e-3, "sphere-cut-with-torus");
 }
 
+/// 🕳️ Every `sphere-cut-with-torus` slider radius past the torus's outer equator (`major + minor`)
+/// swallows the whole tube: the cut is the ball with a torus-shaped CAVITY, whose volume is the
+/// closed form `4/3·π·r³ − 2·π²·major·minor²`. The containment fast path answers these, and it used
+/// to leave the void shell wound outward, so every such value failed `void-shell-not-inverted`
+/// (the `generation3d` slider rows `inside`, `max-end` and `burst`).
+#[test]
+fn sphere_cut_with_torus_past_the_tube_is_a_ball_with_a_torus_cavity() {
+    let (major, minor) = (2.0_f64, 0.5_f64);
+    for radius in [2.8_f64, 3.0, 3.5, 6.0, 8.0, 10.0] {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let sphere = make_sphere(&mut body, radius, &mut rec).expect("sphere");
+        let torus = make_torus(&mut body, major, minor, &mut rec).expect("torus");
+        let carved = boolean_solid(&mut body, sphere, torus, BooleanOp::Cut, 1e-6, &mut rec).expect("cut");
+        let expected = 4.0 / 3.0 * PI * radius.powi(3) - 2.0 * PI * PI * major * minor * minor;
+        assert_boolean_result(&body, carved, expected, 5e-3, &format!("sphere-cut-with-torus r={radius}"));
+    }
+}
 // #endregion 🔖️Examples

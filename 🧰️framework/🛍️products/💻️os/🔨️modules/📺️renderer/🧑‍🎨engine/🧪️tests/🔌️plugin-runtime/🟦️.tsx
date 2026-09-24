@@ -3247,7 +3247,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         { tag: "typed-operation-terminal-output", val: { schema: "semio.space.home.directory-projection-receipt.v1", throughSeqInclusive: 8 } },
       ]);
       pendingTurnEffects.set(instanceId, [{ tag: "notify", val: { message: "invocation" } }]);
-      push({ instanceId, frames: [encodeAppFrame({ OperationCompleted: { operation: 9, revision: 3, ui_scope: [], history_patch: Array.from(encodePackValue({ cursor: 2, upserts: [] })) } })] });
+      push({ instanceId, frames: [encodeAppFrame({ OperationCompleted: { operation: 9, revision: 3n, ui_scope: [], history_patch: Array.from(encodePackValue({ cursor: 2, upserts: [] })) } })] });
       for (let tick = 0; tick < 8 && seen.length === 0; tick += 1) await Promise.resolve();
       expect(seen).toHaveLength(1);
       expect(seen[0]).toMatchObject({ instanceId, operation: 9, revision: 3, requestedEffects: [{ notify: { message: "done" } }] });

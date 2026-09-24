@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceReferences",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-references",
-  "binaryTag": null,
+  "binaryTag": 18,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

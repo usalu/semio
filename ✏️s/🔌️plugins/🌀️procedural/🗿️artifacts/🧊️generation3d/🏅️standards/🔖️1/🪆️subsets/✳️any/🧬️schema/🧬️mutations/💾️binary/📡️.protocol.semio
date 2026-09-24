@@ -3,14 +3,39 @@ protocol generation3d.mutations
 version 1
 schema procedural.generation3d.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record create-widget tag=0
+field payload bytes
+record update-widget tag=1
+field payload bytes
+record delete-widget tag=2
+field payload bytes
+record connect-synapse tag=3
+field payload bytes
+record update-synapse tag=4
+field payload bytes
+record disconnect-synapse tag=5
+field payload bytes
+record move-widget tag=6
+field payload bytes
+record delete-widget-position tag=7
+field payload bytes
+record update-camera tag=8
+field payload bytes
+record change-schema tag=9
+field payload bytes
+record create-generation tag=10
+field payload bytes
+record delete-generation tag=11
+field payload bytes
+record rename-generation tag=12
+field payload bytes
+record change-generation-value tag=13
+field payload bytes

@@ -1,6 +1,11 @@
 {
+  "artifact": "s.wfc.wfc2d",
   "standard": "1",
   "subsets": {
-    "*": {}
-  }
+    "*": {
+      "name": "Unconstrained wfc wfc2d 1"
+    }
+  },
+  "subsetPolicy": "single",
+  "subsetPolicyRationale": "`s.wfc.wfc2d@1` is one self-contained WaveFunctionCollapse problem document — free rectangular slots, an adjacency edge list with named relation classes, a tile alphabet carrying inline 2D media, rules and one seed. There is no alternate conformance profile, encoding variant or standard subclass to split against: every mutation reads and writes the SAME value model through the SAME codec and dispatch, so `✳️any` is this artifact's only real scope."
 }

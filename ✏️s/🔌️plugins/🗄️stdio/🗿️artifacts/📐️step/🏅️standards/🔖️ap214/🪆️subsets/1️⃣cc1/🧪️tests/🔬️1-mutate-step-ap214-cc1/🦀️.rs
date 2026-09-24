@@ -121,10 +121,10 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{class_claim, mutable_input, no_mutation, CLASS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use crate::engine::ladder::{ProductIdentity, ShapeRepresentationRow};
-    use crate::engine::part21::{parse_part21, write_part21};
-    use crate::standards::v_ap214::subsets::cc1::schema::mutations::{apply_step_cc1_mutation_checked, inverse_step_cc1_mutation, StepCc1Mutation};
-    use crate::StepSnapshot;
+    use semio_s_artifact_stdio_step::engine::ladder::{ProductIdentity, ShapeRepresentationRow};
+    use semio_s_artifact_stdio_step::engine::part21::{parse_part21, write_part21};
+    use semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc1::schema::mutations::{apply_step_cc1_mutation_checked, inverse_step_cc1_mutation, StepCc1Mutation};
+    use semio_s_artifact_stdio_step::StepSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::cc1::project_step_ap214_cc1;
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, reparsed_not_copied, round_trip_preserves};
 
@@ -203,28 +203,28 @@ mod subject {
                 if schemas.is_empty() {
                     return Err("set-snapshot requires a non-empty fileSchema field".to_string());
                 }
-                crate::engine::ladder::set_file_schema_names(&mut document, &schemas);
+                semio_s_artifact_stdio_step::engine::ladder::set_file_schema_names(&mut document, &schemas);
                 if let Some(identity) = params.get("productIdentity").filter(|value| !matches!(value, Json::Null)) {
-                    crate::engine::ladder::set_product_identity(&mut document, Some(&identity_from(identity)?));
+                    semio_s_artifact_stdio_step::engine::ladder::set_product_identity(&mut document, Some(&identity_from(identity)?));
                 }
                 snapshot = StepSnapshot::from_part21_document(&document);
                 let _ = base;
-                StepCc1Mutation::SetSnapshot(crate::standards::v_ap214::subsets::cc1::schema::mutations::set_snapshot::SetSnapshot { snapshot })
+                StepCc1Mutation::SetSnapshot(semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc1::schema::mutations::set_snapshot::SetSnapshot { snapshot })
             }
             "set-file-schema" => {
                 let schemas = str_array(&params, "schemas");
                 if schemas.is_empty() {
                     return Err(format!("{CLASS} requires FILE_SCHEMA to declare a schema"));
                 }
-                StepCc1Mutation::SetFileSchema(crate::standards::v_ap214::subsets::cc1::schema::mutations::set_file_schema::SetFileSchema { schemas })
+                StepCc1Mutation::SetFileSchema(semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc1::schema::mutations::set_file_schema::SetFileSchema { schemas })
             }
-            "set-product-identity" => StepCc1Mutation::SetProductIdentity(crate::standards::v_ap214::subsets::cc1::schema::mutations::set_product_identity::SetProductIdentity {
+            "set-product-identity" => StepCc1Mutation::SetProductIdentity(semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc1::schema::mutations::set_product_identity::SetProductIdentity {
                 identity: match params.get("identity").filter(|value| !matches!(value, Json::Null)) {
                     Some(value) => Some(identity_from(value)?),
                     None => None,
                 },
             }),
-            "remove-shape-representation" => StepCc1Mutation::RemoveShapeRepresentation(crate::standards::v_ap214::subsets::cc1::schema::mutations::remove_shape_representation::RemoveShapeRepresentation { id: u64_field(&params, "id")? }),
+            "remove-shape-representation" => StepCc1Mutation::RemoveShapeRepresentation(semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc1::schema::mutations::remove_shape_representation::RemoveShapeRepresentation { id: u64_field(&params, "id")? }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }
@@ -237,6 +237,9 @@ mod subject {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
         let document = parse_part21(text).map_err(|error| format!("parse_part21 failed: {error}"))?;
         let mut snapshot = StepSnapshot::from_part21_document(&document);
+        if spec.str("kind") == "no-mutation" {
+            return Ok(write_part21(&snapshot.to_part21_document()).into_bytes());
+        }
         let mutation = mutation_from_spec(spec, &snapshot.clone())?;
         apply_step_cc1_mutation_checked(&mut snapshot, &mutation)?;
         Ok(write_part21(&snapshot.to_part21_document()).into_bytes())
@@ -266,8 +269,10 @@ mod subject {
         let mutated = apply_and_encode(&input, &spec)?;
         let mutated_text = std::str::from_utf8(&mutated).map_err(|error| format!("output is not UTF-8: {error}"))?;
         let mut snapshot = StepSnapshot::from_part21_document(&parse_part21(mutated_text).map_err(|error| format!("parse_part21 failed: {error}"))?);
-        for step in inverse_step_cc1_mutation(&base, &mutation_from_spec(&spec, &base)?) {
-            apply_step_cc1_mutation_checked(&mut snapshot, &step)?;
+        if kind != "no-mutation" {
+            for step in inverse_step_cc1_mutation(&base, &mutation_from_spec(&spec, &base)?) {
+                apply_step_cc1_mutation_checked(&mut snapshot, &step)?;
+            }
         }
         let restored = write_part21(&snapshot.to_part21_document()).into_bytes();
         let projection = project_step_ap214_cc1(&restored)?;
@@ -293,10 +298,10 @@ mod subject {
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
+        built = built.oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), mutate_oracle).oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), inverse_oracle);
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
+            built = built.subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), subject::mutate).subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), subject::inverse);
         }
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);

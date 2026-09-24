@@ -1,6 +1,6 @@
 //! ℹ️ Direct binary identity for `set-info`.
 
-pub const TAG: u8 = 5;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-info");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetInfo;

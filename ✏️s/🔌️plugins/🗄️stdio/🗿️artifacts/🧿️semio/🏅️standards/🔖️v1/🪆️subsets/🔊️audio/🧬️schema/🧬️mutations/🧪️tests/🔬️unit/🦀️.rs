@@ -80,17 +80,17 @@ async fn remove_channel_out_of_range_is_noop_not_panic() {
 }
 
 /// 🧪️ `kinds_match_the_enum_and_the_catalog`: `KINDS` names every declared variant, in the
-/// declaration order `variant_ordinal` assigns and the spelling `print_audio_mutation` emits,
+/// declaration order `wire_tag` assigns and the spelling `print_audio_mutation` emits,
 /// and every one of those names also appears in the committed oracle manifest's catalog. The
 /// bijection against `all_variants` is what makes a newly added variant fail here instead of
 /// silently shrinking the vocabulary the `🔊️mutate-semio-audio` case claims to cover.
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
-    assert_eq!(KINDS, &OP_KEYWORDS[..], "KINDS must be exactly the op keyword table — one kebab-case name per declared variant, in declaration order");
+    assert_eq!(KINDS, dsl::protocol_record::records(WIRE_PROTOCOL).map(|(kind, _)| kind).collect::<Vec<_>>(), "KINDS must be exactly the 📡️.protocol.semio records — one kebab-case name per declared variant, in tag order");
     let base = base_snapshot();
     let mut seen = vec![false; KINDS.len()];
     for mutation in all_variants(&base) {
-        let ordinal = variant_ordinal(&mutation) as usize;
+        let ordinal = wire_tag(&mutation) as usize;
         assert!(!seen[ordinal], "ordinal {ordinal} is represented twice — all_variants must carry exactly one case per declared variant");
         seen[ordinal] = true;
         assert_eq!(KINDS[ordinal], print_audio_mutation(&mutation).split(' ').next().unwrap_or_default(), "KINDS[{ordinal}] must be the keyword {mutation:?} prints");

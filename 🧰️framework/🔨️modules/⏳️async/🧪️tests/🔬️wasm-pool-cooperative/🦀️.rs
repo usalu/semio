@@ -17,7 +17,7 @@ mod cooperative_tests {
         assert!(!pool.is_shutdown());
         let ran = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let ran_job = ran.clone();
-        pool.submit(Lane::UserVisible, Box::new(move || ran_job.store(true, Ordering::SeqCst)));
+        pool.submit(Lane::Interactive, Box::new(move || ran_job.store(true, Ordering::SeqCst)));
         pool.pump(1);
         assert!(ran.load(Ordering::SeqCst));
         drop(retained);

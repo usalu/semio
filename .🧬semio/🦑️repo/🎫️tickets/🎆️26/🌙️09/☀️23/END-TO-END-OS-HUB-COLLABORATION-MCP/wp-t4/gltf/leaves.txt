@@ -1,0 +1,2351 @@
+===== bind-default-scene (🎬️scene) 🏠️default-scene/🔗️bind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.bind-default-scene.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/scene"];
+#[value(rename_all = "camelCase")]
+pub struct GltfBindDefaultScenePayload {
+    pub scene: usize,
+}
+pub fn validate(payload: &GltfBindDefaultScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.scene >= base.document.scenes.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/scenes", "scene must exist"));
+    }
+    if Some(payload.scene) == base.document.scene {
+        return Err(reject("gltf.mutation.no-observable-change", "document/scene", "scene is already default"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfBindDefaultScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.scene = Some(payload.scene);
+    Ok(next)
+}
+
+===== bind-node-camera (🎬️scene) 📷️node-camera/🔗️bind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.bind-node-camera.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfBindNodeCameraPayload {
+    pub node: usize,
+    pub camera: usize,
+}
+pub fn validate(payload: &GltfBindNodeCameraPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    checked_index(payload.camera, base.document.cameras.len(), "document/cameras")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfBindNodeCameraPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[payload.node].camera = Some(payload.camera);
+    Ok(next)
+}
+
+===== bind-node-child (🎬️scene) 🌿️node-child/🔗️bind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.bind-node-child.v1";
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GltfBindNodeChildPayload {
+    pub parent: usize,
+    pub child: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.parent, base.document.nodes.len(), "document/nodes")?;
+    checked_index(payload.child, base.document.nodes.len(), "document/nodes")?;
+    checked_position(payload.position, base.document.nodes[payload.parent].children.len(), "document/nodes/children")?;
+    if payload.parent == payload.child || base.document.nodes[payload.parent].children.contains(&payload.child) {
+        return Err(reject("gltf.mutation.invalid-child-link", format!("document/nodes/{}/children", payload.parent), "self and duplicate child links are forbidden"));
+    }
+    let mut pending = vec![payload.child];
+    let mut seen = std::collections::BTreeSet::new();
+    while let Some(node) = pending.pop() {
+        if node == payload.parent {
+            return Err(reject("gltf.mutation.node-cycle", format!("document/nodes/{}/children", payload.parent), "relationship closes a cycle"));
+        }
+        if seen.insert(node) {
+            let current = base.document.nodes.get(node).ok_or_else(|| reject("gltf.mutation.invalid-reference", format!("document/nodes/{}", node), "child graph contains a missing node"))?;
+            pending.extend(current.children.iter().copied());
+        }
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfBindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[payload.parent].children.insert(payload.position, payload.child);
+    Ok(next)
+}
+
+===== bind-node-mesh (🎬️scene) 🏗️node-mesh/🔗️bind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.bind-node-mesh.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfBindNodeMeshPayload {
+    pub node: usize,
+    pub mesh: usize,
+}
+pub fn validate(payload: &GltfBindNodeMeshPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfBindNodeMeshPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[payload.node].mesh = Some(payload.mesh);
+    Ok(next)
+}
+
+===== bind-node-skin (🎬️scene) 🩻️node-skin/🔗️bind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.bind-node-skin.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfBindNodeSkinPayload {
+    pub node: usize,
+    pub skin: usize,
+}
+pub fn validate(payload: &GltfBindNodeSkinPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    checked_index(payload.skin, base.document.skins.len(), "document/skins")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfBindNodeSkinPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[payload.node].skin = Some(payload.skin);
+    Ok(next)
+}
+
+===== bind-scene-root-node (🎬️scene) 🌲️scene-root/🔗️bind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.bind-scene-root-node.v1";
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GltfBindSceneRootNodePayload {
+    pub scene: usize,
+    pub node: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.scene, base.document.scenes.len(), "document/scenes")?;
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    checked_position(payload.position, base.document.scenes[payload.scene].nodes.len(), "document/scenes/nodes")?;
+    if base.document.scenes[payload.scene].nodes.contains(&payload.node) {
+        return Err(reject("gltf.mutation.duplicate-scene-root", format!("document/scenes/{}/nodes", payload.scene), "node is already a scene root"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfBindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.scenes[payload.scene].nodes.insert(payload.position, payload.node);
+    Ok(next)
+}
+
+===== change-node-extension-data (🎬️scene) 🌳️node/🧩️change-extensions/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-node-extension-data.v1";
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "state", rename_all = "camelCase")]
+pub enum GltfDataPresence {
+    Absent,
+    Present { value: GltfJson },
+}
+#[value(rename_all = "camelCase")]
+pub struct GltfChangeNodeExtensionDataPayload {
+    pub node: usize,
+    pub data: GltfDataPresence,
+}
+pub fn validate(payload: &GltfChangeNodeExtensionDataPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfChangeNodeExtensionDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[payload.node].extensions = match &payload.data {
+        GltfDataPresence::Absent => None,
+        GltfDataPresence::Present { value } => Some(value.clone()),
+    };
+    Ok(next)
+}
+
+===== change-node-extra-data (🎬️scene) 🌳️node/📝️change-extras/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-node-extra-data.v1";
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "state", rename_all = "camelCase")]
+pub enum GltfDataPresence {
+    Absent,
+    Present { value: GltfJson },
+}
+#[value(rename_all = "camelCase")]
+pub struct GltfChangeNodeExtraDataPayload {
+    pub node: usize,
+    pub data: GltfDataPresence,
+}
+pub fn validate(payload: &GltfChangeNodeExtraDataPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    let unchanged = match &payload.data {
+        GltfDataPresence::Absent => base.document.nodes[payload.node].extras.is_none(),
+        GltfDataPresence::Present { value } => base.document.nodes[payload.node].extras.as_ref() == Some(value),
+    };
+    if unchanged {
+        return Err(reject("gltf.mutation.no-observable-change", format!("document/nodes/{}/extras", payload.node), "extras already has the requested presence and value"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfChangeNodeExtraDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[payload.node].extras = match &payload.data {
+        GltfDataPresence::Absent => None,
+        GltfDataPresence::Present { value } => Some(value.clone()),
+    };
+    Ok(next)
+}
+
+===== change-node-morph-weights (🎬️scene) 🌳️node/⚖️change-weights/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-node-morph-weights.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfChangeNodeMorphWeightsPayload {
+    pub node: usize,
+    pub weights: Vec<f64>,
+}
+pub fn validate(payload: &GltfChangeNodeMorphWeightsPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    if !payload.weights.iter().all(|value| value.is_finite()) {
+        return Err(reject("gltf.mutation.invalid-morph-weights", "document/nodes/weights", "weights must be finite"));
+    }
+    let mesh = base.document.nodes[payload.node].mesh;
+    if !payload.weights.is_empty() && mesh.is_none() {
+        return Err(reject("gltf.mutation.missing-mesh", "document/nodes/mesh", "morph weights require a mesh"));
+    }
+    if let Some(mesh) = mesh {
+        if base.document.meshes[mesh].primitives.iter().any(|primitive| primitive.targets.len() != payload.weights.len()) {
+            return Err(reject("gltf.mutation.morph-weight-arity", "document/nodes/weights", "weights must match primitive target count"));
+        }
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfChangeNodeMorphWeightsPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[payload.node].weights = payload.weights.clone();
+    Ok(next)
+}
+
+===== change-node-name (🎬️scene) 🌳️node/🏷️rename/🦀️.rs
+//#region 🔖️Payload
+pub const ID: &str = "s.stdio.gltf.mutation.change-node-name.v1";
+
+/// 🕳️ `value`/`before`/`after` carry `#[value(required)]` (the `serde` equivalent this leaf once
+/// hand-rolled as `deserialize_with = "required_option"`): this derive, like `serde`'s, decodes a
+/// MISSING `Option<T>` key as `None` unless the field says otherwise, and `required` is exactly
+/// the opt-out — a present wire key is mandatory even for an `Option<T>`. That is what makes a
+/// rename's nullable witnesses honest: `{"before": null}` (the name genuinely was absent) and a
+/// wire that simply forgot to record `before` must not decode to the same value. A present `null`
+/// still decodes as `None` through the blanket `impl<T: FromValue> FromValue for Option<T>`.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GltfChangeNodeNamePayload {
+    pub node: u32,
+    #[value(required)]
+    pub value: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GltfChangeNodeNameRestore {
+    pub node: u32,
+    #[value(required)]
+    pub before: Option<String>,
+    #[value(required)]
+    pub after: Option<String>,
+}
+//#endregion 🔖️Payload
+
+//#region 🔗️Facade
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GltfChangeNodeNameFacadeError {
+    pub code: &'static str,
+    pub path: String,
+}
+
+impl std::fmt::Display for GltfChangeNodeNameFacadeError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "{} at {}", self.code, self.path)
+    }
+}
+
+impl std::error::Error for GltfChangeNodeNameFacadeError {}
+
+type FacadeResult<T> = Result<T, GltfChangeNodeNameFacadeError>;
+
+fn facade_error<T>(code: &'static str, path: impl Into<String>) -> FacadeResult<T> {
+    Err(GltfChangeNodeNameFacadeError { code, path: path.into() })
+}
+
+fn exact_object<'a>(value: &'a DslValue, allowed: &[&str], path: &str) -> FacadeResult<&'a [(String, DslValue)]> {
+    let object = match value.as_object() {
+        Some(object) => object,
+        None => return facade_error("object", path),
+    };
+    if object.iter().any(|(key, _)| !allowed.contains(&key.as_str())) {
+        return facade_error("unknown", path);
+    }
+    if object.iter().enumerate().any(|(index, (key, _))| object[..index].iter().any(|(prior, _)| prior == key)) {
+        return facade_error("duplicate", path);
+    }
+    Ok(object)
+}
+
+fn object_field<'a>(object: &'a [(String, DslValue)], key: &str) -> Option<&'a DslValue> {
+    object.iter().find(|(name, _)| name == key).map(|(_, value)| value)
+}
+
+fn json_node(value: &DslValue, path: &str) -> FacadeResult<u32> {
+    match value.as_f64() {
+        Some(node) if node.is_finite() && node.fract() == 0.0 && (0.0..=f64::from(u32::MAX)).contains(&node) => Ok(node as u32),
+        _ => facade_error("node", path),
+    }
+}
+
+fn graphql_optional(value: &DslValue, path: &str) -> FacadeResult<Option<String>> {
+    let object = exact_object(value, &["present", "absent"], path)?;
+    match (object_field(object, "present"), object_field(object, "absent")) {
+        (Some(DslValue::String(value)), None) => Ok(Some(value.clone())),
+        (None, Some(DslValue::Bool(true))) => Ok(None),
+        _ => facade_error("nullable", path),
+    }
+}
+
+fn proto_optional(value: &DslValue, path: &str) -> FacadeResult<Option<String>> {
+    let object = exact_object(value, &["present", "absent"], path)?;
+    match (object_field(object, "present"), object_field(object, "absent")) {
+        (Some(DslValue::String(value)), None) => Ok(Some(value.clone())),
+        (None, Some(absent)) if exact_object(absent, &[], path)?.is_empty() => Ok(None),
+        _ => facade_error("nullable", path),
+    }
+}
+
+fn decode_object(value: &DslValue, optional: fn(&DslValue, &str) -> FacadeResult<Option<String>>, path: &str) -> FacadeResult<ChangeNodeNameMutation> {
+    let root = exact_object(value, &["apply", "restore"], path)?;
+    match (object_field(root, "apply"), object_field(root, "restore")) {
+        (Some(apply), None) => {
+            let apply = exact_object(apply, &["node", "value"], &format!("{path}.apply"))?;
+            let node = match object_field(apply, "node") {
+                Some(node) => json_node(node, &format!("{path}.apply.node"))?,
+                None => return facade_error("node", format!("{path}.apply.node")),
+            };
+            let value = match object_field(apply, "value") {
+                Some(value) => optional(value, &format!("{path}.apply.value"))?,
+                None => return facade_error("nullable", format!("{path}.apply.value")),
+            };
+            Ok(ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node, value }))
+        }
+        (None, Some(restore)) => {
+            let restore = exact_object(restore, &["node", "before", "after"], &format!("{path}.restore"))?;
+            let node = match object_field(restore, "node") {
+                Some(node) => json_node(node, &format!("{path}.restore.node"))?,
+                None => return facade_error("node", format!("{path}.restore.node")),
+            };
+            let before = match object_field(restore, "before") {
+                Some(value) => optional(value, &format!("{path}.restore.before"))?,
+                None => return facade_error("nullable", format!("{path}.restore.before")),
+            };
+            let after = match object_field(restore, "after") {
+                Some(value) => optional(value, &format!("{path}.restore.after"))?,
+                None => return facade_error("nullable", format!("{path}.restore.after")),
+            };
+            Ok(ChangeNodeNameMutation::Restore(GltfChangeNodeNameRestore { node, before, after }))
+        }
+        _ => facade_error("phase", path),
+    }
+}
+
+pub fn decode_gltf_change_node_name_graphql(value: &DslValue) -> FacadeResult<ChangeNodeNameMutation> {
+    decode_object(value, graphql_optional, "graphql")
+}
+
+pub fn decode_gltf_change_node_name_proto(value: &DslValue) -> FacadeResult<ChangeNodeNameMutation> {
+    decode_object(value, proto_optional, "proto")
+}
+
+struct FacadeProtobufReader<'a> {
+    bytes: &'a [u8],
+    position: usize,
+}
+
+impl<'a> FacadeProtobufReader<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        Self { bytes, position: 0 }
+    }
+
+    fn done(&self) -> bool {
+        self.position == self.bytes.len()
+    }
+
+    fn varint(&mut self, path: &str) -> FacadeResult<u64> {
+        let start = self.position;
+        let mut value = 0_u64;
+        for shift in 0..10 {
+            let byte = match self.bytes.get(self.position) {
+                Some(byte) => *byte,
+                None => return facade_error("truncated", path),
+            };
+            self.position += 1;
+            if shift == 9 && byte > 1 {
+                return facade_error("varint", path);
+            }
+            value |= u64::from(byte & 0x7f) << (shift * 7);
+            if byte & 0x80 == 0 {
+                let width = if value == 0 { 1 } else { (64 - value.leading_zeros()).div_ceil(7) as usize };
+                if self.position - start != width {
+                    return facade_error("nonminimal", path);
+                }
+                return Ok(value);
+            }
+        }
+        facade_error("varint", path)
+    }
+
+    fn key(&mut self, path: &str) -> FacadeResult<(u32, u8)> {
+        let key = self.varint(path)?;
+        let field = u32::try_from(key >> 3).map_err(|_| GltfChangeNodeNameFacadeError { code: "field", path: path.to_string() })?;
+        if field == 0 {
+            return facade_error("field", path);
+        }
+        Ok((field, (key & 7) as u8))
+    }
+
+    fn bytes(&mut self, path: &str) -> FacadeResult<&'a [u8]> {
+        let length = self.varint(path)?;
+        let length = usize::try_from(length).map_err(|_| GltfChangeNodeNameFacadeError { code: "length", path: path.to_string() })?;
+        let end = self.position.checked_add(length).ok_or_else(|| GltfChangeNodeNameFacadeError { code: "length", path: path.to_string() })?;
+        let bytes = match self.bytes.get(self.position..end) {
+            Some(bytes) => bytes,
+            None => return facade_error("truncated", path),
+        };
+        self.position = end;
+        Ok(bytes)
+    }
+
+    fn message(&mut self, path: &str) -> FacadeResult<FacadeProtobufReader<'a>> {
+        Ok(FacadeProtobufReader::new(self.bytes(path)?))
+    }
+}
+
+fn protobuf_optional(reader: &mut FacadeProtobufReader<'_>, path: &str) -> FacadeResult<Option<String>> {
+    let (field, wire) = reader.key(path)?;
+    let value = match (field, wire) {
+        (1, 2) => match String::from_utf8(reader.bytes(path)?.to_vec()) {
+            Ok(value) => Some(value),
+            Err(_) => return facade_error("utf8", path),
+        },
+        (2, 2) => {
+            if !reader.message(path)?.done() {
+                return facade_error("absent", path);
+            }
+            None
+        }
+        (1 | 2, _) => return facade_error("wire", path),
+        _ => return facade_error("unknown", path),
+    };
+    if !reader.done() {
+        return facade_error("duplicate", path);
+    }
+    Ok(value)
+}
+
+fn protobuf_apply(reader: &mut FacadeProtobufReader<'_>, path: &str) -> FacadeResult<ChangeNodeNameMutation> {
+    let mut node = None;
+    let mut value = None;
+    while !reader.done() {
+        let (field, wire) = reader.key(path)?;
+        match field {
+            1 if wire == 0 && node.is_none() => node = Some(u32::try_from(reader.varint(path)?).map_err(|_| GltfChangeNodeNameFacadeError { code: "node", path: path.to_string() })?),
+            2 if wire == 2 && value.is_none() => {
+                let mut nullable = reader.message(path)?;
+                value = Some(protobuf_optional(&mut nullable, path)?);
+            }
+            1 | 2 if matches!(wire, 0 | 2) => return facade_error("duplicate", path),
+            1 | 2 => return facade_error("wire", path),
+            _ => return facade_error("unknown", path),
+        }
+    }
+    match (node, value) {
+        (Some(node), Some(value)) => Ok(ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node, value })),
+        (None, _) => facade_error("node", path),
+        (_, None) => facade_error("nullable", path),
+    }
+}
+
+fn protobuf_restore(reader: &mut FacadeProtobufReader<'_>, path: &str) -> FacadeResult<ChangeNodeNameMutation> {
+    let mut node = None;
+    let mut before = None;
+    let mut after = None;
+    while !reader.done() {
+        let (field, wire) = reader.key(path)?;
+        match field {
+            1 if wire == 0 && node.is_none() => node = Some(u32::try_from(reader.varint(path)?).map_err(|_| GltfChangeNodeNameFacadeError { code: "node", path: path.to_string() })?),
+            2 if wire == 2 && before.is_none() => {
+                let mut nullable = reader.message(path)?;
+                before = Some(protobuf_optional(&mut nullable, path)?);
+            }
+            3 if wire == 2 && after.is_none() => {
+                let mut nullable = reader.message(path)?;
+                after = Some(protobuf_optional(&mut nullable, path)?);
+            }
+            1..=3 if matches!(wire, 0 | 2) => return facade_error("duplicate", path),
+            1..=3 => return facade_error("wire", path),
+            _ => return facade_error("unknown", path),
+        }
+    }
+    match (node, before, after) {
+        (Some(node), Some(before), Some(after)) => Ok(ChangeNodeNameMutation::Restore(GltfChangeNodeNameRestore { node, before, after })),
+        (None, _, _) => facade_error("node", path),
+        (_, None, _) | (_, _, None) => facade_error("nullable", path),
+    }
+}
+
+pub fn decode_gltf_change_node_name_protobuf(bytes: &[u8]) -> FacadeResult<ChangeNodeNameMutation> {
+    let mut reader = FacadeProtobufReader::new(bytes);
+    let (field, wire) = reader.key("protobuf.phase")?;
+    if !matches!(field, 1 | 2) {
+        return facade_error("phase", "protobuf.phase");
+    }
+    if wire != 2 {
+        return facade_error("wire", "protobuf.phase");
+    }
+    let mut phase = reader.message("protobuf.phase")?;
+    let mutation = match field {
+        1 => protobuf_apply(&mut phase, "protobuf.apply")?,
+        2 => protobuf_restore(&mut phase, "protobuf.restore")?,
+        _ => unreachable!(),
+    };
+    if !phase.done() {
+        return facade_error("duplicate", "protobuf.phase");
+    }
+    if !reader.done() {
+        return facade_error("duplicate", "protobuf.phase");
+    }
+    Ok(mutation)
+}
+//#endregion 🔗️Facade
+
+//#region ⚙️Validation
+fn node_path(node: u32) -> String {
+    format!("document/nodes/{node}/name")
+}
+
+fn node_index(node: u32, base: &GltfSnapshot) -> Result<usize, GltfTopLevelMutationRejection> {
+    let index = usize::try_from(node).map_err(|_| reject("gltf.mutation.index-out-of-range", "document/nodes", format!("index {node} is not representable on this platform")))?;
+    checked_index(index, base.document.nodes.len(), "document/nodes")?;
+    Ok(index)
+}
+
+pub fn validate(payload: &GltfChangeNodeNamePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    let index = node_index(payload.node, base)?;
+    if base.document.nodes[index].name == payload.value {
+        return Err(reject("gltf.mutation.no-observable-change", node_path(payload.node), "name already has the requested presence and value"));
+    }
+    Ok(())
+}
+
+pub fn apply(payload: &GltfChangeNodeNamePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[node_index(payload.node, base)?].name = payload.value.clone();
+    Ok(next)
+}
+
+pub fn validate_restore(restore: &GltfChangeNodeNameRestore, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    let index = node_index(restore.node, base)?;
+    if base.document.nodes[index].name != restore.after {
+        return Err(reject("gltf.mutation.stale-inverse", node_path(restore.node), "current name does not equal the inverse after witness"));
+    }
+    if restore.before == restore.after {
+        return Err(reject("gltf.mutation.no-observable-change", node_path(restore.node), "inverse before and after witnesses are equal"));
+    }
+    Ok(())
+}
+
+pub fn apply_restore(restore: &GltfChangeNodeNameRestore, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate_restore(restore, base)?;
+    let mut next = base.clone();
+    next.document.nodes[node_index(restore.node, base)?].name = restore.before.clone();
+    Ok(next)
+}
+//#endregion ⚙️Validation
+
+//#region 🧬️Operation
+/// 🛡️ `deny_unknown_fields` here IS now enforced at this enum's own `{"phase": …, "value": …}`
+/// level too (adjacently tagged: the outer object's keys are checked against `{"phase",
+/// "value"}`), not just for the nested payload structs above — see `🌱️value/✨️derive`'s module
+/// docs (`deny_unknown_fields` enum-container enforcement, ticket
+/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
+#[value(tag = "phase", content = "value", rename_all = "camelCase", deny_unknown_fields)]
+pub enum ChangeNodeNameMutation {
+    Apply(GltfChangeNodeNamePayload),
+    Restore(GltfChangeNodeNameRestore),
+}
+
+impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNameMutation {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-name", kind: "change-node-name", record: "ChangedNodeName" };
+
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+        let next = match self {
+            Self::Apply(payload) => apply(payload, base),
+            Self::Restore(restore) => apply_restore(restore, base),
+        };
+        match next {
+            Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
+        }
+    }
+
+    fn inverse(&self, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
+        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
+            return Vec::new();
+        }
+        let inverse = match self {
+            Self::Apply(payload) => Self::Restore(GltfChangeNodeNameRestore { node: payload.node, before: base.document.nodes[node_index(payload.node, base).expect("validated node")].name.clone(), after: payload.value.clone() }),
+            Self::Restore(restore) => Self::Restore(GltfChangeNodeNameRestore { node: restore.node, before: restore.after.clone(), after: restore.before.clone() }),
+        };
+        vec![super::GltfMutation::ChangeNodeName(inverse)]
+    }
+
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Node Name", "Knotenname ändern")
+    }
+    fn target(&self) -> Vec<String> {
+        vec![node_path(match self {
+            Self::Apply(payload) => payload.node,
+            Self::Restore(restore) => restore.node,
+        })]
+    }
+}
+//#endregion 🧬️Operation
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
+mod direct_leaf_tests;
+//#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "📜️contract/🧪️tests/🔬️unit/🦀️.rs"]
+mod contract;
+
+===== change-node-transform (🎬️scene) 🌳️node/📐️transform/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-node-transform.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfTransformNodePayload {
+    pub node: usize,
+    pub transform: GltfNodeTransform,
+}
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
+pub enum GltfNodeTransform {
+    Matrix { matrix: [f64; 16] },
+    Trs { translation: Option<[f64; 3]>, rotation: Option<[f64; 4]>, scale: Option<[f64; 3]> },
+}
+pub fn validate(payload: &GltfTransformNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    let finite = match &payload.transform {
+        GltfNodeTransform::Matrix { matrix } => matrix.iter().all(|value| value.is_finite()),
+        GltfNodeTransform::Trs { translation, rotation, scale } => translation.iter().flatten().chain(rotation.iter().flatten()).chain(scale.iter().flatten()).all(|value| value.is_finite()),
+    };
+    if !finite {
+        return Err(reject("gltf.mutation.invalid-transform", format!("document/nodes/{}/transform", payload.node), "transform values must be finite"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfTransformNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let node = &mut next.document.nodes[payload.node];
+    match &payload.transform {
+        GltfNodeTransform::Matrix { matrix } => {
+            node.matrix = Some(*matrix);
+            node.translation = None;
+            node.rotation = None;
+            node.scale = None;
+        }
+        GltfNodeTransform::Trs { translation, rotation, scale } => {
+            node.matrix = None;
+            node.translation = *translation;
+            node.rotation = *rotation;
+            node.scale = *scale;
+        }
+    }
+    Ok(next)
+}
+
+===== change-scene-extension-data (🎬️scene) 🎬️scene/🧩️change-extensions/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-scene-extension-data.v1";
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "state", rename_all = "camelCase")]
+pub enum GltfDataPresence {
+    Absent,
+    Present { value: GltfJson },
+}
+#[value(rename_all = "camelCase")]
+pub struct GltfChangeSceneExtensionDataPayload {
+    pub scene: usize,
+    pub data: GltfDataPresence,
+}
+pub fn validate(payload: &GltfChangeSceneExtensionDataPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.scene, base.document.scenes.len(), "document/scenes")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfChangeSceneExtensionDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.scenes[payload.scene].extensions = match &payload.data {
+        GltfDataPresence::Absent => None,
+        GltfDataPresence::Present { value } => Some(value.clone()),
+    };
+    Ok(next)
+}
+
+===== change-scene-extra-data (🎬️scene) 🎬️scene/📝️change-extras/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-scene-extra-data.v1";
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "state", rename_all = "camelCase")]
+pub enum GltfDataPresence {
+    Absent,
+    Present { value: GltfJson },
+}
+#[value(rename_all = "camelCase")]
+pub struct GltfChangeSceneExtraDataPayload {
+    pub scene: usize,
+    pub data: GltfDataPresence,
+}
+pub fn validate(payload: &GltfChangeSceneExtraDataPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.scene, base.document.scenes.len(), "document/scenes")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfChangeSceneExtraDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.scenes[payload.scene].extras = match &payload.data {
+        GltfDataPresence::Absent => None,
+        GltfDataPresence::Present { value } => Some(value.clone()),
+    };
+    Ok(next)
+}
+
+===== change-scene-name (🎬️scene) 🎬️scene/🏷️rename/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-scene-name.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfChangeSceneNamePayload {
+    pub scene: usize,
+    pub value: Option<String>,
+}
+pub fn validate(payload: &GltfChangeSceneNamePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.scene, base.document.scenes.len(), "document/scenes")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfChangeSceneNamePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.scenes[payload.scene].name = payload.value.clone();
+    Ok(next)
+}
+
+===== create-node (🎬️scene) 🌳️node/🌱️create/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.create-node.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/nodes"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfCreateNodePayload {
+    pub position: usize,
+}
+pub fn validate(payload: &GltfCreateNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.position > base.document.nodes.len() {
+        return Err(reject("gltf.mutation.insert-out-of-range", "document/nodes", "position must be within the collection"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfCreateNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    repair(&mut next.document, GltfTopLevelFamily::Nodes, &Change::Insert(payload.position))?;
+    next.document.nodes.insert(payload.position, GltfNode::default());
+    Ok(next)
+}
+
+===== create-scene (🎬️scene) 🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧬️mutation-support/🎬️create-scene/🦀️.rs
+//#region 🔖️Rejection
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfCreateSceneRejection {
+    pub code: String,
+    pub path: String,
+    pub detail: String,
+}
+pub fn reject(code: impl Into<String>, path: impl Into<String>, detail: impl Into<String>) -> GltfCreateSceneRejection {
+    GltfCreateSceneRejection { code: code.into(), path: path.into(), detail: detail.into() }
+}
+//#endregion 🔖️Rejection
+
+//#region 🔢️U32Domain
+pub fn u32_index(value: usize, path: impl Into<String>) -> Result<u32, GltfCreateSceneRejection> {
+    u32::try_from(value).map_err(|_| reject("gltf.mutation.index-out-of-range", path, "index exceeds the u32 command domain"))
+}
+pub fn usize_index(value: u32, path: impl Into<String>) -> Result<usize, GltfCreateSceneRejection> {
+    usize::try_from(value).map_err(|_| reject("gltf.mutation.index-out-of-range", path, "index cannot be represented by this runtime"))
+}
+pub fn scene_count(scenes: &[GltfScene]) -> Result<u32, GltfCreateSceneRejection> {
+    u32::try_from(scenes.len()).map_err(|_| reject("gltf.mutation.collection-overflow", "document/scenes", "scene collection exceeds the u32 command domain"))
+}
+pub fn validate_scene_sequence(scenes: &[GltfScene]) -> Result<(), GltfCreateSceneRejection> {
+    scene_count(scenes)?;
+    for (scene_index, scene) in scenes.iter().enumerate() {
+        for node_index in &scene.nodes {
+            u32_index(*node_index, format!("document/scenes/{scene_index}/nodes"))?;
+        }
+    }
+    Ok(())
+}
+//#endregion 🔢️U32Domain
+
+//#region 🎬️SceneState
+pub fn default_scene(snapshot: &GltfSnapshot) -> Result<Option<u32>, GltfCreateSceneRejection> {
+    validate_scene_sequence(&snapshot.document.scenes)?;
+    snapshot
+        .document
+        .scene
+        .map(|scene| {
+            let scene = u32_index(scene, "document/scene")?;
+            (usize_index(scene, "document/scene")? < snapshot.document.scenes.len()).then_some(scene).ok_or_else(|| reject("gltf.mutation.reference-out-of-range", "document/scene", "default scene must name an existing scene"))
+        })
+        .transpose()
+}
+pub fn insertion_position(position: u32, snapshot: &GltfSnapshot) -> Result<usize, GltfCreateSceneRejection> {
+    default_scene(snapshot)?;
+    if scene_count(&snapshot.document.scenes)? == u32::MAX {
+        return Err(reject("gltf.mutation.collection-overflow", "document/scenes", "creating a scene would exceed the u32 command domain"));
+    }
+    let position = usize_index(position, "document/scenes")?;
+    (position <= snapshot.document.scenes.len()).then_some(position).ok_or_else(|| reject("gltf.mutation.insert-out-of-range", "document/scenes", "position must be within the collection"))
+}
+pub fn existing_position(position: u32, snapshot: &GltfSnapshot) -> Result<usize, GltfCreateSceneRejection> {
+    default_scene(snapshot)?;
+    let position = usize_index(position, "document/scenes")?;
+    (position < snapshot.document.scenes.len()).then_some(position).ok_or_else(|| reject("gltf.mutation.index-out-of-range", "document/scenes", "position must address an existing scene"))
+}
+pub fn default_after(default_scene: Option<u32>, position: u32) -> Result<Option<u32>, GltfCreateSceneRejection> {
+    default_scene.map(|scene| if scene >= position { scene.checked_add(1).ok_or_else(|| reject("gltf.mutation.reference-overflow", "document/scene", "default scene cannot be remapped beyond u32")) } else { Ok(scene) }).transpose()
+}
+pub fn insert_empty_scene(snapshot: &mut GltfSnapshot, position: usize) -> Result<(), GltfCreateSceneRejection> {
+    let default_scene_before = default_scene(snapshot)?;
+    snapshot.document.scene = default_after(default_scene_before, u32_index(position, "document/scenes")?)?.map(|scene| usize_index(scene, "document/scene")).transpose()?;
+    snapshot.document.scenes.insert(position, GltfScene::default());
+    Ok(())
+}
+pub fn remove_created_scene(snapshot: &mut GltfSnapshot, position: usize, default_scene_before: Option<u32>) -> Result<(), GltfCreateSceneRejection> {
+    snapshot.document.scenes.remove(position);
+    snapshot.document.scene = default_scene_before.map(|scene| usize_index(scene, "document/scene")).transpose()?;
+    Ok(())
+}
+//#endregion 🎬️SceneState
+
+===== delete-node (🎬️scene) 🌳️node/🗑️delete/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.delete-node.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/nodes"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfDeleteNodePayload {
+    pub index: usize,
+}
+pub fn validate(payload: &GltfDeleteNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.nodes.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/nodes", "index must address an item"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfDeleteNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    nodes_op(&mut next, GltfTopLevelFamily::Nodes, payload.index, None, None)?;
+    Ok(next)
+}
+
+===== delete-scene (🎬️scene) 🎬️scene/🗑️delete/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.delete-scene.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfDeleteScenePayload {
+    pub index: usize,
+}
+pub fn validate(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.scenes.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/scenes", "index must address a scene"));
+    }
+    if base.document.scene.is_some_and(|scene| scene >= base.document.scenes.len()) {
+        return Err(reject("gltf.reference.invalid-default-scene", "document/scene", "default scene must address an existing scene"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    scenes_op(&mut next, GltfTopLevelFamily::Scenes, payload.index, None, None)?;
+    Ok(next)
+}
+
+===== move-node (🎬️scene) 🌳️node/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-node.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/nodes"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfMoveNodePayload {
+    pub index: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMoveNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.nodes.len() || payload.position >= base.document.nodes.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/nodes", "indices must address items"));
+    }
+    if payload.index == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/nodes", "destination equals source"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMoveNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    nodes_op(&mut next, GltfTopLevelFamily::Nodes, payload.index, Some(payload.position), None)?;
+    Ok(next)
+}
+
+===== move-node-child (🎬️scene) 🌿️node-child/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-node-child.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfMoveNodeChildPayload {
+    pub parent: usize,
+    pub child: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMoveNodeChildPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.parent, base.document.nodes.len(), "document/nodes")?;
+    let children = &base.document.nodes[payload.parent].children;
+    let index = children.iter().position(|child| *child == payload.child).ok_or_else(|| reject("gltf.mutation.relation-absent", "document/nodes/children", "child is not linked to parent"))?;
+    checked_index(payload.position, children.len(), "document/nodes/children")?;
+    if index == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/nodes/children", "destination equals source"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMoveNodeChildPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let children = &mut next.document.nodes[payload.parent].children;
+    let index = children.iter().position(|child| *child == payload.child).expect("validated child");
+    let child = children.remove(index);
+    children.insert(payload.position, child);
+    Ok(next)
+}
+
+===== move-node-parent (🎬️scene) 🌳️node/🌿️reparent/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-node-parent.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfReparentNodePayload {
+    pub parent: usize,
+    pub child: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfReparentNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.parent, base.document.nodes.len(), "document/nodes")?;
+    checked_index(payload.child, base.document.nodes.len(), "document/nodes")?;
+    if payload.parent == payload.child {
+        return Err(reject("gltf.mutation.node-cycle", "document/nodes", "a node cannot parent itself"));
+    }
+    let mut pending = vec![payload.child];
+    let mut seen = std::collections::BTreeSet::new();
+    while let Some(node) = pending.pop() {
+        if node == payload.parent {
+            return Err(reject("gltf.mutation.node-cycle", "document/nodes", "relationship closes a cycle"));
+        }
+        if seen.insert(node) {
+            pending.extend(base.document.nodes[node].children.iter().copied());
+        }
+    }
+    let length = base.document.nodes[payload.parent].children.iter().filter(|child| **child != payload.child).count();
+    checked_position(payload.position, length, "document/nodes/children")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfReparentNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    for node in &mut next.document.nodes {
+        node.children.retain(|child| *child != payload.child);
+    }
+    for scene in &mut next.document.scenes {
+        scene.nodes.retain(|node| *node != payload.child);
+    }
+    next.document.nodes[payload.parent].children.insert(payload.position, payload.child);
+    Ok(next)
+}
+
+===== move-scene (🎬️scene) 🎬️scene/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-scene.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/scenes"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfMoveScenePayload {
+    pub index: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMoveScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.scenes.len() || payload.position >= base.document.scenes.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/scenes", "indices must address items"));
+    }
+    if payload.index == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/scenes", "destination equals source"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMoveScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    scenes_op(&mut next, GltfTopLevelFamily::Scenes, payload.index, Some(payload.position), None)?;
+    Ok(next)
+}
+
+===== move-scene-root-node (🎬️scene) 🌲️scene-root/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-scene-root-node.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfMoveSceneRootNodePayload {
+    pub scene: usize,
+    pub node: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.scene, base.document.scenes.len(), "document/scenes")?;
+    let roots = &base.document.scenes[payload.scene].nodes;
+    let index = roots.iter().position(|node| *node == payload.node).ok_or_else(|| reject("gltf.mutation.relation-absent", format!("document/scenes/{}/nodes", payload.scene), "node is not a root of this scene"))?;
+    checked_index(payload.position, roots.len(), "document/scenes/nodes")?;
+    if index == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/scenes/nodes", "destination equals source"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let roots = &mut next.document.scenes[payload.scene].nodes;
+    let index = roots.iter().position(|node| *node == payload.node).expect("validated root");
+    let node = roots.remove(index);
+    roots.insert(payload.position, node);
+    Ok(next)
+}
+
+===== reorder-node-children (🎬️scene) 🌿️node-child/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-node-children.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderNodeChildrenPayload {
+    pub parent: usize,
+    pub order: Vec<usize>,
+}
+pub fn validate(payload: &GltfReorderNodeChildrenPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.parent, base.document.nodes.len(), "document/nodes")?;
+    let children = &base.document.nodes[payload.parent].children;
+    if payload.order.len() != children.len() || payload.order.iter().any(|child| !children.contains(child)) || {
+        let mut order = payload.order.clone();
+        order.sort_unstable();
+        order.dedup();
+        order.len() != children.len()
+    } {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/nodes/children", "order must contain every child identity once"));
+    }
+    if payload.order == *children {
+        return Err(reject("gltf.mutation.no-observable-change", "document/nodes/children", "reorder must change order"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderNodeChildrenPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[payload.parent].children = payload.order.clone();
+    Ok(next)
+}
+
+===== reorder-nodes (🎬️scene) 🌳️node/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-nodes.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/nodes"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderNodesPayload {
+    pub order: Vec<usize>,
+}
+pub fn validate(payload: &GltfReorderNodesPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.order.len() != base.document.nodes.len() || payload.order.iter().collect::<std::collections::BTreeSet<_>>().len() != payload.order.len() || payload.order.iter().any(|index| *index >= base.document.nodes.len()) {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/nodes", "order must contain every index once"));
+    }
+    if payload.order.iter().enumerate().all(|(index, value)| index == *value) {
+        return Err(reject("gltf.mutation.no-observable-change", "document/nodes", "order already matches"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderNodesPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    nodes_op(&mut next, GltfTopLevelFamily::Nodes, payload.order[0], None, Some(&payload.order))?;
+    Ok(next)
+}
+
+===== reorder-scene-root-nodes (🎬️scene) 🌲️scene-root/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-scene-root-nodes.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderSceneRootNodesPayload {
+    pub scene: usize,
+    pub order: Vec<usize>,
+}
+pub fn validate(payload: &GltfReorderSceneRootNodesPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.scene, base.document.scenes.len(), "document/scenes")?;
+    let roots = &base.document.scenes[payload.scene].nodes;
+    if payload.order.len() != roots.len() || payload.order.iter().any(|node| !roots.contains(node)) || {
+        let mut order = payload.order.clone();
+        order.sort_unstable();
+        order.dedup();
+        order.len() != roots.len()
+    } {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/scenes/nodes", "order must contain every root identity once"));
+    }
+    if payload.order == *roots {
+        return Err(reject("gltf.mutation.no-observable-change", "document/scenes/nodes", "reorder must change order"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderSceneRootNodesPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.scenes[payload.scene].nodes = payload.order.clone();
+    Ok(next)
+}
+
+===== reorder-scenes (🎬️scene) 🎬️scene/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-scenes.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/scenes"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderScenesPayload {
+    pub order: Vec<usize>,
+}
+pub fn validate(payload: &GltfReorderScenesPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.order.len() != base.document.scenes.len() || payload.order.iter().collect::<std::collections::BTreeSet<_>>().len() != payload.order.len() || payload.order.iter().any(|index| *index >= base.document.scenes.len()) {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/scenes", "order must contain every index once"));
+    }
+    if payload.order.iter().enumerate().all(|(index, value)| index == *value) {
+        return Err(reject("gltf.mutation.no-observable-change", "document/scenes", "order already matches"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderScenesPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    scenes_op(&mut next, GltfTopLevelFamily::Scenes, payload.order[0], None, Some(&payload.order))?;
+    Ok(next)
+}
+
+===== unbind-default-scene (🎬️scene) 🏠️default-scene/✂️unbind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.unbind-default-scene.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/scene"];
+#[value(rename_all = "camelCase")]
+pub struct GltfUnbindDefaultScenePayload {}
+pub fn validate(_payload: &GltfUnbindDefaultScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if base.document.scene.is_none() {
+        return Err(reject("gltf.mutation.relation-absent", "document/scene", "no default scene is bound"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfUnbindDefaultScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.scene = None;
+    Ok(next)
+}
+
+===== unbind-node-camera (🎬️scene) 📷️node-camera/✂️unbind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.unbind-node-camera.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfUnbindNodeCameraPayload {
+    pub node: usize,
+}
+pub fn validate(payload: &GltfUnbindNodeCameraPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    if base.document.nodes[payload.node].camera.is_none() {
+        return Err(reject("gltf.mutation.relation-absent", format!("document/nodes/{}/camera", payload.node), "node has no binding"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfUnbindNodeCameraPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[payload.node].camera = None;
+    Ok(next)
+}
+
+===== unbind-node-child (🎬️scene) 🌿️node-child/✂️unbind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.unbind-node-child.v1";
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GltfUnbindNodeChildPayload {
+    pub parent: usize,
+    pub child: usize,
+}
+pub fn validate(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.parent, base.document.nodes.len(), "document/nodes")?;
+    checked_index(payload.child, base.document.nodes.len(), "document/nodes")?;
+    if !base.document.nodes[payload.parent].children.contains(&payload.child) {
+        return Err(reject("gltf.mutation.relation-absent", format!("document/nodes/{}/children", payload.parent), "child is not linked to parent"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let position =
+        next.document.nodes[payload.parent].children.iter().position(|child| *child == payload.child).ok_or_else(|| reject("gltf.mutation.relation-absent", format!("document/nodes/{}/children", payload.parent), "child is not linked to parent"))?;
+    next.document.nodes[payload.parent].children.remove(position);
+    Ok(next)
+}
+
+===== unbind-node-mesh (🎬️scene) 🏗️node-mesh/✂️unbind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.unbind-node-mesh.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfUnbindNodeMeshPayload {
+    pub node: usize,
+}
+pub fn validate(payload: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    if base.document.nodes[payload.node].mesh.is_none() {
+        return Err(reject("gltf.mutation.relation-absent", format!("document/nodes/{}/mesh", payload.node), "node has no binding"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfUnbindNodeMeshPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[payload.node].mesh = None;
+    Ok(next)
+}
+
+===== unbind-node-skin (🎬️scene) 🩻️node-skin/✂️unbind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.unbind-node-skin.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfUnbindNodeSkinPayload {
+    pub node: usize,
+}
+pub fn validate(payload: &GltfUnbindNodeSkinPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    if base.document.nodes[payload.node].skin.is_none() {
+        return Err(reject("gltf.mutation.relation-absent", format!("document/nodes/{}/skin", payload.node), "node has no binding"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfUnbindNodeSkinPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.nodes[payload.node].skin = None;
+    Ok(next)
+}
+
+===== unbind-scene-root-node (🎬️scene) 🌲️scene-root/✂️unbind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.unbind-scene-root-node.v1";
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GltfUnbindSceneRootNodePayload {
+    pub scene: usize,
+    pub node: usize,
+}
+pub fn validate(payload: &GltfUnbindSceneRootNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.scene, base.document.scenes.len(), "document/scenes")?;
+    checked_index(payload.node, base.document.nodes.len(), "document/nodes")?;
+    if !base.document.scenes[payload.scene].nodes.contains(&payload.node) {
+        return Err(reject("gltf.mutation.relation-absent", format!("document/scenes/{}/nodes", payload.scene), "node is not a root of this scene"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfUnbindSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let position =
+        next.document.scenes[payload.scene].nodes.iter().position(|node| *node == payload.node).ok_or_else(|| reject("gltf.mutation.relation-absent", format!("document/scenes/{}/nodes", payload.scene), "node is not a root of this scene"))?;
+    next.document.scenes[payload.scene].nodes.remove(position);
+    Ok(next)
+}
+
+===== create-buffer (💿️buffer) 💿️buffer/🌱️create/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.create-buffer.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/buffers"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfCreateBufferPayload {
+    pub position: usize,
+    pub bytes: Vec<u8>,
+}
+pub fn validate(payload: &GltfCreateBufferPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.position > base.document.buffers.len() {
+        return Err(reject("gltf.mutation.insert-out-of-range", "document/buffers", "position must be within the collection"));
+    }
+    if base.document.buffers.len() != base.buffers.len() {
+        return Err(reject("gltf.mutation.buffer-alignment", "buffers", "descriptor and bytes arrays must align"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfCreateBufferPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    repair(&mut next.document, GltfTopLevelFamily::Buffers, &Change::Insert(payload.position))?;
+    next.document.buffers.insert(payload.position, GltfBuffer { byte_length: payload.bytes.len(), uri: None, name: None, extensions: None, extras: None });
+    next.buffers.insert(payload.position, payload.bytes.clone());
+    Ok(next)
+}
+
+===== create-buffer-view (💿️buffer) 🪟️buffer-view/🌱️create/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.create-buffer-view.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/bufferViews"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfCreateBufferViewPayload {
+    pub position: usize,
+    pub buffer: usize,
+    pub byte_offset: usize,
+    pub byte_length: usize,
+}
+pub fn validate(payload: &GltfCreateBufferViewPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.position > base.document.buffer_views.len() {
+        return Err(reject("gltf.mutation.insert-out-of-range", "document/bufferViews", "position must be within the collection"));
+    }
+    if payload.buffer >= base.document.buffers.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/buffers", "backing buffer must exist"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfCreateBufferViewPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    repair(&mut next.document, GltfTopLevelFamily::BufferViews, &Change::Insert(payload.position))?;
+    next.document.buffer_views.insert(payload.position, GltfBufferView { buffer: payload.buffer, byte_offset: payload.byte_offset, byte_length: payload.byte_length, byte_stride: None, target: None, name: None, extensions: None, extras: None });
+    Ok(next)
+}
+
+===== delete-buffer (💿️buffer) 💿️buffer/🗑️delete/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.delete-buffer.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/buffers"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfDeleteBufferPayload {
+    pub index: usize,
+}
+pub fn validate(payload: &GltfDeleteBufferPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.buffers.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/buffers", "index must address an item"));
+    }
+    if base.document.buffers.len() != base.buffers.len() {
+        return Err(reject("gltf.mutation.buffer-alignment", "buffers", "descriptor and bytes arrays must align"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfDeleteBufferPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    buffers_op(&mut next, GltfTopLevelFamily::Buffers, payload.index, None, None)?;
+    next.buffers.remove(payload.index);
+    Ok(next)
+}
+
+===== delete-buffer-view (💿️buffer) 🪟️buffer-view/🗑️delete/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.delete-buffer-view.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/bufferViews"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfDeleteBufferViewPayload {
+    pub index: usize,
+}
+pub fn validate(payload: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.buffer_views.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/bufferViews", "index must address an item"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    buffer_views_op(&mut next, GltfTopLevelFamily::BufferViews, payload.index, None, None)?;
+    Ok(next)
+}
+
+===== move-buffer (💿️buffer) 💿️buffer/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-buffer.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/buffers"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfMoveBufferPayload {
+    pub index: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMoveBufferPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.buffers.len() || payload.position >= base.document.buffers.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/buffers", "indices must address items"));
+    }
+    if payload.index == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/buffers", "destination equals source"));
+    }
+    if base.document.buffers.len() != base.buffers.len() {
+        return Err(reject("gltf.mutation.buffer-alignment", "buffers", "descriptor and bytes arrays must align"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMoveBufferPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    buffers_op(&mut next, GltfTopLevelFamily::Buffers, payload.index, Some(payload.position), None)?;
+    let bytes = next.buffers.remove(payload.index);
+    next.buffers.insert(payload.position, bytes);
+    Ok(next)
+}
+
+===== move-buffer-view (💿️buffer) 🪟️buffer-view/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-buffer-view.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/bufferViews"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfMoveBufferViewPayload {
+    pub index: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMoveBufferViewPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.buffer_views.len() || payload.position >= base.document.buffer_views.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/bufferViews", "indices must address items"));
+    }
+    if payload.index == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/bufferViews", "destination equals source"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMoveBufferViewPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    buffer_views_op(&mut next, GltfTopLevelFamily::BufferViews, payload.index, Some(payload.position), None)?;
+    Ok(next)
+}
+
+===== reorder-buffer-views (💿️buffer) 🪟️buffer-view/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-buffer-views.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/bufferViews"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderBufferViewsPayload {
+    pub order: Vec<usize>,
+}
+pub fn validate(payload: &GltfReorderBufferViewsPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.order.len() != base.document.buffer_views.len() || payload.order.iter().collect::<std::collections::BTreeSet<_>>().len() != payload.order.len() || payload.order.iter().any(|index| *index >= base.document.buffer_views.len()) {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/bufferViews", "order must contain every index once"));
+    }
+    if payload.order.iter().enumerate().all(|(index, value)| index == *value) {
+        return Err(reject("gltf.mutation.no-observable-change", "document/bufferViews", "order already matches"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderBufferViewsPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    buffer_views_op(&mut next, GltfTopLevelFamily::BufferViews, payload.order[0], None, Some(&payload.order))?;
+    Ok(next)
+}
+
+===== reorder-buffers (💿️buffer) 💿️buffer/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-buffers.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/buffers"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderBuffersPayload {
+    pub order: Vec<usize>,
+}
+pub fn validate(payload: &GltfReorderBuffersPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.order.len() != base.document.buffers.len() || payload.order.iter().collect::<std::collections::BTreeSet<_>>().len() != payload.order.len() || payload.order.iter().any(|index| *index >= base.document.buffers.len()) {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/buffers", "order must contain every index once"));
+    }
+    if payload.order.iter().enumerate().all(|(index, value)| index == *value) {
+        return Err(reject("gltf.mutation.no-observable-change", "document/buffers", "order already matches"));
+    }
+    if base.document.buffers.len() != base.buffers.len() {
+        return Err(reject("gltf.mutation.buffer-alignment", "buffers", "descriptor and bytes arrays must align"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderBuffersPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    buffers_op(&mut next, GltfTopLevelFamily::Buffers, payload.order[0], None, Some(&payload.order))?;
+    next.buffers = payload.order.iter().map(|index| next.buffers[*index].clone()).collect();
+    Ok(next)
+}
+
+===== bind-morph-target-attribute (🕸️mesh) 🎚️morph-attribute/🔗️bind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.bind-morph-target-attribute.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfBindMorphTargetAttributePayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub target: usize,
+    pub semantic: String,
+    pub accessor: usize,
+}
+pub fn validate(payload: &GltfBindMorphTargetAttributePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    checked_index(payload.target, base.document.meshes[payload.mesh].primitives[payload.primitive].targets.len(), "document/meshes/primitives/targets")?;
+    checked_index(payload.accessor, base.document.accessors.len(), "document/accessors")?;
+    if payload.semantic.trim().is_empty() || base.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0.iter().any(|(semantic, _)| semantic == &payload.semantic) {
+        return Err(reject("gltf.mutation.invalid-attribute-semantic", "document/meshes/primitives/targets", "semantic must be non-empty and unique"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfBindMorphTargetAttributePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0.push((payload.semantic.clone(), payload.accessor));
+    Ok(next)
+}
+
+===== bind-primitive-attribute (🕸️mesh) 🔤️primitive-attribute/🔗️bind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.bind-primitive-attribute.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfBindPrimitiveAttributePayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub semantic: String,
+    pub accessor: usize,
+}
+pub fn validate(payload: &GltfBindPrimitiveAttributePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    checked_index(payload.accessor, base.document.accessors.len(), "document/accessors")?;
+    if payload.semantic.trim().is_empty() || base.document.meshes[payload.mesh].primitives[payload.primitive].attributes.iter().any(|(semantic, _)| semantic == &payload.semantic) {
+        return Err(reject("gltf.mutation.invalid-attribute-semantic", "document/meshes/primitives/attributes", "semantic must be non-empty and unique"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfBindPrimitiveAttributePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].attributes.push((payload.semantic.clone(), payload.accessor));
+    Ok(next)
+}
+
+===== bind-primitive-indices (🕸️mesh) 🔢️primitive-indices/🔗️bind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.bind-primitive-indices.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfBindPrimitiveIndicesPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub accessor: usize,
+}
+pub fn validate(payload: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    checked_index(payload.accessor, base.document.accessors.len(), "document/accessors")?;
+    if base.document.accessors[payload.accessor].kind != crate::engine::GltfAccessorType::Scalar || base.document.accessors[payload.accessor].component_type == crate::engine::GltfComponentType::Float {
+        return Err(reject("gltf.mutation.invalid-index-accessor", "document/accessors", "indices require a scalar integer accessor"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].indices = Some(payload.accessor);
+    Ok(next)
+}
+
+===== bind-primitive-material (🕸️mesh) 🧱️primitive-material/🔗️bind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.bind-primitive-material.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfBindPrimitiveMaterialPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub material: usize,
+}
+pub fn validate(payload: &GltfBindPrimitiveMaterialPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    checked_index(payload.material, base.document.materials.len(), "document/materials")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfBindPrimitiveMaterialPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].material = Some(payload.material);
+    Ok(next)
+}
+
+===== change-mesh-extension-data (🕸️mesh) 🕸️mesh/🧩️change-extensions/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-mesh-extension-data.v1";
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "state", rename_all = "camelCase")]
+pub enum GltfDataPresence {
+    Absent,
+    Present { value: GltfJson },
+}
+#[value(rename_all = "camelCase")]
+pub struct GltfChangeMeshExtensionDataPayload {
+    pub mesh: usize,
+    pub data: GltfDataPresence,
+}
+pub fn validate(payload: &GltfChangeMeshExtensionDataPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfChangeMeshExtensionDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].extensions = match &payload.data {
+        GltfDataPresence::Absent => None,
+        GltfDataPresence::Present { value } => Some(value.clone()),
+    };
+    Ok(next)
+}
+
+===== change-mesh-extra-data (🕸️mesh) 🕸️mesh/📝️change-extras/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-mesh-extra-data.v1";
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "state", rename_all = "camelCase")]
+pub enum GltfDataPresence {
+    Absent,
+    Present { value: GltfJson },
+}
+#[value(rename_all = "camelCase")]
+pub struct GltfChangeMeshExtraDataPayload {
+    pub mesh: usize,
+    pub data: GltfDataPresence,
+}
+pub fn validate(payload: &GltfChangeMeshExtraDataPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfChangeMeshExtraDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].extras = match &payload.data {
+        GltfDataPresence::Absent => None,
+        GltfDataPresence::Present { value } => Some(value.clone()),
+    };
+    Ok(next)
+}
+
+===== change-mesh-morph-weights (🕸️mesh) 🕸️mesh/⚖️change-weights/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-mesh-morph-weights.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfChangeMeshMorphWeightsPayload {
+    pub mesh: usize,
+    pub weights: Vec<f64>,
+}
+pub fn validate(payload: &GltfChangeMeshMorphWeightsPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    if !payload.weights.iter().all(|value| value.is_finite()) || base.document.meshes[payload.mesh].primitives.iter().any(|primitive| primitive.targets.len() != payload.weights.len()) {
+        return Err(reject("gltf.mutation.invalid-morph-weights", "document/meshes/weights", "weights must be finite and match every primitive target list"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfChangeMeshMorphWeightsPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].weights = payload.weights.clone();
+    Ok(next)
+}
+
+===== change-mesh-name (🕸️mesh) 🕸️mesh/🏷️rename/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-mesh-name.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfChangeMeshNamePayload {
+    pub mesh: usize,
+    pub value: Option<String>,
+}
+pub fn validate(payload: &GltfChangeMeshNamePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfChangeMeshNamePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].name = payload.value.clone();
+    Ok(next)
+}
+
+===== change-primitive-extension-data (🕸️mesh) 🔺️primitive/🧩️change-extensions/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-primitive-extension-data.v1";
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "state", rename_all = "camelCase")]
+pub enum GltfDataPresence {
+    Absent,
+    Present { value: GltfJson },
+}
+#[value(rename_all = "camelCase")]
+pub struct GltfChangePrimitiveExtensionDataPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub data: GltfDataPresence,
+}
+pub fn validate(payload: &GltfChangePrimitiveExtensionDataPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfChangePrimitiveExtensionDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].extensions = match &payload.data {
+        GltfDataPresence::Absent => None,
+        GltfDataPresence::Present { value } => Some(value.clone()),
+    };
+    Ok(next)
+}
+
+===== change-primitive-extra-data (🕸️mesh) 🔺️primitive/📝️change-extras/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-primitive-extra-data.v1";
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "state", rename_all = "camelCase")]
+pub enum GltfDataPresence {
+    Absent,
+    Present { value: GltfJson },
+}
+#[value(rename_all = "camelCase")]
+pub struct GltfChangePrimitiveExtraDataPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub data: GltfDataPresence,
+}
+pub fn validate(payload: &GltfChangePrimitiveExtraDataPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfChangePrimitiveExtraDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].extras = match &payload.data {
+        GltfDataPresence::Absent => None,
+        GltfDataPresence::Present { value } => Some(value.clone()),
+    };
+    Ok(next)
+}
+
+===== change-primitive-topology-mode (🕸️mesh) 🔺️primitive/📐️change-topology/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.change-primitive-topology-mode.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfChangePrimitiveTopologyModePayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub mode: u64,
+}
+pub fn validate(payload: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    if payload.mode > 6 {
+        return Err(reject("gltf.mutation.invalid-topology-mode", "document/meshes/primitives/mode", "mode must be in the glTF topology domain"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].mode = Some(payload.mode);
+    Ok(next)
+}
+
+===== create-accessor (🕸️mesh) 📐️accessor/🌱️create/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.create-accessor.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/accessors"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfCreateAccessorPayload {
+    pub position: usize,
+    pub component_type: GltfComponentType,
+    pub count: usize,
+    pub kind: GltfAccessorType,
+}
+pub fn validate(payload: &GltfCreateAccessorPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.position > base.document.accessors.len() {
+        return Err(reject("gltf.mutation.insert-out-of-range", "document/accessors", "position must be within the collection"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfCreateAccessorPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    repair(&mut next.document, GltfTopLevelFamily::Accessors, &Change::Insert(payload.position))?;
+    next.document.accessors.insert(
+        payload.position,
+        GltfAccessor { buffer_view: None, byte_offset: 0, component_type: payload.component_type, normalized: false, count: payload.count, kind: payload.kind, max: None, min: None, sparse: None, name: None, extensions: None, extras: None },
+    );
+    Ok(next)
+}
+
+===== create-mesh (🕸️mesh) 🕸️mesh/🌱️create/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.create-mesh.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/meshes"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfCreateMeshPayload {
+    pub position: usize,
+}
+pub fn validate(payload: &GltfCreateMeshPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.position > base.document.meshes.len() {
+        return Err(reject("gltf.mutation.insert-out-of-range", "document/meshes", "position must be within the collection"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfCreateMeshPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    repair(&mut next.document, GltfTopLevelFamily::Meshes, &Change::Insert(payload.position))?;
+    next.document.meshes.insert(payload.position, GltfMesh::default());
+    Ok(next)
+}
+
+===== create-morph-target (🕸️mesh) 🧬️morph-target/🌱️create/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.create-morph-target.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfCreateMorphTargetPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfCreateMorphTargetPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    checked_position(payload.position, base.document.meshes[payload.mesh].primitives[payload.primitive].targets.len(), "document/meshes/primitives/targets")?;
+    if base.document.meshes[payload.mesh].primitives.len() != 1 {
+        return Err(reject("gltf.mutation.morph-target-arity", "document/meshes/primitives/targets", "all primitive target counts must remain coherent"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfCreateMorphTargetPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].targets.insert(payload.position, GltfMorphTarget(Vec::new()));
+    Ok(next)
+}
+
+===== create-primitive (🕸️mesh) 🔺️primitive/🌱️create/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.create-primitive.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfCreatePrimitivePayload {
+    pub mesh: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfCreatePrimitivePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_position(payload.position, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfCreatePrimitivePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives.insert(payload.position, GltfPrimitive::default());
+    Ok(next)
+}
+
+===== delete-accessor (🕸️mesh) 📐️accessor/🗑️delete/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.delete-accessor.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/accessors"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfDeleteAccessorPayload {
+    pub index: usize,
+}
+pub fn validate(payload: &GltfDeleteAccessorPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.accessors.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/accessors", "index must address an item"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfDeleteAccessorPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    accessors_op(&mut next, GltfTopLevelFamily::Accessors, payload.index, None, None)?;
+    Ok(next)
+}
+
+===== delete-mesh (🕸️mesh) 🕸️mesh/🗑️delete/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.delete-mesh.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/meshes"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfDeleteMeshPayload {
+    pub index: usize,
+}
+pub fn validate(payload: &GltfDeleteMeshPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.meshes.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/meshes", "index must address an item"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfDeleteMeshPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    meshes_op(&mut next, GltfTopLevelFamily::Meshes, payload.index, None, None)?;
+    Ok(next)
+}
+
+===== delete-morph-target (🕸️mesh) 🧬️morph-target/🗑️delete/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.delete-morph-target.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfDeleteMorphTargetPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub target: usize,
+}
+pub fn validate(payload: &GltfDeleteMorphTargetPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    checked_index(payload.target, base.document.meshes[payload.mesh].primitives[payload.primitive].targets.len(), "document/meshes/primitives/targets")?;
+    if base.document.meshes[payload.mesh].primitives.len() != 1 || !base.document.meshes[payload.mesh].weights.is_empty() {
+        return Err(reject("gltf.mutation.morph-target-arity", "document/meshes", "target deletion would violate mesh target-count coherence"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfDeleteMorphTargetPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].targets.remove(payload.target);
+    Ok(next)
+}
+
+===== delete-primitive (🕸️mesh) 🔺️primitive/🗑️delete/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.delete-primitive.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfDeletePrimitivePayload {
+    pub mesh: usize,
+    pub primitive: usize,
+}
+pub fn validate(payload: &GltfDeletePrimitivePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    Ok(())
+}
+pub fn apply(payload: &GltfDeletePrimitivePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives.remove(payload.primitive);
+    Ok(next)
+}
+
+===== move-accessor (🕸️mesh) 📐️accessor/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-accessor.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/accessors"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfMoveAccessorPayload {
+    pub index: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMoveAccessorPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.accessors.len() || payload.position >= base.document.accessors.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/accessors", "indices must address items"));
+    }
+    if payload.index == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/accessors", "destination equals source"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMoveAccessorPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    accessors_op(&mut next, GltfTopLevelFamily::Accessors, payload.index, Some(payload.position), None)?;
+    Ok(next)
+}
+
+===== move-mesh (🕸️mesh) 🕸️mesh/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-mesh.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/meshes"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfMoveMeshPayload {
+    pub index: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMoveMeshPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.index >= base.document.meshes.len() || payload.position >= base.document.meshes.len() {
+        return Err(reject("gltf.mutation.index-out-of-range", "document/meshes", "indices must address items"));
+    }
+    if payload.index == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/meshes", "destination equals source"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMoveMeshPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    meshes_op(&mut next, GltfTopLevelFamily::Meshes, payload.index, Some(payload.position), None)?;
+    Ok(next)
+}
+
+===== move-morph-target (🕸️mesh) 🧬️morph-target/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-morph-target.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfMoveMorphTargetPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub target: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMoveMorphTargetPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    checked_index(payload.target, base.document.meshes[payload.mesh].primitives[payload.primitive].targets.len(), "document/meshes/primitives/targets")?;
+    checked_index(payload.position, base.document.meshes[payload.mesh].primitives[payload.primitive].targets.len(), "document/meshes/primitives/targets")?;
+    if payload.target == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/meshes/primitives/targets", "destination equals source"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMoveMorphTargetPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let target = next.document.meshes[payload.mesh].primitives[payload.primitive].targets.remove(payload.target);
+    next.document.meshes[payload.mesh].primitives[payload.primitive].targets.insert(payload.position, target);
+    Ok(next)
+}
+
+===== move-morph-target-attribute (🕸️mesh) 🎚️morph-attribute/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-morph-target-attribute.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfMoveMorphTargetAttributePayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub target: usize,
+    pub semantic: String,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMoveMorphTargetAttributePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    checked_index(payload.target, base.document.meshes[payload.mesh].primitives[payload.primitive].targets.len(), "document/meshes/primitives/targets")?;
+    let attributes = &base.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0;
+    let index = attributes.iter().position(|(semantic, _)| semantic == &payload.semantic).ok_or_else(|| reject("gltf.mutation.relation-absent", "document/meshes/primitives/targets", "semantic is not bound"))?;
+    checked_index(payload.position, attributes.len(), "document/meshes/primitives/targets")?;
+    if index == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/meshes/primitives/targets", "destination equals source"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMoveMorphTargetAttributePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let attributes = &mut next.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0;
+    let index = attributes.iter().position(|(semantic, _)| semantic == &payload.semantic).expect("validated semantic");
+    let entry = attributes.remove(index);
+    attributes.insert(payload.position, entry);
+    Ok(next)
+}
+
+===== move-primitive (🕸️mesh) 🔺️primitive/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-primitive.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfMovePrimitivePayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMovePrimitivePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    checked_index(payload.position, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    if payload.primitive == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/meshes/primitives", "destination equals source"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMovePrimitivePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let primitive = next.document.meshes[payload.mesh].primitives.remove(payload.primitive);
+    next.document.meshes[payload.mesh].primitives.insert(payload.position, primitive);
+    Ok(next)
+}
+
+===== move-primitive-attribute (🕸️mesh) 🔤️primitive-attribute/🚚️move/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.move-primitive-attribute.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfMovePrimitiveAttributePayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub semantic: String,
+    pub position: usize,
+}
+pub fn validate(payload: &GltfMovePrimitiveAttributePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    let attributes = &base.document.meshes[payload.mesh].primitives[payload.primitive].attributes;
+    let index = attributes.iter().position(|(semantic, _)| semantic == &payload.semantic).ok_or_else(|| reject("gltf.mutation.relation-absent", "document/meshes/primitives/attributes", "semantic is not bound"))?;
+    checked_index(payload.position, attributes.len(), "document/meshes/primitives/attributes")?;
+    if index == payload.position {
+        return Err(reject("gltf.mutation.no-observable-change", "document/meshes/primitives/attributes", "destination equals source"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfMovePrimitiveAttributePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let attributes = &mut next.document.meshes[payload.mesh].primitives[payload.primitive].attributes;
+    let index = attributes.iter().position(|(semantic, _)| semantic == &payload.semantic).expect("validated semantic");
+    let attribute = attributes.remove(index);
+    attributes.insert(payload.position, attribute);
+    Ok(next)
+}
+
+===== reorder-accessors (🕸️mesh) 📐️accessor/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-accessors.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/accessors"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderAccessorsPayload {
+    pub order: Vec<usize>,
+}
+pub fn validate(payload: &GltfReorderAccessorsPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.order.len() != base.document.accessors.len() || payload.order.iter().collect::<std::collections::BTreeSet<_>>().len() != payload.order.len() || payload.order.iter().any(|index| *index >= base.document.accessors.len()) {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/accessors", "order must contain every index once"));
+    }
+    if payload.order.iter().enumerate().all(|(index, value)| index == *value) {
+        return Err(reject("gltf.mutation.no-observable-change", "document/accessors", "order already matches"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderAccessorsPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    accessors_op(&mut next, GltfTopLevelFamily::Accessors, payload.order[0], None, Some(&payload.order))?;
+    Ok(next)
+}
+
+===== reorder-meshs (🕸️mesh) 🕸️mesh/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-meshs.v1";
+pub const TOUCHED_PATHS: &[&str] = &["document/meshes"];
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderMeshsPayload {
+    pub order: Vec<usize>,
+}
+pub fn validate(payload: &GltfReorderMeshsPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    if payload.order.len() != base.document.meshes.len() || payload.order.iter().collect::<std::collections::BTreeSet<_>>().len() != payload.order.len() || payload.order.iter().any(|index| *index >= base.document.meshes.len()) {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/meshes", "order must contain every index once"));
+    }
+    if payload.order.iter().enumerate().all(|(index, value)| index == *value) {
+        return Err(reject("gltf.mutation.no-observable-change", "document/meshes", "order already matches"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderMeshsPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    meshes_op(&mut next, GltfTopLevelFamily::Meshes, payload.order[0], None, Some(&payload.order))?;
+    Ok(next)
+}
+
+===== reorder-morph-target-attributes (🕸️mesh) 🎚️morph-attribute/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-morph-target-attributes.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderMorphTargetAttributesPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub target: usize,
+    pub order: Vec<String>,
+}
+pub fn validate(payload: &GltfReorderMorphTargetAttributesPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    checked_index(payload.target, base.document.meshes[payload.mesh].primitives[payload.primitive].targets.len(), "document/meshes/primitives/targets")?;
+    let attributes = &base.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0;
+    if payload.order.len() != attributes.len() || payload.order.iter().any(|semantic| !attributes.iter().any(|(key, _)| key == semantic)) {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/meshes/primitives/targets", "order must contain every semantic once"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderMorphTargetAttributesPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let prior = next.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0 = payload.order.iter().map(|semantic| prior.iter().find(|(key, _)| key == semantic).expect("validated semantic").clone()).collect();
+    Ok(next)
+}
+
+===== reorder-morph-targets (🕸️mesh) 🧬️morph-target/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-morph-targets.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderMorphTargetsPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub order: Vec<usize>,
+}
+pub fn validate(payload: &GltfReorderMorphTargetsPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    let length = base.document.meshes[payload.mesh].primitives[payload.primitive].targets.len();
+    if payload.order.len() != length || payload.order.iter().any(|index| *index >= length) || {
+        let mut order = payload.order.clone();
+        order.sort_unstable();
+        order.dedup();
+        order.len() != length
+    } {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/meshes/primitives/targets", "order must contain each target once"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderMorphTargetsPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let prior = next.document.meshes[payload.mesh].primitives[payload.primitive].targets.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].targets = payload.order.iter().map(|index| prior[*index].clone()).collect();
+    Ok(next)
+}
+
+===== reorder-primitive-attributes (🕸️mesh) 🔤️primitive-attribute/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-primitive-attributes.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderPrimitiveAttributesPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub order: Vec<String>,
+}
+pub fn validate(payload: &GltfReorderPrimitiveAttributesPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    let attributes = &base.document.meshes[payload.mesh].primitives[payload.primitive].attributes;
+    if payload.order.len() != attributes.len() || payload.order.iter().any(|semantic| !attributes.iter().any(|(key, _)| key == semantic)) || {
+        let mut order = payload.order.clone();
+        order.sort();
+        order.dedup();
+        order.len() != attributes.len()
+    } {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/meshes/primitives/attributes", "order must contain every semantic once"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderPrimitiveAttributesPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let prior = next.document.meshes[payload.mesh].primitives[payload.primitive].attributes.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].attributes = payload.order.iter().map(|semantic| prior.iter().find(|(key, _)| key == semantic).expect("validated semantic").clone()).collect();
+    Ok(next)
+}
+
+===== reorder-primitives (🕸️mesh) 🔺️primitive/🔀️reorder/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.reorder-primitives.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfReorderPrimitivesPayload {
+    pub mesh: usize,
+    pub order: Vec<usize>,
+}
+pub fn validate(payload: &GltfReorderPrimitivesPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    let length = base.document.meshes[payload.mesh].primitives.len();
+    if payload.order.len() != length || payload.order.iter().any(|index| *index >= length) || {
+        let mut order = payload.order.clone();
+        order.sort_unstable();
+        order.dedup();
+        order.len() != length
+    } {
+        return Err(reject("gltf.mutation.invalid-permutation", "document/meshes/primitives", "order must contain each primitive once"));
+    }
+    if payload.order.iter().enumerate().all(|(index, value)| *value == index) {
+        return Err(reject("gltf.mutation.no-observable-change", "document/meshes/primitives", "reorder must change order"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfReorderPrimitivesPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    let prior = next.document.meshes[payload.mesh].primitives.clone();
+    next.document.meshes[payload.mesh].primitives = payload.order.iter().map(|index| prior[*index].clone()).collect();
+    Ok(next)
+}
+
+===== unbind-morph-target-attribute (🕸️mesh) 🎚️morph-attribute/✂️unbind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.unbind-morph-target-attribute.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfUnbindMorphTargetAttributePayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub target: usize,
+    pub semantic: String,
+}
+pub fn validate(payload: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    checked_index(payload.target, base.document.meshes[payload.mesh].primitives[payload.primitive].targets.len(), "document/meshes/primitives/targets")?;
+    if !base.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0.iter().any(|(semantic, _)| semantic == &payload.semantic) {
+        return Err(reject("gltf.mutation.relation-absent", "document/meshes/primitives/targets", "semantic is not bound"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0.retain(|(semantic, _)| semantic != &payload.semantic);
+    Ok(next)
+}
+
+===== unbind-primitive-attribute (🕸️mesh) 🔤️primitive-attribute/✂️unbind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.unbind-primitive-attribute.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfUnbindPrimitiveAttributePayload {
+    pub mesh: usize,
+    pub primitive: usize,
+    pub semantic: String,
+}
+pub fn validate(payload: &GltfUnbindPrimitiveAttributePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    if !base.document.meshes[payload.mesh].primitives[payload.primitive].attributes.iter().any(|(semantic, _)| semantic == &payload.semantic) {
+        return Err(reject("gltf.mutation.relation-absent", "document/meshes/primitives/attributes", "semantic is not bound"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfUnbindPrimitiveAttributePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].attributes.retain(|(semantic, _)| semantic != &payload.semantic);
+    Ok(next)
+}
+
+===== unbind-primitive-indices (🕸️mesh) 🔢️primitive-indices/✂️unbind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.unbind-primitive-indices.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfUnbindPrimitiveIndicesPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+}
+pub fn validate(payload: &GltfUnbindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    if base.document.meshes[payload.mesh].primitives[payload.primitive].indices.is_none() {
+        return Err(reject("gltf.mutation.relation-absent", "document/meshes/primitives/indices", "primitive has no indices"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfUnbindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].indices = None;
+    Ok(next)
+}
+
+===== unbind-primitive-material (🕸️mesh) 🧱️primitive-material/✂️unbind/🦀️.rs
+pub const ID: &str = "s.stdio.gltf.mutation.unbind-primitive-material.v1";
+#[value(rename_all = "camelCase")]
+pub struct GltfUnbindPrimitiveMaterialPayload {
+    pub mesh: usize,
+    pub primitive: usize,
+}
+pub fn validate(payload: &GltfUnbindPrimitiveMaterialPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+    checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
+    checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    if base.document.meshes[payload.mesh].primitives[payload.primitive].material.is_none() {
+        return Err(reject("gltf.mutation.relation-absent", "document/meshes/primitives/material", "primitive has no material"));
+    }
+    Ok(())
+}
+pub fn apply(payload: &GltfUnbindPrimitiveMaterialPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+    validate(payload, base)?;
+    let mut next = base.clone();
+    next.document.meshes[payload.mesh].primitives[payload.primitive].material = None;
+    Ok(next)
+}

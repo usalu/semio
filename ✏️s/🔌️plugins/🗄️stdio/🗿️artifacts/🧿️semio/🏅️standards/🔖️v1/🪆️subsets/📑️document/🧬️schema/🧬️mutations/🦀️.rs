@@ -214,7 +214,7 @@ pub enum SemioDocumentMutation {
 
 /// 🏷️ The declared mutation vocabulary of `s.stdio.semio.document`, in `SemioDocumentMutation`'s own
 /// declaration order and kebab-case spelling — the single source of truth for the binary op frame's
-/// `tag` ordinal (see [`variant_ordinal`]), for `parse_document_mutation`'s keyword match, and for
+/// `tag` ordinal (see [`wire_tag`]), for `parse_document_mutation`'s keyword match, and for
 /// the `semio-v1-document` catalog in `../../🔣️oracle.json`. The framework never parses
 /// Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
 pub const KINDS: &[&str] = &[
@@ -649,26 +649,48 @@ impl OpText for SemioDocumentMutation {
     }
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioDocumentMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-block");
+const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
+const TAG_SET_BLOCK_CONTENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-block-content");
+const TAG_SET_PARAGRAPH_STYLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-paragraph-style");
+const TAG_SET_HEADING_LEVEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-heading-level");
+const TAG_SET_LIST_ORDERED: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-list-ordered");
+const TAG_SET_RUN_TEXT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-run-text");
+const TAG_SET_RUN_STYLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-run-style");
+const TAG_SET_IMAGE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-image-block");
+const TAG_INSERT_STYLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-style");
+const TAG_REMOVE_STYLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-style");
+const TAG_SET_STYLE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-style-name");
+const TAG_SET_STYLE_BASED_ON: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-style-based-on");
+const TAG_INSERT_IMAGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-image");
+const TAG_REMOVE_IMAGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-image");
+const TAG_SET_IMAGE_BYTES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-image-bytes");
+//#endregion 🏷️WireTags
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioDocumentMutation) -> u8 {
+fn wire_tag(m: &SemioDocumentMutation) -> u8 {
     match m {
-        SemioDocumentMutation::SetSnapshot(..) => 0,
-        SemioDocumentMutation::InsertBlock(..) => 1,
-        SemioDocumentMutation::RemoveBlock(..) => 2,
-        SemioDocumentMutation::SetBlockContent(..) => 3,
-        SemioDocumentMutation::SetParagraphStyle(..) => 4,
-        SemioDocumentMutation::SetHeadingLevel(..) => 5,
-        SemioDocumentMutation::SetListOrdered(..) => 6,
-        SemioDocumentMutation::SetRunText(..) => 7,
-        SemioDocumentMutation::SetRunStyle(..) => 8,
-        SemioDocumentMutation::SetImageBlock(..) => 9,
-        SemioDocumentMutation::InsertStyle(..) => 10,
-        SemioDocumentMutation::RemoveStyle(..) => 11,
-        SemioDocumentMutation::SetStyleName(..) => 12,
-        SemioDocumentMutation::SetStyleBasedOn(..) => 13,
-        SemioDocumentMutation::InsertImage(..) => 14,
-        SemioDocumentMutation::RemoveImage(..) => 15,
-        SemioDocumentMutation::SetImageBytes(..) => 16,
+        SemioDocumentMutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
+        SemioDocumentMutation::InsertBlock(..) => TAG_INSERT_BLOCK,
+        SemioDocumentMutation::RemoveBlock(..) => TAG_REMOVE_BLOCK,
+        SemioDocumentMutation::SetBlockContent(..) => TAG_SET_BLOCK_CONTENT,
+        SemioDocumentMutation::SetParagraphStyle(..) => TAG_SET_PARAGRAPH_STYLE,
+        SemioDocumentMutation::SetHeadingLevel(..) => TAG_SET_HEADING_LEVEL,
+        SemioDocumentMutation::SetListOrdered(..) => TAG_SET_LIST_ORDERED,
+        SemioDocumentMutation::SetRunText(..) => TAG_SET_RUN_TEXT,
+        SemioDocumentMutation::SetRunStyle(..) => TAG_SET_RUN_STYLE,
+        SemioDocumentMutation::SetImageBlock(..) => TAG_SET_IMAGE_BLOCK,
+        SemioDocumentMutation::InsertStyle(..) => TAG_INSERT_STYLE,
+        SemioDocumentMutation::RemoveStyle(..) => TAG_REMOVE_STYLE,
+        SemioDocumentMutation::SetStyleName(..) => TAG_SET_STYLE_NAME,
+        SemioDocumentMutation::SetStyleBasedOn(..) => TAG_SET_STYLE_BASED_ON,
+        SemioDocumentMutation::InsertImage(..) => TAG_INSERT_IMAGE,
+        SemioDocumentMutation::RemoveImage(..) => TAG_REMOVE_IMAGE,
+        SemioDocumentMutation::SetImageBytes(..) => TAG_SET_IMAGE_BYTES,
     }
 }
 /// ✂️ Just the `key=value ...` argument tail of `print_document_mutation` (empty for
@@ -692,7 +714,7 @@ fn print_document_mutation_args(m: &SemioDocumentMutation) -> String {
 impl OpBinary for SemioDocumentMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_document_mutation_args(self).as_bytes());
         Ok(out)
     }
@@ -705,7 +727,7 @@ impl OpBinary for SemioDocumentMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = KINDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", KINDS.len()) })?;
+        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })

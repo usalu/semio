@@ -11,7 +11,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "shape-symbols";
-const FIXTURE = "local://shape-symbols.tex";
+const FIXTURE = "shared://🔷️shape-symbols/shape-symbols.tex";
 const SIZES = ["64", "17.5", "200"] as const;
 
 const DECIMALS = 6;

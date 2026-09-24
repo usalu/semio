@@ -1,3 +1,21 @@
-dialect protocol stdio.wav.mutations
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.wav.mutations"
+dialect protocol
+protocol None
+version 1
+schema None
+start op
+framing record
+
+# Real `WavMutation` op frame (`dsl::tagged_value_binary`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`, then
+# the variant's `ToValue` tree without its variant name, as one framework wire value (`pack_rt::encode_wire_value`).
+# Each record is one mutation kind at its wire tag; this file is the only source of those tags.
+header fixed 2
+field format u8
+field tag varint
+record set-snapshot tag=0
+field payload bytes
+record set-fmt tag=1
+field payload bytes
+record set-data tag=2
+field payload bytes
+record set-other-chunks tag=3
+field payload bytes

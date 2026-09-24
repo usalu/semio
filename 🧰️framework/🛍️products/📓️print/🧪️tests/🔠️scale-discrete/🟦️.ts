@@ -11,7 +11,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "scale-discrete";
-const FIXTURE = "local://scale-discrete.tex";
+const FIXTURE = "shared://🔠️scale-discrete/scale-discrete.tex";
 const DECIMALS = 6;
 
 /** 🔢️ Rounds an oracle's numbers onto the emission grid the probe writes on. */

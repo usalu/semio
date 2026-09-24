@@ -17,7 +17,7 @@ Feature: Concatenation, insets and dashboard cells hand out sub-frames
   @level-quick
   @mode-conformance
   Scenario: Two horizontal items advance by width plus gap
-    Given the committed probe document local://concat.tex with direction=horizontal gap=5 width=55
+    Given the committed probe document shared://🧩️composition-concat-inset/concat.tex with direction=horizontal gap=5 width=55
     Then the compiled probe reports the specified item rectangles
       | key   | values        |
       | item0 | 0,0,0,55,60   |
@@ -27,7 +27,7 @@ Feature: Concatenation, insets and dashboard cells hand out sub-frames
   @level-quick
   @mode-conformance
   Scenario: An inset keeps the rectangle it was given
-    Given the committed probe document local://inset.tex with at=70,30 width=45 height=25
+    Given the committed probe document shared://🧩️composition-concat-inset/inset.tex with at=70,30 width=45 height=25
     Then the compiled probe reports the specified inset rectangle
       | key   | values      |
       | inset | 70,30,45,25 |
@@ -36,7 +36,7 @@ Feature: Concatenation, insets and dashboard cells hand out sub-frames
   @level-quick
   @mode-conformance
   Scenario: A spanning dashboard cell consumes the column slots it spans
-    Given the committed probe document local://dashboard.tex with columns=3 rows=2 gap=3
+    Given the committed probe document shared://🧩️composition-concat-inset/dashboard.tex with columns=3 rows=2 gap=3
     Then the compiled probe reports the specified cell rectangles
       | key   | values             |
       | cell0 | 0,0,31.5,38,28.5   |

@@ -9,7 +9,7 @@ mod subject {
     use semio_framework_repo_providers::{hook_client_for_mcp_kind, mcp_kind_from_resolved_client, mcp_server_name, parse_mcp_client_kind};
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    const VECTORS: &str = "local://🪪️client-kinds.json";
+    const VECTORS: &str = "shared://🪪️mcp-client-kind-parse/🪪️client-kinds.json";
 
     fn strings(value: &Json, key: &str) -> Vec<String> {
         value

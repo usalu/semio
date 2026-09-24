@@ -1,0 +1,11 @@
+{
+  "schema": "db-artifact-mutation-id-collision/v1",
+  "description": "A ledger dedupes by mutation id. Resending an identical envelope (even under a new socket actor) is an idempotent replay; reusing a committed id for different content is a collision the ledger must refuse loudly instead of acknowledging and dropping.",
+  "committed": { "id": "edit-shared", "actor": "hub.v1.first", "path": "blocks/0", "value": "first" },
+  "cases": [
+    { "name": "identical-replay", "id": "edit-shared", "actor": "hub.v1.first", "path": "blocks/0", "value": "first", "outcome": "replayed", "headSeq": 1 },
+    { "name": "identical-replay-new-actor", "id": "edit-shared", "actor": "hub.v1.second", "path": "blocks/0", "value": "first", "outcome": "replayed", "headSeq": 1 },
+    { "name": "colliding-content", "id": "edit-shared", "actor": "hub.v1.second", "path": "blocks/1", "value": "second", "outcome": "conflict", "headSeq": 1 },
+    { "name": "fresh-identity", "id": "edit-fresh", "actor": "hub.v1.second", "path": "blocks/1", "value": "second", "outcome": "committed", "headSeq": 2 }
+  ]
+}

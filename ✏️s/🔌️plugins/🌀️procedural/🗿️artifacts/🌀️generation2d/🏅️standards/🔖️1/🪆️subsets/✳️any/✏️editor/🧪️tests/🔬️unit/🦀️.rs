@@ -373,7 +373,8 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
         let last_valid = production_read(app.snapshot().expect("last-valid P2 snapshot"));
         let last_valid_digest = production_semantic_digest(&last_valid);
         let base_generation = app.artifact_generation_now();
-        let (wire, _, _) = production_envelope_wire("rejected-production-candidate");
+        let (wire, candidate, _) = production_envelope_wire("rejected-production-candidate");
+        candidate.retire_cold();
         let handle = admit_production_envelope(&mut app, &wire);
         let lease = ProductionLease(handle);
         crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_arm_publication_hostile(handle.operation, hostile);
@@ -395,10 +396,10 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
 fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-    assert_eq!(GENERATION2D_BOUNDED_TOOL_IDS.len(), 21);
+    assert_eq!(GENERATION2D_BOUNDED_TOOL_IDS.len(), 22);
     assert_eq!(GENERATION2D_CONTRIBUTIONS_TOOL_IDS.len(), 1);
-    assert_eq!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 22, "both factories' proofs, aggregated");
-    assert_eq!(Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 21);
+    assert_eq!(<Generation2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 23, "both factories' proofs, aggregated");
+    assert_eq!(Generation2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 22);
     assert_eq!(Generation2dContributionsJobFactory::PUBLICATION_CONTRACTS.len(), 1);
     assert!(GENERATION2D_CONTRIBUTIONS_TOOL_IDS.iter().all(|tool_id| !GENERATION2D_BOUNDED_TOOL_IDS.contains(tool_id)), "a tool id may be owned by exactly one factory");
     assert!(GENERATION2D_CONTRIBUTIONS_RAW_BYTES > GENERATION2D_RETAINED_RAW_BYTES, "the contributions route exists precisely because the gesture quota cannot carry it");
@@ -742,6 +743,7 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "update-generation-values",
         "node-graph-viewport",
         "set-show-mode",
+        "active-example",
         "generate",
         "set-eval-outputs",
         "canvas-pointer-down",
@@ -776,6 +778,7 @@ pub(super) fn every_command() -> Vec<Generation2dCommand> {
         Generation2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
         Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d::default() }),
         Generation2dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wire".into() }),
+        Generation2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
         Generation2dCommand::Generate(enter_generate::Generate {}),
         Generation2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs { outputs_json: "{}".into() }),
         Generation2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}),
@@ -844,6 +847,11 @@ fn canvas_pointer_wire_defaults_samples_and_cancelled() {
     let mut session = FlowEvalSession::default();
     let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { cancelled: true }, &view, &cfg, &mut session).expect("cancel");
     assert!(emit.artifact_mutations.is_empty() && emit.effects.is_empty() && emit.config_mutations.is_empty(), "a cancel never selects or commits");
+    document.retire_cold();
+    session.begin_close();
+    while !session.terminal_is_empty() {
+        let _ = session.close_step(usize::MAX, usize::MAX);
+    }
 }
 
 /// 🎥️ LAW: `nodeGraphViewport` declares no args, so the shell stages nothing for it. An absent `viewport`

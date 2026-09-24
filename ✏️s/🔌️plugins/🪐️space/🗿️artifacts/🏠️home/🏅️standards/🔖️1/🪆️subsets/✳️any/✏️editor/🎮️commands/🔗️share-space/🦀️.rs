@@ -21,7 +21,17 @@ pub struct ShareSpace {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handle
-pub fn handle(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+pub fn handle(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
+    let directory = cfg.snapshot.directory().ok();
+    let is_hub = directory.as_ref().is_some_and(|model| model.spaces.contains_key(&payload.space_id));
+    if !is_hub {
+        let args = Some(pack::json_to_dsl_value(&pack::json!({
+            "spaceId": payload.space_id.clone(),
+            "dataClass": "ephemeralLocalOnly",
+            "reason": "ephemeral-local-only"
+        })));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(128), dialog_id: "ephemeralShareBlocked".into(), args }));
+    }
     if payload.email.trim().is_empty() {
         let args = Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": payload.space_id.clone() })));
         return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(126), dialog_id: "shareSpace".into(), args }));

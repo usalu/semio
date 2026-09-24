@@ -71,9 +71,9 @@ test("socket-grant command contract is schema-first and independently parsed", a
   expect(errors).toEqual([]);
 });
 
-test("seven anonymous owners are exported, acyclic, and type-correct", () => {
+test("six anonymous owners are exported, acyclic, and type-correct", () => {
   const ownerPaths = new Set(fixture.owners.map((owner) => owner.path));
-  expect(fixture.owners).toHaveLength(7);
+  expect(fixture.owners).toHaveLength(6);
   for (const owner of fixture.owners) {
     const absolute = join(repoRoot, owner.path);
     expect(existsSync(absolute), owner.path).toBe(true);
@@ -99,7 +99,7 @@ test("seven anonymous owners are exported, acyclic, and type-correct", () => {
     visited.add(path);
   };
   for (const path of ownerPaths) visit(path);
-  expect(visited.size).toBe(7);
+  expect(visited.size).toBe(6);
 
   const paths = fixture.owners.filter((owner) => owner.language === "typescript").map((owner) => join(repoRoot, owner.path));
   const program = ts.createProgram(paths, {
@@ -121,7 +121,7 @@ test("seven anonymous owners are exported, acyclic, and type-correct", () => {
   }
 });
 
-test("owner paths bind all eighteen taxonomy contexts", () => {
+test("owner paths bind all seventeen taxonomy contexts", () => {
   const taxonomy = loadTaxonomy();
   for (const context of fixture.contexts) expect(semanticDirectoryKindId(context.directoryName, taxonomy, { parentKindId: context.parentKindId }), context.kindId).toBe(context.kindId);
   for (const owner of fixture.owners) {

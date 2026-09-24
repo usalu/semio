@@ -17,7 +17,7 @@ Feature: A facet computes its panel rectangles from the block and the groups
   @level-quick
   @mode-conformance
   Scenario: A wrapped facet fills a two-column grid on a 120 by 60 block
-    Given the committed probe document local://wrap.tex with wrap=A,B,C,D columns=2 gap=4
+    Given the committed probe document shared://🪟️facet-layout/wrap.tex with wrap=A,B,C,D columns=2 gap=4
     Then the compiled probe reports the specified panel rectangles
       | key    | values           |
       | panel0 | 0,0,32,58,28     |
@@ -29,7 +29,7 @@ Feature: A facet computes its panel rectangles from the block and the groups
   @level-quick
   @mode-conformance
   Scenario: Shared axes are drawn on the bottom row and the leftmost column only
-    Given the committed probe document local://wrap.tex with sharedX=true sharedY=true
+    Given the committed probe document shared://🪟️facet-layout/wrap.tex with sharedX=true sharedY=true
     Then the compiled probe reports the specified axis count
       | key        | values |
       | axisCount  | 4      |

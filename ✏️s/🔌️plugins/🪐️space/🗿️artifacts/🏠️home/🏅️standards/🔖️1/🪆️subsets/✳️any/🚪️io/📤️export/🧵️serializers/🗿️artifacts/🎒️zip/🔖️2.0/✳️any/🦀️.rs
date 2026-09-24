@@ -1,14 +1,10 @@
-//! home -> zip
+//! home → zip — the shared document archive (`encode_document_archive`): this artifact's DSL as the
+//! authoritative member plus its rfc8259 rendition, both lossless (`IoFidelity::Exact`).
 use crate::SHomeSnapshot;
-use semio_s_artifact_stdio_zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_zip::io::encode_document_archive;
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &SHomeSnapshot) -> Result<ZipSnapshot, store::TextError> {
-    let _ = STDIO_ZIP_DOCUMENT_SCHEMA;
-    dsl::FromValue::from_value(dsl::ToValue::to_value(snapshot)).map_err(|e: dsl::ValueError| store::TextError::new(format!("home->zip: {e}"), dsl::TextSpan::at(1, 1)))
-}
-
 pub fn serialize_bytes(snapshot: &SHomeSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<ZipSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
+    encode_document_archive(snapshot).map_err(|error| store::TextError::new(format!("home→zip: {error}"), dsl::TextSpan::at(1, 1)))
 }

@@ -931,7 +931,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/📜️script.ts byte-order",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-tiff-byte-order-v1",
       "reproducible": true,

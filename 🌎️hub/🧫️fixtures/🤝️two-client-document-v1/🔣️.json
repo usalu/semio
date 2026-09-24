@@ -1,0 +1,76 @@
+{
+  "schema": "semio.hub.two-client-document-scenario/v1",
+  "version": 1,
+  "authors": [
+    "author-a",
+    "author-b"
+  ],
+  "artifactKindId": "s.note.note",
+  "surfaceId": "s.note.note@1/*#editor",
+  "spaceName": "Two Client Document Collab",
+  "command": {
+    "diffSchema": "db.pathmap.v1",
+    "diffValue": {
+      "value": "two-client-a1"
+    },
+    "inverseValue": {},
+    "batchId": 1,
+    "mutationIdPrefix": "tc-doc-"
+  },
+  "presence": {
+    "lane": "preview",
+    "labelA": "author-a",
+    "leaseTtlMs": 15000,
+    "hoveredPath": "two-client/probe"
+  },
+  "shutdown": {
+    "closeCode": 1012,
+    "gracefulExitWithinMs": 15000,
+    "crashReleaseSlackMs": 30000,
+    "databaseClosedMarker": "database=closed",
+    "liveWriterProbe": {
+      "postgres": "SELECT count(*) FROM pg_locks l JOIN pg_stat_activity a ON a.pid = l.pid WHERE l.locktype = 'advisory' AND l.granted AND a.application_name = 'semio-wal-writer'",
+      "neo4j": "MATCH (w:WalWriter) WHERE w.holder IS NOT NULL AND w.expiresAtMs > timestamp() RETURN count(w) AS live"
+    }
+  },
+  "steps": [
+    "start-hub-with-trusted-catalog",
+    "provision-two-credentials",
+    "mint-two-sessions",
+    "create-space",
+    "admit-author-b",
+    "create-note-artifact",
+    "open-plan-and-socket-grants-both",
+    "socket-hello-welcome-both",
+    "a-publishes-presence-b-sees-a",
+    "a-sends-commands-b-receives-identical-envelope",
+    "ack-frontier-advances",
+    "late-joiner-welcome-at-ack-frontier-with-presence-replay",
+    "late-joiner-leaves-roster-drops-it",
+    "a-stops-beating-lease-expiry-strips-a-to-identity",
+    "b-disconnect-a-sends-again-b-reconnect-resume",
+    "sigterm-with-open-socket-closes-1012-drains-and-exits-zero",
+    "restart-same-data-dir-reopens-document-first-attempt-keeps-artifact-and-frontier",
+    "sigkill-with-open-document-restart-reopens-after-backend-crash-release"
+  ],
+  "expectations": {
+    "bReceivesCommandsEnvelope": true,
+    "ackStagesIncludeApplied": true,
+    "frontierDocumentIdIsPlainArtifactId": true,
+    "presencePeerActorMatchesA": true,
+    "presenceJoinReplayShowsA": true,
+    "lateJoinerCatchesUp": true,
+    "presenceLeaveDropsPeer": true,
+    "presenceLeaseExpiryStripsA": true,
+    "reconnectDeliversMissedOrRebootstrap": true,
+    "restartPreservesArtifactAndFrontier": true,
+    "gracefulShutdownClosesSocketsAndReleasesWriters": true,
+    "crashReleasesWritersPerBackendContract": true
+  },
+  "nonclaims": [
+    "plugin-ui-mount",
+    "uiPatch.receipt",
+    "browser-actor",
+    "durable-collaborative-redo"
+  ]
+}

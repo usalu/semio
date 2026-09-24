@@ -31,7 +31,7 @@ function rows(ctx: AdapterContext): Record<string, string>[] {
 
 /** 🎯️ The compiled probe of one fixture, kept whole so the arc and its centroid stay paired. */
 async function probe(ctx: AdapterContext, fixture: string): Promise<ProbeRecord[]> {
-  const parsed = await compileVizProbe(ctx.fixture(`local://${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const parsed = await compileVizProbe(ctx.fixture(`shared://⏱️charts-kpi-gauge/${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   return roundProbeNumbers(parsed, DECIMALS);
 }
 

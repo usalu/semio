@@ -32,6 +32,8 @@ export type LocalHubStartOptions = Readonly<{
   adminSubjects?: readonly string[];
   isolatedSecuritySmoke?: boolean;
   binaryPath?: string;
+  /** 🔐️ When set, the child keeps `OS_HUB_ADMIN_TOKEN` for operator surfaces (collab e2e admin checks). */
+  adminToken?: string;
   inferenceCheckpointControl?: boolean;
   runParent?: string;
   allocationOperations?: LocalHubRunAllocationOperations;
@@ -156,7 +158,8 @@ export async function startLocalHub(repoRoot: string, root: string, profiles: re
   else delete env.OS_HUB_TEST_INFERENCE_CHECKPOINT_FD;
   delete env.OS_HUB_TRUSTED_CATALOG_BUNDLE;
   delete env.OS_HUB_TRUSTED_CATALOG_PROFILE;
-  delete env.OS_HUB_ADMIN_TOKEN;
+  if (options.adminToken) env.OS_HUB_ADMIN_TOKEN = options.adminToken;
+  else delete env.OS_HUB_ADMIN_TOKEN;
   delete env.S_USER;
   for (const name of Object.keys(env)) if (/^S_.*TOKEN$/.test(name)) delete env[name];
   if (options.isolatedSecuritySmoke) {

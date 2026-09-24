@@ -52,7 +52,7 @@ fn generation2d_window_camera_ownership_matches_neutral_fixture_and_exact_codecs
     use crate::editor::generation2d::modes::edit::windows::{flow, preview as edit_preview};
     use crate::editor::generation2d::modes::generate::windows::preview as generate_preview;
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("neutral Generation2d window fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")).expect("neutral Generation2d window fixture");
     let main_base: flow::config::Generation2dMainWindowConfig = dsl::json::from_json_str(&fixture["baseConfigs"][flow::GENERATION2D_PLAY_WINDOW_MAIN].to_string()).expect("neutral main config");
     let main_next: flow::config::Generation2dMainWindowConfig = dsl::json::from_json_str(&fixture["expected"]["main-left"].to_string()).expect("neutral main next config");
     let main_mutation = flow::config::Generation2dMainWindowConfigMutation::Snapshot { config: Box::new(main_next.clone()) };
@@ -170,7 +170,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     (app, observed)
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("neutral runtime fixture");
+                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")).expect("neutral runtime fixture");
                 let all = ViewModel {
                     window_instances: fixture["windowInstances"].as_array().expect("window instances").iter().map(|row| ViewWindowInstance {
                         id: row["id"].as_str().expect("window id").into(),

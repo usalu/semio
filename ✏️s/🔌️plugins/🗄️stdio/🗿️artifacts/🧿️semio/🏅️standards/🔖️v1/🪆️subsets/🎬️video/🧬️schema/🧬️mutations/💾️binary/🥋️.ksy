@@ -5,7 +5,7 @@ doc: |
   Kaitai mirror (descriptive, not test-parsed — the real byte-level walker is
   ../📡️.protocol.semio, walked by dsl::walk_protocol) for the REAL binary op frame
   (video wave, replacing the old print_op().into_bytes() text-as-binary shortcut). `format`/`tag`
-  (the SemioVideoMutation variant ordinal, see ../🦀️.rs's OP_KEYWORDS) are real, fully
+  (the record tag in `📡️.protocol.semio`) are real, fully
   described fixed header fields; the variant's own `key=value ...` argument text follows as one
   opaque trailing `payload` (reuses the already-real, already-tested print_semio_video_mutation
   text codec).
@@ -15,7 +15,7 @@ seq:
     doc: "OP_BINARY_FORMAT, currently 1"
   - id: tag
     type: u1
-    doc: "SemioVideoMutation variant ordinal, 0-7 — see ../🦀️.rs's OP_KEYWORDS"
+    doc: "the kind's record tag in 📡️.protocol.semio"
   - id: payload
     size-eos: true
     doc: "the variant's own key=value ... argument text (UTF-8)"

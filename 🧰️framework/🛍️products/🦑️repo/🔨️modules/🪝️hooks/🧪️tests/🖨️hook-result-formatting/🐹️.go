@@ -14,7 +14,7 @@ import (
 
 // region 🔖️Vectors
 
-const formattingVectors = "local://🖨️invocations.json"
+const formattingVectors = "shared://🖨️hook-result-formatting/🖨️invocations.json"
 
 const bareClient = "claude-code"
 

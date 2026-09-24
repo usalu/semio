@@ -21,7 +21,7 @@
       }
     },
     "brep": {
-      "childId": "brep-01",
+      "childId": "crate-brep",
       "target": {
         "artifactId": "crate-brep",
         "dialect": {
@@ -32,7 +32,7 @@
       }
     },
     "mesh": {
-      "childId": "mesh-01",
+      "childId": "crate-mesh",
       "target": {
         "artifactId": "crate-mesh",
         "dialect": {
@@ -43,7 +43,7 @@
       }
     },
     "properties": {
-      "childId": "props-01",
+      "childId": "crate-props",
       "target": {
         "artifactId": "crate-props",
         "dialect": {

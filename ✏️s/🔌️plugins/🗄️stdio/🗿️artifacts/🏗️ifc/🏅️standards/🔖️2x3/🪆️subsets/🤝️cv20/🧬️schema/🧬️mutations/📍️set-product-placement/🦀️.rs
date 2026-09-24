@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetProductPlacement {
-    pub(crate) product: u64,
-    pub(crate) placement: Option<u64>,
+    pub product: u64,
+    pub placement: Option<u64>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProductPlacement {

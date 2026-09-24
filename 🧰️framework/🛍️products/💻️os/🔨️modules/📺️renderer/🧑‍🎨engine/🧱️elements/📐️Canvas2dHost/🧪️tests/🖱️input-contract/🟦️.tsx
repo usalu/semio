@@ -10,11 +10,11 @@ import Ajv2020 from "ajv/dist/2020";
 import layoutCatalogue from "../../../../../../../../../../✏️s/🔌️plugins/📏️layout/🧫️fixtures/🛍️canvas-catalogue/🔣️.json" with { type: "json" };
 import layoutCatalogueSchema from "../../../../../../../../../../✏️s/🔌️plugins/📏️layout/🧬️schema/🛍️canvas-catalogue/🔣️.json" with { type: "json" };
 
-import catalogueTerminal from "../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🛒️canvas-catalogue-terminal/🔣️.json" with { type: "json" };
+import catalogueTerminal from "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛒️canvas-catalogue-terminal/🔣️.json" with { type: "json" };
 import catalogueTerminalSchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🛒️canvas-catalogue-terminal/🔣️.json" with { type: "json" };
-import cataloguePointerTransfer from "../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🛒️canvas-catalogue-pointer-transfer/🔣️.json" with { type: "json" };
+import cataloguePointerTransfer from "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛒️canvas-catalogue-pointer-transfer/🔣️.json" with { type: "json" };
 import cataloguePointerTransferSchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🛒️canvas-catalogue-pointer-transfer/🔣️.json" with { type: "json" };
-import cameraGestures from "../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json" with { type: "json" };
+import cameraGestures from "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json" with { type: "json" };
 import cameraGesturesSchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🧭️canvas2d-camera-gestures/🔣️.json" with { type: "json" };
 import { Tree, catalogueTreeDragController, getActiveCataloguePointerDragData } from "@semio-tech/ui-react";
 

@@ -1,18 +1,11 @@
 
-use crate::Block3dSnapshot;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::obj::v3_0::any::Block3dIntoObj;
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::Block3dIntoPng;
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::stl::v_ascii::any::Block3dIntoStl;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::zip::v2_0::any::Block3dIntoZip;
 use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::obj::v3_0::any::ObjIntoBlock3d;
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::png::v1_2::any::PngIntoBlock3d;
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::stl::v_ascii::any::StlIntoBlock3d;
 use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
 use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::zip::v2_0::any::{ZIP_MAGIC, from_zip_bytes};
-use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::IoPayload;
 
 /// 📄️ Every handcrafted `.semio` DSL example asset of this subset — the language-agnostic
@@ -54,26 +47,9 @@ async fn zip_round_trips_every_example_as_a_real_archive() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn geometry_and_raster_hops_refuse_with_a_reason() {
-    let snapshot = Block3dSnapshot::default();
-    let empty_text = IoPayload::Text(String::new());
-    let empty_binary = IoPayload::Binary(Vec::new());
-    for message in [
-        Block3dIntoStl::serialize(&snapshot).await.expect_err("stl export must refuse").message,
-        Block3dIntoObj::serialize(&snapshot).await.expect_err("obj export must refuse").message,
-        Block3dIntoPng::serialize(&snapshot).await.expect_err("png export must refuse").message,
-        StlIntoBlock3d::deserialize(&empty_text).await.expect_err("stl import must refuse").message,
-        ObjIntoBlock3d::deserialize(&empty_text).await.expect_err("obj import must refuse").message,
-        PngIntoBlock3d::deserialize(&empty_binary).await.expect_err("png import must refuse").message,
-    ] {
-        assert!(message.contains("not supported for"), "every refusing hop must name the reason, got: {message}");
-    }
-}
-
-#[semio_framework_async_macros::async_test]
-async fn io_declaration_registers_both_directions_of_all_six_formats() {
+async fn io_declaration_registers_both_directions_of_all_three_formats() {
     let declaration = super::io();
-    assert_eq!(declaration.entries.len(), 12, "six formats x two directions");
+    assert_eq!(declaration.entries.len(), 6, "three formats x two directions");
     let own = "s.block.block3d";
     let mut foreign: Vec<&str> = Vec::new();
     for entry in declaration.entries {
@@ -82,5 +58,5 @@ async fn io_declaration_registers_both_directions_of_all_six_formats() {
     }
     foreign.sort_unstable();
     foreign.dedup();
-    assert_eq!(foreign, vec!["s.stdio.json", "s.stdio.obj", "s.stdio.png", "s.stdio.stl", "s.stdio.txt", "s.stdio.zip"]);
+    assert_eq!(foreign, vec!["s.stdio.json", "s.stdio.txt", "s.stdio.zip"]);
 }

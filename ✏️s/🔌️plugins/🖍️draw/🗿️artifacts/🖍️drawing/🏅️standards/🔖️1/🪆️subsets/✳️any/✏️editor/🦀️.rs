@@ -371,25 +371,6 @@ mod args_bridge {
             _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the draw editor has no command for action '{action}'"))),
         })
     }
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn folds_camel_case_keys_and_json_values() {
-            let args = dsl::json::to_dsl_value(&dsl::json::parse(r#"{"exampleId":"demo"}"#).expect("json"));
-            assert_eq!(command_from_action("setActiveExample", Some(&args)).expect("decodes"), DrawingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }));
-            let args = dsl::json::to_dsl_value(&dsl::json::parse(r#"{"layerId":"a","field":"opacity","value":0.5}"#).expect("json"));
-            assert_eq!(command_from_action("patchLayer", Some(&args)).expect("decodes"), DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: "a".into(), field: "opacity".into(), value: "0.5".into() }));
-            let args = dsl::json::to_dsl_value(&dsl::json::parse(r#"{"camera":{"x":1,"y":2,"zoom":1.5}}"#).expect("json"));
-            assert!(matches!(command_from_action("setCamera", Some(&args)).expect("decodes"), DrawingCommand::SetCamera(_)));
-            assert_eq!(command_from_action("addLayer", None).expect("arg-less palette row"), DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }));
-            assert_eq!(command_from_action("exportDocument", None).expect("arg-less palette row"), DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into() }));
-            assert_eq!(command_from_action("exportDocument", Some(&dsl::DslValue::Object(vec![("format".into(), dsl::DslValue::String("svg".into()))]))).expect("explicit format"), DrawingCommand::ExportDocument(export_document::ExportDocument { format: "svg".into() }));
-            assert!(command_from_action("noSuchAction", None).is_err());
-        }
-    }
 }
 //#endregion 🌉️ActionBridge
 
@@ -1458,6 +1439,13 @@ impl ArtifactEditor for DrawingPlayApp {
     const DIALECT: semio_framework::Dialect = crate::DRAWING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
 
+    /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields;
+    /// without it every live envelope load faults `editor did not declare a loaded-parent child
+    /// projection` before the decoded document can replace the store.
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("drawing.child-projection"), error.to_string()))
+    }
+
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::spr::drawing_envelope_decode_owner_bundle())
     }
@@ -2046,6 +2034,10 @@ pub(crate) mod unit_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️archive-load/🦀️.rs"]
 mod archive_load_tests;
+/// 🌉️ The action bridge folds camelCase keys and JSON values into typed drawing commands.
+#[cfg(test)]
+#[path = "🧪️tests/🌉️args-bridge/🦀️.rs"]
+mod args_bridge_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts

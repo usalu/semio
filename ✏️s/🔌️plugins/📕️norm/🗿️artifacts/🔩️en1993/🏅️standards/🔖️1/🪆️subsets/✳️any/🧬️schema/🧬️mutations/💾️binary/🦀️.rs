@@ -35,26 +35,48 @@ fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Resul
     pack::json::from_json_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `En1993Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
+const TAG_CHANGE_ANNEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-annex");
+const TAG_UPDATE_MEMBER_PROPERTIES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-member-properties");
+const TAG_UPDATE_FIRE_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-fire-inputs");
+const TAG_UPDATE_COLD_FORMED_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-cold-formed-inputs");
+const TAG_UPDATE_STAINLESS_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-stainless-inputs");
+const TAG_UPDATE_PLATED_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-plated-inputs");
+const TAG_UPDATE_SILO_SHELL_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-silo-shell-inputs");
+const TAG_UPDATE_BOLT_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-bolt-inputs");
+const TAG_UPDATE_WELD_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-weld-inputs");
+const TAG_UPDATE_FATIGUE_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-fatigue-inputs");
+const TAG_UPDATE_THROUGH_THICKNESS_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-through-thickness-inputs");
+const TAG_UPDATE_TENSION_COMPONENT_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-tension-component-inputs");
+const TAG_UPDATE_HSS_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-hss-inputs");
+const TAG_UPDATE_BRIDGE_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-bridge-inputs");
+const TAG_UPDATE_TOWER_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-tower-inputs");
+const TAG_UPDATE_PILE_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-pile-inputs");
+const TAG_UPDATE_CRANE_INPUTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-crane-inputs");
+//#endregion 🏷️WireTags
+
 impl protocol::OpBinary for En1993Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            En1993Mutation::ChangeAnnex(_) => 0,
-            En1993Mutation::UpdateMemberProperties(_) => 1,
-            En1993Mutation::UpdateFireInputs(_) => 2,
-            En1993Mutation::UpdateColdFormedInputs(_) => 3,
-            En1993Mutation::UpdateStainlessInputs(_) => 4,
-            En1993Mutation::UpdatePlatedInputs(_) => 5,
-            En1993Mutation::UpdateSiloShellInputs(_) => 6,
-            En1993Mutation::UpdateBoltInputs(_) => 7,
-            En1993Mutation::UpdateWeldInputs(_) => 8,
-            En1993Mutation::UpdateFatigueInputs(_) => 9,
-            En1993Mutation::UpdateThroughThicknessInputs(_) => 10,
-            En1993Mutation::UpdateTensionComponentInputs(_) => 11,
-            En1993Mutation::UpdateHssInputs(_) => 12,
-            En1993Mutation::UpdateBridgeInputs(_) => 13,
-            En1993Mutation::UpdateTowerInputs(_) => 14,
-            En1993Mutation::UpdatePileInputs(_) => 15,
-            En1993Mutation::UpdateCraneInputs(_) => 16,
+            En1993Mutation::ChangeAnnex(_) => TAG_CHANGE_ANNEX,
+            En1993Mutation::UpdateMemberProperties(_) => TAG_UPDATE_MEMBER_PROPERTIES,
+            En1993Mutation::UpdateFireInputs(_) => TAG_UPDATE_FIRE_INPUTS,
+            En1993Mutation::UpdateColdFormedInputs(_) => TAG_UPDATE_COLD_FORMED_INPUTS,
+            En1993Mutation::UpdateStainlessInputs(_) => TAG_UPDATE_STAINLESS_INPUTS,
+            En1993Mutation::UpdatePlatedInputs(_) => TAG_UPDATE_PLATED_INPUTS,
+            En1993Mutation::UpdateSiloShellInputs(_) => TAG_UPDATE_SILO_SHELL_INPUTS,
+            En1993Mutation::UpdateBoltInputs(_) => TAG_UPDATE_BOLT_INPUTS,
+            En1993Mutation::UpdateWeldInputs(_) => TAG_UPDATE_WELD_INPUTS,
+            En1993Mutation::UpdateFatigueInputs(_) => TAG_UPDATE_FATIGUE_INPUTS,
+            En1993Mutation::UpdateThroughThicknessInputs(_) => TAG_UPDATE_THROUGH_THICKNESS_INPUTS,
+            En1993Mutation::UpdateTensionComponentInputs(_) => TAG_UPDATE_TENSION_COMPONENT_INPUTS,
+            En1993Mutation::UpdateHssInputs(_) => TAG_UPDATE_HSS_INPUTS,
+            En1993Mutation::UpdateBridgeInputs(_) => TAG_UPDATE_BRIDGE_INPUTS,
+            En1993Mutation::UpdateTowerInputs(_) => TAG_UPDATE_TOWER_INPUTS,
+            En1993Mutation::UpdatePileInputs(_) => TAG_UPDATE_PILE_INPUTS,
+            En1993Mutation::UpdateCraneInputs(_) => TAG_UPDATE_CRANE_INPUTS,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -176,11 +198,11 @@ impl protocol::OpBinary for En1993Mutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            0 => {
+            TAG_CHANGE_ANNEX => {
                 let new_annex = read_json_bin(&mut reader).map_err(|e| malformed("annex", reader.position(), e))?;
                 Ok(En1993Mutation::ChangeAnnex(ChangeAnnex { new_annex }))
             }
-            1 => {
+            TAG_UPDATE_MEMBER_PROPERTIES => {
                 let new_n_ed_kn = read_json_bin(&mut reader).map_err(|e| malformed("n_ed_kn", reader.position(), e))?;
                 let new_m_ed_knm = read_json_bin(&mut reader).map_err(|e| malformed("m_ed_knm", reader.position(), e))?;
                 let new_v_ed_kn = read_json_bin(&mut reader).map_err(|e| malformed("v_ed_kn", reader.position(), e))?;
@@ -194,7 +216,7 @@ impl protocol::OpBinary for En1993Mutation {
                 let new_tension_n_ed_kn = read_json_bin(&mut reader).map_err(|e| malformed("tension_n_ed_kn", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateMemberProperties(UpdateMemberProperties { new_n_ed_kn, new_m_ed_knm, new_v_ed_kn, new_a_mm2, new_a_v_mm2, new_w_pl_mm3, new_f_y_mpa, new_f_u_mpa, new_chi, new_a_net_mm2, new_tension_n_ed_kn }))
             }
-            2 => {
+            TAG_UPDATE_FIRE_INPUTS => {
                 let new_fire_thickness_mm = read_json_bin(&mut reader).map_err(|e| malformed("fire_thickness_mm", reader.position(), e))?;
                 let new_fire_rating = read_json_bin(&mut reader).map_err(|e| malformed("fire_rating", reader.position(), e))?;
                 let new_fire_massivity = read_json_bin(&mut reader).map_err(|e| malformed("fire_massivity", reader.position(), e))?;
@@ -202,7 +224,7 @@ impl protocol::OpBinary for En1993Mutation {
                 let new_fire_design_temperature_c = read_json_bin(&mut reader).map_err(|e| malformed("fire_design_temperature_c", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateFireInputs(UpdateFireInputs { new_fire_thickness_mm, new_fire_rating, new_fire_massivity, new_fire_mu_0, new_fire_design_temperature_c }))
             }
-            3 => {
+            TAG_UPDATE_COLD_FORMED_INPUTS => {
                 let new_cf_b_bar_mm = read_json_bin(&mut reader).map_err(|e| malformed("cf_b_bar_mm", reader.position(), e))?;
                 let new_cf_t_mm = read_json_bin(&mut reader).map_err(|e| malformed("cf_t_mm", reader.position(), e))?;
                 let new_cf_k_sigma = read_json_bin(&mut reader).map_err(|e| malformed("cf_k_sigma", reader.position(), e))?;
@@ -211,18 +233,18 @@ impl protocol::OpBinary for En1993Mutation {
                 let new_cf_gross_resistance_kn = read_json_bin(&mut reader).map_err(|e| malformed("cf_gross_resistance_kn", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateColdFormedInputs(UpdateColdFormedInputs { new_cf_b_bar_mm, new_cf_t_mm, new_cf_k_sigma, new_cf_psi, new_cf_n_ed_kn, new_cf_gross_resistance_kn }))
             }
-            4 => {
+            TAG_UPDATE_STAINLESS_INPUTS => {
                 let new_stainless_m_ed_knm = read_json_bin(&mut reader).map_err(|e| malformed("stainless_m_ed_knm", reader.position(), e))?;
                 let new_stainless_w_pl_mm3 = read_json_bin(&mut reader).map_err(|e| malformed("stainless_w_pl_mm3", reader.position(), e))?;
                 let new_stainless_f_y_mpa = read_json_bin(&mut reader).map_err(|e| malformed("stainless_f_y_mpa", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateStainlessInputs(UpdateStainlessInputs { new_stainless_m_ed_knm, new_stainless_w_pl_mm3, new_stainless_f_y_mpa }))
             }
-            5 => {
+            TAG_UPDATE_PLATED_INPUTS => {
                 let new_plated_lambda_p = read_json_bin(&mut reader).map_err(|e| malformed("plated_lambda_p", reader.position(), e))?;
                 let new_plated_sigma_ed_mpa = read_json_bin(&mut reader).map_err(|e| malformed("plated_sigma_ed_mpa", reader.position(), e))?;
                 Ok(En1993Mutation::UpdatePlatedInputs(UpdatePlatedInputs { new_plated_lambda_p, new_plated_sigma_ed_mpa }))
             }
-            6 => {
+            TAG_UPDATE_SILO_SHELL_INPUTS => {
                 let new_silo_t_mm = read_json_bin(&mut reader).map_err(|e| malformed("silo_t_mm", reader.position(), e))?;
                 let new_silo_r_mm = read_json_bin(&mut reader).map_err(|e| malformed("silo_r_mm", reader.position(), e))?;
                 let new_shell_sigma_x_ed_mpa = read_json_bin(&mut reader).map_err(|e| malformed("shell_sigma_x_ed_mpa", reader.position(), e))?;
@@ -231,7 +253,7 @@ impl protocol::OpBinary for En1993Mutation {
                 let new_silo_depth_m = read_json_bin(&mut reader).map_err(|e| malformed("silo_depth_m", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateSiloShellInputs(UpdateSiloShellInputs { new_silo_t_mm, new_silo_r_mm, new_shell_sigma_x_ed_mpa, new_silo_k, new_silo_gamma_kn_m3, new_silo_depth_m }))
             }
-            7 => {
+            TAG_UPDATE_BOLT_INPUTS => {
                 let new_bolt_f_ed_kn = read_json_bin(&mut reader).map_err(|e| malformed("bolt_f_ed_kn", reader.position(), e))?;
                 let new_bolt_n_bolts = read_json_bin(&mut reader).map_err(|e| malformed("bolt_n_bolts", reader.position(), e))?;
                 let new_bolt_a_s_mm2 = read_json_bin(&mut reader).map_err(|e| malformed("bolt_a_s_mm2", reader.position(), e))?;
@@ -244,7 +266,7 @@ impl protocol::OpBinary for En1993Mutation {
                 let new_bolt_f_ub_mpa = read_json_bin(&mut reader).map_err(|e| malformed("bolt_f_ub_mpa", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateBoltInputs(UpdateBoltInputs { new_bolt_f_ed_kn, new_bolt_n_bolts, new_bolt_a_s_mm2, new_bolt_e1_mm, new_bolt_e2_mm, new_bolt_d0_mm, new_bolt_d_mm, new_bolt_t_mm, new_bolt_f_u_mpa, new_bolt_f_ub_mpa }))
             }
-            8 => {
+            TAG_UPDATE_WELD_INPUTS => {
                 let new_weld_a_mm = read_json_bin(&mut reader).map_err(|e| malformed("weld_a_mm", reader.position(), e))?;
                 let new_weld_l_mm = read_json_bin(&mut reader).map_err(|e| malformed("weld_l_mm", reader.position(), e))?;
                 let new_weld_f_u_mpa = read_json_bin(&mut reader).map_err(|e| malformed("weld_f_u_mpa", reader.position(), e))?;
@@ -252,49 +274,49 @@ impl protocol::OpBinary for En1993Mutation {
                 let new_weld_f_ed_kn = read_json_bin(&mut reader).map_err(|e| malformed("weld_f_ed_kn", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateWeldInputs(UpdateWeldInputs { new_weld_a_mm, new_weld_l_mm, new_weld_f_u_mpa, new_weld_steel_grade, new_weld_f_ed_kn }))
             }
-            9 => {
+            TAG_UPDATE_FATIGUE_INPUTS => {
                 let new_delta_sigma_mpa = read_json_bin(&mut reader).map_err(|e| malformed("delta_sigma_mpa", reader.position(), e))?;
                 let new_fatigue_category = read_json_bin(&mut reader).map_err(|e| malformed("fatigue_category", reader.position(), e))?;
                 let new_fatigue_method = read_json_bin(&mut reader).map_err(|e| malformed("fatigue_method", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateFatigueInputs(UpdateFatigueInputs { new_delta_sigma_mpa, new_fatigue_category, new_fatigue_method }))
             }
-            10 => {
+            TAG_UPDATE_THROUGH_THICKNESS_INPUTS => {
                 let new_t10_steel_subgrade = read_json_bin(&mut reader).map_err(|e| malformed("t10_steel_subgrade", reader.position(), e))?;
                 let new_t10_actual_thickness_mm = read_json_bin(&mut reader).map_err(|e| malformed("t10_actual_thickness_mm", reader.position(), e))?;
                 let new_t10_t_ed_c = read_json_bin(&mut reader).map_err(|e| malformed("t10_t_ed_c", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateThroughThicknessInputs(UpdateThroughThicknessInputs { new_t10_steel_subgrade, new_t10_actual_thickness_mm, new_t10_t_ed_c }))
             }
-            11 => {
+            TAG_UPDATE_TENSION_COMPONENT_INPUTS => {
                 let new_tension_component_f_uk_kn = read_json_bin(&mut reader).map_err(|e| malformed("tension_component_f_uk_kn", reader.position(), e))?;
                 let new_tension_component_f_k_kn = read_json_bin(&mut reader).map_err(|e| malformed("tension_component_f_k_kn", reader.position(), e))?;
                 let new_tension_component_n_ed_kn = read_json_bin(&mut reader).map_err(|e| malformed("tension_component_n_ed_kn", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateTensionComponentInputs(UpdateTensionComponentInputs { new_tension_component_f_uk_kn, new_tension_component_f_k_kn, new_tension_component_n_ed_kn }))
             }
-            12 => {
+            TAG_UPDATE_HSS_INPUTS => {
                 let new_hss_w_el_mm3 = read_json_bin(&mut reader).map_err(|e| malformed("hss_w_el_mm3", reader.position(), e))?;
                 let new_hss_f_y_mpa = read_json_bin(&mut reader).map_err(|e| malformed("hss_f_y_mpa", reader.position(), e))?;
                 let new_hss_section_class = read_json_bin(&mut reader).map_err(|e| malformed("hss_section_class", reader.position(), e))?;
                 let new_hss_m_ed_knm = read_json_bin(&mut reader).map_err(|e| malformed("hss_m_ed_knm", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateHssInputs(UpdateHssInputs { new_hss_w_el_mm3, new_hss_f_y_mpa, new_hss_section_class, new_hss_m_ed_knm }))
             }
-            13 => {
+            TAG_UPDATE_BRIDGE_INPUTS => {
                 let new_bridge_lambda = read_json_bin(&mut reader).map_err(|e| malformed("bridge_lambda", reader.position(), e))?;
                 let new_bridge_phi_2 = read_json_bin(&mut reader).map_err(|e| malformed("bridge_phi_2", reader.position(), e))?;
                 let new_bridge_delta_sigma_p_mpa = read_json_bin(&mut reader).map_err(|e| malformed("bridge_delta_sigma_p_mpa", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateBridgeInputs(UpdateBridgeInputs { new_bridge_lambda, new_bridge_phi_2, new_bridge_delta_sigma_p_mpa }))
             }
-            14 => {
+            TAG_UPDATE_TOWER_INPUTS => {
                 let new_tower_wind_factor = read_json_bin(&mut reader).map_err(|e| malformed("tower_wind_factor", reader.position(), e))?;
                 let new_tower_n_ed_kn = read_json_bin(&mut reader).map_err(|e| malformed("tower_n_ed_kn", reader.position(), e))?;
                 Ok(En1993Mutation::UpdateTowerInputs(UpdateTowerInputs { new_tower_wind_factor, new_tower_n_ed_kn }))
             }
-            15 => {
+            TAG_UPDATE_PILE_INPUTS => {
                 let new_pile_sigma_mpa = read_json_bin(&mut reader).map_err(|e| malformed("pile_sigma_mpa", reader.position(), e))?;
                 let new_pile_k_red = read_json_bin(&mut reader).map_err(|e| malformed("pile_k_red", reader.position(), e))?;
                 let new_pile_n_ed_kn = read_json_bin(&mut reader).map_err(|e| malformed("pile_n_ed_kn", reader.position(), e))?;
                 Ok(En1993Mutation::UpdatePileInputs(UpdatePileInputs { new_pile_sigma_mpa, new_pile_k_red, new_pile_n_ed_kn }))
             }
-            16 => {
+            TAG_UPDATE_CRANE_INPUTS => {
                 let new_crane_f_z_ed_kn = read_json_bin(&mut reader).map_err(|e| malformed("crane_f_z_ed_kn", reader.position(), e))?;
                 let new_crane_wheel_contact_length_mm = read_json_bin(&mut reader).map_err(|e| malformed("crane_wheel_contact_length_mm", reader.position(), e))?;
                 let new_crane_dispersion_mm = read_json_bin(&mut reader).map_err(|e| malformed("crane_dispersion_mm", reader.position(), e))?;

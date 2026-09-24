@@ -323,8 +323,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.imperative.procedure.schema.artifact", "schema", "s.imperative.procedure", &[("schema", "s.imperative.procedure")], None),
         ("s.imperative.procedure.inference.artifact", "inference", "s.imperative.procedure.inference", &[("schema", "s.imperative.procedure.inference")], None),
         ("s.imperative.procedure.composer.native", "composer", "s.imperative.procedure@1/*", &[("dialect", "s.imperative.procedure@1/*")], None),
-        ("s.imperative.procedure.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
-        ("s.imperative.procedure.composer.md", "composer", "s.stdio.md@commonmark/*", &[("dialect", "s.stdio.md@commonmark/*")], None),
         ("s.imperative.procedure.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
         ("s.imperative.procedure.grammar.document", "grammar", "procedure.document", &[("grammar", "procedure.document")], None),
         ("s.imperative.procedure.grammar.op", "grammar", "imperative.procedure.op", &[("grammar", "imperative.procedure.op")], None),
@@ -440,8 +438,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "procedure.document".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.md".into()],
-        import_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.md".into()],
+        export_stdio_kinds: vec!["stdio.json".into()],
+        import_stdio_kinds: vec!["stdio.json".into()],
     }
 }
 //#endregion 🔖️ArtifactKind
@@ -625,30 +623,6 @@ pub mod standards {
                                     }
                                 }
                                 #[path = "."]
-                                pub mod csv {
-                                    #[path = "."]
-                                    pub mod v_rfc4180 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod md {
-                                    #[path = "."]
-                                    pub mod v_commonmark {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
                                 pub mod json {
                                     #[path = "."]
                                     pub mod v_rfc8259 {
@@ -676,30 +650,6 @@ pub mod standards {
                                         #[path = "."]
                                         pub mod any {
                                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod csv {
-                                    #[path = "."]
-                                    pub mod v_rfc4180 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod md {
-                                    #[path = "."]
-                                    pub mod v_commonmark {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }

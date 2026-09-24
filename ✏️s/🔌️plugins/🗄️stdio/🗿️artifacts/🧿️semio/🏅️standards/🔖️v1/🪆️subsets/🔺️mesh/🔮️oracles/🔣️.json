@@ -6,7 +6,7 @@
     {
       "id": "semio-mesh-typescript-three-independent",
       "kind": "cross-semio-implementation",
-      "ecosystem": "typescript",
+      "ecosystem": "javascript",
       "package": "semio-s-plugin-stdio-test-oracle",
       "engine": {
         "family": "semio-mesh-ts-independent",
@@ -23,7 +23,7 @@
       "testOnly": true,
       "productionReachable": false,
       "networkDuringExecution": false,
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧪️tests/🔺️mutate-semio-mesh",
       "rationale": "🩹️ REGISTERED (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, shard A10). `stdio.semio.mesh`'s carrier and its seventeen verbs are semio's own — no third party speaks them, so `three-carrier-reader` and `manifold-mesh-measure`/`manifold3d-three` above cover only the GEOMETRY half. The second producer for the half no third party speaks is `🟦️.ts` beside `../../../../../../../🧪️tests/mutate-semio-mesh/🥒️.feature`: a second implementation written in TypeScript from the committed specification documents alone (the DSL grammar, the pack-frame protocol and its Kaitai mirror, the mutation grammar and its proto/JSON-schema mirrors), importing nothing from and transliterating nothing of the Rust subject it judges — pinned before use by reproducing the committed `🧊️cube` artifact byte for byte in both encodings and reaching all seventeen committed after-snapshots. A required SUPPLEMENT, never a substitute for a qualifying third-party reference: registered `cross-semio-implementation`, not `third-party-library`. The `@no-oracle-…` decision this replaces is already gone from this registry; only the oracle id the feature's `@oracle-semio-mesh-typescript-three-independent` tag names was missing."
     },
     {
@@ -64,10 +64,23 @@
       "homepage": "https://threejs.org",
       "rationale": "🕸️ THE CARRIER READER. three parses the four formats this subset exports — STL, OBJ, PLY and glTF 2.0 — with no knowledge of our snapshot type, so what it recovers from the bytes is an independent reading rather than our own encoder agreeing with itself.\n\nIt is registered against ALL SEVENTEEN kinds because glTF, alone among the four, encodes PBR metallic-roughness materials and texture images as well as geometry. That is not a convenience: it is the only reason the ten material and texture mutations are checkable at all. STL, OBJ and PLY carry triangles, so a roughness change is invisible in them BY CONSTRUCTION — the `gltf-materials` and `material-compare` probes therefore return `unsupported` rather than an empty `ok` when handed one of them, because an empty material list reported as ok would let a roughness mutation pass against a carrier that never encoded roughness: a green result standing on the absence of the evidence.\n\nMEASURED, and this is what qualifies the registration rather than merely motivating it: one mesh written to all four carriers and read back through all four readers compares at relativeVolumeError 0.000e+00, relativeAreaError 0.000e+00 and symmetric Hausdorff 0.000e+00 on every pairing, while a solid differing by a single bore radius (5 mm against 6 mm) at IDENTICAL tessellation separates at 1.073e-01 and 9.988e-01. The gate therefore has about five orders of magnitude of margin.",
       "productionDebt": {
-        "reason": "three is already a production-runtime dependency of ✏️s/🔌️plugins/📐️cad, 🧩️puzzle and the os renderer, so this oracle is NOT isolated from production the way manifold-3d is.",
-        "consequence": "A bug shared between three's loaders and a production consumer of three would not be caught by this oracle alone. The mesh pipeline's independence therefore rests on manifold-3d, which is test-only and a different engine family; three is the parser, manifold is the judge.",
-        "owner": "✏️s/🔌️plugins/📐️cad"
-      }
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️unified-gumball/🧪️.story.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx",
+          "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx"
+        ],
+        "owner": "✏️s/🔌️plugins/📐️cad",
+        "plan": "three is already a production-runtime dependency of ✏️s/🔌️plugins/📐️cad, 🧩️puzzle and the os renderer, so this oracle is NOT isolated from production the way manifold-3d is. A bug shared between three's loaders and a production consumer of three would not be caught by this oracle alone. The mesh pipeline's independence therefore rests on manifold-3d, which is test-only and a different engine family; three is the parser, manifold is the judge."
+      },
+      "comparisonProfiles": [
+        "semantic-mesh-manifold-v1"
+      ]
     },
     {
       "id": "manifold-mesh-measure",
@@ -103,6 +116,7 @@
       ],
       "license": "Apache-2.0",
       "testOnly": true,
+      "productionDebt": {"reachableFrom": ["✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json"], "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f", "plan": "`three-mesh-bvh`, the closest-point helper this oracle links for its symmetric Hausdorff bound, is a runtime dependency of the r3f world renderer and the fem package. The judge itself, manifold-3d, stays test-only, and the semio mesh subject links neither. The debt retires when those renderers stop needing a BVH from the three ecosystem. No path may join."},
       "productionReachable": false,
       "networkDuringExecution": false,
       "platforms": [
@@ -113,7 +127,10 @@
         "win32-x64"
       ],
       "homepage": "https://github.com/elalish/manifold",
-      "rationale": "📏️ THE MEASURING ENGINE, AND A DIFFERENT FAMILY FROM THE READER ON PURPOSE. three parses the carrier; manifold computes volume, surface area, genus and connected-component count from what three recovered. Because the two are independent implementations, the measurement checks the parse instead of confirming it — which is exactly what `distinctEngineFamilies` is accounting for, and why a second three-based measurement would not have counted.\n\nmanifold requires a welded, watertight mesh and REFUSES a triangle soup outright, which STL and OBJ both are. Welding is therefore not a tidying step but a precondition, and it is done on a grid keyed to the model's own bounding-box diagonal (1e-7 relative) rather than a constant — a constant merges genuine detail on a millimetre part and welds nothing at all on a kilometre one. MEASURED: a 20 mm cube with a bore re-imported from STL welds 6336 soup corners back to exactly the 1056 shared vertices manifold originally built it with, 0 degenerate triangles, and reports genus 1 — the bore survives as a topological fact, not merely as a triangle count."
+      "rationale": "📏️ THE MEASURING ENGINE, AND A DIFFERENT FAMILY FROM THE READER ON PURPOSE. three parses the carrier; manifold computes volume, surface area, genus and connected-component count from what three recovered. Because the two are independent implementations, the measurement checks the parse instead of confirming it — which is exactly what `distinctEngineFamilies` is accounting for, and why a second three-based measurement would not have counted.\n\nmanifold requires a welded, watertight mesh and REFUSES a triangle soup outright, which STL and OBJ both are. Welding is therefore not a tidying step but a precondition, and it is done on a grid keyed to the model's own bounding-box diagonal (1e-7 relative) rather than a constant — a constant merges genuine detail on a millimetre part and welds nothing at all on a kilometre one. MEASURED: a 20 mm cube with a bore re-imported from STL welds 6336 soup corners back to exactly the 1056 shared vertices manifold originally built it with, 0 degenerate triangles, and reports genus 1 — the bore survives as a topological fact, not merely as a triangle count.",
+      "comparisonProfiles": [
+        "semantic-mesh-manifold-v1"
+      ]
     },
     {
       "id": "manifold3d-three",
@@ -150,6 +167,7 @@
       ],
       "license": "Apache-2.0",
       "testOnly": true,
+      "productionDebt": {"reachableFrom": ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🟦️.tsx", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🟦️.tsx", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️.tsx", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx", "🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️unified-gumball/🧪️.story.tsx", "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx", "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx"], "owner": "✏️s/🔌️plugins/📐️cad", "plan": "three is already a production-runtime dependency of ✏️s/🔌️plugins/📐️cad, 🧩️puzzle and the os renderer, so this oracle is NOT isolated from production the way manifold-3d is. A bug shared between three's loaders and a production consumer of three would not be caught by this oracle alone. The independence this pilot actually rests on is the measuring half, manifold-3d, which is test-only and a different engine family; three is the parser, manifold is the judge."},
       "productionReachable": false,
       "networkDuringExecution": false,
       "platforms": [
@@ -160,22 +178,25 @@
         "win32-x64"
       ],
       "homepage": "https://github.com/elalish/manifold",
-      "rationale": "🏭️ THE GENERATOR PAIR, DISTINCT FROM THE TWO RUNTIME-COMPARISON ORACLES ABOVE. `manifold-mesh-measure` and `three-carrier-reader` judge a mutation already applied by this subset's own code; this entry is the tool that PRODUCED the expected fixture files in the first place — manifold-3d computes the boolean/primitive geometry (the same engine and version `manifold-mesh-measure` uses to judge it later), and three.js's exporters/loaders round-trip that geometry through all four committed carrier formats so every fixture ships STL, OBJ, PLY and glTF built by the same real pipeline this subset's mutations claim to produce. Registered separately from `manifold-mesh-measure` because a fixture's authority is the tool that GENERATED it, and that tool is this pair used together, not either library alone."
+      "rationale": "🏭️ THE GENERATOR PAIR, DISTINCT FROM THE TWO RUNTIME-COMPARISON ORACLES ABOVE. `manifold-mesh-measure` and `three-carrier-reader` judge a mutation already applied by this subset's own code; this entry is the tool that PRODUCED the expected fixture files in the first place — manifold-3d computes the boolean/primitive geometry (the same engine and version `manifold-mesh-measure` uses to judge it later), and three.js's exporters/loaders round-trip that geometry through all four committed carrier formats so every fixture ships STL, OBJ, PLY and glTF built by the same real pipeline this subset's mutations claim to produce. Registered separately from `manifold-mesh-measure` because a fixture's authority is the tool that GENERATED it, and that tool is this pair used together, not either library alone.",
+      "comparisonProfiles": [
+        "semantic-mesh-manifold-v1"
+      ]
     },
     {
-      "id": "serde-json-semio-mesh-carrier-reader",
+      "id": "json-rust-semio-mesh-carrier-reader",
       "kind": "third-party-library",
       "ecosystem": "rust",
-      "package": "serde_json",
-      "version": "1",
+      "package": "json",
+      "version": "0.12",
       "source": {
-        "repository": "https://github.com/serde-rs/json",
+        "repository": "https://github.com/maciejhirsz/json-rust",
         "license": "MIT OR Apache-2.0"
       },
       "engine": {
-        "family": "serde-json",
-        "implementation": "serde_json 1 value tree",
-        "version": "1"
+        "family": "json-rust",
+        "implementation": "json-rust 0.12 value tree",
+        "version": "0.12"
       },
       "capabilities": [
         "semio-v1-mesh-mutate"
@@ -194,8 +215,8 @@
         "linux-arm64",
         "win32-x64"
       ],
-      "homepage": "https://docs.rs/serde_json",
-      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\ncreate-material's production diff appends a caller-supplied SemioMaterial to SemioMeshSnapshot::materials (an id-keyed append); create-material/🦀️.rs's own doc comment states a duplicate id already present in base is a no-op. No computed field, no cross-reference.\n\n`SemioMeshSnapshot::materials` is an INLINE `Vec<SemioMaterial>` carrying its full content directly in this subset's own JSON export (`🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `create-material` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `serde-json-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`📑️document/🔮️oracles/🔣️.json`).\n\nThe reading tool is `🔺️mesh/🏭️generator/🧩️json/📦️packages/🦀️rust` — its own standalone crate (own `[workspace]`, `[dependencies] serde_json = \"1\"` and nothing else), which builds a deterministic seed document, applies `create-material` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-mesh-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
+      "homepage": "https://docs.rs/json",
+      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\ncreate-material's production diff appends a caller-supplied SemioMaterial to SemioMeshSnapshot::materials (an id-keyed append); create-material/🦀️.rs's own doc comment states a duplicate id already present in base is a no-op. No computed field, no cross-reference.\n\n`SemioMeshSnapshot::materials` is an INLINE `Vec<SemioMaterial>` carrying its full content directly in this subset's own JSON export (`🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `create-material` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `json-rust-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`📑️document/🔮️oracles/🔣️.json`).\n\nThe reading tool is `🔺️mesh/🏭️generator/🧩️json/📦️packages/🦀️rust` — its own standalone crate (own `[workspace]`, `[dependencies] json = \"0.12\"` and nothing else), which builds a deterministic seed document, applies `create-material` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-mesh-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
     }
   ],
   "comparisonProfiles": [

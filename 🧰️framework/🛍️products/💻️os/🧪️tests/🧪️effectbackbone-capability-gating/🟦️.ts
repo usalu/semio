@@ -184,7 +184,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("document opening attempt transport stamps one retained owner on its lazy open and every send", async () => {
       const { decodeBackboneWorkerRequest } = await import("../../🟦️.ts");
       const { worker, posted } = fakeWorker();
-      const transport = createBackboneWorkerTransport(worker, "studio-42", { actor: "actor-1", hub: { kind: "hub", baseUrl: "https://hub.example", spaceId: "space-1" } });
+      const transport = createBackboneWorkerTransport(worker, "studio-42", { actor: "actor-1", hub: { kind: "hub", dataClass: "persistedShared", baseUrl: "https://hub.example", spaceId: "space-1" } });
       transport.send("studio-42", [1, 2]);
       transport.send("studio-42", [3, 4]);
       expect(posted).toHaveLength(3); // one "open" + two "send"
@@ -199,7 +199,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("send throws if used for a different uri than it was bound to", () => {
       const { worker } = fakeWorker();
-      const transport = createBackboneWorkerTransport(worker, "studio-42", { actor: "actor-1", hub: { kind: "hub", baseUrl: "https://hub.example", spaceId: "space-1" } });
+      const transport = createBackboneWorkerTransport(worker, "studio-42", { actor: "actor-1", hub: { kind: "hub", dataClass: "persistedShared", baseUrl: "https://hub.example", spaceId: "space-1" } });
       expect(() => transport.send("other-uri", [1])).toThrow();
     });
 

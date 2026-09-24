@@ -21,13 +21,13 @@ Feature: The convex hull of semio-viz-spatial agrees with d3-delaunay
 
   Indices are integers, so the comparison profile is the exact one: there is nothing to round.
 
-  Probe document: local://hull.tex is committed.
+  Probe document: shared://🥚️spatial-hull/hull.tex is committed.
 
   @id-convex-hull
   @level-quick
   @mode-differential
   Scenario: The hull vertex cycle agrees with d3-delaunay
-    Given the committed probe document local://hull.tex and the point set demo-points
+    Given the committed probe document shared://🥚️spatial-hull/hull.tex and the point set demo-points
       | x  | y  |
       | 12 | 14 |
       | 28 | 9  |

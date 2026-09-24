@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceKindCatalogs",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-kind-catalogs",
-  "binaryTag": null,
+  "binaryTag": 34,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

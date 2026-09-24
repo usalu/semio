@@ -7,7 +7,7 @@ use super::super::{
 use super::InsertPage;
 
 //#region 🔖️Codec
-pub const TAG: u8 = 0;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "insert-page");
 
 pub fn encode(mutation: &PdfMutation) -> Option<Result<Vec<u8>, String>> {
     let PdfMutation::InsertPage(payload) = mutation else {

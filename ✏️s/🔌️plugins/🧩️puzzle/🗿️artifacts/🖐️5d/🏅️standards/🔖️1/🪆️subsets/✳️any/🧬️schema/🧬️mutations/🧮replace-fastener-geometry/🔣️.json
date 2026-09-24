@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceFastenerGeometry",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-fastener-geometry",
-  "binaryTag": null,
+  "binaryTag": 20,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

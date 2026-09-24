@@ -1,6 +1,6 @@
 //! 🌫️ Direct binary identity for `remove-image`.
 
-pub const TAG: u8 = 27;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "remove-image");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::RemoveImage;

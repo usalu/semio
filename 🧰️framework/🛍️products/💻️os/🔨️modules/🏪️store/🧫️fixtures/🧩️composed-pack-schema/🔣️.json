@@ -1,0 +1,250 @@
+{
+  "graph": [
+    [
+      {
+        "id": 0,
+        "key": "schema",
+        "optional": false,
+        "flatten": false,
+        "shape": {
+          "kind": "text"
+        }
+      },
+      {
+        "id": 1,
+        "key": "document",
+        "optional": false,
+        "flatten": false,
+        "shape": {
+          "kind": "record",
+          "record": 1
+        }
+      },
+      {
+        "id": 2,
+        "key": "parts",
+        "optional": false,
+        "flatten": false,
+        "shape": {
+          "kind": "list",
+          "item": {
+            "kind": "record",
+            "record": 1
+          }
+        }
+      },
+      {
+        "id": 3,
+        "key": "cover",
+        "optional": true,
+        "flatten": false,
+        "shape": {
+          "kind": "record",
+          "record": 2
+        }
+      },
+      {
+        "id": 4,
+        "key": "links",
+        "optional": false,
+        "flatten": false,
+        "shape": {
+          "kind": "list",
+          "item": {
+            "kind": "record",
+            "record": 2
+          }
+        }
+      }
+    ],
+    [
+      {
+        "id": 0,
+        "key": "child_id",
+        "optional": false,
+        "flatten": false,
+        "shape": {
+          "kind": "text"
+        }
+      },
+      {
+        "id": 1,
+        "key": "target",
+        "optional": false,
+        "flatten": false,
+        "shape": {
+          "kind": "text"
+        }
+      }
+    ],
+    [
+      {
+        "id": 0,
+        "key": "target",
+        "optional": false,
+        "flatten": false,
+        "shape": {
+          "kind": "text"
+        }
+      },
+      {
+        "id": 1,
+        "key": "pin",
+        "optional": false,
+        "flatten": false,
+        "shape": {
+          "kind": "record",
+          "record": 3
+        }
+      },
+      {
+        "id": 2,
+        "key": "role",
+        "optional": false,
+        "flatten": false,
+        "shape": {
+          "kind": "text"
+        }
+      }
+    ],
+    [
+      {
+        "id": 0,
+        "key": "kind",
+        "optional": false,
+        "flatten": false,
+        "shape": {
+          "kind": "enum",
+          "variants": [
+            [
+              0,
+              "head"
+            ],
+            [
+              1,
+              "checkpoint"
+            ],
+            [
+              2,
+              "snapshot"
+            ]
+          ]
+        }
+      },
+      {
+        "id": 1,
+        "key": "checkpoint_id",
+        "optional": true,
+        "flatten": false,
+        "shape": {
+          "kind": "text"
+        }
+      },
+      {
+        "id": 2,
+        "key": "blob_hash",
+        "optional": true,
+        "flatten": false,
+        "shape": {
+          "kind": "text"
+        }
+      },
+      {
+        "id": 3,
+        "key": "blob_size",
+        "optional": true,
+        "flatten": false,
+        "shape": {
+          "kind": "uint"
+        }
+      },
+      {
+        "id": 4,
+        "key": "blob_media_type",
+        "optional": true,
+        "flatten": false,
+        "shape": {
+          "kind": "text"
+        }
+      }
+    ]
+  ],
+  "childFields": [
+    "child_id",
+    "target"
+  ],
+  "linkFields": [
+    "target",
+    "pin",
+    "role"
+  ],
+  "canonicalHex": "04050006736368656d6100050108646f63756d656e74000a010205706172747300090a010305636f766572010a0204056c696e6b7300090a020200086368696c645f69640005010674617267657400050300067461726765740005010370696e000a030204726f6c6500050500046b696e64000703000468656164010a636865636b706f696e740208736e617073686f74010d636865636b706f696e745f696401050209626c6f625f6861736801050309626c6f625f73697a650103040f626c6f625f6d656469615f747970650105",
+  "schemaHash": "53951ccfb6331e241da1b72bc4a46ed3e19584de054d7c303e6e1b8a6d3f3968",
+  "withoutLinksSchemaHash": "38c702f29b9e593ed7ea54b1bded7c074a25eae99b8470af31e6f325adbbaaba",
+  "renamedChildSchemaHash": "b00c27e2ef3fd97571b8be55728c276bc22a6a3829f8324bd4871f7fea49714e",
+  "renamedLinkRoleSchemaHash": "f924501957443be86e4ce4c131c7fbe9e46b9e808f6787bf0ddcd829d7c36ed9",
+  "documents": [
+    {
+      "name": "children and every pin kind",
+      "snapshot": {
+        "schema": "composed.document",
+        "document": {
+          "childId": "doc-1",
+          "target": "doc-1!s.stdio.semio@v1/document"
+        },
+        "parts": [
+          {
+            "childId": "mesh-1",
+            "target": "mesh-1!s.stdio.semio@v1/mesh"
+          },
+          {
+            "childId": "mesh-2",
+            "target": "mesh-2!s.stdio.semio@v1/mesh"
+          }
+        ],
+        "cover": {
+          "target": "img-1!s.stdio.semio@v1/image",
+          "pin": {
+            "kind": "snapshot",
+            "hash": "b3:00ff",
+            "size": 4096,
+            "mediaType": "image/png"
+          },
+          "role": "cover-image"
+        },
+        "links": [
+          {
+            "target": "ref-1!s.stdio.semio@v1/graph",
+            "pin": {
+              "kind": "head"
+            },
+            "role": "reference"
+          },
+          {
+            "target": "ref-2!s.stdio.semio@v1/graph",
+            "pin": {
+              "kind": "checkpoint",
+              "id": "cp-7"
+            },
+            "role": "reference"
+          }
+        ]
+      },
+      "packHex": "8953504b0d0a1a0a010000000100000001000000ef65ef880000000000000000030387018502e3674f32b63230484b134ccecf2dc82f4e4dd14bc94f2ecd4dcd2be14ece2f4b2dd2cdcc4d4c4f65492ed0356705cae81aca8349c562bde29294cc7cbde2d4dccc7c8732437d98364eb006fd82bc7499ccdc746c2ac10ad872538b33740d652014a6229038448d11448d1176353245a969d8f4a71725164024b168044b720225538b52f39253017db89d4b0403515b6365606364e46562606361646365e26102313918d938413417231b37332f33031b3b232f0b031713131b03334b83020b1b1b131b130b502d508a87919791818b81898d0fc4e30519c5c5c8c8c60c140000ca7a35860103323063089e2a737e9bb19c8aecc2edda4796e45d7e38b5e51eab6f8d815d9e7457aebd65c646c6484685898c0c4010cdcac00f001899fe5b0000007aa3646053504b464f4f543101000000010000000a010000000000003a000000000000009f0100000000000057711a69ddf527a69db34987533f3d4b277ecda5acb7e3d22d2be18496c260060000000000000000b010d287"
+    },
+    {
+      "name": "no parts, no cover, no links",
+      "snapshot": {
+        "schema": "composed.document",
+        "document": {
+          "childId": "doc-2",
+          "target": "doc-2!s.stdio.semio@v1/document"
+        },
+        "parts": [],
+        "cover": null,
+        "links": []
+      },
+      "packHex": "8953504b0d0a1a0a010000000100000001000000ef65ef8800000000000000000303303963164ccecf2dc82f4e4dd14bc94f2ecd4dcd2b610532748de4c1a462b15e71494a66be5e716a6e66be4399a13e4c1500347fbc9a040315136361606360e46562606364646362e26160e1610000b5c364090103302e63089e2a737e9bb19c8aecc2edda4796e45d7e38b5e51eab6f8d815d9e7457aebd6546842ca38205031008b33030030053ca2e350000007aa3646053504b464f4f54310100000001000000750000000000000038000000000000000801000000000000d6c1d6fcaaf095a07af2e3a7df04e99cad80f3224a2f95d3fa40e77515a3e00700000000000000000980483f"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+slice: g6
+crate: semio-s-plugin-wfc (✏️s/🔌️plugins/🀄️wfc) — wasm-dev guest through the product verbs (`bun nx run @semio-tech/wfc-plugin:describe` then `:materialize-dev`), same shape as g5's two requests.
+reason: over-MCP inference factor (target < 1.5x vs headless native). Measured 2026-09-24 05:41 with a counting wasi clock: the wfc genesis solve makes 6 692 297 monotonic-clock host calls in one inference_run (one per WFC unit); each is a component-model host call, the largest guest share next to the solve itself. Source changes that ride this rebuild:
+  1. 🧰️framework/🔨️modules/🧵️job/🦀️.rs — new `semio_framework_job::ClockStride`: a job's per-unit clock read for real only every `stride` units, recalibrated to ~64 µs between reads; re-reads first under every new step budget. Law 🧫️fixtures/🪜️clock-stride-law.json + 🧪️tests/🔬️clock-stride (2/2 native).
+  2. ✏️s/🔌️plugins/🀄️wfc/⚙️engine/💼️job/🦀️.rs — WfcJob + WfcRestore read the clock through a ClockStride; emit_preview takes the reading its caller already has.
+  3. 🧰️framework/🔨️modules/⏳️async/🦀️.rs — CancelToken gained waker registration (`cancelled()`), TimerWheel an earlier-deadline hook; native pool parking is cfg(not wasm32). Guest-visible only as the CancelToken/TimerWheel changes — please confirm the wasm32 compile stays clean.
+need: rebuilt wfc wasm-dev staged at .🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2/wasm-dev/semio_s_plugin_wfc.wasm with sha == ✏️s/🔌️plugins/🀄️wfc/🔣️.json hashes.wasmSha256 (describe) + materialize-dev.
+consumer: g6 re-measures the over-MCP genesis solve (.tmp-ticket/wp-g6/g6-solve-probe.ts) back to back with the native reference, and reruns client-e2e.
+please append: result path + sha256 + time here.
+
+[w1 2026-09-24 06:22] DONE wfc (G6 ClockStride + async CancelToken/TimerWheel): describe + materialize-dev, wasm32 compile clean
+  CORRECTION (measured 06:33): p5's pack-schema-hash edit (06:11) landed BETWEEN this hold's describe (cargo ~06:09) and
+  its component-dev (~06:20), so the two builds differ:
+    committed 🔣️.json hashes.wasmSha256 == shared wasm-dev  = afcc3a1f4d6f5daf36c733562cd1b419c2b033011fcbe1a64bf0b0d3e385dfc3 (pre-p5 source)
+    dist/component-dev == staged s module (activated 06:23) = 562d05bad031… (post-p5 source; contains your ClockStride change either way)
+  The browser/dev lane runs 562d05ba…. An MCP freshness row that compares shared wasm-dev to the descriptor passes on afcc3a1f….
+  The final post-p5 pass re-describes wfc and brings all four back into agreement.
+  log: .tmp-ticket/wp-w1/generated/stage-wfc-plugin.txt

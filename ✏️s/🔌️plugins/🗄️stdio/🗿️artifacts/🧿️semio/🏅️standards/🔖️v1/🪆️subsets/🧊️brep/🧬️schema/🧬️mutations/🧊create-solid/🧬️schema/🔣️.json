@@ -20,20 +20,7 @@
   },
   "$defs": {
     "BrepSolidShell": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "shell",
-        "isVoid"
-      ],
-      "properties": {
-        "shell": {
-          "type": "string"
-        },
-        "isVoid": {
-          "type": "boolean"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json#/$defs/BrepSolidShell"
     }
   }
 }

@@ -415,6 +415,20 @@ fn dec_xlsx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSnaps
 }
 //#endregion 🔖️OpBinaryCodec
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `XlsxMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_INSERT_SHEET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-sheet");
+const TAG_REMOVE_SHEET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-sheet");
+const TAG_RENAME_SHEET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rename-sheet");
+const TAG_SET_CELL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-cell");
+const TAG_REMOVE_CELL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-cell");
+const TAG_INSERT_SHARED_STRING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-shared-string");
+const TAG_REMOVE_SHARED_STRING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-shared-string");
+const TAG_SET_SHARED_STRING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-shared-string");
+//#endregion 🏷️WireTags
+
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut (confirmed still on that
@@ -424,15 +438,15 @@ fn dec_xlsx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSnaps
 impl OpBinary for XlsxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            XlsxMutation::SetSnapshot(_) => 1,
-            XlsxMutation::InsertSheet(_) => 2,
-            XlsxMutation::RemoveSheet(_) => 3,
-            XlsxMutation::RenameSheet(_) => 4,
-            XlsxMutation::SetCell(_) => 5,
-            XlsxMutation::RemoveCell(_) => 6,
-            XlsxMutation::InsertSharedString(_) => 7,
-            XlsxMutation::RemoveSharedString(_) => 8,
-            XlsxMutation::SetSharedString(_) => 9,
+            XlsxMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+            XlsxMutation::InsertSheet(_) => TAG_INSERT_SHEET,
+            XlsxMutation::RemoveSheet(_) => TAG_REMOVE_SHEET,
+            XlsxMutation::RenameSheet(_) => TAG_RENAME_SHEET,
+            XlsxMutation::SetCell(_) => TAG_SET_CELL,
+            XlsxMutation::RemoveCell(_) => TAG_REMOVE_CELL,
+            XlsxMutation::InsertSharedString(_) => TAG_INSERT_SHARED_STRING,
+            XlsxMutation::RemoveSharedString(_) => TAG_REMOVE_SHARED_STRING,
+            XlsxMutation::SetSharedString(_) => TAG_SET_SHARED_STRING,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -470,45 +484,45 @@ impl OpBinary for XlsxMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            1 => {
+            TAG_SET_SNAPSHOT => {
                 let snapshot = dec_xlsx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
-            2 => {
+            TAG_INSERT_SHEET => {
                 let sheet = dec_sheet_bin(&mut reader).map_err(|e| malformed("op sheet", reader.position(), e))?;
                 Ok(XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet }))
             }
-            3 => {
+            TAG_REMOVE_SHEET => {
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 Ok(XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name }))
             }
-            4 => {
+            TAG_RENAME_SHEET => {
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 let new_name = read_str_lp(&mut reader).map_err(|e| malformed("op new_name", reader.position(), e))?;
                 Ok(XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name, new_name }))
             }
-            5 => {
+            TAG_SET_CELL => {
                 let sheet_name = read_str_lp(&mut reader).map_err(|e| malformed("op sheet_name", reader.position(), e))?;
                 let row = reader.read_varint_u64().map_err(|e| malformed("op row", reader.position(), e.to_string()))? as u32;
                 let col = reader.read_varint_u64().map_err(|e| malformed("op col", reader.position(), e.to_string()))? as u32;
                 let value = dec_cell_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(XlsxMutation::SetCell(set_cell::SetCell { sheet_name, row, col, value }))
             }
-            6 => {
+            TAG_REMOVE_CELL => {
                 let sheet_name = read_str_lp(&mut reader).map_err(|e| malformed("op sheet_name", reader.position(), e))?;
                 let row = reader.read_varint_u64().map_err(|e| malformed("op row", reader.position(), e.to_string()))? as u32;
                 let col = reader.read_varint_u64().map_err(|e| malformed("op col", reader.position(), e.to_string()))? as u32;
                 Ok(XlsxMutation::RemoveCell(remove_cell::RemoveCell { sheet_name, row, col }))
             }
-            7 => {
+            TAG_INSERT_SHARED_STRING => {
                 let value = read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value }))
             }
-            8 => {
+            TAG_REMOVE_SHARED_STRING => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 Ok(XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index }))
             }
-            9 => {
+            TAG_SET_SHARED_STRING => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let value = read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value }))

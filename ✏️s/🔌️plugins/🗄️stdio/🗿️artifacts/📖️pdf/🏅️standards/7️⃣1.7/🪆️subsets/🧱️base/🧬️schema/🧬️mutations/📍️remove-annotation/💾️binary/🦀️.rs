@@ -1,6 +1,6 @@
 //! 📍️ Direct binary identity for `remove-annotation`.
 
-pub const TAG: u8 = 22;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "remove-annotation");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::RemoveAnnotation;

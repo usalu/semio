@@ -88,7 +88,7 @@ async fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
         export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     });
-    let mut projection = demo_space_projection().await;
+    let mut projection = semio_framework_os::empty_workflow_snapshot().await;
     let src_out = crate::engine::space::unit_tests::context::test_port("contract-src-2", "out", MediaPortDirection::Out, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-a").await;
     let dst_in = crate::engine::space::unit_tests::context::test_port("contract-dst-2", "in", MediaPortDirection::In, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-b").await;
     projection.graph.nodes.push(crate::engine::space::unit_tests::context::test_node("contract-src-2", vec![], vec![src_out]).await);

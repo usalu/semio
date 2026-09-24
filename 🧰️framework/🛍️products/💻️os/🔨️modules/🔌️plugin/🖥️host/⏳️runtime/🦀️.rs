@@ -118,14 +118,14 @@ pub async fn build_async_engine(cfg: SharedEngineConfig) -> Result<(Engine, bool
     Ok((engine, false))
 }
 
-/// 🐎️ One async engine + its epoch ticker + a `Linker` with WASI-async and `world actor`'s whole
+/// 🐎️ One async engine + its demand-driven epoch + a `Linker` with WASI-async and `world actor`'s whole
 /// import surface (`pure` + `host-async`, ONE call — `B1 world-collapse` made `Actor::add_to_linker`
 /// define both) already wired — built ONCE per process, `Arc`-shared into every
-/// [`AsyncActorTask::spawn`] call. Reuses `crate::EpochTicker` (already `pub` in `../⏳️runtime/🦀️.rs`)
-/// rather than duplicating a THIRD 1ms ticker thread.
+/// [`AsyncActorTask::spawn`] call. Reuses `crate::EpochDeadlines`: every in-flight command holds a
+/// timeslice demand, so the epoch advances each millisecond only while a guest call runs.
 pub struct AsyncEngineHandle {
     pub engine: Engine,
-    _epoch_ticker: crate::EpochTicker,
+    epoch: crate::EpochDeadlines,
     /// 🔗️ `Arc`, not a bare `Linker` — [`AsyncActorTask::spawn`] moves a clone of this handle into a
     /// `tokio::spawn`ed `'static` task body (harness tests D/E: the Store, and everything it needs
     /// to instantiate against, must be OWNED by that task, never borrowed from an outer scope, or
@@ -136,13 +136,13 @@ pub struct AsyncEngineHandle {
 impl AsyncEngineHandle {
     pub async fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
         let (engine, _pooling_active) = build_async_engine(cfg).await?;
-        let epoch_ticker = crate::EpochTicker::start(&engine, &crate::plugin_host_worker_pool());
+        let epoch = crate::EpochDeadlines::new(&engine, &crate::plugin_host_worker_pool());
         let mut linker = Linker::new(&engine);
         wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         // 🧬️ B1 world-collapse already landed `pub(crate) mod actor_bindings` — no lease needed
         // (the previous draft's blocking lease request is resolved; see this file's module doc).
         actor_bindings::Actor::add_to_linker::<AsyncActorHostState, HasSelf<AsyncActorHostState>>(&mut linker, |state: &mut AsyncActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Ok(Self { engine, _epoch_ticker: epoch_ticker, linker: Arc::new(linker) })
+        Ok(Self { engine, epoch, linker: Arc::new(linker) })
     }
 }
 //#endregion 🐎️AsyncEngineHandle
@@ -320,6 +320,7 @@ impl AsyncActorTask {
         let (commands_tx, mut commands_rx) = tokio::sync::mpsc::unbounded_channel::<AsyncActorCommand>();
         let (ready_tx, ready_rx) = tokio::sync::oneshot::channel::<Result<(), PluginHostError>>();
         let engine_handle = engine.engine.clone();
+        let epoch = engine.epoch.clone();
         let linker = engine.linker.clone();
 
         let join = tokio::spawn(async move {
@@ -372,6 +373,7 @@ impl AsyncActorTask {
                                 let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
 
                                 struct PollTask {
+                                    _epoch: crate::EpochDemand,
                                     instance: Arc<actor_bindings::Actor>,
                                     instance_id: u32,
                                     events: Vec<wit_events::Event>,
@@ -386,7 +388,7 @@ impl AsyncActorTask {
                                         // 📥️ A turn's pages are STAGED before it, never carried through
                                         // `poll`'s parameter list — see `reactor.stage-command-page` in
                                         // the WIT for the leaked parameter area that shape cost.
-                                        let Self { instance, instance_id, events, command_page, cold_pair_page, budget, max_patch_bytes, reply } = self;
+                                        let Self { _epoch, instance, instance_id, events, command_page, cold_pair_page, budget, max_patch_bytes, reply } = self;
                                         let outcome = async {
                                             if let Some((cursor, bytes)) = command_page {
                                                 if let Err(fault) = instance.semio_framework_reactor().call_stage_command_page(accessor, cursor, bytes).await? {
@@ -423,10 +425,11 @@ impl AsyncActorTask {
                                         Ok(())
                                     }
                                 }
-                                let _ = accessor.spawn(PollTask { instance: instance.clone(), instance_id, events: wit_events_vec, command_page, cold_pair_page, budget: wit_budget, max_patch_bytes: budget.max_patch_bytes, reply });
+                                let _ = accessor.spawn(PollTask { _epoch: epoch.arm_timeslice(), instance: instance.clone(), instance_id, events: wit_events_vec, command_page, cold_pair_page, budget: wit_budget, max_patch_bytes: budget.max_patch_bytes, reply });
                             }
                             Some(AsyncActorCommand::StartJob { job, kind, input, reply }) => {
                                 struct StartJobTask {
+                                    _epoch: crate::EpochDemand,
                                     instance: Arc<actor_bindings::Actor>,
                                     job: u64,
                                     kind: String,
@@ -445,7 +448,7 @@ impl AsyncActorTask {
                                         Ok(())
                                     }
                                 }
-                                let _ = accessor.spawn(StartJobTask { instance: instance.clone(), job, kind, input, reply });
+                                let _ = accessor.spawn(StartJobTask { _epoch: epoch.arm_timeslice(), instance: instance.clone(), job, kind, input, reply });
                             }
                             Some(AsyncActorCommand::StepJob { job, budget, reply }) => {
                                 deadline.extend(Duration::from_millis(budget.deadline_ms as u64));
@@ -455,6 +458,7 @@ impl AsyncActorTask {
                                 let wit_budget = wit_jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
 
                                 struct StepJobTask {
+                                    _epoch: crate::EpochDemand,
                                     instance: Arc<actor_bindings::Actor>,
                                     job: u64,
                                     budget: wit_jobs::JobBudget,
@@ -476,10 +480,11 @@ impl AsyncActorTask {
                                         Ok(())
                                     }
                                 }
-                                let _ = accessor.spawn(StepJobTask { instance: instance.clone(), job, budget: wit_budget, reply });
+                                let _ = accessor.spawn(StepJobTask { _epoch: epoch.arm_timeslice(), instance: instance.clone(), job, budget: wit_budget, reply });
                             }
                             Some(AsyncActorCommand::CancelJob { job, reply }) => {
                                 struct CancelJobTask {
+                                    _epoch: crate::EpochDemand,
                                     instance: Arc<actor_bindings::Actor>,
                                     job: u64,
                                     reply: tokio::sync::oneshot::Sender<Result<(), String>>,
@@ -497,10 +502,11 @@ impl AsyncActorTask {
                                         Ok(())
                                     }
                                 }
-                                let _ = accessor.spawn(CancelJobTask { instance: instance.clone(), job, reply });
+                                let _ = accessor.spawn(CancelJobTask { _epoch: epoch.arm_timeslice(), instance: instance.clone(), job, reply });
                             }
                             Some(AsyncActorCommand::Checkpoint(reply)) => {
                                 struct CheckpointTask {
+                                    _epoch: crate::EpochDemand,
                                     instance: Arc<actor_bindings::Actor>,
                                     reply: tokio::sync::oneshot::Sender<Result<Vec<u8>, String>>,
                                 }
@@ -516,10 +522,11 @@ impl AsyncActorTask {
                                         Ok(())
                                     }
                                 }
-                                let _ = accessor.spawn(CheckpointTask { instance: instance.clone(), reply });
+                                let _ = accessor.spawn(CheckpointTask { _epoch: epoch.arm_timeslice(), instance: instance.clone(), reply });
                             }
                             Some(AsyncActorCommand::Restore(bytes, reply)) => {
                                 struct RestoreTask {
+                                    _epoch: crate::EpochDemand,
                                     instance: Arc<actor_bindings::Actor>,
                                     state: Vec<u8>,
                                     reply: tokio::sync::oneshot::Sender<Result<(), String>>,
@@ -536,7 +543,7 @@ impl AsyncActorTask {
                                         Ok(())
                                     }
                                 }
-                                let _ = accessor.spawn(RestoreTask { instance: instance.clone(), state: bytes, reply });
+                                let _ = accessor.spawn(RestoreTask { _epoch: epoch.arm_timeslice(), instance: instance.clone(), state: bytes, reply });
                             }
                         }
                     }

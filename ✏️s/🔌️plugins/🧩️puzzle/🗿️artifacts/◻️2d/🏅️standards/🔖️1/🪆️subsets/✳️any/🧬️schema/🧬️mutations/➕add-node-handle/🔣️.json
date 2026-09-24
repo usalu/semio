@@ -7,7 +7,7 @@
   "aggregateVariant": "AddNodeHandle",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-node-handle",
-  "binaryTag": null,
+  "binaryTag": 12,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

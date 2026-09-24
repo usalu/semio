@@ -16,7 +16,7 @@ pub mod mutation;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSnapshot {
-    pub(crate) snapshot: Box<Ifc2x3Snapshot>,
+    pub snapshot: Box<Ifc2x3Snapshot>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for SetSnapshot {

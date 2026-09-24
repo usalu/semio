@@ -1261,8 +1261,7 @@ impl<T: Topology + Clone> WfcJob<T> {
         self.last_preview_ms.is_none() || self.preview_units >= PREVIEW_UNIT_INTERVAL || self.last_preview_ms.is_some_and(|last| now_ms.saturating_sub(last) >= PREVIEW_TIME_INTERVAL_MS)
     }
 
-    fn emit_preview(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        let Some(now_ms) = context.now_us().map(|now_us| now_us / 1_000) else { return StepOutcome::Yield };
+    fn emit_preview(&mut self, context: &mut StepContext<'_>, now_ms: u64) -> StepOutcome {
         let sequence = match context.next_preview_sequence() {
             Ok(sequence) => sequence.max(self.state.preview_sequence),
             Err(_) => return StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
@@ -1700,7 +1699,8 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
             if context.is_cancelled() {
                 return StepOutcome::Cancelled;
             }
-            let Some(now_ms) = context.now_us().map(|now_us| now_us / 1_000) else { return StepOutcome::Yield };
+            let Some(now_us) = context.now_us() else { return StepOutcome::Yield };
+            let now_ms = now_us / 1_000;
             if self.last_preview_ms.is_none() || self.preview_units >= PREVIEW_UNIT_INTERVAL || self.last_preview_ms.is_some_and(|last| now_ms.saturating_sub(last) >= PREVIEW_TIME_INTERVAL_MS) {
                 let (completed, total) = self.progress();
                 let sequence = match context.next_preview_sequence() {
@@ -1714,7 +1714,7 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
                 self.publication = Some(Publication::new(PublicationKind::Preview, bytes, Vec::new()));
                 return Publication::poll(&mut self.publication, context);
             }
-            if context.should_yield() {
+            if context.fuel_exhausted() || now_us >= context.deadline_us() {
                 return StepOutcome::Yield;
             }
         }
@@ -1819,7 +1819,9 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
             return Publication::poll(&mut self.publication, context);
         }
         loop {
-            context.set_stage(self.state.stage.label());
+            if context.stage() != self.state.stage.label() {
+                context.set_stage(self.state.stage.label());
+            }
             match self.state.stage {
                 WfcStage::InitializeDomains => self.initialize_one(),
                 WfcStage::FindMinimumEntropySlot => self.find_slot(),
@@ -1835,7 +1837,8 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
                     } else {
                         self.state.stage = WfcStage::FindMinimumEntropySlot;
                     }
-                    return self.emit_preview(context);
+                    let Some(now_us) = context.now_us() else { return StepOutcome::Yield };
+                    return self.emit_preview(context, now_us / 1_000);
                 }
                 WfcStage::MaterializeCheckpoint => {
                     let checkpoint = match self.checkpoint_one() {
@@ -1885,10 +1888,11 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
             if context.is_cancelled() {
                 return StepOutcome::Cancelled;
             }
-            if self.preview_stage() && context.now_us().is_some_and(|now_us| self.preview_due(now_us / 1_000)) {
-                return self.emit_preview(context);
+            let now_us = context.now_us();
+            if let Some(now_ms) = now_us.map(|now_us| now_us / 1_000).filter(|now_ms| self.preview_stage() && self.preview_due(*now_ms)) {
+                return self.emit_preview(context, now_ms);
             }
-            if context.should_yield() {
+            if context.fuel_exhausted() || now_us.is_none_or(|now_us| now_us >= context.deadline_us()) {
                 return StepOutcome::Yield;
             }
         }

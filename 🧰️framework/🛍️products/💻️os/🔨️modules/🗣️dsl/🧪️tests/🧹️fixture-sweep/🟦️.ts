@@ -32,7 +32,7 @@ interface FixtureSweepLawGroup {
 }
 
 export function fixtureSweepLawGroup(): FixtureSweepLawGroup {
-  const fixture = JSON.parse(read(join(sweepRoot, "🧫️fixtures/🔣️.json")));
+  const fixture = JSON.parse(read(join(sweepRoot, "../../🧫️fixtures/🧹️fixture-sweep/🔣️.json")));
   return { package: fixture.package, target: { kind: "test", name: fixture.target }, laws: fixture.laws };
 }
 
@@ -105,7 +105,7 @@ function exampleInventory(root: string): { directories: string[]; files: string[
   return { directories: directories.map(path => relative(root, path)).sort(), files };
 }
 
-/** 🧪️ One hostile or valid row of `🧫️fixtures/🔣️.json`, exactly as `🧬️schema/🔣️.json` `$defs/case` declares it. */
+/** 🧪️ One hostile or valid row of `../../🧫️fixtures/🧹️fixture-sweep/🔣️.json`, exactly as `../../🧫️fixtures/🧹️fixture-sweep/📐️schema/🔣️.json` `$defs/case` declares it. */
 interface FixtureSweepReportCase {
   readonly id: string;
   readonly assertions: number;
@@ -120,8 +120,8 @@ interface FixtureSweepReportFixture {
 }
 
 export function testFixtureSweepReportContract(): void {
-  const reportFixture: unknown = JSON.parse(read(testFileUrlToPath(new URL("🧫️fixtures/🔣️.json", import.meta.url))));
-  const reportSchema = JSON.parse(read(testFileUrlToPath(new URL("🧬️schema/🔣️.json", import.meta.url))));
+  const reportFixture: unknown = JSON.parse(read(testFileUrlToPath(new URL("../../🧫️fixtures/🧹️fixture-sweep/🔣️.json", import.meta.url))));
+  const reportSchema = JSON.parse(read(testFileUrlToPath(new URL("../../🧫️fixtures/🧹️fixture-sweep/📐️schema/🔣️.json", import.meta.url))));
   const reportAjv = new Ajv2020({ strict: true, allErrors: true });
   const validateReport = reportAjv.compile<FixtureSweepReportFixture>(reportSchema);
   assert(validateReport(reportFixture), JSON.stringify(validateReport.errors));
@@ -132,8 +132,8 @@ export function testFixtureSweepReportContract(): void {
 export async function testFixtureSweepExtraction(): Promise<void> {
   const root = repoRoot();
   testFixtureSweepReportContract();
-  const fixture = JSON.parse(read(join(sweepRoot, "🧫️fixtures/🔣️.json")));
-  const document = JSON.parse(read(join(sweepRoot, "🧬️schema/🔣️.json")));
+  const fixture = JSON.parse(read(join(sweepRoot, "../../🧫️fixtures/🧹️fixture-sweep/🔣️.json")));
+  const document = JSON.parse(read(join(sweepRoot, "../../🧫️fixtures/🧹️fixture-sweep/📐️schema/🔣️.json")));
   const sweepAjv = new Ajv({ strict: true, allErrors: true });
   sweepAjv.addSchema(document);
   const validate = sweepAjv.getSchema(`${document.$id}#/$defs/DslFixtureSweepExtractionV1`)!;

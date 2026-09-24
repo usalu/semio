@@ -18,10 +18,8 @@ import {
   runCmd,
   runProbe,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { type McpBuildProfile, MCP_BINARY_NAME, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
-import { OsMcpLiveAgentLoopScript } from "../../🧪️tests/🤖️live-agent-loop/🏃️execution/🟦️.ts";
-import { OsMcpHubAgentParticipantScript } from "../../🧪️tests/🤖️hub-agent-participant/🏃️execution/🟦️.ts";
-import { OsMcpAgentReplyScript } from "../../🧪️tests/💬️agent-reply/🏃️execution/🟦️.ts";
 
 import { buildCargoArtifacts, packageNativeRelease, signExecutableForDistribution, workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 
@@ -464,6 +462,55 @@ class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
 /** ▶️ `bun ./📜️script.ts dev [-- stdio [flags...]]` — boots the real stdio server for local/manual
  *  smoke testing (`printf '<json-rpc line>' | bun ./📜️script.ts dev -- stdio | ...`). Defaults to
  *  `stdio` when no mode is given, matching `🏗️bootstrap/🦀️.rs`'s own default-less argv contract. */
+/** 🤖️ Runs the live agent-loop gate: a real `semio-os-mcp` stdio gateway launched from `.mcp.json`
+ * against an already-running React `dev` session, driven through the whole (a)–(e) transcript in a
+ * real browser. The session is a precondition rather than something this gate boots, because an
+ * activation costs minutes and every developer already has one open — the gate says exactly which
+ * launch row to start when none answers. */
+class OsMcpLiveAgentLoopScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("live-agent-loop-check accepts no arguments");
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤖️live-agent-loop/🟦️.ts")], this.repoRoot, "os-mcp-live-agent-loop", 900_000);
+  }
+}
+
+/** 🤖️ Runs the hub-agent-participant gate: a real `semio-os-mcp` stdio gateway bound to a REMOTE
+ * hub space with a delegated agent credential, driven through delegation → agent session →
+ * `artifact_open` → `artifact_snapshot` → `action_prepare`/`action_invoke` → revocation. The hub is
+ * a precondition rather than something this gate boots (a trusted-catalog publication costs
+ * minutes); the gate names the origin it looked for when none answers. `OS_MCP_HUB_ORIGIN`,
+ * `OS_MCP_HUB_EMAIL`, `OS_MCP_HUB_PASSWORD` and `OS_MCP_HUB_SPACE` select the target. */
+class OsMcpHubAgentParticipantScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("hub-agent-participant-check accepts no arguments");
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤖️hub-agent-participant/🟦️.ts")], this.repoRoot, "os-mcp-hub-agent-participant", 900_000);
+  }
+}
+
+/** 🤝️ Runs the hub-edit-durability gate: agent (fresh `semio-os-mcp --hub` processes) and human
+ * (document socket) edits on one hub note must each be relayed, advance the ledger head, reach a
+ * late joiner's catch-up and survive a restart of the hub the gate itself boots. `OS_MCP_HUB_BINARY`
+ * and `OS_MCP_HUB_DATA_DIR` select the hub; see the gate's own doc for the rest. */
+class OsMcpHubEditDurabilityScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("hub-edit-durability-check accepts no arguments");
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤝️hub-edit-durability/🟦️.ts")], this.repoRoot, "os-mcp-hub-edit-durability", 1_800_000);
+  }
+}
+
+/** 💬️ Runs the agent-reply gate: a real `semio-os-mcp` stdio gateway launched from `.mcp.json`
+ * against an already-running React `dev` session, driving the whole `conversation_reply` channel in
+ * a real browser — the tool on the live surface, its scope gate, a streamed turn rendered as one
+ * row, no duplicated tool-call row, and the human's own typed turn reaching the agent's inbox. The
+ * session is a precondition rather than something this gate boots, because an activation costs
+ * minutes and every developer already has one open. */
+class OsMcpAgentReplyScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("agent-reply-check accepts no arguments");
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💬️agent-reply/🟦️.ts")], this.repoRoot, "os-mcp-agent-reply", 900_000);
+  }
+}
+
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     const args = segments.length > 0 ? segments : ["stdio"];
@@ -715,6 +762,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("canonical-checkpoint-resource-native-check", CanonicalCheckpointResourceNativeCheckScript)
   .register("live-agent-loop-check", OsMcpLiveAgentLoopScript)
   .register("hub-agent-participant-check", OsMcpHubAgentParticipantScript)
+  .register("hub-edit-durability-check", OsMcpHubEditDurabilityScript)
   .register("agent-reply-check", OsMcpAgentReplyScript)
   .register("capability-audit-check", CapabilityAuditCheckScript)
   .register("schema-mirror", SchemaMirrorScript)

@@ -1,0 +1,48 @@
+{
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ Test-only references of the 📝️todos owner. `ajv` is already a devDependency of 🔨️modules/📚️library/📦️packages/🟦️typescript and is registered in the repository-root 🔒️dependencies.json; no production code of this module can reach it, and this module ships no TypeScript package at all.",
+  "oracles": [
+    {
+      "id": "ajv-todo-line-vectors",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "ajv",
+      "version": "8.20.0",
+      "engine": { "family": "none", "implementation": "ajv", "version": "8.20.0" },
+      "capabilities": ["repo.todos.line-grammar"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "productionDebt": {"reachableFrom": ["package.json", "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json", "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json", "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json", "🌎️hub/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"], "owner": "🧰️framework/🛍️products/💻️os", "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."},
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://ajv.js.org",
+      "rationale": "The line grammar is small enough that a shared misreading between two hand written scanners would go unnoticed, so the oracle restates it with a JavaScript regular expression — a different engine from either scanner — and re-derives every rewrite and every removal straight from the committed documents. `ajv` is a real draft 2020-12 validator and additionally decides whether the vectors satisfy 🧬️schema/🔣️.json, so a schema that has drifted away from the two implementations fails here instead of agreeing with itself."
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-todos-scanning",
+      "capabilities": ["repo.todos.scanning"],
+      "rationale": "Which files a scan reads, which directories it refuses to enter and the rule that markdown items only count inside a directory's own `.todos.md` are this repository's own conventions; no third party has a todo scanner over this vocabulary. This checkout carries no `.todos.md` at all and only two genuine todo comments, both inside test literals, so nothing real could be copied and the tree is stated as specification vectors covering every branch the scan has to answer for. Confidence comes from those vectors plus two independently written implementations agreeing on the in-memory scan, the search over it and the filesystem walk that applies the skip rules.",
+      "substitutes": ["specification-vectors", "independent-implementations"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-todos-lifecycle",
+      "capabilities": ["repo.todos.lifecycle"],
+      "rationale": "Creating, changing, promoting and deleting a todo is this repository's own workflow over its own tree, ticket opener and emitter; no third party has a todo aggregate to compare against. Every effect is a port with an in-memory implementation, so the scenario observes the whole outcome — the files the tree is left holding, the opened tickets, the emitted envelopes and the class of every refusal — rather than a return value, and confidence comes from two independently written implementations replaying the same script and agreeing on all four.",
+      "substitutes": ["independent-implementations", "specification-vectors"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-todos-drafts",
+      "capabilities": ["repo.todos.drafts"],
+      "rationale": "A draft is a directory under this repository's own notes tree addressed by the slug of its title, and the 🎨️-tagged artifact identifier and `repo://draft/…` URI it takes come from this repository's own entity emoji table. Nothing outside this repository knows either. The store is a port with an in-memory implementation, so the script observes the stored files as well as the identifiers, and confidence comes from two independently written implementations agreeing on the successes, on the three refusals and on the identifier and URI of every draft.",
+      "substitutes": ["independent-implementations", "specification-vectors"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": [{ "implementation": "typescript", "package": "ajv", "version": "8.20.0" }]
+}

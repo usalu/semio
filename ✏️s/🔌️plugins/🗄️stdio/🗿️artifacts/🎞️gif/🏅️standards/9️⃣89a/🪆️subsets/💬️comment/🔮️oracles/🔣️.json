@@ -5,80 +5,6 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "mutationManifests": [
-    {
-      "schema": "semio.repository-test.mutation-manifest/v2",
-      "artifact": "s.stdio.gif",
-      "standard": "89a",
-      "subset": "comment",
-      "standardDirectoryName": "9️⃣89a",
-      "subsetDirectoryName": "💬️comment",
-      "mutations": [
-        {
-          "id": "insert-comment",
-          "capability": "gif-89a-comment-mutate",
-          "payloadSchema": "../../🧱️base/🧬️schema/🧬️mutations/💬insert-comment/🦀️.rs#InsertComment",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "insert-comment",
-            "bridgeVersion": 1,
-            "variant": "GifMutation::InsertComment"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "gif-89a-comment-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-extension-reader"
-            }
-          ],
-          "carriers": [
-            "gif"
-          ],
-          "invariants": {
-            "local": [
-              "comment-extension-text-and-count-agree"
-            ],
-            "enclosing": [
-              "gif-reencode-round-trip-agrees-with-reference-decoder"
-            ]
-          }
-        },
-        {
-          "id": "remove-comment",
-          "capability": "gif-89a-comment-mutate",
-          "payloadSchema": "../../🧱️base/🧬️schema/🧬️mutations/🚫remove-comment/🦀️.rs#RemoveComment",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "remove-comment",
-            "bridgeVersion": 1,
-            "variant": "GifMutation::RemoveComment"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "gif-89a-comment-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-extension-reader"
-            }
-          ],
-          "carriers": [
-            "gif"
-          ],
-          "invariants": {
-            "local": [
-              "comment-extension-count-agrees"
-            ],
-            "enclosing": [
-              "gif-reencode-round-trip-agrees-with-reference-decoder"
-            ]
-          }
-        }
-      ]
-    }
-  ],
   "fixtureManifests": [
     {
       "schema": "semio.repository-test.fixture/v2",
@@ -121,7 +47,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts extensions",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-gif-89a-extension-v1",
       "reproducible": true,
@@ -170,7 +96,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts extensions",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-gif-89a-extension-v1",
       "reproducible": true,

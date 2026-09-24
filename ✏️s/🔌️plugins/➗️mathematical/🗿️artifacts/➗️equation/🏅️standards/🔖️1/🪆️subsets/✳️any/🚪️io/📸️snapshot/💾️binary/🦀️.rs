@@ -1,10 +1,6 @@
 //! 📦️ Equation artifact — binary document surface + laws (constitutional: pack). The
-//! `store::ArtifactPack` impl for `EquationSnapshot` lives here rather than next to
-//! `EquationSnapshot` itself (design.md §1 CORRECTION: unsplit, one bidirectional impl per
-//! representation, sitting directly under `🚪️io/<facet>/<representation>/`) — moved here verbatim
-//! from `🧬️schema/📸️snapshot/🦀️.rs`.
+//! `store::ArtifactPack` impl for `EquationSnapshot` encodes the derived `EquationPackRecord` spec.
 
-use crate::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
 use crate::EquationSnapshot;
 use store::PackError;
 
@@ -14,121 +10,78 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-//#region 🔖️BinaryPrimitives
-/// 🔢️ Pack format 2 — format 1 carried no scene (see `write_scene`).
-const PACK_BINARY_FORMAT: u8 = 2;
-
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
-    write_str_lp(out, &r.to_uri());
-}
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
-}
-fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
-    write_str_lp(out, &c.child_id);
-    write_ref(out, &c.target);
-}
-fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
-    let child_id = read_str_lp(reader)?;
-    let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
+//#region 🔖️PackRecord
+/// 🕸️ Derived pack record of an `EquationSnapshot`: the three composed-child handles, the authored
+/// equation, and the live `(graph, geometry)` scene those handles own. The scene lives only in the
+/// handles' `EquationWorkingScene` local owner, so it is persisted beside them — a bare-handle pack
+/// could not be reopened by a fresh process (ticket 26/09/19, `📓️knowledge.md` §4).
+#[derive(dsl::DslRecord)]
+#[dsl(extension = "equation")]
+struct EquationPackRecord {
+    notation: crate::EquationNotationChild,
+    results: crate::EquationResultsChild,
+    computed: crate::EquationComputedChild,
+    equation: dsl::DslValue,
+    graph: dsl::DslValue,
+    geometry: dsl::DslValue,
 }
 
-fn write_equation(out: &mut Vec<u8>, e: &EquationExprSnapshot) {
-    write_bytes_lp(out, pack::json::to_json_string(e).as_bytes());
-}
-fn read_equation(reader: &mut store::ByteReader<'_>) -> Result<EquationExprSnapshot, String> {
-    let bytes = read_bytes_lp(reader)?;
-    let text = String::from_utf8(bytes).map_err(|e| e.to_string())?;
-    pack::json::from_json_str(&text).map_err(|e| e.to_string())
-}
-
-/// 🕸️ The live `(graph, geometry)` behind the composed-child triple, carried as two length-prefixed
-/// first-party JSON blocks — the same "real codec, minimal grammar" trade `equation` above already
-/// makes for its own opaque payload.
-///
-/// 🐛️ Format 1 wrote the three children as BARE HANDLES and nothing else, so the scene — which lives
-/// only in the handles' `EquationWorkingScene` local owner — did not survive a single round trip.
-/// `🕸️dag`'s own snapshot module states the rule that was being broken: "A codec that persisted only
-/// the bare handle would produce an UNRECOVERABLE snapshot the instant a fresh process parses it."
-/// It made the committed `🎬️demo` asset carry no graph at all, which is why the mathematical play
-/// pane rendered an empty grid and a bare cursor (ticket 26/09/19, `📓️knowledge.md` §4).
-fn write_scene(out: &mut Vec<u8>, scene: &crate::EquationWorkingScene) {
-    write_bytes_lp(out, pack::json::to_json_string(&scene.graph).as_bytes());
-    write_bytes_lp(out, pack::json::to_json_string(&scene.geometry).as_bytes());
-}
-fn read_scene(reader: &mut store::ByteReader<'_>) -> Result<crate::EquationWorkingScene, String> {
-    let graph_text = String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())?;
-    let geometry_text = String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())?;
-    Ok(crate::EquationWorkingScene {
-        graph: pack::json::from_json_str(&graph_text).map_err(|e| e.to_string())?,
-        geometry: pack::json::from_json_str(&geometry_text).map_err(|e| e.to_string())?,
-    })
-}
-
-fn encode_equation_snapshot_binary(s: &EquationSnapshot) -> Vec<u8> {
-    let mut out = vec![PACK_BINARY_FORMAT];
-    write_child(&mut out, &s.notation);
-    write_child(&mut out, &s.results);
-    write_child(&mut out, &s.computed);
-    write_equation(&mut out, &s.equation);
-    write_scene(&mut out, &crate::equation_scene(s));
-    out
-}
-fn decode_equation_snapshot_binary(bytes: &[u8]) -> Result<EquationSnapshot, String> {
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
-        return Err(format!("unsupported pack format {format}"));
+impl EquationPackRecord {
+    fn from_snapshot(snapshot: &EquationSnapshot) -> Self {
+        let scene = crate::equation_scene(snapshot);
+        Self {
+            notation: snapshot.notation.clone(),
+            results: snapshot.results.clone(),
+            computed: snapshot.computed.clone(),
+            equation: dsl::ToValue::to_value(&snapshot.equation),
+            graph: dsl::ToValue::to_value(&scene.graph),
+            geometry: dsl::ToValue::to_value(&scene.geometry),
+        }
     }
-    let (notation, results, computed, equation) = (read_child(&mut reader)?, read_child(&mut reader)?, read_child(&mut reader)?, read_equation(&mut reader)?);
-    // 🏗️ The decoded scene is attached to the exact handles this pack names, never to freshly minted
-    // ones: `equation_children_from_state` derives the same ids, but re-minting would silently
-    // discard whatever identity the pack actually carried.
-    let owner = std::sync::Arc::new(read_scene(&mut reader)?);
-    Ok(EquationSnapshot {
-        notation: notation.with_local_owner(owner.clone()),
-        results: results.with_local_owner(owner.clone()),
-        computed: computed.with_local_owner(owner),
-        equation,
-    })
-}
-//#endregion 🔖️BinaryPrimitives
 
-//#region 🔖️HandcraftedArtifactPack
-/// ✉️ P6 handcrafted `ArtifactPack`, real LEB128 binary primitives — moved here verbatim from
-/// `🧬️schema/📸️snapshot/🦀️.rs`.
+    fn into_snapshot(self) -> Result<EquationSnapshot, String> {
+        let owner = std::sync::Arc::new(crate::EquationWorkingScene { graph: dsl::FromValue::from_value(self.graph).map_err(|e| e.to_string())?, geometry: dsl::FromValue::from_value(self.geometry).map_err(|e| e.to_string())? });
+        Ok(EquationSnapshot {
+            notation: self.notation.with_local_owner(owner.clone()),
+            results: self.results.with_local_owner(owner.clone()),
+            computed: self.computed.with_local_owner(owner),
+            equation: dsl::FromValue::from_value(self.equation).map_err(|e| e.to_string())?,
+        })
+    }
+}
+
+/// 🖨️ The derived text body: the same `EquationPackRecord` the pack encodes, printed by the spec-driven engine.
+pub(crate) fn print_pack_record_text(snapshot: &EquationSnapshot) -> String {
+    dsl::print(&EquationPackRecord::from_snapshot(snapshot).__dsl_to_record(), &EquationPackRecord::__dsl_spec(), dsl::JoinMode::Document)
+}
+
+/// 📖️ Parses a derived text body back through `EquationPackRecord`, with the same decode steps as the pack.
+pub(crate) fn parse_pack_record_text(body: &str) -> Result<EquationSnapshot, store::TextError> {
+    let record = dsl::parse(body, &EquationPackRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+    EquationPackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
+}
+//#endregion 🔖️PackRecord
+
+//#region 🔖️ArtifactPack
 impl store::ArtifactPack for EquationSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let _ = options;
-        let raw = encode_equation_snapshot_binary(self);
+        let inner = store::pack_rt::encode_document(&EquationPackRecord::__dsl_spec(), &EquationPackRecord::from_snapshot(self).__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        decode_equation_snapshot_binary(&inner).map_err(PackError::Schema)
+        let (record, _report) = store::pack_rt::decode_document(&inner, &EquationPackRecord::__dsl_spec(), options)?;
+        EquationPackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(PackError::Schema)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(EquationPackRecord::__dsl_spec())
     }
 }
-//#endregion 🔖️HandcraftedArtifactPack
+//#endregion 🔖️ArtifactPack
 
 /// 📦️ Encodes a `EquationSnapshot` to its binary pack form.
 pub fn encode(snapshot: &EquationSnapshot) -> Vec<u8> {
@@ -197,3 +150,4 @@ impl Drop for OwnedEquationStore {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+

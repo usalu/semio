@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeOutdoorAirSystemAirLoop",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-outdoor-air-system-air-loop",
-  "binaryTag": null,
+  "binaryTag": 189,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

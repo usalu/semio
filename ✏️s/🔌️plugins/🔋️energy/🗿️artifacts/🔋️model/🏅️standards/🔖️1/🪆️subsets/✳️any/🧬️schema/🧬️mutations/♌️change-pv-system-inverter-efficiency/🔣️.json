@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePvSystemInverterEfficiency",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-pv-system-inverter-efficiency",
-  "binaryTag": null,
+  "binaryTag": 206,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

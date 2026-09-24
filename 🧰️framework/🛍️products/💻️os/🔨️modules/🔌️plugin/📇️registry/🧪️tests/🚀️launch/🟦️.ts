@@ -107,7 +107,7 @@ describe("WASI codegen profile policy", () => {
     expect(manifest.profile.dev["codegen-units"]).toBeUndefined();
     for (const override of Object.values(manifest.profile.dev.package ?? {})) expect((override as any)["codegen-units"]).toBeUndefined();
     const { package: developmentPackageOverrides, ...developmentProfile } = manifest.profile["wasm-dev"];
-    expect(developmentProfile).toEqual({ inherits: "dev", "codegen-units": 1 });
+    expect(developmentProfile).toEqual({ inherits: "dev", "codegen-units": 1, incremental: false });
     expect(developmentPackageOverrides).toEqual(fixture.developmentPackageOverrides);
     const freshTarget = join(root, "target", "registry-profile-fixture");
     for (const vector of fixture.artifactPaths) {
@@ -130,8 +130,10 @@ describe("WASI codegen profile policy", () => {
       expect(declaration, path).toContain('["wasm-dev", "wasm-release"]');
       expect(declaration, path).not.toContain('"debug"');
     }
-    const describe = ["🏗️component-build", "🏭️fresh-component"].map((owner) => readFileSync(join(root, `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/${owner}/🟦️.ts`), "utf8")).join("\n");
-    expect(describe.match(/"--target", "wasm32-wasip2", "--profile", "wasm-dev"/g)).toHaveLength(2);
+    const describe = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts"), "utf8");
+    expect(describe.match(/pluginComponentRustcArgs\(packageName, "wasm-dev"\)/g)).toHaveLength(1);
+    const component = readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts"), "utf8");
+    expect(component).toContain('"--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", profile');
     const scale = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/📜️script.ts"), "utf8");
     expect(scale).toContain('"--target", "wasm32-wasip2", "--profile", "wasm-dev"');
   });

@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetListOrdered {
-    pub(crate) path: DocBlockPath,
-    pub(crate) ordered: bool,
+    pub path: DocBlockPath,
+    pub ordered: bool,
 }
 
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for SetListOrdered {

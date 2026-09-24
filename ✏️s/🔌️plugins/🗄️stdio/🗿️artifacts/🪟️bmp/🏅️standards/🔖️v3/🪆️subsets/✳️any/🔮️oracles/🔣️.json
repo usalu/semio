@@ -52,6 +52,7 @@
       ],
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
+      "productionDebt": {"reachableFrom": ["🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml", "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"], "owner": "🧰️framework/🔨️modules/🗺️surface", "plan": "The same package the `image-bmp` oracle records: raster decode in the framework surface, intrinsic sizing and the os world and renderer crates. None of them is the stdio bmp codec under test. The debt retires when those call sites decode through stdio's own decoders. No path may join."},
       "productionReachable": false,
       "networkDuringExecution": false,
       "platforms": [
@@ -864,7 +865,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/📜️script.ts header",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-bmp-header-v1",
       "reproducible": true,

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeSetpointManagerSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-setpoint-manager-schedule",
-  "binaryTag": null,
+  "binaryTag": 169,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

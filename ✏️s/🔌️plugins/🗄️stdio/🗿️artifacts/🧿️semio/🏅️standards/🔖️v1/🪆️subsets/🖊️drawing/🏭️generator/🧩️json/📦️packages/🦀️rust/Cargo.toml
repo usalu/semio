@@ -1,7 +1,8 @@
 # 🧭️ Own workspace root: never joins the repository's root workspace, whose root manifest is a shared,
 # contended file.
 #
-# 🚫️ DEPENDS ON `serde_json` AND NOTHING ELSE. `SemioDrawingSnapshot::layers` is an INLINE
+# 🚫️ DEPENDS ON `json` (json-rust) AND NOTHING ELSE — never `serde_json`, which the subject crate links in
+# production. `SemioDrawingSnapshot::layers` is an INLINE
 # `Vec<DrawLayer>` directly in this subset's own JSON export
 # (`🖊️drawing/🧬️schema/📸️snapshot/🦀️.rs`), so `create-layer` — a caller-supplied full `DrawLayer` at a
 # caller-supplied index, clamped to `base.layers.len()` (an append when the index is at or past the
@@ -26,4 +27,4 @@ name = "semio_drawing_json"
 path = "../../🦀️.rs"
 
 [dependencies]
-serde_json = "1"
+json = "0.12"

@@ -4,7 +4,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::exit;
 
-use fem2d_json::{apply, arrange, build_seed, project, KINDS};
+use fem2d_json::{apply, arrange, build_seed, project, render, KINDS};
 
 fn fixture_directory(kind: &str) -> Option<&'static str> {
     match kind {
@@ -52,8 +52,8 @@ fn main() {
                 continue;
             }
         };
-        let base_bytes = format!("{}\n", pack::json::to_string(&base));
-        let mutated_bytes = format!("{}\n", pack::json::to_string(&mutated));
+        let base_bytes = render(&base);
+        let mutated_bytes = render(&mutated);
         match (project(base_bytes.as_bytes()), project(mutated_bytes.as_bytes())) {
             (Ok(before), Ok(after)) => {
                 if before == after {

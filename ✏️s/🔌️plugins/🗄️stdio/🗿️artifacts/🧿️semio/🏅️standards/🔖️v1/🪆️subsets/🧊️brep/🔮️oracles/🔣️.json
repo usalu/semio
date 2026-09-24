@@ -42,7 +42,7 @@
         "brep.topology.count"
       ],
       "comparisonProfiles": [
-        "semantic-brep-kernel-v1"
+        "semantic-brep-kernel-edit-v1"
       ],
       "license": "Apache-2.0",
       "testOnly": true,
@@ -123,19 +123,19 @@
       "networkDuringExecution": false
     },
     {
-      "id": "serde-json-semio-brep-carrier-reader",
+      "id": "json-rust-semio-brep-carrier-reader",
       "kind": "third-party-library",
       "ecosystem": "rust",
-      "package": "serde_json",
-      "version": "1",
+      "package": "json",
+      "version": "0.12",
       "source": {
-        "repository": "https://github.com/serde-rs/json",
+        "repository": "https://github.com/maciejhirsz/json-rust",
         "license": "MIT OR Apache-2.0"
       },
       "engine": {
-        "family": "serde-json",
-        "implementation": "serde_json 1 value tree",
-        "version": "1"
+        "family": "json-rust",
+        "implementation": "json-rust 0.12 value tree",
+        "version": "0.12"
       },
       "capabilities": [
         "semio-v1-brep-mutate"
@@ -154,8 +154,8 @@
         "linux-arm64",
         "win32-x64"
       ],
-      "homepage": "https://docs.rs/serde_json",
-      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\ncreate-vertex's production diff appends a caller-supplied {id, point} to SemioBrepSnapshot::vertices (an id-keyed append); create-vertex/🦀️.rs's own doc comment states a duplicate id already present in base is a no-op, never a duplicate. No computed field, no cross-reference.\n\n`SemioBrepSnapshot::vertices` is an INLINE `Vec<BrepVertex>` carrying its full content directly in this subset's own JSON export (`🧊️brep/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `create-vertex` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `serde-json-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`📑️document/🔮️oracles/🔣️.json`).\n\nThe reading tool is `🧊️brep/🏭️generator/🧩️json/📦️packages/🦀️rust` — its own standalone crate (own `[workspace]`, `[dependencies] serde_json = \"1\"` and nothing else), which builds a deterministic seed document, applies `create-vertex` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-brep-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
+      "homepage": "https://docs.rs/json",
+      "rationale": "📖️ A READER over this subset's own JSON export, covering exactly the one kind whose full forward semantics reduces to a pure structural edit.\n\ncreate-vertex's production diff appends a caller-supplied {id, point} to SemioBrepSnapshot::vertices (an id-keyed append); create-vertex/🦀️.rs's own doc comment states a duplicate id already present in base is a no-op, never a duplicate. No computed field, no cross-reference.\n\n`SemioBrepSnapshot::vertices` is an INLINE `Vec<BrepVertex>` carrying its full content directly in this subset's own JSON export (`🧊️brep/🧬️schema/📸️snapshot/🦀️.rs`), so a genuinely fresh, unique-keyed `create-vertex` payload is a carrier-level fact a third-party JSON implementation witnesses in full — the identical inline-versus-composed discriminator `json-rust-semio-document-carrier-reader`'s own rationale already applies to `document`'s `insert-image`/`remove-image`/`set-image-bytes` (`📑️document/🔮️oracles/🔣️.json`).\n\nThe reading tool is `🧊️brep/🏭️generator/🧩️json/📦️packages/🦀️rust` — its own standalone crate (own `[workspace]`, `[dependencies] json = \"0.12\"` and nothing else), which builds a deterministic seed document, applies `create-vertex` as a domain-blind edit to the JSON tree (never through this repository's own mutation engine), and refuses to write a pair whose projection does not move. Scoped HONESTLY to this one kind: the other kinds this subset's own `semio-v1-brep-mutate` capability names are NOT claimed by this oracle — most carry computed fields, cross-references or binary payloads this generic reader does not attempt (mirroring `dxf-crate-cad-r12-read`'s own partial-coverage precedent in this same file, which likewise reuses the shared capability id rather than declaring a new one for a subset of kinds)."
     }
   ],
   "mutationCatalogs": [
@@ -822,14 +822,14 @@
     {
       "id": "geometry-tessellated",
       "description": "📏️ Curve-replacement edits (arc→spline and line→arc) that legitimately re-tessellate: the new curve is geometrically different by construction, so the gate is the DEVIATION of the tessellated approximation from the analytic curve it replaces, not bit-identity with a previous tessellation. Wider than `mechanical-standard` because a spline approximating an arc carries real, expected chord error at the segment's own scale.",
-      "absoluteLength": 1e-06,
-      "relativeLength": 1e-05,
-      "absoluteArea": 1e-06,
-      "relativeArea": 1e-05,
-      "absoluteVolume": 1e-06,
-      "relativeVolume": 1e-05,
+      "absoluteLength": 0.000001,
+      "relativeLength": 0.00001,
+      "absoluteArea": 0.000001,
+      "relativeArea": 0.00001,
+      "absoluteVolume": 0.000001,
+      "relativeVolume": 0.00001,
       "normalizedHausdorffMax": 0.0001,
-      "normalizedCentroidDistanceMax": 1e-06,
+      "normalizedCentroidDistanceMax": 0.000001,
       "maxOverrideFactor": 5
     }
   ],
@@ -870,10 +870,10 @@
             "actual-step"
           ],
           "assertions": {
-            "relativeVolumeErrorMax": 1e-08,
-            "relativeAreaErrorMax": 1e-07,
-            "normalizedCentroidDistanceMax": 1e-08,
-            "normalizedBoundingBoxDiagonalErrorMax": 1e-08,
+            "relativeVolumeErrorMax": 1e-8,
+            "relativeAreaErrorMax": 1e-7,
+            "normalizedCentroidDistanceMax": 1e-8,
+            "normalizedBoundingBoxDiagonalErrorMax": 1e-8,
             "connectedComponentsEqual": true
           }
         },

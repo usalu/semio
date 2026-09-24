@@ -79,11 +79,10 @@ pub enum SemioModelMutation {
 
 /// 🏷️ This subset's DECLARED mutation vocabulary, kebab-case, in enum declaration order — the one
 /// list the repository test platform's completeness gate measures `🏛️mutate-semio-model` against
-/// (catalog `semio-v1-model` in `../../🔮️oracles/🔣️.json`). It aliases [`OP_KEYWORDS`],
-/// which the binary op frame's `tag` byte already indexes by [`variant_ordinal`], so the vocabulary
-/// is declared exactly once and `kinds_match_the_enum_and_the_catalog` keeps that declaration
-/// honest against both the enum and the manifest.
-pub const KINDS: &[&str] = &OP_KEYWORDS;
+/// (catalog `semio-v1-model` in `../../🔮️oracles/🔣️.json`). 
+/// `kinds_match_the_enum_and_the_catalog` keeps it honest against the enum, the manifest and the
+/// `💾️binary/📡️.protocol.semio` records that carry each kind's wire tag.
+pub const KINDS: &[&str] = &["set-snapshot", "insert-spatial-node", "remove-spatial-node", "set-spatial-node", "insert-element", "remove-element", "set-element", "insert-relation", "remove-relation", "set-relation"];
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
@@ -291,22 +290,34 @@ impl OpText for SemioModelMutation {
     }
 }
 
-/// 🏷️ Ordinal table, same declaration order as `SemioModelMutation`'s own enum variants and
-/// `parse_semio_model_mutation`'s keyword match — the real binary `tag` field's source of truth.
-const OP_KEYWORDS: [&str; 10] = ["set-snapshot", "insert-spatial-node", "remove-spatial-node", "set-spatial-node", "insert-element", "remove-element", "set-element", "insert-relation", "remove-relation", "set-relation"];
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioModelMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_INSERT_SPATIAL_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-spatial-node");
+const TAG_REMOVE_SPATIAL_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-spatial-node");
+const TAG_SET_SPATIAL_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-spatial-node");
+const TAG_INSERT_ELEMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-element");
+const TAG_REMOVE_ELEMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-element");
+const TAG_SET_ELEMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-element");
+const TAG_INSERT_RELATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-relation");
+const TAG_REMOVE_RELATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-relation");
+const TAG_SET_RELATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-relation");
+//#endregion 🏷️WireTags
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioModelMutation) -> u8 {
+fn wire_tag(m: &SemioModelMutation) -> u8 {
     match m {
-        SemioModelMutation::SetSnapshot(_) => 0,
-        SemioModelMutation::InsertSpatialNode(_) => 1,
-        SemioModelMutation::RemoveSpatialNode(_) => 2,
-        SemioModelMutation::SetSpatialNode(_) => 3,
-        SemioModelMutation::InsertElement(_) => 4,
-        SemioModelMutation::RemoveElement(_) => 5,
-        SemioModelMutation::SetElement(_) => 6,
-        SemioModelMutation::InsertRelation(_) => 7,
-        SemioModelMutation::RemoveRelation(_) => 8,
-        SemioModelMutation::SetRelation(_) => 9,
+        SemioModelMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioModelMutation::InsertSpatialNode(_) => TAG_INSERT_SPATIAL_NODE,
+        SemioModelMutation::RemoveSpatialNode(_) => TAG_REMOVE_SPATIAL_NODE,
+        SemioModelMutation::SetSpatialNode(_) => TAG_SET_SPATIAL_NODE,
+        SemioModelMutation::InsertElement(_) => TAG_INSERT_ELEMENT,
+        SemioModelMutation::RemoveElement(_) => TAG_REMOVE_ELEMENT,
+        SemioModelMutation::SetElement(_) => TAG_SET_ELEMENT,
+        SemioModelMutation::InsertRelation(_) => TAG_INSERT_RELATION,
+        SemioModelMutation::RemoveRelation(_) => TAG_REMOVE_RELATION,
+        SemioModelMutation::SetRelation(_) => TAG_SET_RELATION,
     }
 }
 /// ✂️ Just the `key=value ...` argument tail of `print_semio_model_mutation` — the binary frame's
@@ -321,15 +332,14 @@ fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String {
 }
 
 /// ⚡️ P2 pilot (model): real binary op frame, replacing the old `serde_json::to_vec`/`from_slice`
-/// shortcut. `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see
-/// [`OP_KEYWORDS`]) are two REAL fixed fields; the variant's own `key=value ...` argument payload
+/// shortcut. `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) are two REAL fixed fields; the variant's own `key=value ...` argument payload
 /// follows as one opaque trailing `bytes` chain — reusing the already-real, already-tested
 /// `print_semio_model_mutation`/`parse_semio_model_mutation` text codec rather than re-deriving a
 /// second independent encoding.
 impl OpBinary for SemioModelMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_semio_model_mutation_args(self).as_bytes());
         Ok(out)
     }
@@ -342,7 +352,7 @@ impl OpBinary for SemioModelMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })

@@ -1,0 +1,28 @@
+slice: g5
+crate: semio-s-plugin-wfc (✏️s/🔌️plugins/🀄️wfc) — wasm-dev guest through the product verb (`bun nx run @semio-tech/wfc-plugin:describe`), same as g4's request. This build also carries g4's second request (admission rule + genesis default revert), so one wfc rebuild serves both g4 and g5.
+reason: over-MCP inference throughput root fix lives in guest code linked into every s guest:
+  1. 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🦀️.rs — `semio.infer` Pump now drives the mounted session on the caller until the host's crossing grant (fuel + deadline_ms) is spent, retiring Yield/Preview outcomes in place (was: one transition per step-job crossing + one OutcomeClose crossing per 16-unit WFC preview → 736 776 crossings for the genesis solve).
+  2. 🧰️framework/🔨️modules/🧵️job/🦀️.rs — new `MountedWorkerJobSession::step_on_caller`.
+  3. …/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs — `pump_process_worker_pool_for_inference` deleted (dead), turn pump inlined.
+  Native law: `✏️s/…/🖼️bitmap/…/💡️inferences` `a_whole_solve_grant_settles_the_genesis_inference_in_a_bounded_state_walk` 41 crossings (old walk: 736 776).
+need: rebuilt wfc wasm-dev staged at .🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2/wasm-dev/semio_s_plugin_wfc.wasm with sha == ✏️s/🔌️plugins/🀄️wfc/🔣️.json hashes.wasmSha256 (describe). note is NOT needed (its staged bytes stay equal to its committed descriptor). Other s guests pick the reactor change up at their next normal rebuild.
+consumer: g5 re-measures the over-MCP genesis solve (`.tmp-ticket/wp-g5/g5-solve-probe.ts`) and reruns client-e2e.
+please append: result path + sha256 + time here.
+
+[w1 2026-09-24 03:09] DONE wfc via `bun nx run @semio-tech/wfc-plugin:describe` then `:materialize-dev` (wasm mutex w1, shared target; source as of ~03:05 incl. G4 admission/genesis revert, G5 infer Pump + step_on_caller, H4 Store identity, W1 viewer owner default):
+  wasm sha256 e36b9d88fcb8d6c61c7de5b0e2797cb7b5fd34815907e99bf026c661e4258d77
+    == /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2/wasm-dev/semio_s_plugin_wfc.wasm
+    == ✏️s/🔌️plugins/🀄️wfc/📦️packages/🦀️rust/dist/component-dev/semio_s_plugin_wfc.wasm (sha e36b9d88fcb8d6c61c7de5b0e2797cb7b5fd34815907e99bf026c661e4258d77)
+    == ✏️s/🔌️plugins/🀄️wfc/🔣️.json hashes.wasmSha256 (e36b9d88fcb8d6c61c7de5b0e2797cb7b5fd34815907e99bf026c661e4258d77)
+    == staged dist/dev/🔌️plugin-modules/🀄️wfc/🔣️.json (e36b9d88fcb8d6c61c7de5b0e2797cb7b5fd34815907e99bf026c661e4258d77)
+  log: .tmp-ticket/wp-w1/generated/stage-wfc-plugin.txt
+
+[g5 2026-09-24 03:35] SECOND REQUEST — wfc guest rebuild (describe + materialize-dev, as before):
+  - root Cargo.toml: NEW `[profile.wasm-dev.package.semio-s-plugin-wfc-engine]` + `[profile.wasm-dev.package.semio-s-artifact-wfc-bitmap]` opt-level = 2 (guest throughput; same precedent as lowpoly/puzzle3d/remodel). Also root Cargo.toml: `[profile.dev.package.<wasmtime*/cranelift*/…>] opt-level = 3` (native hosts only, no guest impact).
+  - ✏️s/🔌️plugins/🀄️wfc/⚙️engine/💼️job/🦀️.rs: WFC step loop reads the clock once per unit (was 3 host clock calls per propagation edge) and records a stage change only when the stage changes.
+  Measured with rebuild #1 (e36b9d88): over-MCP genesis solve 112.7 s (debug host) / 63.9 s (opt host) vs 17.9 s native — clock host calls + opt-level-0 guest are the remaining share.
+  please append: sha + time.
+
+[w1 2026-09-24 04:09] DONE wfc rebuild #2 (G5 opt-level 2 wfc-engine/bitmap + engine clock-once): describe + materialize-dev
+  wasm sha256 8cf171025f1249154841ee3a9d5e4539b81fac434528e059c13dd63b77160385 == shared wasm-dev == dist/component-dev (8cf171025f1249154841ee3a9d5e4539b81fac434528e059c13dd63b77160385) == 🔣️.json hashes.wasmSha256 (8cf171025f1249154841ee3a9d5e4539b81fac434528e059c13dd63b77160385) == staged module (8cf171025f1249154841ee3a9d5e4539b81fac434528e059c13dd63b77160385)
+  log: .tmp-ticket/wp-w1/generated/stage-wfc-plugin.txt

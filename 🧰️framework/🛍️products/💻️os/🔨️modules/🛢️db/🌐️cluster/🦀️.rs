@@ -221,14 +221,9 @@ impl ReplicationRejected {
             Self::BeforeWriter(error) => Ok(error),
             Self::WalOpen(rejected) => rejected.into_open_rejected().retry_close().await.map_err(Self::WalRelease),
             Self::WalRelease(rejected) => rejected.retry_close().await.map_err(Self::WalRelease),
-            Self::RetainedWal { cause, close_error: _, mut wal } => loop {
-                match wal.close_step() {
-                    Ok(true) => semio_framework_async::yield_once().await,
-                    Ok(false) => return Ok(cause),
-                    Err(error) => {
-                        return Err(Self::RetainedWal { cause, close_error: error, wal });
-                    }
-                }
+            Self::RetainedWal { cause, close_error: _, mut wal } => match wal.close().await {
+                Ok(()) => Ok(cause),
+                Err(error) => Err(Self::RetainedWal { cause, close_error: error, wal }),
             },
         }
     }

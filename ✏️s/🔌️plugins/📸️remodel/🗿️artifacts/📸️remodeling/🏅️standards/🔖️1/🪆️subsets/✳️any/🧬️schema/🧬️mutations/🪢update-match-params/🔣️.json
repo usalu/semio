@@ -7,7 +7,7 @@
   "aggregateVariant": "UpdateMatchParams",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-match-params",
-  "binaryTag": null,
+  "binaryTag": 20,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

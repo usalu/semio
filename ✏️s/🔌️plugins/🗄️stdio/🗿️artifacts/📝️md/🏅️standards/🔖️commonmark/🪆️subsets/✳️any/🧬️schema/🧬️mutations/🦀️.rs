@@ -293,6 +293,16 @@ fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdPathStep>, S
 }
 //#endregion 🔖️OpBinaryCodec
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `MdMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-block");
+const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
+const TAG_REPLACE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-block");
+const TAG_SET_INLINES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-inlines");
+//#endregion 🏷️WireTags
+
 /// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the `MdMutation`
@@ -302,11 +312,11 @@ fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdPathStep>, S
 impl protocol::OpBinary for MdMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            MdMutation::SetSnapshot(_) => 1,
-            MdMutation::InsertBlock(_) => 2,
-            MdMutation::RemoveBlock(_) => 3,
-            MdMutation::ReplaceBlock(_) => 4,
-            MdMutation::SetInlines(_) => 5,
+            MdMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+            MdMutation::InsertBlock(_) => TAG_INSERT_BLOCK,
+            MdMutation::RemoveBlock(_) => TAG_REMOVE_BLOCK,
+            MdMutation::ReplaceBlock(_) => TAG_REPLACE_BLOCK,
+            MdMutation::SetInlines(_) => TAG_SET_INLINES,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -340,28 +350,28 @@ impl protocol::OpBinary for MdMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            1 => {
+            TAG_SET_SNAPSHOT => {
                 let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
-            2 => {
+            TAG_INSERT_BLOCK => {
                 let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(MdMutation::InsertBlock(insert_block::InsertBlock { path, index, block }))
             }
-            3 => {
+            TAG_REMOVE_BLOCK => {
                 let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 Ok(MdMutation::RemoveBlock(remove_block::RemoveBlock { path, index }))
             }
-            4 => {
+            TAG_REPLACE_BLOCK => {
                 let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path, index, block }))
             }
-            5 => {
+            TAG_SET_INLINES => {
                 let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let inlines = dec_inline_list_bin(&mut reader).map_err(|e| malformed("op inlines", reader.position(), e))?;

@@ -17,8 +17,9 @@ use std::collections::BTreeMap;
 /// 🛡️ `deny_unknown_fields` closes that replacement: a snapshot still carrying the retired inline
 /// `objects`/`shapeGeometry`/`activeModelDefinitionId` keys must FAIL to decode, never decode with
 /// them silently dropped (`🧫️fixtures/🪪️document-contract`'s `invalidDocuments`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, dsl::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
+#[dsl(extension = "cad")]
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadSnapshot {
     #[state(artifact)]
@@ -53,63 +54,7 @@ pub struct CadSnapshot {
     pub nodes: Vec<CadNode>,
 }
 
-//#region 🔖️ChildCodecPrimitives
-/// 🧪️ Real hex/bracket child-handle codec (mirrors `✳️object`/`✳️kit`'s own — the working reference
-/// for a composite subset's `enc_child`/`dec_child` helpers) — a handle is exactly two strings
-/// (`child_id`, the target's `ArtifactRef` flattened via `to_uri()`), never the child's own content.
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-pub(crate) fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
-}
-pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
-}
-
-/// 🔧️ Local `split_top_level`/`strip_brackets` (bracket-depth-aware split, `[...]` unwrap) — same
-/// shape as stdio's own `engine::triples` helpers, duplicated rather than imported since that
-/// module is private to the stdio crate.
-fn strip_brackets(s: &str) -> Result<&str, String> {
-    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
-}
-fn split_top_level(s: &str, sep: char) -> Vec<&str> {
-    if s.is_empty() {
-        return Vec::new();
-    }
-    let mut out = Vec::new();
-    let mut depth = 0i32;
-    let mut start = 0usize;
-    for (i, c) in s.char_indices() {
-        match c {
-            '[' => depth += 1,
-            ']' => depth -= 1,
-            c if c == sep && depth == 0 => {
-                out.push(&s[start..i]);
-                start = i + c.len_utf8();
-            }
-            _ => {}
-        }
-    }
-    out.push(&s[start..]);
-    out
-}
-
-pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
+//#region 🔖️ExactChildren
 fn exact_child<S>(child_id: String, target: store::os_io::ArtifactRef, subset: &str) -> Result<store::ArtifactChild<S>, String> {
     if child_id != target.artifact_id {
         return Err("cad child id must equal target artifact id".into());
@@ -119,213 +64,22 @@ fn exact_child<S>(child_id: String, target: store::os_io::ArtifactRef, subset: &
     }
     Ok(store::ArtifactChild::new(child_id, target))
 }
-pub(crate) fn dec_child<S>(s: &str, subset: &str) -> Result<store::ArtifactChild<S>, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    exact_child(dec_str(child_id)?, dec_ref(target)?, subset)
-}
-pub(crate) fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
-    match c {
-        Some(c) => enc_child(c),
-        None => "[]".to_string(),
-    }
-}
-pub(crate) fn dec_child_opt<S>(s: &str, subset: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
-    if s == "[]" {
-        return Ok(None);
-    }
-    Ok(Some(dec_child(s, subset)?))
-}
-pub(crate) fn enc_child_list<S>(items: &[store::ArtifactChild<S>]) -> String {
-    format!("[{}]", items.iter().map(enc_child).collect::<Vec<_>>().join(","))
-}
-pub(crate) fn dec_child_list<S>(s: &str, subset: &str) -> Result<Vec<store::ArtifactChild<S>>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|value| dec_child(value, subset)).collect()
-}
-//#endregion 🔖️ChildCodecPrimitives
 
-//#region 🔖️JsonFieldPrimitives
-/// 🧾️ `nodes`/`references_by_model_definition_id` are structured (`Vec<CadNode>` /
-/// `BTreeMap<String, Vec<CadReference>>`), `ToValue`/`FromValue` (no longer `Serialize`/
-/// `Deserialize` — see this file's own conversion). Round 1's schema restructuring added both
-/// fields to `CadSnapshot` but never wired them into `print_cad_snapshot_body`/
-/// `parse_cad_snapshot_body` — confirmed by a real `assert_document_text_round_trip`/
-/// `assert_document_pack_round_trip` failure (both silently dropped every reload), not a
-/// hypothetical gap. Fixed the same way `enc_str`/`dec_str` already hex-encode every other text
-/// field in this file: encode/decode as JSON text via `protocol::json::to_json_string`/
-/// `from_json_str` (the first-party `ToValue`/`FromValue` codec, no `serde_json` bridging), then
-/// hex-encode the JSON bytes — one more line-oriented field, no new wire primitive.
-fn enc_json<T: protocol::ToValue>(value: &T) -> String {
-    enc_str(&protocol::json::to_json_string(value))
-}
-fn dec_json<T: protocol::FromValue>(s: &str) -> Result<T, String> {
-    protocol::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
-}
-
-/// 🧾️ The binary codec's own twin of `enc_json`/`dec_json` — RAW JSON text (no `enc_str`/`dec_str`
-/// hex wrapping), since `write_str_lp`/`read_str_lp` already length-prefix the bytes and the
-/// binary format has no delimiter to escape, unlike the line-oriented text DSL above.
-fn json_of<T: protocol::ToValue>(value: &T) -> String {
-    protocol::json::to_json_string(value)
-}
-fn from_json<T: protocol::FromValue>(s: &str) -> Result<T, String> {
-    protocol::json::from_json_str(s).map_err(|e| e.to_string())
-}
-//#endregion 🔖️JsonFieldPrimitives
-
-//#region 🔖️TextPrimitives
-fn print_cad_snapshot_body(s: &CadSnapshot) -> String {
-    format!(
-        "schema={}\nid={}\nshapeModel={}\nbuildingModel={}\nenergyModel={}\nstructureClassicModel={}\ndrawings={}\nreferencesByModelDefinitionId={}\nnodes={}",
-        enc_str(&s.schema),
-        enc_str(&s.id),
-        enc_child_opt(&s.shape_model),
-        enc_child_opt(&s.building_model),
-        enc_child_opt(&s.energy_model),
-        enc_child_opt(&s.structure_classic_model),
-        enc_child_list(&s.drawings),
-        enc_json(&s.references_by_model_definition_id),
-        enc_json(&s.nodes),
-    )
-}
-fn parse_cad_snapshot_body(body: &str) -> Result<CadSnapshot, String> {
-    let mut snapshot = empty_cad_snapshot();
-    let mut saw_schema = false;
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("schema=") {
-            snapshot.schema = dec_str(rest)?;
-            saw_schema = true;
-        } else if let Some(rest) = line.strip_prefix("id=") {
-            snapshot.id = dec_str(rest)?;
-        } else if let Some(rest) = line.strip_prefix("shapeModel=") {
-            snapshot.shape_model = dec_child_opt(rest, "model")?;
-        } else if let Some(rest) = line.strip_prefix("buildingModel=") {
-            snapshot.building_model = dec_child_opt(rest, "model")?;
-        } else if let Some(rest) = line.strip_prefix("energyModel=") {
-            snapshot.energy_model = dec_child_opt(rest, "model")?;
-        } else if let Some(rest) = line.strip_prefix("structureClassicModel=") {
-            snapshot.structure_classic_model = dec_child_opt(rest, "model")?;
-        } else if let Some(rest) = line.strip_prefix("drawings=") {
-            snapshot.drawings = dec_child_list(rest, "drawing")?;
-        } else if let Some(rest) = line.strip_prefix("referencesByModelDefinitionId=") {
-            snapshot.references_by_model_definition_id = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("nodes=") {
-            snapshot.nodes = dec_json(rest)?;
-        } else {
-            return Err(format!("cad snapshot: unknown line {line:?}"));
-        }
+/// 🛡️ Every composed child handle must name its own target and the exact `s.stdio.semio@v1` subset.
+fn require_exact_children(s: &CadSnapshot) -> Result<(), String> {
+    for child in [&s.shape_model, &s.building_model, &s.energy_model, &s.structure_classic_model].into_iter().flatten() {
+        exact_child::<()>(child.child_id.clone(), child.target.clone(), "model")?;
     }
-    if !saw_schema {
-        return Err("cad snapshot: missing schema line".to_string());
+    for child in &s.drawings {
+        exact_child::<()>(child.child_id.clone(), child.target.clone(), "drawing")?;
     }
-    Ok(snapshot)
+    Ok(())
 }
-//#endregion 🔖️TextPrimitives
-
-//#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
-    write_str_lp(out, &r.to_uri());
-}
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
-}
-fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
-    write_str_lp(out, &c.child_id);
-    write_ref(out, &c.target);
-}
-fn read_child<S>(reader: &mut store::ByteReader<'_>, subset: &str) -> Result<store::ArtifactChild<S>, String> {
-    let child_id = read_str_lp(reader)?;
-    let target = read_ref(reader)?;
-    exact_child(child_id, target, subset)
-}
-fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
-    match c {
-        Some(c) => {
-            out.push(1);
-            write_child(out, c);
-        }
-        None => out.push(0),
-    }
-}
-fn read_child_opt<S>(reader: &mut store::ByteReader<'_>, subset: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(None),
-        _ => Ok(Some(read_child(reader, subset)?)),
-    }
-}
-fn write_child_list<S>(out: &mut Vec<u8>, items: &[store::ArtifactChild<S>]) {
-    store::pack_rt::write_varint_u64(out, items.len() as u64);
-    for item in items {
-        write_child(out, item);
-    }
-}
-fn read_child_list<S>(reader: &mut store::ByteReader<'_>, subset: &str) -> Result<Vec<store::ArtifactChild<S>>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut items = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        items.push(read_child(reader, subset)?);
-    }
-    Ok(items)
-}
-
-fn encode_cad_snapshot_binary(s: &CadSnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut out = vec![PACK_BINARY_FORMAT];
-    write_str_lp(&mut out, &s.schema);
-    write_str_lp(&mut out, &s.id);
-    write_child_opt(&mut out, &s.shape_model);
-    write_child_opt(&mut out, &s.building_model);
-    write_child_opt(&mut out, &s.energy_model);
-    write_child_opt(&mut out, &s.structure_classic_model);
-    write_child_list(&mut out, &s.drawings);
-    write_str_lp(&mut out, &json_of(&s.references_by_model_definition_id));
-    write_str_lp(&mut out, &json_of(&s.nodes));
-    out
-}
-fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<CadSnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
-        return Err(format!("unsupported pack format {format}"));
-    }
-    let mut snapshot = empty_cad_snapshot();
-    snapshot.schema = read_str_lp(&mut reader)?;
-    snapshot.id = read_str_lp(&mut reader)?;
-    snapshot.shape_model = read_child_opt(&mut reader, "model")?;
-    snapshot.building_model = read_child_opt(&mut reader, "model")?;
-    snapshot.energy_model = read_child_opt(&mut reader, "model")?;
-    snapshot.structure_classic_model = read_child_opt(&mut reader, "model")?;
-    snapshot.drawings = read_child_list(&mut reader, "drawing")?;
-    snapshot.references_by_model_definition_id = from_json(&read_str_lp(&mut reader)?)?;
-    snapshot.nodes = from_json(&read_str_lp(&mut reader)?)?;
-    Ok(snapshot)
-}
-//#endregion 🔖️BinaryPrimitives
+//#endregion 🔖️ExactChildren
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack, real hex/bracket text + LEB128 binary primitives —
-/// same upgrade `✳️object`/`✳️kit` made when they gained real `ArtifactChild<S>` slots (the old
-/// `dsl::DslRecord`-derive-driven `Self::__dsl_spec()` path cannot express a composed child slot,
-/// which has no `dsl::DslField` impl reachable from this crate).
+/// ✉️ `ArtifactDsl` and `ArtifactPack` are the derived spec-driven text and pack of the one
+/// `dsl::DslRecord` spec; both re-check every composed child's exact identity on decode.
 impl store::ArtifactDsl for CadSnapshot {
     const EXTENSION: &'static str = "cad";
     fn envelope_id() -> &'static str {
@@ -336,10 +90,13 @@ impl store::ArtifactDsl for CadSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_cad_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let snapshot = Self::__dsl_from_record(&record)?;
+        require_exact_children(&snapshot).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))?;
+        Ok(snapshot)
     }
     fn print_dsl(&self) -> String {
-        let body = print_cad_snapshot_body(self);
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -347,19 +104,24 @@ impl store::ArtifactDsl for CadSnapshot {
 
 impl store::ArtifactPack for CadSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_cad_snapshot_binary(self);
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        decode_cad_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        let snapshot = Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?;
+        require_exact_children(&snapshot).map_err(store::PackError::Schema)?;
+        Ok(snapshot)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 //#endregion 🔖️Snapshot
+

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePartKindDescription",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-part-kind-description",
-  "binaryTag": null,
+  "binaryTag": 3,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

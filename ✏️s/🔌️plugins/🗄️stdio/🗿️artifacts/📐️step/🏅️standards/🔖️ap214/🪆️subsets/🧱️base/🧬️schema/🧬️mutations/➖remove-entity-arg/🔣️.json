@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveEntityArg",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-entity-arg",
-  "binaryTag": null,
+  "binaryTag": 9,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

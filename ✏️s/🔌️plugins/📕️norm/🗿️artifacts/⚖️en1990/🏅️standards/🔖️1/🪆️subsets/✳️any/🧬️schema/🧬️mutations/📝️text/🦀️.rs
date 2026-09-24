@@ -150,19 +150,34 @@ fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Resul
     pack::json::from_json_str(text).map_err(|e| e.to_string())
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `En1990Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("../💾️binary/📡️.protocol.semio");
+const TAG_CHANGE_ANNEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-annex");
+const TAG_CHANGE_PERMANENT_ACTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-permanent-action");
+const TAG_CHANGE_RESISTANCE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-resistance");
+const TAG_CHANGE_CONSEQUENCE_CLASS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-consequence-class");
+const TAG_CHANGE_SEISMIC_ACTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-seismic-action");
+const TAG_INSERT_VARIABLE_ACTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-variable-action");
+const TAG_REMOVE_VARIABLE_ACTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-variable-action");
+const TAG_CHANGE_VARIABLE_ACTION_CATEGORY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-variable-action-category");
+const TAG_CHANGE_VARIABLE_ACTION_VALUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-variable-action-value");
+const TAG_REORDER_VARIABLE_ACTIONS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "reorder-variable-actions");
+//#endregion 🏷️WireTags
+
 impl protocol::OpBinary for En1990Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            En1990Mutation::ChangeAnnex(_) => 0,
-            En1990Mutation::ChangePermanentAction(_) => 1,
-            En1990Mutation::ChangeResistance(_) => 2,
-            En1990Mutation::ChangeConsequenceClass(_) => 3,
-            En1990Mutation::ChangeSeismicAction(_) => 4,
-            En1990Mutation::InsertVariableAction(_) => 5,
-            En1990Mutation::RemoveVariableAction(_) => 6,
-            En1990Mutation::ChangeVariableActionCategory(_) => 7,
-            En1990Mutation::ChangeVariableActionValue(_) => 8,
-            En1990Mutation::ReorderVariableActions(_) => 9,
+            En1990Mutation::ChangeAnnex(_) => TAG_CHANGE_ANNEX,
+            En1990Mutation::ChangePermanentAction(_) => TAG_CHANGE_PERMANENT_ACTION,
+            En1990Mutation::ChangeResistance(_) => TAG_CHANGE_RESISTANCE,
+            En1990Mutation::ChangeConsequenceClass(_) => TAG_CHANGE_CONSEQUENCE_CLASS,
+            En1990Mutation::ChangeSeismicAction(_) => TAG_CHANGE_SEISMIC_ACTION,
+            En1990Mutation::InsertVariableAction(_) => TAG_INSERT_VARIABLE_ACTION,
+            En1990Mutation::RemoveVariableAction(_) => TAG_REMOVE_VARIABLE_ACTION,
+            En1990Mutation::ChangeVariableActionCategory(_) => TAG_CHANGE_VARIABLE_ACTION_CATEGORY,
+            En1990Mutation::ChangeVariableActionValue(_) => TAG_CHANGE_VARIABLE_ACTION_VALUE,
+            En1990Mutation::ReorderVariableActions(_) => TAG_REORDER_VARIABLE_ACTIONS,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -199,47 +214,47 @@ impl protocol::OpBinary for En1990Mutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            0 => {
+            TAG_CHANGE_ANNEX => {
                 let new_annex = read_json_bin(&mut reader).map_err(|e| malformed("new_annex", reader.position(), e))?;
                 Ok(En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex }))
             }
-            1 => {
+            TAG_CHANGE_PERMANENT_ACTION => {
                 let new_g_k = read_json_bin(&mut reader).map_err(|e| malformed("new_g_k", reader.position(), e))?;
                 Ok(En1990Mutation::ChangePermanentAction(ChangePermanentAction { new_g_k }))
             }
-            2 => {
+            TAG_CHANGE_RESISTANCE => {
                 let new_resistance_kn = read_json_bin(&mut reader).map_err(|e| malformed("new_resistance_kn", reader.position(), e))?;
                 Ok(En1990Mutation::ChangeResistance(ChangeResistance { new_resistance_kn }))
             }
-            3 => {
+            TAG_CHANGE_CONSEQUENCE_CLASS => {
                 let new_consequence_class = read_json_bin(&mut reader).map_err(|e| malformed("new_consequence_class", reader.position(), e))?;
                 Ok(En1990Mutation::ChangeConsequenceClass(ChangeConsequenceClass { new_consequence_class }))
             }
-            4 => {
+            TAG_CHANGE_SEISMIC_ACTION => {
                 let new_seismic_a_ed_kn = read_json_bin(&mut reader).map_err(|e| malformed("new_seismic_a_ed_kn", reader.position(), e))?;
                 Ok(En1990Mutation::ChangeSeismicAction(ChangeSeismicAction { new_seismic_a_ed_kn }))
             }
-            5 => {
+            TAG_INSERT_VARIABLE_ACTION => {
                 let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 let category = read_json_bin(&mut reader).map_err(|e| malformed("category", reader.position(), e))?;
                 let value = read_json_bin(&mut reader).map_err(|e| malformed("value", reader.position(), e))?;
                 Ok(En1990Mutation::InsertVariableAction(InsertVariableAction { index, category, value }))
             }
-            6 => {
+            TAG_REMOVE_VARIABLE_ACTION => {
                 let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 Ok(En1990Mutation::RemoveVariableAction(RemoveVariableAction { index }))
             }
-            7 => {
+            TAG_CHANGE_VARIABLE_ACTION_CATEGORY => {
                 let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 let new_category = read_json_bin(&mut reader).map_err(|e| malformed("new_category", reader.position(), e))?;
                 Ok(En1990Mutation::ChangeVariableActionCategory(ChangeVariableActionCategory { index, new_category }))
             }
-            8 => {
+            TAG_CHANGE_VARIABLE_ACTION_VALUE => {
                 let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 let new_value = read_json_bin(&mut reader).map_err(|e| malformed("new_value", reader.position(), e))?;
                 Ok(En1990Mutation::ChangeVariableActionValue(ChangeVariableActionValue { index, new_value }))
             }
-            9 => {
+            TAG_REORDER_VARIABLE_ACTIONS => {
                 let from = read_json_bin(&mut reader).map_err(|e| malformed("from", reader.position(), e))?;
                 let to = read_json_bin(&mut reader).map_err(|e| malformed("to", reader.position(), e))?;
                 Ok(En1990Mutation::ReorderVariableActions(ReorderVariableActions { from, to }))

@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceDailyScheduleHourlyValues",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-daily-schedule-hourly-values",
-  "binaryTag": null,
+  "binaryTag": 257,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

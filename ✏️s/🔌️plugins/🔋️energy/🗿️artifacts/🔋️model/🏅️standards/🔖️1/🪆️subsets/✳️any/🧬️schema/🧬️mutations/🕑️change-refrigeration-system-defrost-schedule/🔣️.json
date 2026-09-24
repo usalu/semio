@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeRefrigerationSystemDefrostSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-refrigeration-system-defrost-schedule",
-  "binaryTag": null,
+  "binaryTag": 230,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

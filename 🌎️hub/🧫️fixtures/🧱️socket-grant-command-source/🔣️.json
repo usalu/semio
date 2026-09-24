@@ -104,22 +104,6 @@
       ]
     },
     {
-      "path": "🌎️hub/🧪️tests/🧱️socket-grant-command-source/🏃️execution/🟦️.ts",
-      "language": "typescript",
-      "declarations": [
-        "HubSocketGrantCommandSourceScript"
-      ],
-      "imports": [],
-      "rootImports": [
-        "HubSocketGrantCommandSourceScript"
-      ],
-      "contextChain": [
-        "hub-tests",
-        "hub-socket-grant-command-source-test",
-        "hub-socket-grant-command-source-execution"
-      ]
-    },
-    {
       "path": "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs",
       "language": "rust",
       "declarations": [
@@ -203,11 +187,6 @@
       "kindId": "hub-socket-grant-command-source-test"
     },
     {
-      "directoryName": "🏃️execution",
-      "parentKindId": "hub-socket-grant-command-source-test",
-      "kindId": "hub-socket-grant-command-source-execution"
-    },
-    {
       "directoryName": "🧬️schema",
       "parentKindId": "hub",
       "kindId": "hub-schema"
@@ -243,7 +222,6 @@
         "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/📋️native-law-plan/🟦️.ts",
         "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts",
         "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs",
-        "{workspaceRoot}/🌎️hub/🧪️tests/🧱️socket-grant-command-source/🏃️execution/🟦️.ts",
         "{workspaceRoot}/🌎️hub/🧬️schema/🧱️socket-grant-command-source/🔣️.json",
         "{workspaceRoot}/🌎️hub/🧫️fixtures/🧱️socket-grant-command-source/🔣️.json",
         "{workspaceRoot}/🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts",

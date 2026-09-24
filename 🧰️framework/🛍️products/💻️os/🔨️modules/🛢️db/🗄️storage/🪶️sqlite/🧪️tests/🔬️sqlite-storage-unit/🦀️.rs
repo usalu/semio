@@ -120,9 +120,7 @@ mod tests {
         }
 
         assert_eq!(fixture["mutations"], serde_json::json!(["create", "append", "sync", "seal", "truncateTail", "delete"]));
-        let cases = fixture["cases"].as_array().unwrap();
-        assert!(cases.iter().any(|row| row["backend"] == "sqlite" && row["name"] == "canonical-alias-conflict" && row["expect"] == "conflictThenAcquire"));
-        assert!(cases.iter().any(|row| row["backend"] == "sqlite" && row["name"] == "crash-releases-sidecar" && row["expect"] == "reacquire"));
+        assert!(fixture["backends"].as_array().unwrap().iter().any(|row| row["backend"] == "sqlite" && row["mechanism"] == "sidecar-file-lock" && row["crashRelease"] == "immediate"));
 
         let base = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();

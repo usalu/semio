@@ -68,7 +68,7 @@ pub const ARTIFACT_CREATION_DEADLINE_MS: u64 = 30_000;
 /// burned 130–145 % CPU throughout (slice HC1, `🗑️generated/hc1-create-sampled-1.txt`). The guest
 /// codec call feeds this bound its own fuel progress, so an interpreter that keeps stepping keeps
 /// the creation alive and one that stops stepping is named within this span.
-pub const ARTIFACT_CREATION_STALL_BOUND_MS: u64 = 30_000;
+pub const ARTIFACT_CREATION_STALL_BOUND_MS: u64 = 180_000;
 pub const ARTIFACT_CREATION_PAIR_MAX_BYTES: usize = 1024 * 1024;
 pub const ARTIFACT_CREATION_FACTS_MAX: usize = 3;
 

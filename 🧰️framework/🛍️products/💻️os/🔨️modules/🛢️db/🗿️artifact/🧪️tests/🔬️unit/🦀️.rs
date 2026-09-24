@@ -22,8 +22,10 @@ fn artifact_runner_terminal_authority_latch_preserves_external_job_and_one_resum
         close_runner: std::sync::Mutex::new(None),
         retirement_maintenance: std::sync::Mutex::new(None),
         close_error: std::sync::Mutex::new(None),
-        close_fault_once: std::sync::atomic::AtomicBool::new(false),
+        close_retry: std::sync::Mutex::new(ArtifactCloseRetry::clear()),
+        close_faults: std::sync::atomic::AtomicUsize::new(0),
         close_polls: std::sync::atomic::AtomicUsize::new(0),
+        retirement_turns: std::sync::atomic::AtomicUsize::new(0),
         active_history: std::sync::atomic::AtomicBool::new(false),
         driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::Parked as u8),
         terminal: std::sync::atomic::AtomicBool::new(false),
@@ -79,8 +81,10 @@ fn artifact_runner_terminal_resume_refusal_returns_exact_cursor_for_close() {
         close_runner: std::sync::Mutex::new(None),
         retirement_maintenance: std::sync::Mutex::new(None),
         close_error: std::sync::Mutex::new(None),
-        close_fault_once: std::sync::atomic::AtomicBool::new(false),
+        close_retry: std::sync::Mutex::new(ArtifactCloseRetry::clear()),
+        close_faults: std::sync::atomic::AtomicUsize::new(0),
         close_polls: std::sync::atomic::AtomicUsize::new(0),
+        retirement_turns: std::sync::atomic::AtomicUsize::new(0),
         active_history: std::sync::atomic::AtomicBool::new(false),
         driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::Parked as u8),
         terminal: std::sync::atomic::AtomicBool::new(false),
@@ -124,16 +128,15 @@ async fn artifact_authority_drop_transfers_parked_terminal_job_to_registered_clo
     *authority.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) =
         Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, Box::new(|| panic!("parked terminal job must be retired, not executed after authority Drop"))));
     let done = authority._done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("artifact retirement fixture owns its exact terminal acknowledgement");
+    let retirement = authority.retirement.as_ref().expect("artifact retirement fixture owns its reservation");
+    let (index, generation) = (retirement.index, retirement.generation);
+    let handoff = authority.handoff.clone();
     drop(authority);
     done.await.expect("registered authority retirement did not produce its terminal acknowledgement");
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
-    while ARTIFACT_RUNNER_RETIREMENT_GENERATIONS.iter().any(|generation| generation.load(std::sync::atomic::Ordering::Acquire) != 0) {
-        assert!(std::time::Instant::now() < deadline, "registered authority retirement did not release its exact callback slot");
-        semio_framework_async::yield_once().await;
-    }
+    await_retirement_slot_release(&handoff, index, generation, std::time::Instant::now() + std::time::Duration::from_secs(10)).await;
     assert_eq!(pool.shutdown(), Ok(()));
     drop(storage);
-    assert!(ARTIFACT_RUNNER_RETIREMENT_GENERATIONS.iter().all(|generation| generation.load(std::sync::atomic::Ordering::Acquire) == 0));
+    assert_ne!(ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire), generation);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -147,8 +150,10 @@ async fn artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_re
         close_runner: std::sync::Mutex::new(None),
         retirement_maintenance: std::sync::Mutex::new(None),
         close_error: std::sync::Mutex::new(None),
-        close_fault_once: std::sync::atomic::AtomicBool::new(false),
+        close_retry: std::sync::Mutex::new(ArtifactCloseRetry::clear()),
+        close_faults: std::sync::atomic::AtomicUsize::new(0),
         close_polls: std::sync::atomic::AtomicUsize::new(0),
+        retirement_turns: std::sync::atomic::AtomicUsize::new(0),
         active_history: std::sync::atomic::AtomicBool::new(false),
         driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::ClosingReady as u8),
         terminal: std::sync::atomic::AtomicBool::new(false),
@@ -191,46 +196,111 @@ async fn artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_re
     assert_eq!(pool.shutdown(), Ok(()));
 }
 
+async fn await_retirement_slot_release(handoff: &ArtifactRunnerHandoff, index: usize, generation: u64, deadline: std::time::Instant) {
+    while ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire) == generation {
+        assert!(
+            std::time::Instant::now() < deadline,
+            "artifact retirement did not release its slot: driver={} terminal={} close_error={:?} retry={:?} turns={} polls={} maintenance={}",
+            handoff.driver.load(std::sync::atomic::Ordering::Acquire),
+            handoff.terminal.load(std::sync::atomic::Ordering::Acquire),
+            handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner),
+            handoff.close_retry_progress(),
+            handoff.retirement_turns.load(std::sync::atomic::Ordering::Acquire),
+            handoff.close_polls.load(std::sync::atomic::Ordering::Acquire),
+            handoff.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(),
+        );
+        semio_framework_async::yield_once().await;
+    }
+}
+
 #[semio_framework_async_macros::async_test]
-async fn artifact_engine_close_fault_retains_exact_runner_until_explicit_maintenance_retry() {
+async fn artifact_engine_close_fault_retries_on_bounded_timer_backoff_until_terminal() {
     let (authority, storage, pool) = journal_authority().await;
     let handoff = authority.handoff.clone();
     let retirement = authority.retirement.as_ref().expect("artifact engine close-fault fixture owns one retirement reservation");
-    let index = retirement.index;
-    let generation = retirement.generation;
+    let (index, generation) = (retirement.index, retirement.generation);
     let done = authority._done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("artifact engine close-fault fixture owns its terminal acknowledgement");
-    handoff.close_fault_once.store(true, std::sync::atomic::Ordering::Release);
+    handoff.close_faults.store(3, std::sync::atomic::Ordering::Release);
     drop(authority);
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
-    loop {
-        let retained = ARTIFACT_RUNNER_RETIREMENTS[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(|owner| owner.generation == generation && Arc::ptr_eq(&owner.handoff, &handoff));
-        if retained && matches!(&*handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner), Some(DbError::Io(detail)) if detail == "injected artifact engine close fault") {
-            break;
-        }
-        assert!(std::time::Instant::now() < deadline, "artifact engine close fault did not retain its exact runner cursor");
+    done.await.expect("the pool timer did not drive the faulted close to its terminal acknowledgement");
+    await_retirement_slot_release(&handoff, index, generation, std::time::Instant::now() + std::time::Duration::from_secs(10)).await;
+    assert!(handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+    let retry = handoff.close_retry.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    assert_eq!((retry.state, retry.attempts), (ArtifactCloseRetryState::Clear, 0), "a healthy close step clears the retry owner");
+    drop(retry);
+    assert_eq!(handoff.close_faults.load(std::sync::atomic::Ordering::Acquire), 0);
+    assert_eq!(pool.shutdown(), Ok(()));
+    drop(storage);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn artifact_engine_close_fault_exhausts_its_budget_then_polls_only_on_readmission() {
+    let (authority, storage, pool) = journal_authority().await;
+    let handoff = authority.handoff.clone();
+    let retirement = authority.retirement.as_ref().expect("artifact engine close-fault fixture owns one retirement reservation");
+    let (index, generation) = (retirement.index, retirement.generation);
+    let done = authority._done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("artifact engine close-fault fixture owns its terminal acknowledgement");
+    handoff.close_faults.store(usize::MAX, std::sync::atomic::Ordering::Release);
+    drop(authority);
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+    while artifact_close_retry_progress(&pool).is_none_or(|progress| !progress.is_blocked()) {
+        assert!(std::time::Instant::now() < deadline, "faulted close never exhausted its bounded retry budget: {:?}", handoff.close_retry_progress());
         semio_framework_async::yield_once().await;
     }
-    let retained_polls = handoff.close_polls.load(std::sync::atomic::Ordering::Acquire);
+    let exhausted = artifact_close_retry_progress(&pool).unwrap();
+    assert_eq!(exhausted, ArtifactCloseRetryProgress { state: ArtifactCloseRetryState::Exhausted, attempts: ARTIFACT_CLOSE_RETRY_LIMIT, limit: ARTIFACT_CLOSE_RETRY_LIMIT });
+    let polls = handoff.close_polls.load(std::sync::atomic::Ordering::Acquire);
+    assert_eq!(polls, 1 + usize::from(ARTIFACT_CLOSE_RETRY_LIMIT), "one initial poll plus exactly one poll per armed retry");
+    handoff.request_retirement_maintenance();
     let (barrier_tx, barrier_rx) = std::sync::mpsc::sync_channel(1);
-    pool.submit_at(pool.now_ms(), semio_framework_async::Lane::UserVisible, Box::new(move || barrier_tx.send(()).unwrap()));
+    pool.submit_at(pool.now_ms() + ARTIFACT_CLOSE_RETRY_CAP_MS, semio_framework_async::Lane::UserVisible, Box::new(move || barrier_tx.send(()).unwrap()));
     barrier_rx.recv().unwrap();
-    assert_eq!(handoff.close_polls.load(std::sync::atomic::Ordering::Acquire), retained_polls, "faulted artifact engine close was repolled without explicit maintenance admission");
+    assert_eq!(handoff.close_polls.load(std::sync::atomic::Ordering::Acquire), polls, "an exhausted faulted close was re-polled without re-admission");
     assert_eq!(ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire), generation);
     assert_eq!(pool.shutdown(), Err(semio_framework_async::WorkerPoolShutdownError::Busy { retained_uses: 1 }));
-    handoff.request_retirement_maintenance();
-    done.await.expect("explicit artifact engine close retry did not produce one terminal acknowledgement");
-    while ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire) == generation {
-        assert!(std::time::Instant::now() < deadline, "explicit artifact engine close retry did not release its retirement slot");
+    handoff.close_faults.store(0, std::sync::atomic::Ordering::Release);
+    assert_eq!(artifact_close_retry_readmit(&pool), 1);
+    done.await.expect("re-admitted close did not reach its terminal acknowledgement");
+    await_retirement_slot_release(&handoff, index, generation, deadline).await;
+    assert!(artifact_close_retry_progress(&pool).is_none());
+    assert_eq!(pool.shutdown(), Ok(()));
+    drop(storage);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn artifact_engine_close_fault_cancel_stops_the_timer_until_readmission() {
+    let (authority, storage, pool) = journal_authority().await;
+    let handoff = authority.handoff.clone();
+    let retirement = authority.retirement.as_ref().expect("artifact engine close-fault fixture owns one retirement reservation");
+    let (index, generation) = (retirement.index, retirement.generation);
+    let done = authority._done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("artifact engine close-fault fixture owns its terminal acknowledgement");
+    handoff.close_faults.store(usize::MAX, std::sync::atomic::Ordering::Release);
+    drop(authority);
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+    while artifact_close_retry_cancel(&pool) == 0 {
+        assert!(std::time::Instant::now() < deadline, "faulted close never scheduled its first retry");
         semio_framework_async::yield_once().await;
     }
-    assert!(handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
-    assert!(handoff.close_polls.load(std::sync::atomic::Ordering::Acquire) > retained_polls);
+    let cancelled = handoff.close_retry_progress().expect("cancelled close keeps its fault");
+    assert_eq!(cancelled.state, ArtifactCloseRetryState::Cancelled);
+    let polls = handoff.close_polls.load(std::sync::atomic::Ordering::Acquire);
+    let (barrier_tx, barrier_rx) = std::sync::mpsc::sync_channel(1);
+    pool.submit_at(pool.now_ms() + ARTIFACT_CLOSE_RETRY_CAP_MS, semio_framework_async::Lane::UserVisible, Box::new(move || barrier_tx.send(()).unwrap()));
+    barrier_rx.recv().unwrap();
+    assert_eq!(handoff.close_polls.load(std::sync::atomic::Ordering::Acquire), polls, "a cancelled retry timer re-polled the faulted close");
+    assert_eq!(ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire), generation);
+    handoff.close_faults.store(0, std::sync::atomic::Ordering::Release);
+    assert_eq!(artifact_close_retry_readmit(&pool), 1);
+    done.await.expect("re-admitted close did not reach its terminal acknowledgement");
+    await_retirement_slot_release(&handoff, index, generation, deadline).await;
     assert_eq!(pool.shutdown(), Ok(()));
     drop(storage);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_authority_drop_reuses_registered_retirement_slot_beyond_capacity() {
+    const ARTIFACT_RETIREMENT_LIVENESS_WATCHDOG: std::time::Duration = std::time::Duration::from_secs(60);
+    const ARTIFACT_RETIREMENT_EVENT_TURN_BUDGET: usize = 96;
     fn idle(_: [u64; 2]) -> semio_framework_async::WorkerMaintenanceStep {
         semio_framework_async::WorkerMaintenanceStep::Idle
     }
@@ -254,12 +324,14 @@ async fn artifact_authority_drop_reuses_registered_retirement_slot_beyond_capaci
         )
         .await
         .unwrap();
+        let handoff = authority.handoff.clone();
+        let retirement = authority.retirement.as_ref().expect("spawned authority owns its retirement reservation");
+        let (index, generation) = (retirement.index, retirement.generation);
         drop(authority);
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
-        while ARTIFACT_RUNNER_RETIREMENT_GENERATIONS.iter().any(|generation| generation.load(std::sync::atomic::Ordering::Acquire) != 0) {
-            assert!(std::time::Instant::now() < deadline, "artifact authority retirement did not release its callback slot");
-            semio_framework_async::yield_once().await;
-        }
+        let deadline = std::time::Instant::now() + ARTIFACT_RETIREMENT_LIVENESS_WATCHDOG;
+        await_retirement_slot_release(&handoff, index, generation, deadline).await;
+        let turns = handoff.retirement_turns.load(std::sync::atomic::Ordering::Acquire);
+        assert!(turns <= ARTIFACT_RETIREMENT_EVENT_TURN_BUDGET, "dropped authority retirement took {turns} hook turns: the hook re-requested itself instead of waking on progress");
         let wal = storage.wal().await;
         let writer = loop {
             match wal.acquire_writer(&core).await {
@@ -297,7 +369,6 @@ async fn artifact_authority_drop_reuses_registered_retirement_slot_beyond_capaci
         semio_framework_async::yield_once().await;
     }
     assert_eq!(pool.shutdown(), Ok(()));
-    eprintln!("[DEBUG] artifact authority Drop reused its self-retiring maintenance slot beyond the fixed 64-owner capacity");
 }
 
 #[test]
@@ -312,8 +383,10 @@ fn artifact_runner_terminal_close_returns_exact_cursor_until_retained_wake() {
         close_runner: std::sync::Mutex::new(None),
         retirement_maintenance: std::sync::Mutex::new(None),
         close_error: std::sync::Mutex::new(None),
-        close_fault_once: std::sync::atomic::AtomicBool::new(false),
+        close_retry: std::sync::Mutex::new(ArtifactCloseRetry::clear()),
+        close_faults: std::sync::atomic::AtomicUsize::new(0),
         close_polls: std::sync::atomic::AtomicUsize::new(0),
+        retirement_turns: std::sync::atomic::AtomicUsize::new(0),
         active_history: std::sync::atomic::AtomicBool::new(true),
         driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::Parked as u8),
         terminal: std::sync::atomic::AtomicBool::new(false),
@@ -361,8 +434,10 @@ fn artifact_runner_closing_poll_waits_for_retained_wake_before_next_turn() {
         close_runner: std::sync::Mutex::new(None),
         retirement_maintenance: std::sync::Mutex::new(None),
         close_error: std::sync::Mutex::new(None),
-        close_fault_once: std::sync::atomic::AtomicBool::new(false),
+        close_retry: std::sync::Mutex::new(ArtifactCloseRetry::clear()),
+        close_faults: std::sync::atomic::AtomicUsize::new(0),
         close_polls: std::sync::atomic::AtomicUsize::new(0),
+        retirement_turns: std::sync::atomic::AtomicUsize::new(0),
         active_history: std::sync::atomic::AtomicBool::new(true),
         driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::ClosingPolling as u8),
         terminal: std::sync::atomic::AtomicBool::new(false),
@@ -392,9 +467,7 @@ async fn artifact_open_ignores_neutral_aborted_command_snapshot_and_cas() {
     assert_eq!(engine.frontier.head_seq, 0);
     assert!(engine.state.values.is_empty());
     assert!(engine.applied.is_empty());
-    while engine.wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    engine.wal.close().await.unwrap();
     while engine.state.values.close_step().unwrap() {
         semio_framework_async::yield_once().await;
     }
@@ -424,12 +497,15 @@ async fn artifact_engine_create_rejection_propagates_exact_wal_release_owner() {
 }
 
 fn history_construction_test_lock() -> std::sync::MutexGuard<'static, ()> {
-    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    history_capacity_test_lock()
 }
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_history_replay_uses_neutral_committed_inventory_and_retires_every_owner() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_history_replay_uses_neutral_committed_inventory_and_retires_every_owner") {
+        return;
+    }
+    let _history_capacity = history_construction_test_lock();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for (name, compacted, hole) in [
         ("high-water-across-segments", false, false),
@@ -471,6 +547,10 @@ async fn artifact_history_replay_uses_neutral_committed_inventory_and_retires_ev
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_history_replay_projects_real_committed_batch_and_cancels_owned_sources() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_history_replay_projects_real_committed_batch_and_cancels_owned_sources") {
+        return;
+    }
+    let _history_capacity = history_construction_test_lock();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let projection = &fixture["historyProjection"];
     let mut engine = ArtifactEngine::create_retained(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).await.unwrap();
@@ -529,9 +609,7 @@ async fn artifact_history_replay_projects_real_committed_batch_and_cancels_owned
         assert!(replay.terminal_is_empty());
         eprintln!("[DEBUG] history cancelled and retired authenticated source at {checkpoint}");
     }
-    while engine.wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    engine.wal.close().await.unwrap();
     while engine.state.values.close_step().unwrap() {
         semio_framework_async::yield_once().await;
     }
@@ -540,6 +618,10 @@ async fn artifact_history_replay_projects_real_committed_batch_and_cancels_owned
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_history_and_opener_reject_neutral_inner_documents_and_frontier_order() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_history_and_opener_reject_neutral_inner_documents_and_frontier_order") {
+        return;
+    }
+    let _history_capacity = history_construction_test_lock();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for row in fixture["historyProjection"]["rejections"].as_array().unwrap() {
         let backing = storage().await;
@@ -578,9 +660,7 @@ async fn artifact_history_and_opener_reject_neutral_inner_documents_and_frontier
             Err(_) => false,
         };
         assert!(replay.terminal_is_empty());
-        while engine.wal.close_step().unwrap() {
-            semio_framework_async::yield_once().await;
-        }
+        engine.wal.close().await.unwrap();
         while engine.state.values.close_step().unwrap() {
             semio_framework_async::yield_once().await;
         }
@@ -589,9 +669,7 @@ async fn artifact_history_and_opener_reject_neutral_inner_documents_and_frontier
         let rejected = match ArtifactEngine::open_retained(document_id().await, backing, ArtifactEngineConfig::default(), 2).await {
             Err(rejected) => matches!(rejected_engine_open_error(rejected).await, DbError::Corrupt(_)),
             Ok((mut engine, _)) => {
-                while engine.wal.close_step().unwrap() {
-                    semio_framework_async::yield_once().await;
-                }
+                engine.wal.close().await.unwrap();
                 while engine.state.values.close_step().unwrap() {
                     semio_framework_async::yield_once().await;
                 }
@@ -605,6 +683,9 @@ async fn artifact_history_and_opener_reject_neutral_inner_documents_and_frontier
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_are_lossless() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_are_lossless") {
+        return;
+    }
     while artifact_state_retirement_maintenance_step().unwrap() {}
     let accepted_cancel = StdArc::new(std::sync::atomic::AtomicBool::new(false));
     let mut accepted_control = db_state::StateCursorControl::new(accepted_cancel, std::time::Instant::now() + std::time::Duration::from_secs(30), 8).unwrap();
@@ -951,9 +1032,7 @@ async fn open_replays_the_wal_and_reconstructs_state_and_frontier_identically() 
         let count = stored_json(engine.get("count").await.unwrap().unwrap()).await;
         assert!(store::pack_rt::json_values_equal(&count, &serde_json::json!(2)));
         let frontier = engine.frontier().await;
-        while engine.wal.close_step().unwrap() {
-            semio_framework_async::yield_once().await;
-        }
+        engine.wal.close().await.unwrap();
         while engine.state.values.close_step().unwrap() {
             semio_framework_async::yield_once().await;
         }
@@ -971,9 +1050,7 @@ async fn open_replays_the_wal_and_reconstructs_state_and_frontier_identically() 
     assert_eq!(name, serde_json::json!("hello"));
     let count: serde_json::Value = stored_json(reopened.get("count").await.unwrap().unwrap()).await;
     assert_eq!(count, before_count);
-    while reopened.wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    reopened.wal.close().await.unwrap();
     while reopened.state.values.close_step().unwrap() {
         semio_framework_async::yield_once().await;
     }
@@ -1044,6 +1121,28 @@ async fn resubmitting_the_same_batch_returns_the_cached_receipt_without_advancin
 
     assert_eq!(first, second);
     assert_eq!(engine.frontier().await, frontier_after_first, "a deduped resubmit must not move the frontier");
+}
+/// 🪪️ Fixture law `🧫️fixtures/🪪️mutation-id-collision`: a replayed id is idempotent only while its
+/// content matches the committed envelope; a colliding id is refused instead of silently dropped.
+#[semio_framework_async_macros::async_test]
+async fn a_committed_mutation_id_replays_idempotently_but_refuses_colliding_content() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️mutation-id-collision/🔣️.json")).unwrap();
+    let row_envelope = |row: &serde_json::Value| db_actor::block_on(envelope(row["id"].as_str().unwrap(), &[], row["actor"].as_str().unwrap(), &[(row["path"].as_str().unwrap(), row["value"].clone())]));
+    let mut engine = ArtifactEngine::create(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).unwrap();
+    engine.submit(CommandBatch::new(vec![row_envelope(&fixture["committed"])]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
+    for (tick, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
+        let name = case["name"].as_str().unwrap();
+        let before = engine.frontier().await;
+        let outcome = engine.submit(CommandBatch::new(vec![row_envelope(case)]).await.unwrap(), SubmitOptions::default(), tick as u64 + 1).await;
+        let after = engine.frontier().await;
+        match case["outcome"].as_str().unwrap() {
+            "replayed" => assert!(outcome.is_ok() && after == before, "{name}"),
+            "conflict" => assert!(matches!(outcome, Err(DbError::Conflict(_))) && after == before, "{name}: {outcome:?}"),
+            "committed" => assert!(outcome.is_ok() && after.commit_seq == before.commit_seq + 1, "{name}"),
+            other => panic!("unknown fixture outcome {other}"),
+        }
+        assert_eq!(after.head_seq, case["headSeq"].as_u64().unwrap(), "{name}");
+    }
 }
 //#endregion 🔖️Deps + Dedupe
 
@@ -1329,9 +1428,7 @@ async fn document_authority_durable_group_journal_commits_one_exact_fsync_event(
     assert_eq!(report.commands_replayed, 1);
     let reopened_snapshot = reopened.checkpoint_publication_snapshot().await;
     assert_eq!(reopened_snapshot, ordinary_snapshot, "reopen must reconstruct the exact Event-plus-Command publication frontier");
-    while reopened.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    reopened.close().await.unwrap();
     drop(reopened);
 
     let wal_facet = storage.wal().await;
@@ -1368,7 +1465,7 @@ async fn document_authority_durable_group_journal_commits_one_exact_fsync_event(
     assert_eq!(witness.record.decision_sha256(), decision_sha256);
     assert_eq!(receipt.transaction_id, 1);
     let source = include_str!("../../🦀️.rs");
-    let witness_api = &source[source.find("pub struct ArtifactCommittedDurableGroupDecisionV1").unwrap()..source.find("pub(crate) fn committed_durable_group_decision_from_transaction").unwrap()];
+    let witness_api = &source[source.find("pub struct ArtifactCommittedDurableGroupDecisionV1").unwrap()..source.find("pub(crate) async fn committed_durable_group_decision_from_transaction").unwrap()];
     assert!(witness_api.contains("into_store_owned_recovery") && witness_api.contains("take_rejected_terminal"));
     assert!(!witness_api.contains("fn record(&self)") && !witness_api.contains("fn into_record("));
     assert!(!witness_api.contains("fn cancel("));
@@ -1562,6 +1659,46 @@ async fn document_authority_submits_and_queries_over_finite_pool_turns() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn document_authority_close_drains_pending_group_commit_for_every_durability_class() {
+    for durability in [DurabilityClass::Memory, DurabilityClass::Os, DurabilityClass::Fsync] {
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
+        let storage = storage().await;
+        let reopen_storage = storage.clone();
+        let document = document_id().await;
+        let reopen_document = document.clone();
+        let authority = ArtifactAuthority::spawn(pool.clone(), move || async move { ArtifactEngine::create_retained(document, storage, ArtifactEngineConfig::default(), 0).await.map(Box::new) }, MailboxCapacities::uniform(16)).await.unwrap();
+        let batch = CommandBatch::new(vec![envelope("close-drain", &[], "alice", &[("name", serde_json::json!("kept"))]).await]).await.unwrap();
+        let receipt = authority.submit(batch, SubmitOptions { durability, ..Default::default() }, 0).await.unwrap();
+        assert_eq!(receipt.frontier.head_seq, 1);
+        let mut steps = 0usize;
+        while !authority.shutdown_step() {
+            steps += 1;
+            assert!(steps < 100_000, "{durability:?} close parked: {}", authority.shutdown_debug_witness());
+            semio_framework_async::yield_once().await;
+        }
+        assert!(authority.handoff.close_error.lock().unwrap().is_none());
+        drop(authority);
+        let (engine, report) = ArtifactEngine::<AllowAll, NullVersionGraph>::open_retained(reopen_document, reopen_storage, ArtifactEngineConfig::default(), 1).await.unwrap();
+        assert_eq!(report.torn_tail_bytes, 0);
+        assert_eq!(engine.frontier.head_seq, 1, "{durability:?} close must make the acknowledged transaction durable");
+        let mut engine = engine;
+        engine.close().await.unwrap();
+        assert_eq!(pool.shutdown(), Ok(()));
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn artifact_engine_submit_future_stays_within_the_worker_stack_budget() {
+    let mut engine = ArtifactEngine::create_retained(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).await.unwrap();
+    let batch = CommandBatch::new(vec![envelope("frame-budget", &[], "alice", &[("name", serde_json::json!("x"))]).await]).await.unwrap();
+    let submit = engine.submit(batch, SubmitOptions::default(), 0);
+    assert!(std::mem::size_of_val(&submit) <= 512 * 1024, "submit future reserves {} B; fixed-capacity owners must stay boxed off the poll stack", std::mem::size_of_val(&submit));
+    drop(submit);
+    assert!(size_of::<db_wal::WalRecordBatch>() <= 32 && size_of::<db_index::RunEntries>() <= 32);
+    engine.close().await.unwrap();
+}
+
+#[semio_framework_async_macros::async_test]
 async fn document_authority_spawn_propagates_a_build_failure_synchronously() {
     let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
     let result = ArtifactAuthority::spawn(
@@ -1579,6 +1716,10 @@ async fn document_authority_spawn_propagates_a_build_failure_synchronously() {
 
 #[test]
 fn artifact_history_backend_token_crc_fault_retire_1024_pages_one_grant_each() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_history_backend_token_crc_fault_retire_1024_pages_one_grant_each") {
+        return;
+    }
+    let _history_capacity = history_construction_test_lock();
     let mut reservation = HistoryReplayReservation::try_new().unwrap();
     for _ in 0..HISTORY_REPLAY_SEGMENT_PAGES {
         reservation.retain_source_page(vec![0]).unwrap();
@@ -1597,14 +1738,19 @@ fn artifact_history_backend_token_crc_fault_retire_1024_pages_one_grant_each() {
     }
     assert!(cursor.terminal_is_empty());
     let replay = include_str!("../../🦀️.rs");
-    for fault in ["history backend page ownership", "history frame CRC mismatch", "history envelope has trailing bytes"] {
+    for fault in ["history backend page ownership", "history envelope has trailing bytes", "history source finished without authentication"] {
         assert!(replay.contains(fault), "missing retained fault source {fault}");
     }
     assert!(replay.contains("HistoryReplayTransition::FaultRetire"));
+    assert!(include_str!("../../../📝️wal/🦀️.rs").contains("wal chain crc or frame length differs"), "history CRC faults are authenticated by the WAL chain");
 }
 
 #[test]
 fn artifact_history_scratch_result_boundary_plus_one_preserves_exact_owner() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_history_scratch_result_boundary_plus_one_preserves_exact_owner") {
+        return;
+    }
+    let _history_capacity = history_construction_test_lock();
     let reservation = HistoryReplayReservation::try_new().unwrap();
     let first_result_owner = reservation.result_pages[0].as_ref().unwrap().as_ptr();
     assert_eq!(reservation.source_pages.len(), HISTORY_REPLAY_SEGMENT_PAGES as usize);
@@ -1628,6 +1774,9 @@ fn artifact_history_scratch_result_boundary_plus_one_preserves_exact_owner() {
 
 #[test]
 fn artifact_history_reservation_construction_fault_cap_plus_one_and_each_page_retire_one_owner() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_history_reservation_construction_fault_cap_plus_one_and_each_page_retire_one_owner") {
+        return;
+    }
     let _guard = history_construction_test_lock();
     for failure_after in [0, 1, HISTORY_REPLAY_RESULT_PAGES / 2, HISTORY_REPLAY_RESULT_PAGES - 1, HISTORY_REPLAY_RESULT_PAGES] {
         let mut fault = HistoryReplayReservation::try_new_with_result_page_failure(failure_after).unwrap_err();
@@ -1668,7 +1817,8 @@ fn artifact_history_reservation_construction_fault_cap_plus_one_and_each_page_re
         {
             let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let slot = &mut registry.slots[token.slot];
-            slot.cursor = Some(close);
+            let mut claimed = slot.cursor.replace(close).expect("construction claim installs its exact empty owner");
+            while claimed.close_step() {}
         }
         let mut fault = HistoryReplayReservationConstructionFault { token: Some(token), unregistered_error: None };
         let mut retired_pages = 0;
@@ -1688,6 +1838,9 @@ fn artifact_history_reservation_construction_fault_cap_plus_one_and_each_page_re
 
 #[test]
 fn artifact_history_unchecked_construction_error_and_checked_out_drop_hand_back_exact_pages() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_history_unchecked_construction_error_and_checked_out_drop_hand_back_exact_pages") {
+        return;
+    }
     let _guard = history_construction_test_lock();
     let generation = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).next_generation;
     let dropped = std::panic::catch_unwind(|| {
@@ -1711,6 +1864,9 @@ fn artifact_history_unchecked_construction_error_and_checked_out_drop_hand_back_
 
 #[test]
 fn artifact_history_construction_unwind_hands_partial_owner_to_registry_without_bulk_drop() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_history_construction_unwind_hands_partial_owner_to_registry_without_bulk_drop") {
+        return;
+    }
     let _guard = history_construction_test_lock();
     let generation = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).next_generation;
     let unwind = std::panic::catch_unwind(|| {
@@ -1741,6 +1897,9 @@ fn artifact_history_construction_unwind_hands_partial_owner_to_registry_without_
 
 #[test]
 fn artifact_history_construction_registry_saturation_rejects_before_partial_owner_and_reuses_with_fresh_generation() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_history_construction_registry_saturation_rejects_before_partial_owner_and_reuses_with_fresh_generation") {
+        return;
+    }
     let _guard = history_construction_test_lock();
     let mut faults = Vec::with_capacity(HISTORY_REPLAY_CONSTRUCTION_SLOTS);
     for _ in 0..HISTORY_REPLAY_CONSTRUCTION_SLOTS {
@@ -1766,6 +1925,9 @@ fn artifact_history_construction_registry_saturation_rejects_before_partial_owne
 
 #[test]
 fn artifact_history_construction_handback_rejects_stale_duplicate_and_aba_without_owner_overwrite() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_history_construction_handback_rejects_stale_duplicate_and_aba_without_owner_overwrite") {
+        return;
+    }
     let _guard = history_construction_test_lock();
     let mut first = HistoryReplayReservation::try_new_with_result_page_failure(1).unwrap_err();
     let first_token = first.token.as_ref().map(|token| (token.slot, token.generation)).expect("first linear construction token");
@@ -1813,14 +1975,25 @@ fn artifact_history_fixed_owner_accounting_has_no_capacity_scan() {
     }
 }
 
+fn history_phase_fixture_page() -> Result<db_storage::DbIoPages, DbError> {
+    let mut writer = db_storage::DbIoPageWriter::try_reserve(1).map_err(|rejected| rejected.into_error())?;
+    writer.write_fragment(&[0])?;
+    writer.seal().map_err(|rejected| rejected.into_error())
+}
+
 #[semio_framework_async_macros::async_test]
 async fn artifact_history_panic_at_each_phase_transition_retains_then_fault_retires() {
+    if !crate::db_storage::process_isolated_law("db_artifact::tests::artifact_history_panic_at_each_phase_transition_retains_then_fault_retires") {
+        return;
+    }
+    let _history_capacity = history_construction_test_lock();
     let mut engine = ArtifactEngine::create_retained(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).await.unwrap();
     let phases = Vec::from([
         HistoryReplayPhase::Probe,
         HistoryReplayPhase::SegmentLen { index: 0, future: Box::pin(async { Err(DbError::NotFound("phase fixture".to_string())) }) },
         HistoryReplayPhase::PageStart { index: 0, len: 1, offset: 0 },
-        HistoryReplayPhase::PageRead { index: 0, len: 1, offset: 0, requested: 1, future: Box::pin(async { Ok(vec![0]) }) },
+        HistoryReplayPhase::PageRead { index: 0, len: 1, offset: 0, requested: 1, future: Box::pin(async { history_phase_fixture_page() }) },
+        HistoryReplayPhase::PageClose { index: 0, len: 1, offset: 1, retained: history_phase_fixture_page().unwrap() },
         HistoryReplayPhase::Inventory { future: Box::pin(async { Ok(db_storage::DbIoU64List::new()) }) },
         HistoryReplayPhase::Verify { index: 0 },
         HistoryReplayPhase::Frame { index: 0 },
@@ -1854,9 +2027,7 @@ async fn artifact_history_panic_at_each_phase_transition_retains_then_fault_reti
         assert!(terminal);
         assert!(replay.terminal_is_empty());
     }
-    while engine.wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    engine.wal.close().await.unwrap();
     while engine.state.values.close_step().unwrap() {
         semio_framework_async::yield_once().await;
     }

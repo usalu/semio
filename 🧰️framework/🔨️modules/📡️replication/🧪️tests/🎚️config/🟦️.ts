@@ -35,8 +35,11 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/framework-replication",
     environment: "node",
-    include: [],
-    coverage: { include: ["*.ts"] },
+    include: [
+      "👕️peer-overlay/🧪️tests/**/*.ts",
+    ],
+    exclude: ["**/🎚️config/**", "**/node_modules/**"],
+    coverage: { include: ["*.ts", "👕️peer-overlay/**/*.ts"] },
     includeSource: ["*.ts"],
     passWithNoTests: false,
   },

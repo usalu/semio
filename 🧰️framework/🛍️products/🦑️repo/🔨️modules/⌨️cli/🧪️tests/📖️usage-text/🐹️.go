@@ -15,7 +15,7 @@ import (
 
 // 📥️ The committed goldens every scenario reads.
 func goldens(ctx *host.Context) (map[string]interface{}, error) {
-	raw, err := ctx.FixtureBytes("local://📖️usage-goldens.json")
+	raw, err := ctx.FixtureBytes("shared://📖️usage-text/📖️usage-goldens.json")
 	if err != nil {
 		return nil, err
 	}

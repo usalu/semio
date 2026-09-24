@@ -34,6 +34,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -245,7 +246,7 @@ async function manifests(): Promise<void> {
       units: { length: "unitless", angle: "degree" },
       files,
       provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-      generator: { oracle: ORACLE_ID, packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate", platform: process.platform },
+      generator: { oracle: ORACLE_ID, packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate", platform: currentPlatform() },
       comparisonProfile: COMPARISON_PROFILE,
       reproducible: true,
       family: "mechanical",
@@ -317,7 +318,7 @@ async function aspectMode(command: string): Promise<number> {
       units: { length: "unitless", angle: "degree" },
       files,
       provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-      generator: { oracle: "giflib-gif-screen-cli", packageVersion: "6.1", engineFamily: "giflib", engineVersion: "6.1", command: "bun 📜️script.ts aspect", platform: process.platform },
+      generator: { oracle: "giflib-gif-screen-cli", packageVersion: "6.1", engineFamily: "giflib", engineVersion: "6.1", command: "bun 📜️script.ts aspect", platform: currentPlatform() },
       comparisonProfile: "semantic-gif-screen-v1",
       reproducible: true,
       family: "mechanical",

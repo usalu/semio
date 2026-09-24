@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceGeoProducts",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-geo-products",
-  "binaryTag": null,
+  "binaryTag": 31,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

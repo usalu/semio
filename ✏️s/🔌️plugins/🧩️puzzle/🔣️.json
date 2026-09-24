@@ -21640,14 +21640,14 @@
                 },
                 {
                   "kind": "group",
-                  "id": "puzzle5d-play-utility-options-move",
+                  "id": "puzzle5d-play-utility-options-transform",
                   "label": "",
                   "defaultOpen": true,
-                  "activeUtilityId": "move",
+                  "activeUtilityId": "transform",
                   "children": [
                     {
                       "kind": "toggle",
-                      "id": "puzzle5d-play-utility-options-move-move",
+                      "id": "puzzle5d-transform-move",
                       "iconId": "move-3d",
                       "label": "Move",
                       "pressed": true,
@@ -21662,85 +21662,7 @@
                     },
                     {
                       "kind": "toggle",
-                      "id": "puzzle5d-play-utility-options-move-rotate",
-                      "iconId": "rotate-cw",
-                      "label": "Rotate",
-                      "pressed": true,
-                      "text": null,
-                      "onChange": {
-                        "controllerId": "puzzle5d-play",
-                        "action": "setTransformGumballFlag",
-                        "args": {
-                          "flag": "rotate"
-                        }
-                      }
-                    }
-                  ]
-                },
-                {
-                  "kind": "group",
-                  "id": "puzzle5d-play-utility-options-rotate",
-                  "label": "",
-                  "defaultOpen": true,
-                  "activeUtilityId": "rotate",
-                  "children": [
-                    {
-                      "kind": "toggle",
-                      "id": "puzzle5d-play-utility-options-rotate-move",
-                      "iconId": "move-3d",
-                      "label": "Move",
-                      "pressed": true,
-                      "text": null,
-                      "onChange": {
-                        "controllerId": "puzzle5d-play",
-                        "action": "setTransformGumballFlag",
-                        "args": {
-                          "flag": "move"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "toggle",
-                      "id": "puzzle5d-play-utility-options-rotate-rotate",
-                      "iconId": "rotate-cw",
-                      "label": "Rotate",
-                      "pressed": true,
-                      "text": null,
-                      "onChange": {
-                        "controllerId": "puzzle5d-play",
-                        "action": "setTransformGumballFlag",
-                        "args": {
-                          "flag": "rotate"
-                        }
-                      }
-                    }
-                  ]
-                },
-                {
-                  "kind": "group",
-                  "id": "puzzle5d-play-utility-options-scale",
-                  "label": "",
-                  "defaultOpen": true,
-                  "activeUtilityId": "scale",
-                  "children": [
-                    {
-                      "kind": "toggle",
-                      "id": "puzzle5d-play-utility-options-scale-move",
-                      "iconId": "move-3d",
-                      "label": "Move",
-                      "pressed": true,
-                      "text": null,
-                      "onChange": {
-                        "controllerId": "puzzle5d-play",
-                        "action": "setTransformGumballFlag",
-                        "args": {
-                          "flag": "move"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "toggle",
-                      "id": "puzzle5d-play-utility-options-scale-rotate",
+                      "id": "puzzle5d-transform-rotate",
                       "iconId": "rotate-cw",
                       "label": "Rotate",
                       "pressed": true,
@@ -23446,9 +23368,7 @@
               }
             ],
             "utilities": [
-              "move",
-              "rotate",
-              "scale",
+              "transform",
               "brush",
               "volumeBrush",
               "worldRelocate"
@@ -25367,6 +25287,186 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "openVortexSuggestions",
+            "label": {
+              "native": {
+                "en": "Open Grip Suggestions",
+                "de": "Griff-Vorschläge öffnen"
+              },
+              "reuse": {
+                "en": "Open Grip Suggestions",
+                "de": "Griff-Vorschläge öffnen"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "closeVortexSuggestions",
+            "label": {
+              "native": {
+                "en": "Close Grip Suggestions",
+                "de": "Griff-Vorschläge schließen"
+              },
+              "reuse": {
+                "en": "Close Grip Suggestions",
+                "de": "Griff-Vorschläge schließen"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "hoverSuggestion",
+            "label": {
+              "native": {
+                "en": "Hover Suggestion",
+                "de": "Vorschlag überfahren"
+              },
+              "reuse": {
+                "en": "Hover Suggestion",
+                "de": "Vorschlag überfahren"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "audience": "input"
+            }
+          },
+          {
+            "id": "acceptSuggestion",
+            "label": {
+              "native": {
+                "en": "Accept Suggestion",
+                "de": "Vorschlag annehmen"
+              },
+              "reuse": {
+                "en": "Accept Suggestion",
+                "de": "Vorschlag annehmen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
@@ -27837,51 +27937,18 @@
             "allowsActionsWhileActive": false
           },
           {
-            "id": "move",
+            "id": "transform",
             "label": {
               "native": {
-                "en": "Move",
-                "de": "Verschieben"
+                "en": "Transform",
+                "de": "Transformieren"
               },
               "reuse": {
-                "en": "Move",
-                "de": "Verschieben"
+                "en": "Transform",
+                "de": "Transformieren"
               }
             },
-            "iconId": "move",
-            "group": "transform",
-            "allowsActionsWhileActive": false
-          },
-          {
-            "id": "rotate",
-            "label": {
-              "native": {
-                "en": "Rotate",
-                "de": "Drehen"
-              },
-              "reuse": {
-                "en": "Rotate",
-                "de": "Drehen"
-              }
-            },
-            "iconId": "rotate-cw",
-            "group": "transform",
-            "allowsActionsWhileActive": false
-          },
-          {
-            "id": "scale",
-            "label": {
-              "native": {
-                "en": "Scale",
-                "de": "Skalieren"
-              },
-              "reuse": {
-                "en": "Scale",
-                "de": "Skalieren"
-              }
-            },
-            "iconId": "maximize-2",
-            "group": "transform",
+            "iconId": "transform-3d",
             "allowsActionsWhileActive": false
           },
           {
@@ -28735,6 +28802,20 @@
                   }
                 },
                 "iconId": "link"
+              },
+              {
+                "id": "targetVolume",
+                "label": {
+                  "native": {
+                    "en": "Target Volume",
+                    "de": "Zielvolumen"
+                  },
+                  "reuse": {
+                    "en": "Target Volume",
+                    "de": "Zielvolumen"
+                  }
+                },
+                "iconId": "circle"
               }
             ],
             "hierarchy": {
@@ -28775,23 +28856,23 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 60.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "puzzle5d-3d",
-                    "title": "Puzzle 3D"
-                  }
-                ]
-              },
-              {
-                "kind": "stack",
                 "size": 40.0,
                 "children": [
                   {
                     "kind": "window",
                     "windowKindId": "puzzle5d-2d",
                     "title": "Puzzle 2D"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "size": 60.0,
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "puzzle5d-3d",
+                    "title": "Puzzle 3D"
                   }
                 ]
               }
@@ -30189,23 +30270,23 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 60.0,
-                "children": [
-                  {
-                    "kind": "window",
-                    "windowKindId": "framework.window.mesh",
-                    "title": "Puzzle 3D"
-                  }
-                ]
-              },
-              {
-                "kind": "stack",
                 "size": 40.0,
                 "children": [
                   {
                     "kind": "window",
                     "windowKindId": "puzzle5d-view-2d",
                     "title": "Puzzle 2D"
+                  }
+                ]
+              },
+              {
+                "kind": "stack",
+                "size": 60.0,
+                "children": [
+                  {
+                    "kind": "window",
+                    "windowKindId": "framework.window.mesh",
+                    "title": "Puzzle 3D"
                   }
                 ]
               }
@@ -30912,8 +30993,8 @@
     }
   ],
   "hashes": {
-    "wasmSha256": "8b67a11cd759e58d2dd2c6388455f59d3b8ed1756af584389a20e1a116ff02dd",
-    "coreWasmSha256": "9d5cda282fbad63b17246fff597a0f1519967b8ae58fb6a89fb26c0537961dbd",
-    "descriptorSha256": "4a91f7906b407d7d2b917b0f9abeab4239508c8426dae7ec9be5d3962d75384b"
+    "wasmSha256": "44a1aa9af9fb0b51930ea37611a76f19bf8ac7612876676e950da1ace24d77fc",
+    "coreWasmSha256": "3ce6e205a7eea56a1f35f83bc7e4964517b680d0310971da5f58c425b9c6314d",
+    "descriptorSha256": "d522daa51a858eae9200e66fa3e34d7239b22e529a7a6ed6096f75981472613e"
   }
 }

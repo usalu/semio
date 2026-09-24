@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveAuthor",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-author",
-  "binaryTag": null,
+  "binaryTag": 35,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

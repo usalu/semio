@@ -70,7 +70,7 @@ import { pluginOutRoot } from "../📋️plan/🟦️.ts";
 /** 🛡️Rejects unexpected output children without removing retained files before a build. */
 function assertPluginOutputChildren(outDir: string, componentBase: string): void {
   if (!existsSync(outDir)) return;
-  const files = new Set([PLUGIN_HOST_SHIM_FILE, MODULE_BRIDGE_FILE, `${componentBase}.js`, `${componentBase}.d.ts`, `${componentBase}.core.wasm`, "🔣️.json", "🛂️.descriptor.semio", ".nx-artifact.json"]);
+  const files = new Set([PLUGIN_HOST_SHIM_FILE, MODULE_BRIDGE_FILE, `${componentBase}.js`, `${componentBase}.d.ts`, `${componentBase}.core.wasm`, "🔣️.json", "🛂️.descriptor.semio", ".nx-artifact.json", ".source-content-sha256"]);
   for (const entry of readdirSync(outDir, { withFileTypes: true })) {
     if (entry.isDirectory() && entry.name === "interfaces") continue;
     if (entry.isFile() && files.has(entry.name)) continue;

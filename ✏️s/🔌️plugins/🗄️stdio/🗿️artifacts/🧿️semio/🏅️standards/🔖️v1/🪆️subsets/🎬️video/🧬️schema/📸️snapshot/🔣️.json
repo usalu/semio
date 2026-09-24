@@ -74,9 +74,12 @@
                 "type": "boolean"
               },
               "data": {
-                "type": "string",
-                "contentEncoding": "hex",
-                "description": "opaque compressed payload"
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
               }
             },
             "required": [

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { FlowOperation, FlowOperationFields } from "../../🖥️host/🏃️runtime/🟨️.js";
-import { flowWasmContract } from "./🛂️admission/🟦️.ts";
+import { flowWasmContract } from "../../🔮️oracles/🛂️contract-admission/🟦️.ts";
 
 //#region 🔮️OwnedOraclePort
 

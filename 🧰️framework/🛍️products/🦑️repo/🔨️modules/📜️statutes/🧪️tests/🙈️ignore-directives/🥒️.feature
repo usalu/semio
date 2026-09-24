@@ -13,7 +13,7 @@ Feature: A compose-ignore directive suppresses exactly the breaches it names
   @mode-conformance
   @seed-1
   Scenario: Every directive vector suppresses the breaches it claims and no other
-    Given the directive vectors local://🔣️vectors.json
+    Given the directive vectors shared://🙈️ignore-directives/🔣️vectors.json
     When the host parses every directive block and decides every suppression
     Then every implementation projects the same parsed directives and the same suppression decisions
 
@@ -22,6 +22,6 @@ Feature: A compose-ignore directive suppresses exactly the breaches it names
   @mode-error
   @seed-1
   Scenario: A breach before the directive or beyond its window survives
-    Given the directive vectors local://🔣️vectors.json
+    Given the directive vectors shared://🙈️ignore-directives/🔣️vectors.json
     When the host decides suppression for the line of the directive, the line before it, the last line of its window and the line after its window
     Then every implementation keeps the breach outside the window and drops only the breach inside it

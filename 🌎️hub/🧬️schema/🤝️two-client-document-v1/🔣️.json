@@ -1,0 +1,238 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/two-client-document/schema.json",
+  "title": "TwoClientDocumentScenarioV1",
+  "$defs": {
+    "TwoClientDocumentScenarioV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "authors",
+        "artifactKindId",
+        "surfaceId",
+        "spaceName",
+        "command",
+        "presence",
+        "shutdown",
+        "steps",
+        "expectations"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.two-client-document-scenario/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "authors": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "artifactKindId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "surfaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "spaceName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "command": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "diffSchema",
+            "diffValue",
+            "inverseValue",
+            "batchId",
+            "mutationIdPrefix"
+          ],
+          "properties": {
+            "diffSchema": {
+              "const": "db.pathmap.v1"
+            },
+            "diffValue": {
+              "type": "object"
+            },
+            "inverseValue": {
+              "type": "object"
+            },
+            "batchId": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "mutationIdPrefix": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            }
+          }
+        },
+        "presence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lane",
+            "labelA",
+            "leaseTtlMs",
+            "hoveredPath"
+          ],
+          "properties": {
+            "lane": {
+              "const": "preview"
+            },
+            "labelA": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "leaseTtlMs": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 120000
+            },
+            "hoveredPath": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        "shutdown": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "closeCode",
+            "gracefulExitWithinMs",
+            "crashReleaseSlackMs",
+            "databaseClosedMarker",
+            "liveWriterProbe"
+          ],
+          "properties": {
+            "closeCode": {
+              "const": 1012
+            },
+            "gracefulExitWithinMs": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 120000
+            },
+            "crashReleaseSlackMs": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 120000
+            },
+            "databaseClosedMarker": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "liveWriterProbe": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "postgres",
+                "neo4j"
+              ],
+              "properties": {
+                "postgres": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "neo4j": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                }
+              }
+            }
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "string"
+          }
+        },
+        "expectations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bReceivesCommandsEnvelope",
+            "ackStagesIncludeApplied",
+            "frontierDocumentIdIsPlainArtifactId",
+            "presencePeerActorMatchesA",
+            "presenceJoinReplayShowsA",
+            "reconnectDeliversMissedOrRebootstrap",
+            "restartPreservesArtifactAndFrontier",
+            "lateJoinerCatchesUp",
+            "presenceLeaveDropsPeer",
+            "presenceLeaseExpiryStripsA",
+            "gracefulShutdownClosesSocketsAndReleasesWriters",
+            "crashReleasesWritersPerBackendContract"
+          ],
+          "properties": {
+            "bReceivesCommandsEnvelope": {
+              "type": "boolean"
+            },
+            "ackStagesIncludeApplied": {
+              "type": "boolean"
+            },
+            "frontierDocumentIdIsPlainArtifactId": {
+              "type": "boolean"
+            },
+            "presencePeerActorMatchesA": {
+              "type": "boolean"
+            },
+            "reconnectDeliversMissedOrRebootstrap": {
+              "type": "boolean"
+            },
+            "restartPreservesArtifactAndFrontier": {
+              "type": "boolean"
+            },
+            "presenceJoinReplayShowsA": {
+              "type": "boolean"
+            },
+            "lateJoinerCatchesUp": {
+              "type": "boolean"
+            },
+            "presenceLeaveDropsPeer": {
+              "type": "boolean"
+            },
+            "presenceLeaseExpiryStripsA": {
+              "type": "boolean"
+            },
+            "gracefulShutdownClosesSocketsAndReleasesWriters": {
+              "type": "boolean"
+            },
+            "crashReleasesWritersPerBackendContract": {
+              "type": "boolean"
+            }
+          }
+        },
+        "nonclaims": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

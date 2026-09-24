@@ -78,3 +78,23 @@ async fn svg_export_rejects_invalid_document_json() {
     let value = Value::object([("not".into(), Value::String("a layout document".into()))]);
     assert!(layout_document_json_to_svg(&value).is_err());
 }
+
+/// 🔄️ A layout written as svg and dxf reads back with one page per page boundary, and the png is a
+/// real raster of the same spreads.
+#[semio_framework_async_macros::async_test]
+async fn svg_dxf_and_png_exports_are_real_files_that_frame_the_pages_again() {
+    use crate::io::export::serializers::artifacts::{dxf::v_r12::any as dxf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out};
+    use crate::io::import::deserializers::artifacts::{dxf::v_r12::any as dxf_in, svg::v1_1::any as svg_in};
+    let mut dwg = DwgDrawing::default();
+    dwg.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [210.0, 0.0], [210.0, 297.0], [0.0, 297.0]], bulges: vec![0.0; 4] } });
+    let document = LayoutSnapshot::from_value(layout_document_json_from_dwg(&dwg).expect("dwg import")).expect("layout");
+    assert_eq!(document.pages.len(), 1);
+    let svg = svg_out::serialize_text(&document).expect("svg export");
+    assert!(svg.starts_with("<svg"), "{svg}");
+    assert!(svg_in::deserialize_text(&svg).expect("svg import").pages.iter().any(|page| (page.width - 210.0).abs() < 1e-6 && (page.height - 297.0).abs() < 1e-6), "the A4 page frame survives svg");
+    let dxf = String::from_utf8(dxf_out::serialize_bytes(&document).expect("dxf export")).expect("dxf text");
+    assert!(dxf.contains("POLYLINE"), "{dxf}");
+    assert!(!dxf_in::deserialize_text(&dxf).expect("dxf import").pages.is_empty());
+    let png = semio_s_artifact_stdio_png::io::decode_png(&png_out::serialize_bytes(&document).expect("png export")).expect("decodes as png");
+    assert!(png.width >= 210 && png.height >= 297);
+}

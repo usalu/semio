@@ -119,6 +119,120 @@ pub struct InferCommand {
     /// only case where a bare `canonical_payload` is the whole request.
     pub artifact_id: String,
     pub artifact_document: Option<ArtifactDocumentBinding>,
+    pub cancel: InferenceCancel,
+}
+
+/// 🛑️ The caller's live cancellation for one inference run. `inference_run` binds it to its job, so
+/// `job_cancel` and `notifications/cancelled` stop the in-flight guest job through the plugin host's
+/// cold relay instead of waiting for the solve to finish. Two handles compare equal when they are in
+/// the same state — the token itself has no identity a frame log could print.
+#[derive(Clone)]
+pub struct InferenceCancel(pub semio_framework_async::CancelToken);
+
+impl Default for InferenceCancel {
+    fn default() -> Self {
+        Self(semio_framework_async::CancelToken::root_now())
+    }
+}
+
+impl std::fmt::Debug for InferenceCancel {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "InferenceCancel(cancelled: {})", self.0.is_cancelled_now())
+    }
+}
+
+impl PartialEq for InferenceCancel {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.is_cancelled_now() == other.0.is_cancelled_now()
+    }
+}
+
+/// 🧭️ One phase of activating a plugin session and reading its document — `SessionActivationPhaseV1`
+/// in `🏠️workspace/🧬️schema`. The session's component is resolved, read, content-hashed, loaded or
+/// compiled, its guest opened, then its document is read. Every job that activates a session
+/// (`inference_run`'s artifact binding, `artifact_create`) reports these, and a session that already
+/// passed a phase skips it rather than reporting it again.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ActivationPhase {
+    ResolvingComponent,
+    ReadingComponent,
+    HashingComponent,
+    LoadingCompiledCode,
+    CompilingComponent,
+    OpeningGuest,
+    ReadingDocument,
+}
+
+impl ActivationPhase {
+    pub const ALL: [ActivationPhase; 7] = [Self::ResolvingComponent, Self::ReadingComponent, Self::HashingComponent, Self::LoadingCompiledCode, Self::CompilingComponent, Self::OpeningGuest, Self::ReadingDocument];
+
+    /// 🪪️ The schema's kebab-case id.
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::ResolvingComponent => "resolving-component",
+            Self::ReadingComponent => "reading-component",
+            Self::HashingComponent => "hashing-component",
+            Self::LoadingCompiledCode => "loading-compiled-code",
+            Self::CompilingComponent => "compiling-component",
+            Self::OpeningGuest => "opening-guest",
+            Self::ReadingDocument => "reading-document",
+        }
+    }
+
+    /// 📈️ Where the phase starts within an activation, `0..1`; each job maps it onto its own span.
+    pub fn position(self) -> f64 {
+        Self::ALL.iter().position(|phase| *phase == self).map_or(0.0, |index| index as f64 / Self::ALL.len() as f64)
+    }
+
+    /// 📏️ Where `fraction` of this phase lands within an activation, `0..1`.
+    pub fn at(self, fraction: f64) -> f64 {
+        self.position() + fraction.clamp(0.0, 1.0) / Self::ALL.len() as f64
+    }
+}
+
+/// 🏷️ The fault code an activation stopped by its caller's cancel carries; [`map_fault`] answers it
+/// as `CANCELLED`.
+pub const ACTIVATION_CANCELLED_FAULT_CODE: &str = "job.cancelled";
+
+/// 🎚️ Progress and cancellation for one session activation. Every interruptible phase boundary is a
+/// [`ActivationScope::checkpoint`]; a phase with measurable size (hashing) reports its fraction.
+pub struct ActivationScope {
+    cancel: semio_framework_async::CancelToken,
+    report: Box<dyn Fn(ActivationPhase, f64) + Send + Sync>,
+}
+
+impl ActivationScope {
+    pub fn new(cancel: semio_framework_async::CancelToken, report: impl Fn(ActivationPhase, f64) + Send + Sync + 'static) -> Self {
+        Self { cancel, report: Box::new(report) }
+    }
+
+    /// 🫥️ An activation nobody watches or cancels — what an ordinary command exchange opens with.
+    pub fn detached() -> Self {
+        Self::new(semio_framework_async::CancelToken::root_now(), |_, _| {})
+    }
+
+    pub fn cancel(&self) -> &semio_framework_async::CancelToken {
+        &self.cancel
+    }
+
+    /// ▶️ Reports entry into `phase`, then checks the caller's cancel.
+    pub fn enter(&self, phase: ActivationPhase) -> Result<(), Fault> {
+        (self.report)(phase, 0.0);
+        self.checkpoint()
+    }
+
+    /// 📏️ Reports `fraction` (0..=1) of `phase` done, then checks the caller's cancel.
+    pub fn advance(&self, phase: ActivationPhase, fraction: f64) -> Result<(), Fault> {
+        (self.report)(phase, fraction.clamp(0.0, 1.0));
+        self.checkpoint()
+    }
+
+    pub fn checkpoint(&self) -> Result<(), Fault> {
+        if self.cancel.is_cancelled_now() {
+            return Err(Fault { code: ACTIVATION_CANCELLED_FAULT_CODE.to_string(), message: "the caller cancelled while its plugin session was being activated".to_string() });
+        }
+        Ok(())
+    }
 }
 
 /// 📦️ One artifact's canonical `pack`/`spr` pair on its way to a guest inference — host-opaque
@@ -185,6 +299,11 @@ pub struct InferenceOutcome {
 #[dyn_enum]
 pub trait ArtifactChannel: Send {
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault>;
+
+    /// 🔌️ Brings `instance`'s session up to where its next exchange runs without opening anything:
+    /// the component compiled, the guest open. Reports each phase to `scope` and stops at the next
+    /// interruptible boundary once `scope` is cancelled, leaving no half-open guest behind.
+    fn activate(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault>;
 }
 
 /// ↩️ Private durable-history port; only a Hub-bound workspace implements the remote member.
@@ -206,6 +325,7 @@ fn map_fault(fault: &Fault) -> GatewayError {
         "budget.exceeded" => GatewayError::new(GatewayErrorCode::BudgetExceeded, fault.message.clone()).retryable(),
         "capability.not-found" => GatewayError::new(GatewayErrorCode::NotFound, fault.message.clone()),
         "plugin.unavailable" | "workspace.unbound" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()).retryable(),
+        ACTIVATION_CANCELLED_FAULT_CODE => GatewayError::new(GatewayErrorCode::Cancelled, fault.message.clone()),
         _ => GatewayError::new(GatewayErrorCode::Internal, fault.message.clone()),
     }
 }
@@ -237,6 +357,10 @@ impl UnboundArtifactChannel {
 
 impl ArtifactChannel for UnboundArtifactChannel {
     fn exchange(&mut self, _instance: u32, _commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+        Err(Self::fault())
+    }
+
+    fn activate(&mut self, _instance: u32, _scope: &ActivationScope) -> Result<(), Fault> {
         Err(Self::fault())
     }
 }
@@ -423,6 +547,10 @@ impl ArtifactChannel for MockArtifactChannel {
         }
         Ok(frames)
     }
+
+    fn activate(&mut self, _instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
+        scope.checkpoint()
+    }
 }
 //#endregion 🔖️MockArtifactChannel
 
@@ -602,6 +730,11 @@ impl ActionAdapter {
     /// 🔌 Binds the sole workspace-owned remote history implementation before serving tools.
     pub fn bind_history_undo_port(&self, port: Arc<dyn HistoryUndoPort>) {
         *self.history_undo_port.lock().expect("history undo port lock poisoned") = Some(port);
+    }
+
+    /// 🔌️ Activates the session `instance` addresses under `scope` — see [`ArtifactChannel::activate`].
+    pub fn activate_session(&self, instance: u32, scope: &ActivationScope) -> Result<(), GatewayError> {
+        self.channel.lock().expect("artifact channel lock poisoned").activate(instance, scope).map_err(|fault| map_fault(&fault))
     }
 
     /// 📖️ The LIVE document of the guest session `instance` addresses, straight off this adapter's

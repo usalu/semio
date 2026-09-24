@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeFenestrationShgc",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-shgc",
-  "binaryTag": null,
+  "binaryTag": 40,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

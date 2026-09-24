@@ -54,7 +54,7 @@ type entrypointContractFixture struct {
 }
 
 func TestRepositoryEntrypointContract(t *testing.T) {
-	data, err := os.ReadFile("🧫️fixtures/🚪️entrypoint-contract.json")
+	data, err := os.ReadFile(filepath.Join("..", "..", "🔌️mcp", "🧫️fixtures", "🚪️entrypoint-contract.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,7 +221,7 @@ func TestInitializeAdmitsForwardExtensibleClientFrames(t *testing.T) {
 }
 
 func TestG2CanonicalGoldenVectors(t *testing.T) {
-	data, err := os.ReadFile("🧫️fixtures/2️⃣g2-contract.json")
+	data, err := os.ReadFile(filepath.Join("..", "..", "🔌️mcp", "🧫️fixtures", "2️⃣g2-contract.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

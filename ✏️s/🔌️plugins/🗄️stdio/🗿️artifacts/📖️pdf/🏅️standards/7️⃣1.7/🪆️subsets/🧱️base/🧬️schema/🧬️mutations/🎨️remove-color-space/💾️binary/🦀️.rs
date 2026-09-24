@@ -1,6 +1,6 @@
 //! 🎨️ Direct binary identity for `remove-color-space`.
 
-pub const TAG: u8 = 37;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "remove-color-space");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::RemoveColorSpace;

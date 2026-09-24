@@ -1,6 +1,6 @@
 /** 🧩️ Semantic activation freshness owner. */
 
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, newestComponentSourceMtime, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, resolveBootSourceContentHashes, resolveBootSourceContentHashesAsync, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, writeStagedSourceContentHash, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
@@ -49,29 +49,79 @@ export function stagedComponentFacts(moduleRoot: string, pluginId: string): Prep
 export function collectStagedModuleFacts(options: {
   readonly moduleRoot: string;
   readonly installRoot: string;
-  readonly receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string }[] };
+  readonly receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string; readonly sourceContentSha256?: string }[] };
   readonly components: readonly PluginRegistryEntry[];
 }): readonly StagedModuleFacts[] {
   const activated = new Map((options.receipt?.plugins ?? []).map((row) => [row.pluginId, row.artifactSha256]));
+  const activatedSource = new Map((options.receipt?.plugins ?? []).map((row) => [row.pluginId, (row as { sourceContentSha256?: string }).sourceContentSha256]));
   return options.components.map((target): StagedModuleFacts => {
     const directoryName = moduleDirectoryName(target.pluginId);
-    const newest = newestComponentSourceMtime(join(repoRoot, target.cratePath, "..", ".."));
     const installedMeta = join(options.installRoot, directoryName, EXTENSION_INSTALL_META);
     let installedPackageHash: string | undefined;
     if (existsSync(installedMeta)) {
       try { installedPackageHash = JSON.parse(readFileSync(installedMeta, "utf8")).packageHash as string; } catch { installedPackageHash = undefined; }
     }
+    const moduleDirectory = join(options.moduleRoot, directoryName);
+    const sourceRoot = join(repoRoot, target.cratePath, "..", "..");
+    const receiptSource = activatedSource.get(target.pluginId);
+    const stagedAtMs = stagedModuleMtime(moduleDirectory);
+    const hashes = resolveBootSourceContentHashes({
+      sourceRoot,
+      moduleDirectory,
+      receiptSourceContentSha256: receiptSource,
+    });
     return {
       pluginId: target.pluginId,
       role: target.role === "extension" ? "extension" : "plugin",
       activationTracked: options.receipt !== undefined,
-      stagedAtMs: stagedModuleMtime(join(options.moduleRoot, directoryName)),
-      newestSourceMs: newest?.mtimeMs,
-      newestSourcePath: newest ? relative(repoRoot, newest.path).split(/[\\/]/).join("/") : undefined,
+      stagedAtMs,
+      newestSourceMs: hashes.newestSourceMs,
+      newestSourcePath: hashes.newestSourcePath ? relative(repoRoot, hashes.newestSourcePath).split(/[\\/]/).join("/") : undefined,
+      sourceContentSha256: hashes.sourceContentSha256,
+      stagedSourceContentSha256: hashes.stagedSourceContentSha256,
       receiptArtifactSha256: activated.get(target.pluginId),
       installedPackageHash,
     };
   });
+}
+
+export async function collectStagedModuleFactsAsync(options: {
+  readonly moduleRoot: string;
+  readonly installRoot: string;
+  readonly receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string; readonly sourceContentSha256?: string }[] };
+  readonly components: readonly PluginRegistryEntry[];
+}): Promise<readonly StagedModuleFacts[]> {
+  const activated = new Map((options.receipt?.plugins ?? []).map((row) => [row.pluginId, row.artifactSha256]));
+  const activatedSource = new Map((options.receipt?.plugins ?? []).map((row) => [row.pluginId, (row as { sourceContentSha256?: string }).sourceContentSha256]));
+  return Promise.all(options.components.map(async (target): Promise<StagedModuleFacts> => {
+    const directoryName = moduleDirectoryName(target.pluginId);
+    const installedMeta = join(options.installRoot, directoryName, EXTENSION_INSTALL_META);
+    let installedPackageHash: string | undefined;
+    if (existsSync(installedMeta)) {
+      try { installedPackageHash = JSON.parse(readFileSync(installedMeta, "utf8")).packageHash as string; } catch { installedPackageHash = undefined; }
+    }
+    const moduleDirectory = join(options.moduleRoot, directoryName);
+    const sourceRoot = join(repoRoot, target.cratePath, "..", "..");
+    const receiptSource = activatedSource.get(target.pluginId);
+    const stagedAtMs = stagedModuleMtime(moduleDirectory);
+    const hashes = await resolveBootSourceContentHashesAsync({
+      sourceRoot,
+      moduleDirectory,
+      receiptSourceContentSha256: receiptSource,
+    });
+    return {
+      pluginId: target.pluginId,
+      role: target.role === "extension" ? "extension" : "plugin",
+      activationTracked: options.receipt !== undefined,
+      stagedAtMs,
+      newestSourceMs: hashes.newestSourceMs,
+      newestSourcePath: hashes.newestSourcePath ? relative(repoRoot, hashes.newestSourcePath).split(/[\\/]/).join("/") : undefined,
+      sourceContentSha256: hashes.sourceContentSha256,
+      stagedSourceContentSha256: hashes.stagedSourceContentSha256,
+      receiptArtifactSha256: activated.get(target.pluginId),
+      installedPackageHash,
+    };
+  }));
 }
 
 /** @emoji 📣️ Prints one `[stale]` line per component whose served bytes are behind, each naming the exact
@@ -87,11 +137,11 @@ export function reportStagedModuleFreshness(variant: string, renderer: "react" |
 
 /** @emoji 🔎️ Serve-start freshness pass over the one staging root — never throws: a dev server that
  * refuses to start over a stale module is worse than one that says which module is stale. */
-function reportServeStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "dev" | "release", runtime: string, receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string }[] }): void {
+async function reportServeStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "dev" | "release", runtime: string, receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string }[] }): Promise<void> {
   try {
     const selected = new Set(filterProjectedPluginRegistry(readGeneratedCatalogProjection(), resolveCatalogFilterPluginId(variant)).map((entry) => entry.pluginId));
     const components = readGeneratedCatalogProjection().entries.filter((entry) => selected.has(entry.pluginId));
-    reportStagedModuleFreshness(variant, renderer, profile, collectStagedModuleFacts({
+    reportStagedModuleFreshness(variant, renderer, profile, await collectStagedModuleFactsAsync({
       moduleRoot: pluginModulesRoot(profile),
       installRoot: join(runtime, "extensions"),
       receipt,

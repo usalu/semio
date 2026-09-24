@@ -510,11 +510,104 @@ incremental = true
 [profile.dev.build-override]
 opt-level = 3
 
+# ⚡️ The plugin runtime every native dev host embeds (the semio MCP gateway, the hub, native shells) is
+# optimized even in the dev profile. At `opt-level = 0` the wasmtime component-model machinery around
+# every guest crossing and host call, and cranelift compiling a 129 MB wasm-dev guest, dominated the
+# guest's own work. Measured on the wfc genesis `inference_run` over the semio MCP: 112.7 s with this
+# set unoptimized vs 63.9 s optimized (ticket 26/09/23, `📓️wp-g5.md`), and a first solve after a guest
+# rebuild waited ~9 min for its unoptimized cranelift compile. Only these crates change, so a rebuild
+# costs their own compile plus a relink of their dependents (1 min 44 s measured).
+[profile.dev.package.wasmtime]
+opt-level = 3
+
+[profile.dev.package.wasmtime-environ]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-core]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-cranelift]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-fiber]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-unwinder]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-cache]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-component-util]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-jit-debug]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-jit-icache-coherence]
+opt-level = 3
+
+[profile.dev.package.wasmtime-wasi]
+opt-level = 3
+
+[profile.dev.package.wasmtime-wasi-io]
+opt-level = 3
+
+[profile.dev.package.cranelift-codegen]
+opt-level = 3
+
+[profile.dev.package.cranelift-frontend]
+opt-level = 3
+
+[profile.dev.package.cranelift-entity]
+opt-level = 3
+
+[profile.dev.package.cranelift-bforest]
+opt-level = 3
+
+[profile.dev.package.cranelift-bitset]
+opt-level = 3
+
+[profile.dev.package.cranelift-control]
+opt-level = 3
+
+[profile.dev.package.cranelift-native]
+opt-level = 3
+
+[profile.dev.package.cranelift-codegen-shared]
+opt-level = 3
+
+[profile.dev.package.cranelift-assembler-x64]
+opt-level = 3
+
+[profile.dev.package.regalloc2]
+opt-level = 3
+
+[profile.dev.package.wasmparser]
+opt-level = 3
+
+[profile.dev.package.pulley-interpreter]
+opt-level = 3
+
+[profile.dev.package.gimli]
+opt-level = 3
+
+[profile.dev.package.object]
+opt-level = 3
+
+[profile.dev.package.wit-parser]
+opt-level = 3
+
 # 🛡️ WASI component links alone select this mitigation for rust-lld's ElemSection crash.
 # Native dev retains Cargo's parallel codegen policy; publication stays wasm-release.
 [profile.wasm-dev]
 inherits = "dev"
 codegen-units = 1
+# 🧾️ A component's described bytes must be its shipped bytes: `describe` and `component-dev` link the same
+# `cargo rustc --crate-type cdylib` unit, and `incremental` is part of that unit's profile identity, so an
+# inherited `incremental = true` split it by the caller's `CARGO_INCREMENTAL` into two compiles with two
+# different wasm hashes (ticket 26/09/23 W1: descriptor `ce48…`/`2a5c…` vs staged `a740…`).
+incremental = false
 
 # 🎚️ The plugin guest must meet the framework's 8 ms interactive-step contract even in the dev
 # profile: at `opt-level = 0` a lowpoly render turn tessellates its seeded mesh in 10-11.5 ms and
@@ -579,6 +672,17 @@ opt-level = 2
 # per view; the engine's ZNCC inner loops, TSDF integration, bundle adjustment and ORB descriptor
 # passes are all in this one artifact crate.
 [profile.wasm-dev.package.semio-s-artifact-remodel-remodeling]
+opt-level = 2
+
+# 🎚️ Same guest-throughput reason, measured on the wfc genesis `inference_run` over the semio MCP
+# (ticket 26/09/23, `📓️wp-g5.md`): the guest's own unoptimized propagate/observe loop was the largest
+# remaining share of a solve that settles in 17.9 s natively. The engine crate holds every WFC
+# collapse loop, and the bitmap artifact holds the overlapping-model extraction and encode stages of
+# the same solve.
+[profile.wasm-dev.package.semio-s-plugin-wfc-engine]
+opt-level = 2
+
+[profile.wasm-dev.package.semio-s-artifact-wfc-bitmap]
 opt-level = 2
 
 # 🪶️ Admission size, not speed — the only wasm-dev override here that is not an `opt-level`.

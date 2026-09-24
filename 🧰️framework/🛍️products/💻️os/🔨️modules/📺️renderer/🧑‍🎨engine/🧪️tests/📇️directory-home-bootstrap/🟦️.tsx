@@ -97,7 +97,7 @@ function handle(
         listener({
           instanceId: 41,
           operation: completion.operation ?? ADMISSION_OPERATION,
-          revision: 1,
+          revision: 1n,
           uiScope: undefined,
           historyPatch: undefined,
           requestedEffects: [],

@@ -67,7 +67,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     let mut seen = vec![false; KINDS.len()];
     for mutation in demo_mutation_cases() {
         let keyword = print_flow_mutation(&mutation).split(' ').next().expect("printed op is never empty").to_string();
-        let ordinal = variant_ordinal(&mutation) as usize;
+        let ordinal = wire_tag(&mutation) as usize;
         assert_eq!(KINDS[ordinal], keyword, "KINDS must match the declaration order and spelling for {mutation:?}");
         seen[ordinal] = true;
     }

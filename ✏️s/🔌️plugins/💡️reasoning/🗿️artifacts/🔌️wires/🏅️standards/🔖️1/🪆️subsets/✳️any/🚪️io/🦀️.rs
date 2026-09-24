@@ -29,16 +29,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
         ENTRIES
             .get_or_init(|| {
                 vec![
-                    serializer_entry::<WiresSnapshot, export::csv::v_rfc4180::any::WiresIntoCsv>(WIRES_DIALECT),
-                    deserializer_entry::<WiresSnapshot, import::csv::v_rfc4180::any::CsvIntoWires>(WIRES_DIALECT),
-                    serializer_entry::<WiresSnapshot, export::md::v_commonmark::any::WiresIntoMd>(WIRES_DIALECT),
-                    deserializer_entry::<WiresSnapshot, import::md::v_commonmark::any::MdIntoWires>(WIRES_DIALECT),
                     serializer_entry::<WiresSnapshot, export::json::v_rfc8259::any::WiresIntoJson>(WIRES_DIALECT),
                     deserializer_entry::<WiresSnapshot, import::json::v_rfc8259::any::JsonIntoWires>(WIRES_DIALECT),
-                    serializer_entry::<WiresSnapshot, export::svg::v1_1::any::WiresIntoSvg>(WIRES_DIALECT),
-                    deserializer_entry::<WiresSnapshot, import::svg::v1_1::any::SvgIntoWires>(WIRES_DIALECT),
-                    serializer_entry::<WiresSnapshot, export::png::v1_2::any::WiresIntoPng>(WIRES_DIALECT),
-                    deserializer_entry::<WiresSnapshot, import::png::v1_2::any::PngIntoWires>(WIRES_DIALECT),
                     serializer_entry::<WiresSnapshot, export::txt::v_utf_8::any::WiresIntoTxt>(WIRES_DIALECT),
                     deserializer_entry::<WiresSnapshot, import::txt::v_utf_8::any::TxtIntoWires>(WIRES_DIALECT),
                 ]

@@ -9,7 +9,7 @@ mod subject {
     use semio_framework_repo_tickets::{milestone_number_for_title, sync_close_issue, sync_open_issue, RecordedIssueTracker};
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    const VECTORS: &str = "local://🐙️transcripts.json";
+    const VECTORS: &str = "shared://🐙️issue-sync-transcripts/🐙️transcripts.json";
 
     fn strings(values: Vec<String>) -> Json {
         Json::Array(values.into_iter().map(Json::String).collect())

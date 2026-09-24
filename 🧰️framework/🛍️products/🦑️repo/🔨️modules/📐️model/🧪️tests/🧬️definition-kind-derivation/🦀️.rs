@@ -9,7 +9,7 @@ mod subject {
     use semio_framework_repo_model as model;
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    const VECTORS: &str = "local://🔣️vectors.json";
+    const VECTORS: &str = "shared://🧬️definition-kind-derivation/🔣️vectors.json";
 
     const DECLARED: [&str; 4] = ["implementation", "interface", "constant", "test"];
 

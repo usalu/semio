@@ -1,0 +1,556 @@
+{
+  "subjectSchema": "../../🧬️schema/🔣️.json",
+  "tolerance": 1e-09,
+  "_comment": "🌍️ Language-agnostic read→write vectors for s.stdio.json@rfc8259/geojson: `input` is any GeoJSON text the reader meets; `written` is the RFC 7946 FeatureCollection the writer emits from what was read (positions compared within `tolerance`, everything else exactly), or `errorPath` is the JSON pointer the reader refuses at.",
+  "cases": [
+    {
+      "id": "rfc7946-collection-is-rewritten-right-handed",
+      "input": {
+        "type": "FeatureCollection",
+        "bbox": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "features": [
+          {
+            "type": "Feature",
+            "id": "harbor",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.5818,
+                50.603,
+                12.5
+              ]
+            },
+            "properties": {
+              "name": "Harbor"
+            }
+          },
+          {
+            "type": "Feature",
+            "id": 7,
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  5.5,
+                  50.5
+                ],
+                [
+                  5.6,
+                  50.6
+                ]
+              ]
+            },
+            "properties": null
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    1
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ],
+                [
+                  [
+                    0.2,
+                    0.2
+                  ],
+                  [
+                    0.4,
+                    0.2
+                  ],
+                  [
+                    0.4,
+                    0.4
+                  ],
+                  [
+                    0.2,
+                    0.4
+                  ],
+                  [
+                    0.2,
+                    0.2
+                  ]
+                ]
+              ]
+            },
+            "properties": {
+              "kind": "park"
+            },
+            "foreign": "dropped"
+          }
+        ]
+      },
+      "sourceCrs": "rfc7946",
+      "leftHandedRings": 2,
+      "written": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "id": "harbor",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                5.5818,
+                50.603,
+                12.5
+              ]
+            },
+            "properties": {
+              "name": "Harbor"
+            }
+          },
+          {
+            "type": "Feature",
+            "id": 7,
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  5.5,
+                  50.5
+                ],
+                [
+                  5.6,
+                  50.6
+                ]
+              ]
+            },
+            "properties": null
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    0,
+                    1
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ],
+                [
+                  [
+                    0.2,
+                    0.2
+                  ],
+                  [
+                    0.2,
+                    0.4
+                  ],
+                  [
+                    0.4,
+                    0.4
+                  ],
+                  [
+                    0.4,
+                    0.2
+                  ],
+                  [
+                    0.2,
+                    0.2
+                  ]
+                ]
+              ]
+            },
+            "properties": {
+              "kind": "park"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "bare-feature-becomes-a-one-feature-collection",
+      "input": {
+        "type": "Feature",
+        "id": "stops",
+        "geometry": {
+          "type": "MultiPoint",
+          "coordinates": [
+            [
+              6.1,
+              49.6
+            ],
+            [
+              6.2,
+              49.7
+            ]
+          ]
+        },
+        "properties": {}
+      },
+      "sourceCrs": "rfc7946",
+      "leftHandedRings": 0,
+      "written": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "id": "stops",
+            "geometry": {
+              "type": "MultiPoint",
+              "coordinates": [
+                [
+                  6.1,
+                  49.6
+                ],
+                [
+                  6.2,
+                  49.7
+                ]
+              ]
+            },
+            "properties": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "bare-geometry-becomes-an-anonymous-feature",
+      "input": {
+        "type": "GeometryCollection",
+        "geometries": [
+          {
+            "type": "Point",
+            "coordinates": [
+              1,
+              2
+            ]
+          },
+          {
+            "type": "MultiLineString",
+            "coordinates": [
+              [
+                [
+                  1,
+                  2
+                ],
+                [
+                  3,
+                  4
+                ]
+              ]
+            ]
+          }
+        ]
+      },
+      "sourceCrs": "rfc7946",
+      "leftHandedRings": 0,
+      "written": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "GeometryCollection",
+              "geometries": [
+                {
+                  "type": "Point",
+                  "coordinates": [
+                    1.0,
+                    2.0
+                  ]
+                },
+                {
+                  "type": "MultiLineString",
+                  "coordinates": [
+                    [
+                      [
+                        1.0,
+                        2.0
+                      ],
+                      [
+                        3.0,
+                        4.0
+                      ]
+                    ]
+                  ]
+                }
+              ]
+            },
+            "properties": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "gj2008-web-mercator-is-inverse-projected",
+      "input": {
+        "type": "FeatureCollection",
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "urn:ogc:def:crs:EPSG::3857"
+          }
+        },
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                1113194.9079327357,
+                5621521.486192066,
+                100
+              ]
+            },
+            "properties": null
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -13358338.895192828,
+                  -3503549.8435043744
+                ],
+                [
+                  0.0,
+                  -7.081154551613622e-10
+                ]
+              ]
+            },
+            "properties": null
+          }
+        ]
+      },
+      "sourceCrs": "web-mercator",
+      "leftHandedRings": 0,
+      "written": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                10,
+                45,
+                100
+              ]
+            },
+            "properties": null
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -120,
+                  -30
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            },
+            "properties": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "gj2008-crs84-is-read-as-lon-lat",
+      "input": {
+        "type": "Feature",
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+          }
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -0.1427,
+            51.5142
+          ]
+        },
+        "properties": null
+      },
+      "sourceCrs": "declared-crs84",
+      "leftHandedRings": 0,
+      "written": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -0.1427,
+                51.5142
+              ]
+            },
+            "properties": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "an-unsupported-named-crs-is-refused",
+      "input": {
+        "type": "Feature",
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "EPSG:31467"
+          }
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            3500000,
+            5400000
+          ]
+        },
+        "properties": null
+      },
+      "errorPath": "/crs/properties/name"
+    },
+    {
+      "id": "a-linked-crs-is-refused",
+      "input": {
+        "type": "Feature",
+        "crs": {
+          "type": "link",
+          "properties": {
+            "href": "http://example.com/crs/42"
+          }
+        },
+        "geometry": null,
+        "properties": null
+      },
+      "errorPath": "/crs"
+    },
+    {
+      "id": "projected-metres-without-crs-are-not-wgs84",
+      "input": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                621000,
+                5600000
+              ]
+            },
+            "properties": null
+          }
+        ]
+      },
+      "errorPath": "/features/0/geometry/coordinates"
+    },
+    {
+      "id": "an-open-ring-is-refused",
+      "input": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        ]
+      },
+      "errorPath": "/coordinates/0"
+    },
+    {
+      "id": "a-one-position-linestring-is-refused",
+      "input": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      "errorPath": "/coordinates"
+    },
+    {
+      "id": "an-unknown-geometry-type-is-refused",
+      "input": {
+        "type": "Circle",
+        "coordinates": [
+          0,
+          0
+        ]
+      },
+      "errorPath": "/type"
+    },
+    {
+      "id": "a-feature-without-properties-is-refused",
+      "input": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": null
+          }
+        ]
+      },
+      "errorPath": "/features/0/properties"
+    }
+  ]
+}

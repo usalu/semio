@@ -669,6 +669,24 @@ pub mod artifacts {
         }
     }
     #[path = "."]
+    pub mod semio {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v1 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod base {
+                        #[path = "../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
     pub mod step {
         #[path = "."]
         pub mod standards {

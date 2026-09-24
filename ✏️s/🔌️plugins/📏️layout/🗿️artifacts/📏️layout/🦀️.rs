@@ -64,6 +64,31 @@ impl semio_framework_schema::ChildFieldRefs for LayoutDrawingChild {
     }
 }
 
+fn layout_drawing_child_spec() -> dsl::RecordSpec {
+    dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "handle", <store::ArtifactChild<SemioDrawingSnapshot> as dsl::DslField>::shape()), dsl::FieldSpec::new(1, "content", dsl::Shape::Value)])
+}
+
+/// 🧬️ Record binding for the derived `LayoutSnapshot` pack: the child handle through the framework's
+/// own `ArtifactChild` record, the stdio drawing content as its first-party value (the stdio drawing
+/// subset declares no `dsl::DslField` of its own).
+impl dsl::DslField for LayoutDrawingChild {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Record(layout_drawing_child_spec)
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        let mut record = dsl::RecordValue::default();
+        record.fields.insert(0, dsl::DslField::to_value(&self.handle));
+        record.fields.insert(1, dsl::FieldValue::Value(dsl::ToValue::to_value(&self.content)));
+        dsl::FieldValue::Record(record)
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let dsl::FieldValue::Record(record) = value else { return Err(format!("expected Record, found {value:?}")) };
+        let handle = <store::ArtifactChild<SemioDrawingSnapshot> as dsl::DslField>::from_value(record.get(0).ok_or("missing handle")?)?;
+        let Some(dsl::FieldValue::Value(content)) = record.get(1) else { return Err("expected content value".into()) };
+        Ok(Self { handle, content: dsl::FromValue::from_value(content.clone()).map_err(|error| error.to_string())? })
+    }
+}
+
 /// 🪪️ Mints one source-independent identity from the canonical drawing payload.
 pub fn background_drawing_child_handle(_source_tag: &str, content: &SemioDrawingSnapshot) -> LayoutDrawingChild {
     use std::hash::{Hash, Hasher};
@@ -484,8 +509,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: LAYOUT_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.svg".into(), "stdio.png".into()],
-        import_stdio_kinds: vec!["stdio.svg".into(), "stdio.png".into()],
+        export_stdio_kinds: vec!["stdio.dwg".into(), "stdio.dxf".into(), "stdio.json".into(), "stdio.png".into(), "stdio.svg".into()],
+        import_stdio_kinds: vec!["stdio.dwg".into(), "stdio.dxf".into(), "stdio.json".into(), "stdio.svg".into()],
     }
 }
 
@@ -573,6 +598,9 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.layout.layout.composer.layout", "composer", "s.layout.layout@1/*", &[("dialect", "s.layout.layout@1/*")], None),
         ("s.layout.layout.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
         ("s.layout.layout.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.layout.layout.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
+        ("s.layout.layout.composer.dxf", "composer", "s.stdio.dxf@r12/*", &[("dialect", "s.stdio.dxf@r12/*")], None),
+        ("s.layout.layout.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("dialect", "s.stdio.dwg@ac1018/*")], None),
         ("s.layout.layout.grammar.document", "grammar", "layout.document", &[("grammar", "layout.document")], None),
         ("s.layout.layout.grammar.op", "grammar", "layout.op", &[("grammar", "layout.op")], None),
         ("s.layout.layout.grammar.diff", "grammar", "layout.diff", &[("grammar", "layout.diff")], None),
@@ -1193,30 +1221,6 @@ pub mod standards {
                                     }
                                 }
                                 #[path = "."]
-                                pub mod pdf {
-                                    #[path = "."]
-                                    pub mod v1_4 {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod png {
-                                    #[path = "."]
-                                    pub mod v1_2 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
                                 pub mod json {
                                     #[path = "."]
                                     pub mod v_rfc8259 {
@@ -1268,18 +1272,6 @@ pub mod standards {
                                         #[path = "."]
                                         pub mod any {
                                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod pdf {
-                                    #[path = "."]
-                                    pub mod v1_4 {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }

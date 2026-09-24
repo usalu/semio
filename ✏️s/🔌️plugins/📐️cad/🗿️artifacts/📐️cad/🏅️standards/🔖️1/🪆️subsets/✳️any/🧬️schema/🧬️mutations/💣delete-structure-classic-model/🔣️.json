@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteStructureClassicModel",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-structure-classic-model",
-  "binaryTag": null,
+  "binaryTag": 7,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

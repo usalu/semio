@@ -25,7 +25,7 @@ Feature: Sequential and diverging scales position and interpolate colour as d3 d
   @level-quick
   @mode-differential
   Scenario: A sequential scale normalizes its domain onto the unit interval
-    Given the committed probe document local://scale-color.tex and the sequential scales
+    Given the committed probe document shared://🎨️scale-color/scale-color.tex and the sequential scales
       | name     | domain | clamp | inputs                    |
       | seq      | 0,100  | false | -20,0,25,50,75,100,140    |
       | seqclamp | 0,100  | true  | -20,0,25,50,75,100,140    |
@@ -35,7 +35,7 @@ Feature: Sequential and diverging scales position and interpolate colour as d3 d
   @level-quick
   @mode-differential
   Scenario: A diverging scale puts its midpoint at one half
-    Given the committed probe document local://scale-color.tex and the diverging scales
+    Given the committed probe document shared://🎨️scale-color/scale-color.tex and the diverging scales
       | name   | domain    | inputs           |
       | div    | -10,0,30  | -10,-5,0,15,30   |
       | divoff | 0,2,10    | 0,1,2,6,10       |
@@ -45,7 +45,7 @@ Feature: Sequential and diverging scales position and interpolate colour as d3 d
   @level-quick
   @mode-differential
   Scenario: The sRGB interpolator agrees with d3-interpolate
-    Given the committed probe document local://scale-color.tex and the colour pairs
+    Given the committed probe document shared://🎨️scale-color/scale-color.tex and the colour pairs
       | from    | to      | positions          |
       | ff344f  | 34d1bf  | 0,0.25,0.5,0.75,1  |
       | 000000  | ffffff  | 0.5                |
@@ -55,7 +55,7 @@ Feature: Sequential and diverging scales position and interpolate colour as d3 d
   @level-quick
   @mode-differential
   Scenario: The CIE Lab interpolator agrees with d3-interpolate
-    Given the committed probe document local://scale-color.tex and the colour pairs
+    Given the committed probe document shared://🎨️scale-color/scale-color.tex and the colour pairs
       | from    | to      | positions          |
       | ff344f  | 34d1bf  | 0,0.25,0.5,0.75,1  |
       | fa9500  | 001117  | 0.5                |
@@ -65,7 +65,7 @@ Feature: Sequential and diverging scales position and interpolate colour as d3 d
   @level-quick
   @mode-differential
   Scenario: The HCL interpolator takes the shortest hue path, as d3-interpolate does
-    Given the committed probe document local://scale-color.tex and the colour pairs
+    Given the committed probe document shared://🎨️scale-color/scale-color.tex and the colour pairs
       | from    | to      | positions          |
       | ff344f  | 34d1bf  | 0,0.25,0.5,0.75,1  |
       | 7eb77f  | a60009  | 0.5                |
@@ -75,7 +75,7 @@ Feature: Sequential and diverging scales position and interpolate colour as d3 d
   @level-quick
   @mode-differential
   Scenario: A multi-stop ramp is the interpolator applied piecewise
-    Given the committed probe document local://scale-color.tex and the ramp
+    Given the committed probe document shared://🎨️scale-color/scale-color.tex and the ramp
       | stops                     | space | positions            |
       | ff344f,ffffff,34d1bf      | rgb   | 0,0.25,0.5,0.75,1    |
       | ff344f,ffffff,34d1bf      | lab   | 0.125                |

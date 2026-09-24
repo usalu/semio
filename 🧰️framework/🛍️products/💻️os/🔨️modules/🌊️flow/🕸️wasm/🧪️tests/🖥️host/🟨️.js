@@ -2,7 +2,7 @@ import { FLOW_MAX_REQUEST_BYTES, FlowOperation, attachFlowSurface, createFlowFea
 import { createFlowBrowserRuntime } from "../../🌐️browser/🏃️runtime/🟨️.js";
 import * as flowBrowser from "../../🌐️browser/🏃️runtime/🟨️.js";
 import { readFile } from "node:fs/promises";
-import { flowWasmContract } from "../🧬️schema-oracle/🛂️admission/🟦️.ts";
+import { flowWasmContract } from "../../🔮️oracles/🛂️contract-admission/🟦️.ts";
 import { deepStrictEqual } from "node:assert";
 import { MockFlowBridge } from "../🎭️mock-flow-bridge/🟦️.ts";
 import { testFlowOpenOwnership } from "../🔓️open-ownership/🟦️.ts";

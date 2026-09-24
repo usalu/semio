@@ -13,8 +13,10 @@ import { opendir, readFile as readFileAsync } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
 import ts from "typescript";
 import { repoCacheDirectory } from "../📚️library/⚡️caching/🟦️.ts";
-import { type BreachRecord, TEST_LEVELS, type TestLevel, findRepoRoot, getRepoMetaDir, runProbe, testLevelBudgetMs } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord, TEST_LEVELS, type TestLevel, findRepoRoot, getRepoMetaDir, getSemioRoot, runProbe, testLevelBudgetMs } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { type Taxonomy, leadingEmojiIdentity, loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath, pathEmojiStatuteFindings } from "../📚️library/🔍️discovery/🟦️.ts";
+import { validateJsonSchemaSubset } from "../📚️library/🧬️schema/✅️validation/🟦️.ts";
+import protocolSchema from "./🧬️schema/🔣️.json";
 import { packagesForOwner } from "./🕸️dependencies/🟨️.mjs";
 //#endregion 🔌️Adapters
 
@@ -81,6 +83,8 @@ export const CORE_COMPARISON_PROFILES: readonly ComparisonProfileSpec[] = [
 type TestFileKind = Readonly<{ emoji: string; extensionChains: readonly string[] }>;
 type TestPathExclusion = Readonly<{ path: string; mode: "opaque"; reason: string }>;
 type TestLocation = Readonly<{ directoryPath: string; fileKindId: string }>;
+/** 🐹️ A toolchain convention that compiles a test only beside the package it tests, e.g. Go's `_test.go`. */
+export type TestInPackageImplementation = Readonly<{ id: string; implementation: string; fileKindId: string; filenameSuffix: string; rationale: string }>;
 type MutationCatalogAuthority = Pick<Taxonomy, "mutationDomainOwners" | "mutationCatalogSourceOwners" | "pathEmojiPolicy">;
 
 /** 🗂️ Canonical v7 test taxonomy, mirrored from `🔣️taxonomy.json` so drift fails closed. */
@@ -102,6 +106,10 @@ export type TestTaxonomy = MutationCatalogAuthority & Readonly<{
   testImplementationFileKindIds: readonly string[];
   testLegacyDirectoryNames: readonly string[];
   testLegacyFilenamePatterns: readonly Readonly<{ id: string; pattern: string }>[];
+  testInPackageImplementations: readonly TestInPackageImplementation[];
+  testRunnerConfigurationCaseName: string;
+  /** 🔬️ Owner collections whose members bound the search for a case's subject package. */
+  testSubjectBoundaryOwnerKinds: readonly string[];
   testDeliveryScopeDirectoryNames: readonly string[];
   testJavaScriptFrameworkModules: readonly string[];
   testAssertionModules: readonly string[];
@@ -131,7 +139,7 @@ let taxonomyCache: { root: string; value: TestTaxonomy } | null = null;
 export function testTaxonomy(repoRoot: string): TestTaxonomy {
   if (taxonomyCache && taxonomyCache.root === repoRoot) return taxonomyCache.value;
   const parsed = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
-  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testExamplesDirName", "testOraclesDirName", "testObsoleteCategoryStems", "testObsoleteTestEmojiCategoryStems", "testFixtureLegacyDirectoryNames", "exampleAssetsDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testImplementationFileKindIds", "testLegacyDirectoryNames", "testLegacyFilenamePatterns", "testDeliveryScopeDirectoryNames", "testJavaScriptFrameworkModules", "testAssertionModules", "testSelfTestDeclarationPattern", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
+  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testExamplesDirName", "testOraclesDirName", "testObsoleteCategoryStems", "testObsoleteTestEmojiCategoryStems", "testFixtureLegacyDirectoryNames", "exampleAssetsDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testImplementationFileKindIds", "testLegacyDirectoryNames", "testLegacyFilenamePatterns", "testInPackageImplementations", "testRunnerConfigurationCaseName", "testSubjectBoundaryOwnerKinds", "testDeliveryScopeDirectoryNames", "testJavaScriptFrameworkModules", "testAssertionModules", "testSelfTestDeclarationPattern", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
   required.push("mutationDomainOwners", "mutationCatalogSourceOwners", "pathEmojiPolicy");
   const missing = required.filter((key) => parsed[key] === undefined);
   if (missing.length > 0) throw new Error(`🔣️taxonomy.json is missing the test contract keys: ${missing.join(", ")}`);
@@ -171,13 +179,12 @@ export function testAdapterFilenames(taxonomy: TestTaxonomy): Readonly<Record<st
  * only by a CI path filter. This function names no area; which ones are excluded is vocabulary. */
 export function isExcludedTestPath(repoRoot: string, relPath: string): boolean {
   const normalized = relPath.split(sep).join("/");
-  // 🚫️The repository's OWN meta directory is excluded structurally, not by a listed path: it holds
-  // tickets, caches, notes and metrics, and a ticket folder routinely contains a SCRATCH COPY of a
-  // plugin subtree. Those copies were discovered as real owners and real test cases — at one point
-  // the only four cases discovery could find were scratch copies inside one ticket, while every
-  // committed case was invisible. It is derived from `getRepoMetaDir` rather than spelled here so
-  // relocating the cache is still a vocabulary change.
-  const metaRoot = relative(repoRoot, getRepoMetaDir(repoRoot)).split(sep).join("/");
+  // 🚫️The repository's OWN semio root is excluded structurally, not by a listed path: it holds
+  // tickets, caches, notes, metrics and hub runtime data (whose trusted-catalog builds carry cargo
+  // `examples/` output), and a ticket folder routinely contains a SCRATCH COPY of a plugin subtree.
+  // Those copies were discovered as real owners and real test cases. It is derived from
+  // `getSemioRoot` rather than spelled here so relocating it is still a vocabulary change.
+  const metaRoot = relative(repoRoot, getSemioRoot(repoRoot)).split(sep).join("/");
   if (metaRoot.length > 0 && !metaRoot.startsWith("..") && (normalized === metaRoot || normalized.startsWith(`${metaRoot}/`))) return true;
   return Object.values(testTaxonomy(repoRoot).pathExclusions).some(({ path }) => normalized === path.replace(/\/$/, "") || normalized.startsWith(path) || normalized.includes(`/${path}`));
 }
@@ -644,7 +651,20 @@ export function oraclePackages(entry: OracleEntry): string[] {
 }
 
 /** 📇️ A recorded decision that a capability legitimately has no credible reference implementation. */
-export type NoOracleDecision = Readonly<{ id: string; capabilities: readonly string[]; rationale: string; substitutes: readonly string[] }>;
+export type NoOracleDecision = Readonly<{ id: string; capabilities: readonly string[]; rationale: string; substitutes: readonly string[]; coversMutations?: boolean; referenceSurvey?: ReferenceSurvey }>;
+
+/** 🔍️ The recorded negative search behind a justified mutation reference gap. */
+export type ReferenceSurvey = Readonly<{
+  ecosystemsSearched: readonly string[];
+  candidatesConsidered: readonly Readonly<{ package: string; ecosystem: string; verdict: "cannot-express-the-mutation" | "format-defined-by-this-repository" | "no-open-implementation" | "shares-the-production-engine"; reason: string }>[];
+  whyNoneQualifies: string;
+}>;
+
+/** ⚖️ Whether a decision justifies a mutation reference gap: it claims mutations explicitly and carries a surveyed negative search. */
+export function isJustifiedMutationDecision(decision: NoOracleDecision): boolean {
+  const survey = decision.referenceSurvey;
+  return decision.coversMutations === true && survey !== undefined && survey.ecosystemsSearched.length > 0 && survey.candidatesConsidered.length > 0 && survey.whyNoneQualifies.trim().length >= 40;
+}
 
 /**
  * 🦠️ One owner's declared mutation vocabulary for an artifact: the complete list of mutation kinds
@@ -676,6 +696,19 @@ const MUTATION_ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /** 🪆️The path segment that marks an owner as carrying standards/subsets profile coordinates. */
 const PROFILE_MARKER = "/🏅️standards/";
+
+/** 🏷️The logical slug a standard or subset directory renders after its semantic emoji (`🔖️1.1`, `9️⃣89a`, `✉️base`, `1️⃣cc1`). */
+const PROFILE_SLUG_RE = /^[a-z0-9][a-z0-9.-]*$/u;
+
+/**
+ * 🪆️Whether a standard or subset directory name is one taxonomy-admitted semantic directory identity.
+ * The emoji is the owner's own choice (`subsetDirectoryOverrides`, distinct sibling emojis), so only the
+ * shape is judged here; `ownerContainsProfile` binds the exact spelling to the owner's real path.
+ */
+function profileDirectoryIsCanonical(name: string, taxonomy: MutationCatalogAuthority = loadCatalogTaxonomy()): boolean {
+  const identity = leadingEmojiIdentity(name);
+  return identity.emoji.length > 0 && PROFILE_SLUG_RE.test(identity.rest) && pathEmojiStatuteFindings([{ path: name, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length === 0;
+}
 
 /** 🪆️Whether the first standards marker in an owner contains these exact subset coordinates. */
 function ownerContainsProfile(owner: string, standardDirectoryName: string, subsetDirectoryName: string): boolean {
@@ -709,8 +742,8 @@ export function mutationCatalogProblems(value: unknown, owner?: string, taxonomy
       if (typeof value[key] !== "string" || value[key].length === 0) problems.push(`${key} must be a non-empty string`);
       else if (value[key] !== value[key].normalize("NFC")) problems.push(`${key} must be NFC`);
     }
-    if (!standardDirectoryName.startsWith("🔖️")) problems.push("standardDirectoryName must start with 🔖️");
-    if (!subsetDirectoryName.startsWith("✳️")) problems.push("subsetDirectoryName must start with ✳️");
+    if (!profileDirectoryIsCanonical(standardDirectoryName, taxonomy)) problems.push("standardDirectoryName must be one canonical semantic emoji followed by a standard slug");
+    if (!profileDirectoryIsCanonical(subsetDirectoryName, taxonomy)) problems.push("subsetDirectoryName must be one canonical semantic emoji followed by a subset slug");
     if (owner !== undefined && !ownerContainsProfile(owner, standardDirectoryName, subsetDirectoryName)) problems.push("catalog profile does not match its contribution owner");
   } else {
     if (value.standardDirectoryName !== undefined) problems.push("standardDirectoryName is only declarable by an owner that carries standards/subsets coordinates");
@@ -822,7 +855,7 @@ function strictMutationCatalogs(value: unknown, owner: string, manifestPath: str
  * `module` is the import name when it differs from the distribution name (`Pillow` → `PIL`);
  * `version` pins the distribution; `features` are the Cargo features of a local crate.
  */
-export type OracleHostPackage = Readonly<{ implementation: Implementation; package: string; path?: string; version?: string; module?: string; features?: readonly string[] }>;
+export type OracleHostPackage = Readonly<{ implementation: Implementation; package: string; path?: string; version?: string; module?: string; features?: readonly string[]; rationale?: string }>;
 
 /** 🧩️ The name a host imports a contributed package by — the declared module, else the package name. */
 export function oracleHostModule(entry: OracleHostPackage): string {
@@ -875,6 +908,35 @@ export type OracleRegistry = Readonly<{
   contributions: readonly TestContribution[];
 }>;
 
+/** 🧬️ The protocol definition every record of each contribution array must satisfy — the schema is the authority, the TS types mirror it. */
+const CONTRIBUTION_RECORD_DEFINITIONS: Readonly<Record<string, string>> = {
+  oracles: "OracleRegistryEntry",
+  probes: "ProbeRegistryEntry",
+  noOracleDecisions: "NoOracleDecision",
+  comparisonProfiles: "ComparisonProfileSpec",
+  comparisonPipelines: "ComparisonPipeline",
+  toleranceProfiles: "ToleranceProfile",
+  oracleHostPackages: "OracleHostPackage",
+  mutationManifests: "MutationManifest",
+  fixtureManifests: "FixtureManifest",
+};
+
+/**
+ * 🧬️ Validates every record of one parsed contribution against its protocol definition.
+ *
+ * Records were cast, never checked, so an oracle without `comparisonProfiles` or a decision spelled
+ * `capability` reached every gate as `undefined` and crashed or silently passed them. Each finding
+ * names the array, the record's id and the JSON pointer inside it.
+ */
+export function contributionSchemaProblems(parsed: Record<string, unknown>): string[] {
+  return Object.entries(CONTRIBUTION_RECORD_DEFINITIONS).flatMap(([key, definition]) => {
+    const records = parsed[key];
+    if (records === undefined) return [];
+    if (!Array.isArray(records)) return [`${key} must be an array`];
+    return records.flatMap((record, index) => validateJsonSchemaSubset({ $ref: `#/$defs/${definition}` }, record, protocolSchema).map((error) => `${key}[${index}]${isPlainObject(record) && typeof record.id === "string" ? ` ${record.id}` : ""}: ${error.trimStart()} (${definition})`));
+  });
+}
+
 function readContribution(repoRoot: string, owner: string, manifestPath: string): TestContribution | null {
   let parsed: Record<string, unknown>;
   try {
@@ -885,7 +947,7 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
   // 🧫️A fixture manifest's `files[].path` is relative to the CONTRIBUTION, so the directory is stamped
   // in at read time. Resolving it later against the process cwd would silently read the wrong bytes.
   const manifestDir = dirname(manifestPath);
-  const problems: string[] = [];
+  const problems: string[] = contributionSchemaProblems(parsed);
   const mutationCatalogs = strictMutationCatalogs(parsed.mutationCatalogs, owner, manifestPath, problems, testTaxonomy(repoRoot));
   return {
     owner,
@@ -1559,7 +1621,7 @@ export function caseAboveSubsetBreaches(discovered: DiscoveredCase, feature: Par
   const catalog = registry.mutationCatalogs.find((entry) => entry.id === feature.mutationCatalog);
   if (catalog?.subsetDirectoryName === undefined || catalog.subsetDirectoryName.length === 0) return [];
   if (subsetCoordinatesOfOwner(discovered.owner) !== null) return [];
-  const subset = catalog.subsetDirectoryName.slice("✳️".length);
+  const subset = leadingEmojiIdentity(catalog.subsetDirectoryName).rest;
   return [
     breach(
       "testing/taxonomy",
@@ -1686,6 +1748,43 @@ function canonicalTestCaseName(name: string, taxonomy: TestTaxonomy): boolean {
   return !!identity.first && new RegExp(taxonomy.testCaseSlugPattern, "u").test(identity.rest) && pathEmojiStatuteFindings([{ path: name, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length === 0;
 }
 
+const registeredFileKindFilenamesCache = new WeakMap<TestTaxonomy, ReadonlySet<string>>();
+
+/** 🏷️ Every canonical kind-only filename the taxonomy registers; a registered file kind is never a legacy test filename. */
+function registeredFileKindFilenames(taxonomy: TestTaxonomy): ReadonlySet<string> {
+  let names = registeredFileKindFilenamesCache.get(taxonomy);
+  if (!names) registeredFileKindFilenamesCache.set(taxonomy, names = new Set(Object.values(taxonomy.fileKinds).flatMap((kind) => kind.extensionChains.map((extension) => `${kind.emoji}${extension}`))));
+  return names;
+}
+
+/** 🐹️ Names the in-package convention a test source follows when a production source of the same file kind sits beside it. */
+export function inPackageTestImplementation(name: string, siblingNames: Iterable<string>, taxonomy: TestTaxonomy): TestInPackageImplementation | null {
+  for (const entry of taxonomy.testInPackageImplementations) {
+    if (!name.endsWith(entry.filenameSuffix) || name.length === entry.filenameSuffix.length) continue;
+    const extensions = taxonomy.fileKinds[entry.fileKindId]?.extensionChains ?? [];
+    for (const sibling of siblingNames) if (!sibling.endsWith(entry.filenameSuffix) && extensions.some((extension) => sibling.endsWith(extension))) return entry;
+  }
+  return null;
+}
+
+const siblingNamesCache = new WeakMap<ReadonlySet<string>, ReadonlyMap<string, readonly string[]>>();
+
+/** 🗂️ Groups an inventory's file names by directory once per inventory. */
+function siblingNamesOf(path: string, availablePaths: ReadonlySet<string>): readonly string[] {
+  let byDirectory = siblingNamesCache.get(availablePaths);
+  if (!byDirectory) {
+    const grouped = new Map<string, string[]>();
+    for (const entry of availablePaths) {
+      const directory = posix.dirname(entry);
+      const names = grouped.get(directory);
+      if (names) names.push(posix.basename(entry));
+      else grouped.set(directory, [posix.basename(entry)]);
+    }
+    siblingNamesCache.set(availablePaths, byDirectory = grouped);
+  }
+  return byDirectory.get(posix.dirname(path)) ?? [];
+}
+
 /** 📐️ Measures one source path against `<semantic owner>/🧪️tests/<case>/<implementation>`. */
 export function assessTestImplementationPath(path: string, taxonomy: TestTaxonomy): TestPathAssessment {
   const segments = path.split("/");
@@ -1694,7 +1793,7 @@ export function assessTestImplementationPath(path: string, taxonomy: TestTaxonom
   const index = tests.at(-1)!;
   if (tests.length !== 1 || index !== segments.length - 3) return { canonical: false, finding: { code: "test-implementation-depth", path, line: null, detail: `Executable test sources must be direct children of ${taxonomy.testsDirName}/<test-name>.` } };
   const owner = segments.slice(0, index);
-  const delivery = owner.find((segment) => taxonomy.testDeliveryScopeDirectoryNames.includes(segment));
+  const delivery = segments[index + 1] === taxonomy.testRunnerConfigurationCaseName ? undefined : owner.find((segment) => taxonomy.testDeliveryScopeDirectoryNames.includes(segment));
   if (delivery) return { canonical: false, finding: { code: "test-owner-delivery-scope", path, line: null, detail: `The test owner is below delivery scope ${delivery}; move the case to its nearest language-neutral semantic owner.` } };
   if (!canonicalTestCaseName(segments[index + 1]!, taxonomy)) return { canonical: false, finding: { code: "test-case-name", path, line: null, detail: "The test case directory must use one canonical emoji followed by a kebab-case name." } };
   if (!testImplementationFilenames(taxonomy).includes(segments.at(-1)!)) return { canonical: false, finding: { code: "test-implementation-filename", path, line: null, detail: `The implementation filename must be one of ${testImplementationFilenames(taxonomy).join(", ")}.` } };
@@ -2117,7 +2216,7 @@ function maskPythonSource(source: string): string {
 /** 🔎️ Finds executable declarations for non-JavaScript languages after literal masking. */
 function conventionalTestSignals(path: string, source: string, extension: string, taxonomy: TestTaxonomy, availablePaths: ReadonlySet<string>): TestSourceSignal[] {
   if (extension === ".rs") return rustTestSignals(path, source, taxonomy, availablePaths);
-  const masked = extension === ".py" ? maskPythonSource(source) : maskCStyleSource(source, false), patterns: readonly (readonly [RegExp, string])[] = extension === ".go" ? [[/^\s*func\s+(?:Test|Benchmark|Fuzz)[A-Z0-9_]\w*\s*\(/gmu, "Go test declaration"]] : extension === ".py" ? [[/^\s*(?:async\s+)?def\s+test_[A-Za-z0-9_]*\s*\(/gmu, "Python test declaration"], [/^\s*class\s+\w+\s*\([^\n)]*(?:unittest\.)?TestCase[^\n)]*\)\s*:/gmu, "Python TestCase declaration"]] : extension === ".cs" ? [[/^\s*\[(?:Fact|Theory|Test|TestCase)(?:\([^\]]*\))?\]/gmu, ".NET test attribute"]] : [];
+  const masked = extension === ".py" ? maskPythonSource(source) : maskCStyleSource(source, false), patterns: readonly (readonly [RegExp, string])[] = extension === ".go" ? [[/^[ \t]*func\s+(?:Test|Benchmark|Fuzz)(?![a-z])\w*\s*\(\s*\w+\s+\*testing\.[TBF]\s*\)/gmu, "Go test declaration"]] : extension === ".py" ? [[/^[ \t]*(?:async\s+)?def\s+test_[A-Za-z0-9_]*\s*\(/gmu, "Python test declaration"], [/^[ \t]*class\s+\w+\s*\([^\n)]*(?:unittest\.)?TestCase[^\n)]*\)\s*:/gmu, "Python TestCase declaration"]] : extension === ".cs" ? [[/^[ \t]*\[(?:Fact|Theory|Test|TestCase)(?:\([^\]]*\))?\]/gmu, ".NET test attribute"]] : [];
   const found: TestSourceSignal[] = [];
   for (const [pattern, detail] of patterns) for (const match of masked.matchAll(pattern)) found.push({ code: "inline-test-body", line: source.slice(0, match.index!).split("\n").length, detail: `${detail} is outside a canonical test implementation.` });
   return found;
@@ -2137,7 +2236,7 @@ function inspectTestLayoutSource(taxonomy: TestTaxonomy, entry: TestLayoutSource
   findings.push(...fixtureSourceDependencies(path, entry.source, taxonomy, availablePaths));
   const legacyDirectory = segments.slice(0, -1).find((segment) => taxonomy.testLegacyDirectoryNames.includes(segment));
   if (legacyDirectory) findings.push({ code: "legacy-test-directory", path, line: null, detail: `Legacy test directory ${legacyDirectory} is forbidden; use ${taxonomy.testsDirName}/<test-name>/<implementation>.` });
-  const legacyFilename = legacyPatterns.find((entry) => entry.pattern.test(name));
+  const legacyFilename = registeredFileKindFilenames(taxonomy).has(name) ? undefined : legacyPatterns.find((entry) => entry.pattern.test(name));
   if (legacyFilename) findings.push({ code: "legacy-test-filename", path, line: null, detail: `Legacy test filename pattern ${legacyFilename.id} is forbidden.` });
   const assessment = assessTestImplementationPath(path, taxonomy), inFixture = segments.includes(taxonomy.testFixturesDirName);
   if (assessment.finding && !inFixture) findings.push(assessment.finding);
@@ -2145,6 +2244,7 @@ function inspectTestLayoutSource(taxonomy: TestTaxonomy, entry: TestLayoutSource
     if (extension === ".rs") for (const signal of rustTestSignals(path, entry.source, taxonomy, availablePaths)) if (signal.code === "invalid-test-module-wiring") findings.push({ ...signal, path });
     return findings;
   }
+  if (!assessment.finding && inPackageTestImplementation(name, siblingNamesOf(path, availablePaths), taxonomy)) return findings;
   const signals = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs"].includes(extension) ? javascriptTestSignals(path, entry.source, taxonomy, availablePaths) : conventionalTestSignals(path, entry.source, extension, taxonomy, availablePaths);
   return [...findings, ...signals.map((signal) => ({ ...signal, path }))];
 }
@@ -2243,19 +2343,29 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
   // names, and the EXTERNAL distributions an owner puts on a generated host's import path. The
   // second half is how a Python or npm reference library reaches an adapter, so leaving it out
   // would make the purity rule enforceable in Rust only.
-  const probes = [
-    ...registry.oracles.flatMap((entry) => oraclePackages(entry).map((name) => ({ label: entry.id, name, ...importProbe(entry.ecosystem, name) }))),
-    ...externalOracleHostPackages(registry).map((entry) => ({ label: `host package ${entry.ecosystem}:${entry.name}`, name: entry.name, ...importProbe(entry.ecosystem, entry.name) })),
+  // 🎯️An oracle must be independent of the PRODUCTION PATH UNDER TEST: the owner that registers it.
+  // Whether the package may be production-reachable at all is the dependency gate's question, answered
+  // at the declaration (the baseline must classify it test-only or record the debt), so an import here
+  // counts only inside the registering owner's own production sources. A core-registry oracle has no
+  // owner and is scanned repository-wide.
+  const oracleOwners = new Map<string, string[]>();
+  for (const contribution of registry.contributions) for (const oracle of contribution.oracles) oracleOwners.set(oracle.id, [...(oracleOwners.get(oracle.id) ?? []), contribution.owner]);
+  const hostOwners = new Map<string, string[]>();
+  for (const contribution of registry.contributions) for (const host of contribution.oracleHostPackages) if (host.path === undefined) hostOwners.set(`${dependencyEcosystemOf(host.implementation)}:${host.package}`, [...(hostOwners.get(`${dependencyEcosystemOf(host.implementation)}:${host.package}`) ?? []), contribution.owner]);
+  const probes: { label: string; name: string; scope?: readonly string[]; pattern: RegExp; files: RegExp }[] = [
+    ...registry.oracles.flatMap((entry) => oraclePackages(entry).map((name) => ({ label: entry.id, name, scope: oracleOwners.get(entry.id), ...importProbe(entry.ecosystem, name) }))),
+    ...externalOracleHostPackages(registry).map((entry) => ({ label: `host package ${entry.ecosystem}:${entry.name}`, name: entry.name, scope: hostOwners.get(`${entry.ecosystem}:${entry.name}`), ...importProbe(entry.ecosystem, entry.name) })),
   ];
   // 🧩️A contribution directory is test-owned because of WHAT IT IS, which the taxonomy names, not
   // because its manifest happens to parse. Deriving ownership from the discovered manifests alone
   // made a directory production source the moment its JSON was absent or malformed — so an owner
   // adding one would see its own reference libraries reported as a production dependency.
-  // 🧩️A contribution, a probe and a fixture generator are all test-owned by WHAT THEY ARE. All three
-  // link a reference library on purpose; a scan that only knew the first reported the test platform's
-  // own measurement tools as a production dependency on the library they exist to invoke.
+  // 🧩️A contribution, a probe, a fixture generator and anything under a tests directory are all
+  // test-owned by WHAT THEY ARE. A unit test beside production code is compiled only under `cfg(test)`
+  // or a test runner, exactly as the dependency classifier already treats every `🧪️tests/` declaration;
+  // a scan that disagreed reported a unit test's reference library as a production dependency.
   const taxonomy = testTaxonomy(repoRoot);
-  const testOwnedDirs = [taxonomy.testProbeDirName, taxonomy.testGeneratorDirName];
+  const testOwnedDirs = [taxonomy.testProbeDirName, taxonomy.testGeneratorDirName, taxonomy.testsDirName];
   const inContributionDir = (rel: string): boolean => isTestOraclePath(taxonomy, rel) || rel.split("/").some((segment) => testOwnedDirs.includes(segment));
   // 🚫️The repository's OWN meta directory — tickets, caches, notes, metrics — is never production
   // source. Walking into it reported a scratch file inside somebody's ticket folder as a production
@@ -2272,11 +2382,17 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
   const recordedDebt = new Set(registry.oracles.flatMap((entry) => (entry.productionDebt?.reachableFrom ?? []).flatMap((path) => oraclePackages(entry).map((name) => `${path}::${name}`))));
   const hits: { path: string; oracle: string }[] = [];
   const reported = new Set<string>();
+  const scopes = probes.every((probe) => probe.scope !== undefined) ? [...new Set(probes.flatMap((probe) => probe.scope ?? []))] : undefined;
+  const inScope = (rel: string): boolean => scopes === undefined || scopes.some((owner) => rel === owner || rel.startsWith(`${owner}/`));
+  const aboveScope = (rel: string): boolean => scopes !== undefined && (rel === "" || scopes.some((owner) => owner.startsWith(`${rel}/`)));
   walkDirectories(repoRoot, (abs, rel) => {
     if (isExcludedTestPath(repoRoot, rel)) return "skip";
     if (isTestOwned(rel)) return "skip";
-    for (const entry of readdirSync(abs, { withFileTypes: true })) {
+    if (!inScope(rel)) return aboveScope(rel) ? "enter" : "skip";
+    const entries = readdirSync(abs, { withFileTypes: true }), siblingNames = entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
+    for (const entry of entries) {
       if (!entry.isFile() || !/\.(rs|ts|tsx|js|jsx|mjs|cjs|go|py|cs)$/.test(entry.name)) continue;
+      if (inPackageTestImplementation(entry.name, siblingNames, taxonomy)) continue;
       const filePath = `${rel}/${entry.name}`;
       let content: string;
       try {
@@ -2287,6 +2403,7 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
       for (const probe of probes) {
         if (recordedDebt.has(`${filePath}::${probe.name}`)) continue;
         if (!probe.files.test(entry.name)) continue;
+        if (probe.scope !== undefined && !probe.scope.some((owner) => filePath.startsWith(`${owner}/`))) continue;
         if (reported.has(`${filePath}::${probe.name}`) || !probe.pattern.test(content)) continue;
         reported.add(`${filePath}::${probe.name}`);
         hits.push({ path: filePath, oracle: probe.label });
@@ -2391,6 +2508,7 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
   breaches.push(...capabilityManifestBreaches(registry));
   breaches.push(...binaryProtocolDriftBreaches(repoRoot, registry));
   breaches.push(...stubSerializerBreaches(repoRoot));
+  breaches.push(...stubDeserializerBreaches(repoRoot));
   breaches.push(...reimplementationOracleBreaches(repoRoot, registry));
   breaches.push(...nativeSecondImplementationBreaches(registry));
   breaches.push(...registryRecordBreaches(registry));
@@ -3284,9 +3402,9 @@ export function subsetCoordinate(target: SubsetTarget): string {
 
 /** 🪆️ Reads the standards/subsets coordinates out of an owner path, or `null` when it carries none. */
 export function subsetCoordinatesOfOwner(owner: string): { standardDirectoryName: string; subsetDirectoryName: string; standard: string; subset: string } | null {
-  const match = owner.match(/\/🏅️standards\/(🔖️[^/]+)\/🪆️subsets\/(✳️[^/]+)$/);
-  if (match === null) return null;
-  return { standardDirectoryName: match[1]!, subsetDirectoryName: match[2]!, standard: match[1]!.slice("🔖️".length), subset: match[2]!.slice("✳️".length) };
+  const match = owner.match(/\/🏅️standards\/([^/]+)\/🪆️subsets\/([^/]+)$/);
+  if (match === null || !profileDirectoryIsCanonical(match[1]!) || !profileDirectoryIsCanonical(match[2]!)) return null;
+  return { standardDirectoryName: match[1]!, subsetDirectoryName: match[2]!, standard: leadingEmojiIdentity(match[1]!).rest, subset: leadingEmojiIdentity(match[2]!).rest };
 }
 //#endregion 🪆️Subset
 
@@ -3366,7 +3484,7 @@ export function engineFamilyId(engine: EngineFamily | undefined): string {
 }
 
 /** 🎯️ What a mutation needs from an external reference before it may be registered or released. */
-export type OracleRequirement = Readonly<{ capability: string; qualifyingKind: QualifyingOracleKind; distinctEngineFamilies?: number }>;
+export type OracleRequirement = Readonly<{ capability: string; qualifyingKind: QualifyingOracleKind; distinctEngineFamilies?: number; oracle?: string }>;
 
 /** 🦠️ One mutation as its domain owner declares it — the single source feeding production and tests. */
 export type ManifestMutation = Readonly<{
@@ -3380,9 +3498,15 @@ export type ManifestMutation = Readonly<{
   outcomes: readonly MutationOutcomeClass[];
   productionDispatch: Readonly<{ operation: string; bridgeVersion: number; variant?: string }>;
   oracleRequirements: readonly OracleRequirement[];
-  invariants?: Readonly<{ local?: readonly string[]; enclosing?: readonly string[] }>;
+  invariants?: FixtureInvariants;
   normativeTopologyCounts?: boolean;
+  carriers?: readonly string[];
+  notes?: string;
+  comparisonPipeline?: string;
 }>;
+
+/** 🧷️ Named invariants a mutation or fixture must keep, locally and in its enclosing artifact. */
+export type FixtureInvariants = Readonly<{ local?: readonly string[]; enclosing?: readonly string[] }>;
 
 /** 🧬️ One owner's authoritative mutation inventory for one artifact/standard/subset. */
 export type MutationManifest = Readonly<{
@@ -3575,7 +3699,7 @@ export type FixtureClass = (typeof FIXTURE_CLASSES)[number];
 export type FixtureFile = Readonly<{ role: string; path: string; mediaType: string; sha256: string; bytes?: number }>;
 
 /** 🏭️ Exactly how a third-party-generated fixture was produced, in enough detail to re-run it. */
-export type FixtureGenerator = Readonly<{ oracle: string; packageVersion: string; engineFamily: string; engineVersion: string; command: string; seed?: string | number; platform: PlatformId; sourceDigest?: string }>;
+export type FixtureGenerator = Readonly<{ oracle: string; packageVersion: string; engineFamily: string; engineVersion: string; command: string; seed?: string | number; platform: PlatformId; sourceDigest?: string; exportEngine?: EngineFamily }>;
 
 /** 📜️ Where a fixture came from and under what licence it may be committed. */
 export type FixtureProvenance = Readonly<{ source: "generated" | "authored" | "downloaded" | "vendored"; license: string; acquiredAt?: string; attribution?: string; url?: string; security?: "scanned-clean" | "unscanned" | "quarantined"; privacy?: "no-personal-data" | "reviewed" | "unreviewed" }>;
@@ -3604,6 +3728,9 @@ export type FixtureManifest = Readonly<{
   reproducible: boolean;
   family?: string;
   notes?: string;
+  invariants?: FixtureInvariants;
+  comparisonPipeline?: string;
+  reproducibilityDiffs?: readonly string[];
   /** 📁️ Repo-relative directory the manifest was read from; `files[].path` resolves against it. */
   manifestDir?: string;
 }>;
@@ -4153,15 +4280,31 @@ export function binaryProtocolDriftBreaches(repoRoot: string, registry: OracleRe
   for (const owner of [...new Set(registry.contributions.map((entry) => entry.owner))]) {
     const vocabulary = join(repoRoot, owner, "🧬️schema", taxonomy.testMutationVocabularyDirName);
     if (!existsSync(vocabulary)) continue;
-    const kinds = readdirSync(vocabulary, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory() && !entry.isSymbolicLink() && /[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/.test(entry.name))
-      .map((entry) => entry.name.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)![0]);
+    const descriptors = readLeafDescriptors(repoRoot, owner);
+    const kinds = mutationLeafDirectories(repoRoot, owner)
+      .map((leaf) => descriptors.get(leaf)?.semanticKind ?? leaf.split("/").at(-1)!.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)?.[0])
+      .filter((kind): kind is string => kind !== undefined);
     if (kinds.length === 0) continue;
-    const protocol = readFirst([join(vocabulary, "💾️binary", "📡️.protocol.semio"), join(vocabulary, "💾️binary", "📡️.protocol.semio")]);
+    const protocol = readFirst([join(vocabulary, "💾️binary", "📡️.protocol.semio")]);
     if (protocol === null) continue;
-    const declared = new Set([...protocol.text.matchAll(/^record\s+([a-z][a-z0-9-]*)\s+tag=(\d+)/gm)].map((match) => match[1]!));
+    const records = [...protocol.text.matchAll(/^\s*record\s+([a-z][a-z0-9-]*)\s+tag=(\d+)/gm)].map((match) => ({ kind: match[1]!, tag: Number(match[2]) }));
+    const declared = new Set(records.map((record) => record.kind));
     const missing = kinds.filter((kind) => !declared.has(kind));
     const orphaned = [...declared].filter((kind) => !kinds.includes(kind));
+    const reused = records.filter((record, index) => records.findIndex((other) => other.tag === record.tag) !== index || records.findIndex((other) => other.kind === record.kind) !== index);
+    if (reused.length > 0) {
+      breaches.push(
+        breach(
+          "testing/contract",
+          "binary-protocol-tag-reuse",
+          relative(repoRoot, protocol.path).split(sep).join("/"),
+          `${reused.length} record(s) reuse a tag or a kind: ${reused.slice(0, 6).map((record) => `${record.kind}=${record.tag}`).join(", ")}`,
+          "Every codec derives its op tags from these records, so a reused tag decodes two kinds as one and a reused kind makes the tag ambiguous.",
+          "Give every kind exactly one record with a tag no other record uses.",
+          "high",
+        ),
+      );
+    }
     if (missing.length === 0 && orphaned.length === 0) continue;
     breaches.push(
       breach(
@@ -4473,20 +4616,29 @@ function loadSchemaCatalog(repoRoot: string): { catalog: SchemaCatalog | null; d
   return { catalog: { scopes: rows }, diagnostics: found };
 }
 
-const SCHEMA_URI_RE = /^schema:\/\/([a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)*)\/([A-Z][A-Za-z0-9]*)$/u;
+const SCHEMA_URI_RE = /^schema:\/\/([a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)*)\/([A-Z][A-Za-z0-9]*)(?:\?format=([a-z]+))?$/u;
 
 /**
- * 🔗️ Splits a `schema://<scope id>/<ExportId>` URI, or refuses it. Nothing else is a schema URI.
+ * 🔗️ Splits a `schema://<scope id>/<ExportId>[?format=<format id>]` URI, or refuses it. Nothing else
+ * is a schema URI. The optional format id is one of `schemaExportResolution.formatIds` and selects a
+ * non-normative implementation of the same export, such as a scope's GraphQL SDL.
  *
  * The taxonomy owns the grammar (`schemaExportResolution.uriPattern`), so a repository that tightens
  * or widens the id shape does it in one place; the constant here is what an unconfigured tree gets.
  */
-export function parseSchemaUri(uri: string, pattern: string | null = null): { scope: string; export: string } | null {
+export function parseSchemaUri(uri: string, pattern: string | null = null): { scope: string; export: string; format?: string } | null {
   const match = uri.match(pattern === null ? SCHEMA_URI_RE : new RegExp(pattern, "u"));
   if (match === null) return null;
   const scope = match.groups?.scope ?? match[1];
   const exported = match.groups?.export ?? match[2];
-  return scope === undefined || exported === undefined ? null : { scope, export: exported };
+  const format = match.groups?.format ?? match[3];
+  return scope === undefined || exported === undefined ? null : { scope, export: exported, ...(format === undefined ? {} : { format }) };
+}
+
+/** 🔣️ The catalog format key (`🔗️graphql`) a URI format id (`graphql`) names, or `null` when the taxonomy declares no such format. */
+export function schemaFormatKey(repoRoot: string, formatId: string): string | null {
+  const formatIds = (rawTaxonomy(repoRoot).schemaExportResolution as { formatIds?: Record<string, string> } | undefined)?.formatIds ?? {};
+  return Object.entries(formatIds).find(([, id]) => id === formatId)?.[0] ?? null;
 }
 
 /**
@@ -4509,7 +4661,9 @@ export function resolveSchemaExport(repoRoot: string, uri: string, format?: stri
     const names = Object.keys(scope.exports);
     return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-export-unknown", `scope ${JSON.stringify(parsed.scope)} exports ${names.length === 0 ? "nothing" : names.join(", ")} — not ${JSON.stringify(parsed.export)}`, { scope: parsed.scope, export: parsed.export })] };
   }
-  const chosen = format ?? normativeSchemaFormat(repoRoot);
+  const requested = format ?? (parsed.format === undefined ? normativeSchemaFormat(repoRoot) : schemaFormatKey(repoRoot, parsed.format));
+  if (requested === null) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-format-unavailable", `${JSON.stringify(uri)} names format ${JSON.stringify(parsed.format)}, which schemaExportResolution.formatIds does not declare`, { scope: parsed.scope, export: parsed.export, format: parsed.format ?? null })] };
+  const chosen = requested;
   const relative = scope.formats[chosen];
   if (typeof relative !== "string") return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-format-unavailable", `scope ${JSON.stringify(parsed.scope)} declares no ${chosen} implementation`, { scope: parsed.scope, export: parsed.export, format: chosen })] };
   const file = schemaExportFile(scope, exported, chosen, normativeSchemaFormat(repoRoot));
@@ -6231,6 +6385,21 @@ export function oracleRequirementBreaches(registry: OracleRegistry, scope: strin
   for (const requirement of mutation.oracleRequirements) {
     const supplying = registry.oracles.filter((oracle) => oracle.capabilities.includes(requirement.capability));
     const qualifying = supplying.filter((oracle) => isQualifyingOracleKind(oracle.kind));
+    const justified = registry.noOracleDecisions.find((decision) => decision.capabilities.includes(requirement.capability) && isJustifiedMutationDecision(decision));
+    if (qualifying.length === 0 && justified !== undefined) {
+      breaches.push(
+        breach(
+          "testing/oracle",
+          "justified-reference-gap",
+          scope,
+          `${coordinate}: mutation ${mutation.id} has no ${requirement.qualifyingKind} for capability ${requirement.capability}; decision ${justified.id} records a surveyed negative search (${justified.referenceSurvey!.candidatesConsidered.map((candidate) => `${candidate.package}: ${candidate.verdict}`).join(", ")})`,
+          "A surveyed gap is accepted so it does not block, and stays listed so it is revisited when a reference appears.",
+          `Register a ${QUALIFYING_ORACLE_KINDS.join(" / ")} for ${requirement.capability} when one exists, then drop the capability from ${justified.id}.`,
+          "medium",
+        ),
+      );
+      continue;
+    }
     if (qualifying.length === 0) {
       const supplemental = supplying.map((oracle) => `${oracle.id} (${oracle.kind ?? "unclassified"})`);
       breaches.push(
@@ -6530,13 +6699,41 @@ function withoutTestModules(text: string): string {
   }
 }
 
+/** 💬️ Drop whole-line `//` and `//!`/`///` comments before judging a serializer. A leaf that documents the
+ *  stub it REPLACED ("this file used to hand back `print_dsl(...)`") is the opposite of a stub, and matching
+ *  the phrase in prose flagged real zip, stl and dwg writers as internal-DSL emitters. */
+function withoutLineComments(text: string): string {
+  return text.replace(/^[ \t]*\/\/.*$/gm, "");
+}
+
+/** 🪞️ Whether a serializer prints ITS OWN INPUT as DSL text. A hop that builds the target format's
+ *  snapshot and hands that snapshot's own wire text onward (`print_dsl(&md)` for an `MdSnapshot`) is the
+ *  io-mechanism's designed shape — the format's own codec reaches the carrier on the next hop — and
+ *  flagging the call by name alone reported real markdown writers as internal-DSL emitters. */
+function printsItsInputAsDsl(text: string): boolean {
+  for (const match of text.matchAll(/fn\s+serialize(?:_bytes|_text)?\s*(?:<[^>]*>)?\s*\(([^)]*)\)/g)) {
+    const name = ((match[1] ?? "").split(",")[0] ?? "").split(":")[0]?.trim().replace(/^(mut|&)\s*/, "") ?? "";
+    if (!name || name === "self" || name === "&self") continue;
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp(`print_dsl\\s*\\(\\s*&?${escaped}\\b|\\b${escaped}\\s*\\.\\s*print_dsl\\s*\\(`).test(text)) return true;
+  }
+  return false;
+}
+
+/** 🪞️ Whether a deserializer parses this artifact's own DSL out of the file. The one legitimate shape
+ *  is the shared zip document archive, whose declared content IS the `snapshot.<ext>.semio` member; any
+ *  other DSL parse means a real file of the declared format cannot be imported. */
+function parsesItsInputAsDsl(text: string): boolean {
+  return /parse_dsl\s*\(/.test(text) && !/\b(document_archive_member|decode_document_archive)\b/.test(text);
+}
+
 /** 🕳️ A serializer whose body NEVER READS ITS INPUT cannot represent a mutation, whatever else it does.
  *  This one predicate subsumes several shapes that were each hiding separately: an `Err("not
  *  implemented")` stub, a bridge returning `XmlDocument::default()` regardless of argument, and a DWG
  *  leaf that ignores its parameter and returns a hardcoded empty document. Detecting the CAUSE rather
  *  than each spelling is what keeps the gate from needing a new rule per author. */
-function ignoresItsInput(text: string): boolean {
-  for (const match of text.matchAll(/fn\s+serialize(?:_bytes|_text)?\s*(?:<[^>]*>)?\s*\(([^)]*)\)/g)) {
+function ignoresItsInput(text: string, entry: "serialize" | "deserialize" = "serialize"): boolean {
+  for (const match of text.matchAll(new RegExp(`fn\\s+${entry}(?:_bytes|_text)?\\s*(?:<[^>]*>)?\\s*\\(([^)]*)\\)`, "g"))) {
     const parameter = (match[1] ?? "").split(",")[0]?.trim() ?? "";
     const name = parameter.split(":")[0]?.trim().replace(/^(mut|&)\s*/, "") ?? "";
     if (!name || name === "self" || name === "&self") continue;
@@ -6689,6 +6886,57 @@ export function fixtureWriterProvenanceBreaches(repoRoot: string, registry: Orac
   return breaches;
 }
 
+/**
+ * 🧩️ The import half of the same lie: a declared import dialect whose deserializer never reads the
+ * file it is handed, or parses it as this artifact's own DSL instead of the declared format. The
+ * common spelling is `let _ = bytes; Ok(Snapshot::default())` — every import "succeeds" and yields an
+ * empty document, so a user importing a real STL or DXF silently gets nothing. A format the artifact
+ * cannot represent must not be declared at all; one it can must be read.
+ */
+export function stubDeserializerBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  walkDirectories(repoRoot, (abs, rel) => {
+    if (isExcludedTestPath(repoRoot, rel)) return "skip";
+    if (!rel.includes("🧩️deserializers")) return "enter";
+    for (const entry of readdirSync(abs, { withFileTypes: true })) {
+      if (!entry.isFile() || !entry.name.endsWith(".rs")) continue;
+      let text: string;
+      try {
+        text = withoutLineComments(withoutTestModules(readFileSync(join(abs, entry.name), "utf8")));
+      } catch {
+        continue;
+      }
+      if (!/fn\s+deserialize(_bytes|_text)?\s*[(<]/.test(text)) continue;
+      const format = rel.match(/🗿️artifacts\/[^/]*?([a-z0-9]+)\/🔖️/)?.[1] ?? "";
+      const formatType = format.replace(/^./, (c) => c.toUpperCase());
+      const parsesDsl = parsesItsInputAsDsl(text.split("\n").filter((line) => !(formatType && new RegExp(`<\\s*${formatType}Snapshot\\s+as\\s+store::ArtifactDsl\\s*>::parse_dsl`).test(line))).join("\n"));
+      const coerces = (/to_value\s*\(\s*&?[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text) || /\b[a-z_][a-z0-9_]*\s*\.\s*to_value\s*\(\s*\)/.test(text)) && /from_value\s*[:(<]/.test(text);
+      const inert = ignoresItsInput(text, "deserialize");
+      if (!parsesDsl && !coerces && !inert) continue;
+      // 🧭️`binary@raw` is the raw-bytes carrier, like txt: a stdio format read from it by its own
+      // parser (STEP's and IFC's DSL IS Part 21) is the format, not a stub.
+      if (format === "txt" || format === "json" || format === "binary" || format === "") continue;
+      breaches.push(
+        breach(
+          "testing/contract",
+          "stub-deserializer",
+          `${rel}/${entry.name}`,
+          inert ? `The ${format} deserializer never reads its input` : coerces ? `The ${format} deserializer coerces the ${format} snapshot through serde into this artifact` : `The ${format} deserializer parses the artifact's internal DSL, not ${format}`,
+          inert
+            ? `Its deserialize function never mentions its own input parameter, so every ${format} file imports as the same document — usually an empty default reported as success.`
+            : coerces
+              ? `It serializes the decoded ${format} snapshot to a value tree and reads that tree as this artifact; the two shapes share no fields, so every real ${format} file imports as an empty or failing document.`
+              : `It hands the ${format} bytes to this artifact's own DSL parser, so a real ${format} file from any other producer cannot be imported.`,
+          `Read ${format} into this artifact's model, or remove ${format} from this subset's import dialects so the capability is not claimed.`,
+          "high",
+        ),
+      );
+    }
+    return "enter";
+  });
+  return breaches;
+}
+
 export function stubSerializerBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   walkDirectories(repoRoot, (abs, rel) => {
@@ -6698,7 +6946,7 @@ export function stubSerializerBreaches(repoRoot: string): BreachRecord[] {
       if (!entry.isFile() || !entry.name.endsWith(".rs")) continue;
       let text: string;
       try {
-        text = withoutTestModules(readFileSync(join(abs, entry.name), "utf8"));
+        text = withoutLineComments(withoutTestModules(readFileSync(join(abs, entry.name), "utf8")));
       } catch {
         continue;
       }
@@ -6707,7 +6955,7 @@ export function stubSerializerBreaches(repoRoot: string): BreachRecord[] {
       // glTF, IFC and STEP that way. Keying the gate on `serialize_bytes` skipped every one of them and
       // reported the whole owner as having real carriers.
       if (!/fn\s+serialize(_bytes|_text)?\s*[(<]/.test(text)) continue;
-      const printsDsl = /print_dsl\s*\(/.test(text);
+      const printsDsl = printsItsInputAsDsl(text);
       // 🕳️THE SECOND STUB SHAPE, and the worse of the two. `encode_pack` the SOURCE snapshot, then
       // `decode_pack` those very bytes AS THE TARGET type — one artifact's binary envelope reinterpreted
       // as another's. It is not an unimplemented export, it is type confusion: at best it fails on the
@@ -6720,7 +6968,7 @@ export function stubSerializerBreaches(repoRoot: string): BreachRecord[] {
       // xlsx export turns 266 mutable registers into a workbook with no sheets, and reports Ok. It neither
       // prints DSL nor transmutes an envelope, so both earlier detectors passed it, and 266 mutations were
       // counted as having a real carrier on the strength of an exporter that can never show a mutation.
-      const coerces = /to_value\s*\(\s*&?[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text) && /from_value\s*[:(<]/.test(text);
+      const coerces = (/to_value\s*\(\s*&?[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text) || /\b[a-z_][a-z0-9_]*\s*\.\s*to_value\s*\(\s*\)/.test(text)) && /from_value\s*[:(<]/.test(text);
       const inert = ignoresItsInput(text);
       if (!printsDsl && !transmutes && !coerces && !inert) continue;
       const format = rel.match(/🗿️artifacts\/[^/]*?([a-z0-9]+)\/🔖️/)?.[1] ?? "";
@@ -6770,8 +7018,8 @@ export function noOracleMisuseBreaches(registry: OracleRegistry): BreachRecord[]
       continue;
     }
     const covered = decision.capabilities.filter((capability) => mutationCapabilities.has(capability));
-    if (covered.length > 0) {
-      breaches.push(breach("testing/oracle", "no-oracle-covers-mutation", decision.id, `No-oracle decision ${decision.id} claims mutation capability/capabilities ${covered.join(", ")}`, "A runtime mutation's oracle requirement is discharged only by a qualifying third-party reference; recording a decision instead would make the gap invisible rather than blocking.", "Remove the mutation capability from the decision and register a qualifying oracle, or block the mutation."));
+    if (covered.length > 0 && !isJustifiedMutationDecision(decision)) {
+      breaches.push(breach("testing/oracle", "no-oracle-covers-mutation", decision.id, `No-oracle decision ${decision.id} claims mutation capability/capabilities ${covered.join(", ")}`, "A runtime mutation's oracle requirement is discharged only by a qualifying third-party reference; recording a decision instead would make the gap invisible rather than blocking.", "Register a qualifying oracle and remove the mutation capability from the decision; where no third party can express the mutation, record coversMutations: true with a referenceSurvey naming every candidate considered."));
     }
   }
   return breaches;

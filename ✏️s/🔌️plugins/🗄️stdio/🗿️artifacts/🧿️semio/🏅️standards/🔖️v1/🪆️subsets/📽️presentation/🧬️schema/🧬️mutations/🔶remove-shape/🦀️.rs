@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveShape {
-    pub(crate) slide_index: usize,
-    pub(crate) shape_index: usize,
+    pub slide_index: usize,
+    pub shape_index: usize,
 }
 
 impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for RemoveShape {

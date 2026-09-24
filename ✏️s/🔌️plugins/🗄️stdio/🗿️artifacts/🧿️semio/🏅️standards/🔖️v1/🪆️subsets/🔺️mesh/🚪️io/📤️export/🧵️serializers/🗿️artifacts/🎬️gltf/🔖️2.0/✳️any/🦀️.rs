@@ -11,12 +11,14 @@
 //! `SemioTexture`s are emitted as `images`/`textures` entries but nothing in this schema
 //! (materials have no texture indices) ever references them by index -- still real, valid gltf,
 //! just unreferenced, exactly mirroring what the deserializer harvests independently of material
-//! texture refs. `SemioMeshSnapshot` has no scene graph -- `scenes`/`nodes` are left empty.
+//! texture refs. `SemioMeshSnapshot` has no scene graph, so the file gets one default scene holding one
+//! untransformed node per mesh — the minimum a viewer needs to show anything. `POSITION` accessors
+//! carry the `min`/`max` bounds the specification requires.
 
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_gltf::engine::{encode_data_uri, GltfAccessorType, GltfComponentType};
-use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfAlphaMode, GltfBuffer, GltfBufferView, GltfDocument, GltfImage, GltfMaterial, GltfMesh, GltfPbrMetallicRoughness, GltfPrimitive, GltfSourceForm, GltfTexture};
+use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfAlphaMode, GltfBuffer, GltfBufferView, GltfDocument, GltfImage, GltfMaterial, GltfMesh, GltfNode, GltfPbrMetallicRoughness, GltfPrimitive, GltfScene, GltfSourceForm, GltfTexture};
 use semio_s_artifact_stdio_gltf::GltfSnapshot;
 use semio_s_artifact_stdio_gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
 use std::collections::HashMap;
@@ -99,6 +101,9 @@ impl ArtifactSerializer for SemioMeshToGltf {
                 let mut attributes = Vec::new();
                 let pos_values: Vec<f64> = prim.positions.iter().flat_map(|p| [p.x, p.y, p.z]).collect();
                 let pos_idx = push_accessor(&mut buf, &mut buffer_views, &mut accessors, GltfComponentType::Float, GltfAccessorType::Vec3, &pos_values, prim.positions.len());
+                let stored = |axis: usize| pos_values.iter().skip(axis).step_by(3).map(|v| f64::from(*v as f32));
+                accessors[pos_idx].min = Some((0..3).map(|axis| stored(axis).fold(f64::INFINITY, f64::min)).collect());
+                accessors[pos_idx].max = Some((0..3).map(|axis| stored(axis).fold(f64::NEG_INFINITY, f64::max)).collect());
                 attributes.push(("POSITION".to_string(), pos_idx));
 
                 if !prim.normals.is_empty() {
@@ -172,7 +177,10 @@ impl ArtifactSerializer for SemioMeshToGltf {
             gltf_textures.push(GltfTexture { sampler: None, source: Some(img_idx), name: Some(tex.id.clone()), extensions: None, extras: None });
         }
 
-        let mut document = GltfDocument { meshes: gltf_meshes, materials: gltf_materials, images: gltf_images, textures: gltf_textures, accessors, buffer_views, ..GltfDocument::default() };
+        let nodes: Vec<GltfNode> = from.meshes.iter().enumerate().map(|(index, mesh)| GltfNode { mesh: Some(index), name: Some(mesh.id.clone()), ..GltfNode::default() }).collect();
+        let scenes = if nodes.is_empty() { Vec::new() } else { vec![GltfScene { nodes: (0..nodes.len()).collect(), ..GltfScene::default() }] };
+        let scene = (!scenes.is_empty()).then_some(0);
+        let mut document = GltfDocument { meshes: gltf_meshes, materials: gltf_materials, images: gltf_images, textures: gltf_textures, accessors, buffer_views, nodes, scenes, scene, ..GltfDocument::default() };
         let buffers = if buf.is_empty() {
             Vec::new()
         } else {

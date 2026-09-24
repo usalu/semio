@@ -1,6 +1,6 @@
 //! 📌️ Direct binary identity for `insert-annotation`.
 
-pub const TAG: u8 = 21;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "insert-annotation");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::InsertAnnotation;

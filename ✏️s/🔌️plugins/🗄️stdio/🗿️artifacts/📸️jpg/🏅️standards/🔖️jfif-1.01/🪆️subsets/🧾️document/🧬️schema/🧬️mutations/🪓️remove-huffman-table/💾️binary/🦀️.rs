@@ -1,7 +1,7 @@
 //! 💾️ Direct remove-huffman-table binary codec.
 use super::*;
 use crate::schema::mutations::binary::Entry;
-pub const BINARY_TAG: u8 = 6;
+pub const BINARY_TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "remove-huffman-table");
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };
 
 pub fn encode(value: &JpgMutation) -> Option<Result<Vec<u8>, protocol::ProtocolError>> {

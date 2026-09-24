@@ -267,12 +267,15 @@ impl BitmapInferenceJob {
         let snapshot = request.resolve_snapshot()?;
         let input_cells = (snapshot.input.width as usize).saturating_mul(snapshot.input.height as usize);
         let output_cells = (snapshot.output.width as usize).saturating_mul(snapshot.output.height as usize);
+        let pattern = snapshot.model.pattern_size.max(1) as usize;
+        let input_min = (snapshot.input.width as usize).min(snapshot.input.height as usize);
         if input_cells == 0
             || output_cells == 0
             || input_cells > MAX_BITMAP_INPUT_CELLS
             || output_cells > MAX_BITMAP_OUTPUT_CELLS
             || snapshot.pinned.len() > MAX_BITMAP_PINS
             || snapshot.input.palette.is_empty()
+            || (!snapshot.model.periodic_input && pattern > input_min)
             || request.checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.len() > engine::job::MAX_CHECKPOINT_BYTES)
         {
             return Err("bitmap-inference-admission-exceeded".into());

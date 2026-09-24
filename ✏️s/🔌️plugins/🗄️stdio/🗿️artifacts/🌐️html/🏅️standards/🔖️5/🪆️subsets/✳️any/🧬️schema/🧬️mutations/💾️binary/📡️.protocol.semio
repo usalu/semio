@@ -1,4 +1,31 @@
 dialect protocol
-stdio.html.mutations
-magic = %x00
-payload = op-text-utf8 ; UTF-8 bytes of print_op's output verbatim, not a distinct wire format.
+protocol None
+version 1
+schema None
+start op
+framing record
+
+# Real `HtmlMutation` op frame (`dsl::tagged_text_binary`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`, then
+# the kind's `OpText` arguments as UTF-8 (the value tree cannot tell `Some(None)` from `None`).
+# Each record is one mutation kind at its wire tag; this file is the only source of those tags.
+header fixed 2
+field format u8
+field tag varint
+record set-snapshot tag=0
+field payload bytes
+record set-doctype tag=1
+field payload bytes
+record insert-node tag=2
+field payload bytes
+record remove-node tag=3
+field payload bytes
+record set-element-name tag=4
+field payload bytes
+record set-attribute tag=5
+field payload bytes
+record set-text tag=6
+field payload bytes
+record set-comment tag=7
+field payload bytes
+record set-raw-text tag=8
+field payload bytes

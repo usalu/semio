@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePaletteColor",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-palette-color",
-  "binaryTag": null,
+  "binaryTag": 4,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

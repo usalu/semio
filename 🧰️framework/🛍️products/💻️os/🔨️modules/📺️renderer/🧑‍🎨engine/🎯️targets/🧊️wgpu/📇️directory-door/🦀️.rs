@@ -196,6 +196,6 @@ pub type ShellDirectoryClient = semio_framework_os_kernel::os_directory::client:
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "../../../🧪️tests/📇️wgpu-directory-door/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

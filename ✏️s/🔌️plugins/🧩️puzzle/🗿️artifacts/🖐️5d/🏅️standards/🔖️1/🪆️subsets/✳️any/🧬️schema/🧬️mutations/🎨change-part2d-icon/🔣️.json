@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePart2dIcon",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-part2d-icon",
-  "binaryTag": null,
+  "binaryTag": 5,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

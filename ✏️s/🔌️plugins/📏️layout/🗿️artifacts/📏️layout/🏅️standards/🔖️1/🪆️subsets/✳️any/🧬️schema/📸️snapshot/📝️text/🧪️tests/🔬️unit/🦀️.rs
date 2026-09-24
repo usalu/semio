@@ -95,17 +95,13 @@ async fn dsl_round_trips_overrides_frame_flags_and_absent_print_target() {
     store::os_store::test_support::assert_dsl_round_trip(&overrides_frame_flags_document());
 }
 
-/// 🧪️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: the `dsl::` derive-engine
-/// parser is gone (dropped alongside the `dsl::DslArtifact` derive — see `📸️snapshot/🦀️.rs`'s
-/// doc comment on why), replaced by the hand-rolled `key=<hex-or-json-hex>` line codec. These
-/// assertions now exercise THAT codec's real failure modes instead of the old grammar's.
+/// 🧪️ The derived spec-driven grammar's real failure modes.
 #[semio_framework_async_macros::async_test]
-async fn parse_dsl_reports_hand_rolled_codec_errors() {
-    assert!(parse_dsl("").is_err(), "empty text must fail: no schema line at all");
-    assert!(parse_dsl("not a document at all").is_err(), "a line with no recognized key= prefix must fail");
-    assert!(parse_dsl("name=74").is_err(), "a document missing its required schema= line must fail");
-    let odd_hex = format!("schema={}\nname=1", super::super::enc_str(LAYOUT_DOCUMENT_SCHEMA));
-    assert!(parse_dsl(&odd_hex).is_err(), "an odd-length hex value must fail to decode");
-    let bad_json_grid = format!("schema={}\ngrid={}", super::super::enc_str(LAYOUT_DOCUMENT_SCHEMA), super::super::enc_str("not json"));
-    assert!(parse_dsl(&bad_json_grid).is_err(), "a grid= line whose hex decodes to non-JSON must fail");
+async fn parse_dsl_reports_derived_grammar_errors() {
+    assert!(parse_dsl("").is_err(), "empty text must fail: no schema field at all");
+    assert!(parse_dsl("not a document at all").is_err(), "a token with no recognized key must fail");
+    assert!(parse_dsl("name=Demo").is_err(), "a document missing its required schema field must fail");
+    let printed = print_dsl(&super::super::empty_layout_snapshot());
+    assert!(parse_dsl(&printed.replacen("baseline-grid=", "baseline-grid=notanumber ", 1)).is_err(), "a malformed nested grid value must fail");
+    assert!(parse_dsl(&printed.replacen("name=", "unknown-field=1 name=", 1)).is_err(), "an unknown field must fail");
 }

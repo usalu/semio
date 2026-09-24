@@ -1,6 +1,6 @@
 //! 🔧️ Direct binary identity for `set-object-value`.
 
-pub const TAG: u8 = 8;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-object-value");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetObjectValue;

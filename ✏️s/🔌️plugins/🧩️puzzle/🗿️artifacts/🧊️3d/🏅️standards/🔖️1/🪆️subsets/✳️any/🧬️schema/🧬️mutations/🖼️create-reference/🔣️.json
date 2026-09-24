@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateReference",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-reference",
-  "binaryTag": null,
+  "binaryTag": 24,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

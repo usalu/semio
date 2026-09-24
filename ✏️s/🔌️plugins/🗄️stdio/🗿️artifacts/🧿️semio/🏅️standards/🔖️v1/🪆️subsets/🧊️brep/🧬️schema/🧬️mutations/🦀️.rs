@@ -184,26 +184,40 @@ impl OpText for SemioBrepMutation {
 }
 //#endregion 🔖️OpText
 
-//#region 🔖️OpBinary
-/// 🏷️ Ordinal table, same declaration order as `SemioBrepMutation`'s own enum variants and
-/// `parse_brep_mutation`'s keyword match — the real binary `tag` field's source of truth.
-const OP_KEYWORDS: [&str; 13] = ["create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioBrepMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_CREATE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-vertex");
+const TAG_DELETE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-vertex");
+const TAG_CREATE_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-edge");
+const TAG_DELETE_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-edge");
+const TAG_CREATE_FACE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-face");
+const TAG_DELETE_FACE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-face");
+const TAG_CREATE_SHELL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-shell");
+const TAG_DELETE_SHELL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-shell");
+const TAG_CREATE_SOLID: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-solid");
+const TAG_DELETE_SOLID: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-solid");
+const TAG_REPLACE_CURVE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-curve");
+const TAG_REPLACE_SURFACE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-surface");
+const TAG_MOVE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-vertex");
+//#endregion 🏷️WireTags
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioBrepMutation) -> u8 {
+fn wire_tag(m: &SemioBrepMutation) -> u8 {
     match m {
-        SemioBrepMutation::CreateVertex(_) => 0,
-        SemioBrepMutation::DeleteVertex(_) => 1,
-        SemioBrepMutation::CreateEdge(_) => 2,
-        SemioBrepMutation::DeleteEdge(_) => 3,
-        SemioBrepMutation::CreateFace(_) => 4,
-        SemioBrepMutation::DeleteFace(_) => 5,
-        SemioBrepMutation::CreateShell(_) => 6,
-        SemioBrepMutation::DeleteShell(_) => 7,
-        SemioBrepMutation::CreateSolid(_) => 8,
-        SemioBrepMutation::DeleteSolid(_) => 9,
-        SemioBrepMutation::ReplaceCurve(_) => 10,
-        SemioBrepMutation::ReplaceSurface(_) => 11,
-        SemioBrepMutation::MoveVertex(_) => 12,
+        SemioBrepMutation::CreateVertex(_) => TAG_CREATE_VERTEX,
+        SemioBrepMutation::DeleteVertex(_) => TAG_DELETE_VERTEX,
+        SemioBrepMutation::CreateEdge(_) => TAG_CREATE_EDGE,
+        SemioBrepMutation::DeleteEdge(_) => TAG_DELETE_EDGE,
+        SemioBrepMutation::CreateFace(_) => TAG_CREATE_FACE,
+        SemioBrepMutation::DeleteFace(_) => TAG_DELETE_FACE,
+        SemioBrepMutation::CreateShell(_) => TAG_CREATE_SHELL,
+        SemioBrepMutation::DeleteShell(_) => TAG_DELETE_SHELL,
+        SemioBrepMutation::CreateSolid(_) => TAG_CREATE_SOLID,
+        SemioBrepMutation::DeleteSolid(_) => TAG_DELETE_SOLID,
+        SemioBrepMutation::ReplaceCurve(_) => TAG_REPLACE_CURVE,
+        SemioBrepMutation::ReplaceSurface(_) => TAG_REPLACE_SURFACE,
+        SemioBrepMutation::MoveVertex(_) => TAG_MOVE_VERTEX,
     }
 }
 /// ✂️ Just the `key=value ...` argument tail of `print_brep_mutation` — the binary frame's `tag`
@@ -216,15 +230,15 @@ fn print_brep_mutation_args(m: &SemioBrepMutation) -> String {
     }
 }
 
-/// ⚡️ Real binary op frame: `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant
-/// ordinal, see [`OP_KEYWORDS`]) as two REAL fixed fields, then the variant's own `key=value ...`
+/// ⚡️ Real binary op frame: `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in
+/// `💾️binary/📡️.protocol.semio`) as two REAL fixed fields, then the variant's own `key=value ...`
 /// argument payload as one opaque trailing `bytes` chain — reusing the already-real, already-tested
 /// `print_brep_mutation`/`parse_brep_mutation` text codec rather than re-deriving a second
 /// independent encoding.
 impl OpBinary for SemioBrepMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_brep_mutation_args(self).as_bytes());
         Ok(out)
     }
@@ -237,7 +251,7 @@ impl OpBinary for SemioBrepMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })

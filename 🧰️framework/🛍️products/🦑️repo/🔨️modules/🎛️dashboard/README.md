@@ -12,6 +12,6 @@ Rust only by design — it consumes the repo domain crates in process.
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
-`🧪️test` harness; the recorded no-oracle decisions live in `🔮️oracle/🔣️.json`.
+`🧪️test` harness; the recorded no-oracle decisions live in `🔮️oracles/🔣️.json`.
 
 `🌳️command-tree-projection`.

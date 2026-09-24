@@ -11,7 +11,6 @@
     "/renderer-modules/wgpu": "compilerRoot",
     "/🚀️boot.js": "bootRoot",
     "/🎞️frame-worker.js": "workerRoot",
-    "/🔌️plugin-modules/🪞️vendor": "fontRoot",
     "/🔌️plugin-modules": "moduleRoot",
     "/🧩️extension-modules": "extensionRoot"
   },

@@ -7,7 +7,7 @@
   "aggregateVariant": "AddSpaceListMember",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-space-list-member",
-  "binaryTag": null,
+  "binaryTag": 245,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

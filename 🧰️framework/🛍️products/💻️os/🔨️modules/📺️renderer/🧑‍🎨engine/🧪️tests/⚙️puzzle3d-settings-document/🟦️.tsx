@@ -15,7 +15,7 @@ import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const law = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️fixtures/⚙️puzzle3d-settings-document/🔣️.json"), "utf8")) as {
+const law = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/⚙️puzzle3d-settings-document/🔣️.json"), "utf8")) as {
   readonly document: { readonly surface: string; readonly revision: number; readonly root: number; readonly nodes: readonly Record<string, unknown>[] };
   readonly windowId: string;
   readonly controls: readonly { readonly key: string; readonly value: number; readonly step: number; readonly action: string; readonly label: string }[];

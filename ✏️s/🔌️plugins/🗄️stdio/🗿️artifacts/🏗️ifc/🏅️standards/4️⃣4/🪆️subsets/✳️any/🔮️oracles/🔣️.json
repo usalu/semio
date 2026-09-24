@@ -115,7 +115,7 @@
     {
       "id": "semantic-ifc-v1",
       "description": "IFC4 (ISO 10303-21 exchange structures carrying IFC4's own EXPRESS schema) compared by declared FILE_SCHEMA and the full id-keyed entity graph (name plus positional argument values, reals tolerant). Header timestamp, preprocessor/originating-system strings, comment placement and line-wrapping are writer freedom -- the same normative surface IfcDiff/IfcMutation themselves operate over.",
-      "tolerance": 1e-06,
+      "tolerance": 0.000001,
       "ignoreKeys": [
         "timestamp",
         "preprocessorVersion",

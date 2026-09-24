@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeTimeSeriesScheduleTimestep",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-time-series-schedule-timestep",
-  "binaryTag": null,
+  "binaryTag": 275,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

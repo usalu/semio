@@ -7,7 +7,7 @@
   "aggregateVariant": "RenameNode",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-node",
-  "binaryTag": 10,
+  "binaryTag": 12,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

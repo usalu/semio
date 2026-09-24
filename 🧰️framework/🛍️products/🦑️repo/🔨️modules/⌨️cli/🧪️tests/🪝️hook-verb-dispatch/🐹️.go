@@ -14,7 +14,7 @@ import (
 
 // 📥️ The committed invocations every scenario reads.
 func vectors(ctx *host.Context) ([]map[string]interface{}, error) {
-	raw, err := ctx.FixtureBytes("local://🪝️hook-invocations.json")
+	raw, err := ctx.FixtureBytes("shared://🪝️hook-verb-dispatch/🪝️hook-invocations.json")
 	if err != nil {
 		return nil, err
 	}

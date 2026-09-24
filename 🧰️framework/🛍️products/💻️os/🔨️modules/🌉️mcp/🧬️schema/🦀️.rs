@@ -493,8 +493,11 @@ pub fn artifact_create_input_schema() -> serde_json::Value {
     wire("artifact.create", "input", artifact_create_input_shape())
 }
 
+/// 📐️ `artifact_create` runs as a job (`jobId`, readable with `job_get`, cancellable with
+/// `job_cancel` or `notifications/cancelled`); a cancelled create answers `CANCELLED` and creates
+/// nothing.
 pub fn artifact_create_output_shape() -> serde_json::Value {
-    serde_json::json!({ "type": "object", "properties": { "artifactId": { "type": "string" }, "kind": { "type": "string" }, "revision": nullable_revision_stamp_shape() } })
+    serde_json::json!({ "type": "object", "properties": { "jobId": { "type": "string" }, "status": { "enum": ["SUCCEEDED", "CANCELLED"] }, "artifactId": { "type": "string" }, "kind": { "type": "string" }, "pluginId": { "type": "string" }, "appId": { "type": "string" }, "sizeBytes": { "type": "integer", "minimum": 0 }, "revision": nullable_revision_stamp_shape() }, "required": ["jobId", "status", "artifactId", "kind"] })
 }
 
 pub fn artifact_create_output_schema() -> serde_json::Value {

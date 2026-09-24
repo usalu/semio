@@ -214,6 +214,7 @@ export interface PolicyGrant {
 /** 🎓️ A named bundle of grants; `admin`/`editor`/`viewer` are values of this type, never enums. */
 export interface PolicyTemplate {
   readonly name: string;
+  readonly autoApply: boolean;
   readonly grants: readonly PolicyGrant[];
 }
 //#endregion 🔖️Policy
@@ -363,6 +364,11 @@ function asString(value: unknown, path: string): string {
 
 function asNumber(value: unknown, path: string): number {
   if (typeof value !== "number" || !Number.isFinite(value)) fail("expected a number", path);
+  return value;
+}
+
+function asBoolean(value: unknown, path: string): boolean {
+  if (typeof value !== "boolean") fail("expected a boolean", path);
   return value;
 }
 
@@ -742,6 +748,7 @@ function decodePolicyTemplate(value: unknown, path: string): PolicyTemplate {
   const row = asObject(value, path);
   return {
     name: asString(row.name, `${path}.name`),
+    autoApply: row.autoApply === undefined || row.autoApply === null ? false : asBoolean(row.autoApply, `${path}.autoApply`),
     grants: asArray(row.grants, `${path}.grants`).map((entry, index) => {
       const grant = asObject(entry, `${path}.grants[${index}]`);
       return { point: decodePolicyPoint(grant.point, `${path}.grants[${index}].point`), resource: asString(grant.resource, `${path}.grants[${index}].resource`), action: asString(grant.action, `${path}.grants[${index}].action`) };
@@ -792,7 +799,7 @@ export function encodeServerInstanceDefinition(value: ServerInstanceDefinition):
       commands: module.commands.map((command) => ({ kind: command.kind, version: command.version, actorKind: command.actorKind, offline: command.offline })),
       queries: module.queries.map((query) => ({ kind: query.kind, version: query.version, projection: query.projection })),
       projections: [...module.projections],
-      policies: module.policies.map((template) => ({ name: template.name, grants: template.grants.map((grant) => ({ point: grant.point, resource: grant.resource, action: grant.action })) })),
+      policies: module.policies.map((template) => ({ name: template.name, autoApply: template.autoApply, grants: template.grants.map((grant) => ({ point: grant.point, resource: grant.resource, action: grant.action })) })),
       actorKinds: [...module.actorKinds],
     })),
   };
@@ -834,10 +841,8 @@ export function decodeDocumentFrame(message: string | Uint8Array): DocumentFrame
   return typeof message === "string" ? { kind: "error", message } : { kind: "engine", bytes: message };
 }
 
-/** 📄️ How a session identifies itself when joining a document socket. */
+/** 📄️ Non-identity join hints for a document socket. Actor and session are bound server-side. */
 export interface DocumentJoin {
-  readonly actor: string;
-  readonly session?: string;
   readonly surface?: string;
   readonly resume?: string;
 }
@@ -861,7 +866,6 @@ export const SERVER_ROUTES: readonly ServerRoute[] = [
   { method: "POST", path: "/commands" },
   { method: "POST", path: "/queries" },
   { method: "POST", path: "/scopes/{scope}/ephemeral" },
-  { method: "GET", path: "/scopes/{scope}/document/ws" },
   { method: "GET", path: "/actors/{tenant}/{kind}/{id}/events" },
   { method: "GET", path: "/actors/{tenant}/{kind}/{id}/events/ws" },
   { method: "GET", path: "/blobs/{hash}" },
@@ -871,6 +875,7 @@ export const SERVER_ROUTES: readonly ServerRoute[] = [
   { method: "GET", path: "/apps/{app}/installs" },
   { method: "GET", path: "/apps/{app}" },
   { method: "GET", path: "/apps/{app}/{*rest}" },
+  { method: "GET", path: "/scopes/{scope}/document/ws" },
 ];
 
 /** 🎟️ The header a caller presents a capability proof in. */
@@ -990,13 +995,14 @@ export class ServerClient {
     return `${socketRoot(baseUrl)}${this.actorPath(actor, "/events/ws")}?since=${encodeURIComponent(String(since))}`;
   }
 
-  /** 📄️ The websocket URL of one scope's document lane. */
-  documentSocketUrl(baseUrl: string, scope: Scope, join: DocumentJoin): string {
-    const query = new URLSearchParams({ actor: join.actor });
-    if (join.session !== undefined) query.set("session", join.session);
+  /** 📄️ The websocket URL of one scope's document lane. Actor identity is never a query parameter. */
+  documentSocketUrl(baseUrl: string, scope: Scope, join: DocumentJoin = {}): string {
+    const query = new URLSearchParams();
     if (join.surface !== undefined) query.set("surface", join.surface);
     if (join.resume !== undefined) query.set("resume", join.resume);
-    return `${socketRoot(baseUrl)}/scopes/${encodePathSegment(scope)}/document/ws?${query.toString()}`;
+    const encoded = query.toString();
+    const suffix = encoded.length > 0 ? `?${encoded}` : "";
+    return `${socketRoot(baseUrl)}/scopes/${encodePathSegment(scope)}/document/ws${suffix}`;
   }
 
   private actorPath(actor: ActorKey, suffix: string): string {
@@ -1028,149 +1034,7 @@ export function socketRoot(baseUrl: string): string {
 
 //#region 🔖️Tests
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-  const { readFileSync } = await import("node:fs");
-  const { dirname, resolve } = await import("node:path");
-  const { fileURLToPath } = await import("node:url");
-
-  const productRoot = dirname(fileURLToPath(import.meta.url));
-  const fixture = JSON.parse(readFileSync(resolve(productRoot, "🧫️fixtures/🔌️wire/🔣️.json"), "utf8")) as {
-    schema: string;
-    routes: { method: string; path: string }[];
-    vectors: { name: string; type: string; json: unknown }[];
-  };
-
-  const roundTrips: Record<string, (value: unknown) => unknown> = {
-    actorKey: (value) => encodeActorKey(decodeActorKey(value)),
-    principal: (value) => encodePrincipal(decodePrincipal(value)),
-    hybridLogicalClock: (value) => encodeHybridLogicalClock(decodeHybridLogicalClock(value)),
-    traceContext: (value) => encodeTraceContext(decodeTraceContext(value)),
-    frontierSummary: (value) => encodeFrontierSummary(decodeFrontierSummary(value)),
-    eventRecord: (value) => encodeEventRecord(decodeEventRecord(value)),
-    ephemeralFrame: (value) => encodeEphemeralFrame(decodeEphemeralFrame(value)),
-    commandEnvelope: (value) => encodeCommandEnvelope(decodeCommandEnvelope(value)),
-    commandReceipt: (value) => encodeCommandReceipt(decodeCommandReceipt(value)),
-    rejection: (value) => encodeRejection(decodeRejection(value)),
-    commandOutcome: (value) => encodeCommandOutcome(decodeCommandOutcome(value)),
-    queryConsistency: (value) => encodeQueryConsistency(decodeQueryConsistency(value)),
-    queryEnvelope: (value) => encodeQueryEnvelope(decodeQueryEnvelope(value)),
-    queryResult: (value) => encodeQueryResult(decodeQueryResult(value)),
-    serverInstanceDefinition: (value) => encodeServerInstanceDefinition(decodeServerInstanceDefinition(value)),
-  };
-
-  describe("🔌️wire", () => {
-    it("declares the schema every vector belongs to", () => {
-      expect(fixture.schema).toBe("semio.framework.server.wire/v1");
-      expect(fixture.vectors.length).toBeGreaterThan(0);
-      expect(new Set(fixture.vectors.map((vector) => vector.name)).size).toBe(fixture.vectors.length);
-    });
-
-    it("round-trips every shared vector byte-for-byte", () => {
-      for (const vector of fixture.vectors) {
-        const roundTrip = roundTrips[vector.type];
-        expect(roundTrip, `no TypeScript twin for vector type ${vector.type}`).toBeTypeOf("function");
-        expect(roundTrip(vector.json), vector.name).toEqual(vector.json);
-      }
-    });
-
-    it("covers every wire type the fixture names", () => {
-      expect(new Set(fixture.vectors.map((vector) => vector.type))).toEqual(new Set(Object.keys(roundTrips)));
-    });
-
-    it("refuses a payload byte outside 0..=255", () => {
-      expect(() => decodeEventRecord({ stream: { tenant: "t", kind: "k", id: "i" }, seq: 1, hlc: { millis: 0, counter: 0 }, kind: "e", payload: [256] })).toThrow(WireError);
-    });
-
-    it("names the field a malformed value was found at", () => {
-      expect(() => decodeCommandReceipt({ commandId: "c", actor: { tenant: "t", kind: "k", id: "i" }, revision: "nope", acceptedAt: { millis: 0, counter: 0 } })).toThrow("receipt.revision");
-    });
-  });
-
-  describe("🛣️routes", () => {
-    const routerSource = readFileSync(resolve(productRoot, "🔨️modules/📡️gateway/🦀️.rs"), "utf8");
-    const baseRouter = routerSource.slice(routerSource.indexOf("fn base_router<I: ServerInstance>"));
-    const block = baseRouter.slice(0, baseRouter.indexOf("\n}"));
-    const mounted = block
-      .split("\n")
-      .filter((line) => line.includes('.route("'))
-      .flatMap((line) => {
-        const path = /\.route\("([^"]+)"/u.exec(line)![1];
-        const verbs = line.slice(line.indexOf(path) + path.length);
-        return [...verbs.matchAll(/\b(get|post|put|head)\(/gu)].map(([, verb]) => ({ method: verb.toUpperCase(), path }));
-      });
-
-    it("mirrors the router the gateway actually mounts", () => {
-      expect(mounted).toEqual(fixture.routes);
-      expect(SERVER_ROUTES).toEqual(fixture.routes);
-    });
-
-    it("keys the same lanes the gateway does", () => {
-      expect(streamLane({ tenant: "t1", kind: "counter", id: "c1" })).toBe("stream:t1/counter/c1");
-      expect(documentLane("space-1")).toBe("document:space-1");
-      expect(ephemeralLane("space-1")).toBe("ephemeral:space-1");
-      expect(socketRoot("http://127.0.0.1:6081/")).toBe("ws://127.0.0.1:6081");
-    });
-  });
-
-  describe("🖥️client", () => {
-    function recording(answer: (request: HttpRequest) => { status: number; body: string }): { transport: HttpTransport; seen: HttpRequest[] } {
-      const seen: HttpRequest[] = [];
-      return {
-        seen,
-        transport: {
-          async send(request) {
-            seen.push(request);
-            const { status, body } = answer(request);
-            return { status, text: async () => body, bytes: async () => new TextEncoder().encode(body) };
-          },
-        },
-      };
-    }
-
-    const receipt = { commandId: "cmd-1", actor: { tenant: "t1", kind: "counter", id: "c1" }, revision: 1, acceptedAt: { millis: 7, counter: 0 } };
-
-    it("submits a command as the wire shape and decodes the outcome", async () => {
-      const { transport, seen } = recording(() => ({ status: 200, body: JSON.stringify({ status: "accepted", receipt, events: [], frontier: null }) }));
-      const outcome = await new ServerClient(transport, { bearer: "token-1" }).submitCommand(decodeCommandEnvelope(fixture.vectors.find((vector) => vector.type === "commandEnvelope")!.json));
-      expect(outcome.status).toBe("accepted");
-      expect(seen[0].method).toBe("POST");
-      expect(seen[0].path).toBe("/commands");
-      expect(seen[0].headers.authorization).toBe("Bearer token-1");
-      expect(JSON.parse(seen[0].body as string).trace).toEqual({ trace_id: "trace-1", span_id: "span-1" });
-    });
-
-    it("addresses an actor's history with its three path segments", async () => {
-      const { transport, seen } = recording(() => ({ status: 200, body: "[]" }));
-      await new ServerClient(transport).events({ tenant: "t1", kind: "counter", id: "c1" }, 4);
-      expect(seen[0].path).toBe("/actors/t1/counter/c1/events");
-      expect(seen[0].query).toEqual({ since: "4" });
-    });
-
-    it("turns a gateway refusal into an error carrying its own tag", async () => {
-      const { transport } = recording(() => ({ status: 403, body: JSON.stringify({ kind: "forbidden", message: "no" }) }));
-      await expect(new ServerClient(transport).apps()).rejects.toMatchObject({ name: "ServerCallError", kind: "forbidden", status: 403 });
-    });
-
-    it("answers a blob negotiation from the status alone", async () => {
-      const { transport } = recording((request) => ({ status: request.method === "HEAD" ? 404 : 200, body: "" }));
-      expect(await new ServerClient(transport).hasBlob("00".repeat(32))).toBe(false);
-    });
-
-    it("builds both socket urls from the same base", () => {
-      const client = new ServerClient(fetchTransport("http://127.0.0.1:6081"));
-      expect(client.eventStreamUrl("http://127.0.0.1:6081", { tenant: "t1", kind: "counter", id: "c1" }, 9)).toBe("ws://127.0.0.1:6081/actors/t1/counter/c1/events/ws?since=9");
-      expect(client.documentSocketUrl("http://127.0.0.1:6081", "space-1", { actor: "alice", session: "s1" })).toBe("ws://127.0.0.1:6081/scopes/space-1/document/ws?actor=alice&session=s1");
-    });
-
-    it("classifies both document frame shapes", () => {
-      expect(decodeDocumentFrame(new Uint8Array([1, 2]))).toEqual({ kind: "engine", bytes: new Uint8Array([1, 2]) });
-      expect(decodeDocumentFrame("storage entry not found")).toEqual({ kind: "error", message: "storage entry not found" });
-    });
-
-    it("reads an event-stream frame the gateway sent as text", () => {
-      const vector = fixture.vectors.find((entry) => entry.type === "eventRecord")!;
-      expect(encodeEventRecord(decodeEventStreamFrame(JSON.stringify(vector.json)))).toEqual(vector.json);
-    });
-  });
+  const { registerServerWireTests } = await import("./🧪️tests/🔬️wire/🟦️.ts");
+  await registerServerWireTests(import.meta.vitest, { SERVER_ROUTES, ServerClient, WireError, decodeActorKey, decodeCommandEnvelope, decodeCommandOutcome, decodeCommandReceipt, decodeDocumentFrame, decodeEphemeralFrame, decodeEventRecord, decodeEventStreamFrame, decodeFrontierSummary, decodeHybridLogicalClock, decodePrincipal, decodeQueryConsistency, decodeQueryEnvelope, decodeQueryResult, decodeRejection, decodeServerInstanceDefinition, decodeTraceContext, documentLane, encodeActorKey, encodeCommandEnvelope, encodeCommandOutcome, encodeCommandReceipt, encodeEphemeralFrame, encodeEventRecord, encodeFrontierSummary, encodeHybridLogicalClock, encodePrincipal, encodeQueryConsistency, encodeQueryEnvelope, encodeQueryResult, encodeRejection, encodeServerInstanceDefinition, encodeTraceContext, ephemeralLane, fetchTransport, socketRoot, streamLane }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️Tests

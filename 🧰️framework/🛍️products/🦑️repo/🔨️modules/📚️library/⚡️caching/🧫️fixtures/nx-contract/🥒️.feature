@@ -29,12 +29,12 @@ Feature: Correct Nx cache contracts
     Given a workspace-root project declares the policy targets
     When Nx discovers the project without targetDefaults
     Then deterministic targets remain cached
-    And format, setup, publish, live servers, and generator-inputs stay uncached
+    And format, setup, publish, and live servers stay uncached
 
-  Scenario: Generator discovery and freshness stay live
+  Scenario: Generator discovery fingerprint is cacheable
     Given generator-inputs or a required checkTarget freshness guard
     When Nx resolves the project
-    Then those targets stay uncached
+    Then generator-inputs stays cacheable with declared catalog inputs
 
   Scenario: Continuous tasks own a live process
     Given a development or watch target

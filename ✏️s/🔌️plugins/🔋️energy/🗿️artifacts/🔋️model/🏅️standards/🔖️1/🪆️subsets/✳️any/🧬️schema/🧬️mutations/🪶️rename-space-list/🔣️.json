@@ -7,7 +7,7 @@
   "aggregateVariant": "RenameSpaceList",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-space-list",
-  "binaryTag": null,
+  "binaryTag": 244,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

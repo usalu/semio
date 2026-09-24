@@ -46,7 +46,7 @@ const grid = (value: number): number => {
 
 /** 🎯️ Every `geometry/path` record of one compiled fixture, in emission order. */
 async function paths(ctx: AdapterContext, fixture: string): Promise<number[][]> {
-  const records = await compileVizProbe(ctx.fixture(`local://${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const records = await compileVizProbe(ctx.fixture(`shared://📈️charts-line-area/${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   return roundProbeNumbers(records, DECIMALS)
     .filter((record) => record.key === "geometry/path")
     .map((record) => record.values.map(Number));

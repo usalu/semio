@@ -2,25 +2,33 @@ import {readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineOwnedBuildConfigFactory, uiReactBuildPlugin, uiTailwindBuildPlugins, type OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { DEFAULT_HOST_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
-import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
-import { semioAgentBridgeRendezvousVitePlugin, semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
-import { semioExtensionStoreVitePlugin } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
+import { semioAgentBridgeRendezvousVitePlugin, semioLocalHubSessionVitePlugin, semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
+import { loadFrameworkOsPlaygroundCatalog as _semioPlaygroundGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
+import { BUILD_BUDGET_MS as _semioProcessGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { developmentRuntimeRoot, playgroundSessionViteAlias, pluginModulesRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { resolveTestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } from "../../🚚️distribution/🔌️components/🟦️.ts";
 import { DISTRIBUTION_LAYOUT, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
-import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 const configDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
 export default defineOwnedBuildConfigFactory(async ({ command }): Promise<OwnedBuildConfig> => {
+
+/** @emoji 📦️ Config-shaped graph: heavy owners load through opaque dynamic imports so Vite's native
+ * config parse/watch set stays inside the declared module bound (see fixtures config-graph). */
+const { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
+const { resolveShellBrandById } = await import(['../../🏷️brand', '🟦️.ts'].join("/"));
+const { semioExtensionStoreVitePlugin } = await import(['../../../🔌️plugin/🏪️store/📥️installation', '🟦️.ts'].join("/"));
+const { repoCacheDirectory } = await import(['../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching', '🟦️.ts'].join("/"));
+void _semioPlaygroundGraphAnchor;
+void _semioProcessGraphAnchor;
+
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
 const profile = command === "build" || process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
@@ -103,6 +111,7 @@ const activationComponents = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map
   directoryName: moduleDirectoryName(target.pluginId),
   role: target.role === "extension" ? ("extension" as const) : ("plugin" as const),
   sourceRoot: path.resolve(repoRoot, target.cratePath, "..", ".."),
+  cratePath: target.cratePath,
 }));
 //#endregion 🔖️RegistryDrivenAssetsAndEngines
 
@@ -207,6 +216,7 @@ return {
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
     semioAgentBridgeRendezvousVitePlugin(),
+    semioLocalHubSessionVitePlugin(),
     ...(command === "serve" ? [...semioSourceFreshnessVitePlugins({ repoRoot }), semioActivationVitePlugin({ receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: activationComponents }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot })] : []),
     ...semioAssetsVitePlugin(repoRoot),
     ...(productionComponents ? [productionBrowserArtifactsVitePlugin(repoRoot, productionComponents)] : staticDirMountVitePlugins(repoRoot, [

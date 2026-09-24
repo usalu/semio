@@ -7,6 +7,6 @@ module Stdio_semio_mesh_mutation;
 
 public type Envelope = unit {
     format: uint8;   # OP_BINARY_FORMAT, currently 1
-    tag: uint8;      # SemioMeshMutation variant ordinal — see OP_KEYWORDS in ../../🦀️.rs
+    tag: uint8;      # the kind's record tag in 📡️.protocol.semio
     payload: bytes &eod;   # UTF-8 "key=value ..." argument text (never empty — all 17 mesh keywords carry ≥1 argument)
 };

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePlantLoopReturnTemperature",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-plant-loop-return-temperature",
-  "binaryTag": null,
+  "binaryTag": 183,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

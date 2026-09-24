@@ -2068,8 +2068,28 @@ fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
     push_rows!("functions", &program.functions);
     push_rows!("elements", &program.elements);
     push_rows!("quantities", &program.quantities);
-    push_rows!("relationships", &program.relationships);
-    push_rows!("adjacencies", &program.adjacencies);
+    for rel in &program.relationships {
+        rows.push(RegisterCsvRow {
+            register: "relationships".into(),
+            id: rel.header.id.clone(),
+            name: rel.header.name.clone(),
+            status: format!("{:?}", rel.header.status),
+            priority: format!("{:?}", rel.header.priority),
+            tags: rel.header.tags.join(";"),
+            source: format!("{}>{}", rel.source_id, rel.target_id),
+        });
+    }
+    for adj in &program.adjacencies {
+        rows.push(RegisterCsvRow {
+            register: "adjacencies".into(),
+            id: adj.header.id.clone(),
+            name: adj.header.name.clone(),
+            status: format!("{:?}", adj.header.status),
+            priority: format!("{:?}", adj.header.priority),
+            tags: adj.header.tags.join(";"),
+            source: format!("{}>{}", adj.element_a_id, adj.element_b_id),
+        });
+    }
     push_rows!("processes", &program.processes);
     push_rows!("flows", &program.flows);
     push_rows!("access_rules", &program.access_rules);

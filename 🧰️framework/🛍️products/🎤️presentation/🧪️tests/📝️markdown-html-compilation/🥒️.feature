@@ -33,10 +33,10 @@ Feature: Slide markdown compiles to the HTML remark compiles it to
   Scenario: Paragraphs and headings compile to the same block elements
     Given the slide markdown vectors
       | vector               | fixture                          |
-      | paragraph            | local://paragraph.md             |
-      | paragraph-soft-break | local://paragraph-soft-break.md  |
-      | headings             | local://headings.md              |
-      | heading-inline       | local://heading-inline.md        |
+      | paragraph            | shared://📝️markdown-html-compilation/paragraph.md             |
+      | paragraph-soft-break | shared://📝️markdown-html-compilation/paragraph-soft-break.md  |
+      | headings             | shared://📝️markdown-html-compilation/headings.md              |
+      | heading-inline       | shared://📝️markdown-html-compilation/heading-inline.md        |
     When each vector is compiled to an HTML fragment
     Then the owned compiler and the reference implementation agree on every fragment
 
@@ -46,12 +46,12 @@ Feature: Slide markdown compiles to the HTML remark compiles it to
   Scenario: Emphasis, inline code, escapes and hard breaks compile to the same inline elements
     Given the slide markdown vectors
       | vector                  | fixture                             |
-      | emphasis-asterisk       | local://emphasis-asterisk.md        |
-      | emphasis-underscore     | local://emphasis-underscore.md      |
-      | inline-code             | local://inline-code.md              |
-      | inline-code-double-tick | local://inline-code-double-tick.md  |
-      | escapes                 | local://escapes.md                  |
-      | hard-break              | local://hard-break.md               |
+      | emphasis-asterisk       | shared://📝️markdown-html-compilation/emphasis-asterisk.md        |
+      | emphasis-underscore     | shared://📝️markdown-html-compilation/emphasis-underscore.md      |
+      | inline-code             | shared://📝️markdown-html-compilation/inline-code.md              |
+      | inline-code-double-tick | shared://📝️markdown-html-compilation/inline-code-double-tick.md  |
+      | escapes                 | shared://📝️markdown-html-compilation/escapes.md                  |
+      | hard-break              | shared://📝️markdown-html-compilation/hard-break.md               |
     When each vector is compiled to an HTML fragment
     Then the owned compiler and the reference implementation agree on every fragment
 
@@ -61,14 +61,14 @@ Feature: Slide markdown compiles to the HTML remark compiles it to
   Scenario: Unordered and ordered lists compile to the same list elements
     Given the slide markdown vectors
       | vector               | fixture                          |
-      | list-unordered       | local://list-unordered.md        |
-      | list-unordered-plus  | local://list-unordered-plus.md   |
-      | list-unordered-star  | local://list-unordered-star.md   |
-      | list-ordered         | local://list-ordered.md          |
-      | list-ordered-start   | local://list-ordered-start.md    |
-      | list-ordered-paren   | local://list-ordered-paren.md    |
-      | list-nested          | local://list-nested.md           |
-      | list-inline          | local://list-inline.md           |
+      | list-unordered       | shared://📝️markdown-html-compilation/list-unordered.md        |
+      | list-unordered-plus  | shared://📝️markdown-html-compilation/list-unordered-plus.md   |
+      | list-unordered-star  | shared://📝️markdown-html-compilation/list-unordered-star.md   |
+      | list-ordered         | shared://📝️markdown-html-compilation/list-ordered.md          |
+      | list-ordered-start   | shared://📝️markdown-html-compilation/list-ordered-start.md    |
+      | list-ordered-paren   | shared://📝️markdown-html-compilation/list-ordered-paren.md    |
+      | list-nested          | shared://📝️markdown-html-compilation/list-nested.md           |
+      | list-inline          | shared://📝️markdown-html-compilation/list-inline.md           |
     When each vector is compiled to an HTML fragment
     Then the owned compiler and the reference implementation agree on every fragment
 
@@ -78,11 +78,11 @@ Feature: Slide markdown compiles to the HTML remark compiles it to
   Scenario: Links and autolinks compile to the same anchors
     Given the slide markdown vectors
       | vector       | fixture                  |
-      | link         | local://link.md          |
-      | link-title   | local://link-title.md    |
-      | link-inline  | local://link-inline.md   |
-      | link-mailto  | local://link-mailto.md   |
-      | autolink     | local://autolink.md      |
+      | link         | shared://📝️markdown-html-compilation/link.md          |
+      | link-title   | shared://📝️markdown-html-compilation/link-title.md    |
+      | link-inline  | shared://📝️markdown-html-compilation/link-inline.md   |
+      | link-mailto  | shared://📝️markdown-html-compilation/link-mailto.md   |
+      | autolink     | shared://📝️markdown-html-compilation/autolink.md      |
     When each vector is compiled to an HTML fragment
     Then the owned compiler and the reference implementation agree on every fragment
 
@@ -92,10 +92,10 @@ Feature: Slide markdown compiles to the HTML remark compiles it to
   Scenario: Fenced code blocks keep their language, their escaping and their trailing newline
     Given the slide markdown vectors
       | vector               | fixture                          |
-      | code-fence-language  | local://code-fence-language.md   |
-      | code-fence-plain     | local://code-fence-plain.md      |
-      | code-fence-escaping  | local://code-fence-escaping.md   |
-      | code-fence-tilde     | local://code-fence-tilde.md      |
+      | code-fence-language  | shared://📝️markdown-html-compilation/code-fence-language.md   |
+      | code-fence-plain     | shared://📝️markdown-html-compilation/code-fence-plain.md      |
+      | code-fence-escaping  | shared://📝️markdown-html-compilation/code-fence-escaping.md   |
+      | code-fence-tilde     | shared://📝️markdown-html-compilation/code-fence-tilde.md      |
     When each vector is compiled to an HTML fragment
     Then the owned compiler and the reference implementation agree on every fragment
 
@@ -105,8 +105,8 @@ Feature: Slide markdown compiles to the HTML remark compiles it to
   Scenario: GFM tables compile to the same table, with the same column alignment
     Given the slide markdown vectors
       | vector        | fixture                   |
-      | table-aligned | local://table-aligned.md  |
-      | table-plain   | local://table-plain.md    |
+      | table-aligned | shared://📝️markdown-html-compilation/table-aligned.md  |
+      | table-plain   | shared://📝️markdown-html-compilation/table-plain.md    |
     When each vector is compiled to an HTML fragment
     Then the owned compiler and the reference implementation agree on every fragment
 
@@ -116,6 +116,6 @@ Feature: Slide markdown compiles to the HTML remark compiles it to
   Scenario: A whole slide body compiles to the same fragment
     Given the slide markdown vectors
       | vector | fixture           |
-      | slide  | local://slide.md  |
+      | slide  | shared://📝️markdown-html-compilation/slide.md  |
     When each vector is compiled to an HTML fragment
     Then the owned compiler and the reference implementation agree on every fragment

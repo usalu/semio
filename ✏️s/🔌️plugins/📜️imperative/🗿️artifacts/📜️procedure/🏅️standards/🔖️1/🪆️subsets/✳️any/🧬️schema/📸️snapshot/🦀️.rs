@@ -32,168 +32,50 @@ impl Default for ProcedureSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️ChildCodecPrimitives
-/// 🧪️ Real hex/bracket child-handle codec (mirrors `📐️cad`'s/`✒️writer`'s own `enc_child`/
-/// `dec_child`) — a handle is exactly two strings (`child_id`, the target's `ArtifactRef`
-/// flattened via `to_uri()`), never the child's own content.
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+//#region 🔖️PackRecord
+/// 🛤️ Derived pack record of a `ProcedureSnapshot`: both composed-child handles plus the content their
+/// local owners hold (the flow child's `path`, the text child's `seed`), which a bare-handle pack would
+/// lose. Text and pack are both derived from this record.
+#[derive(dsl::DslRecord)]
+#[dsl(extension = "imperative")]
+struct ProcedurePackRecord {
+    schema: String,
+    flow: ProcedureFlowChild,
+    text: ProcedureTextChild,
+    path: dsl::DslValue,
+    seed: dsl::DslValue,
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
+
+impl ProcedurePackRecord {
+    fn from_snapshot(snapshot: &ProcedureSnapshot) -> Self {
+        let scene = crate::procedure_working_scene(snapshot);
+        Self { schema: snapshot.schema.clone(), flow: snapshot.flow.clone(), text: snapshot.text.clone(), path: dsl::ToValue::to_value(&scene.path), seed: dsl::ToValue::to_value(&scene.seed) }
     }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
-}
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
-}
 
-fn enc_flow_child(c: &ProcedureFlowChild) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
-fn dec_flow_child(s: &str) -> Result<ProcedureFlowChild, String> {
-    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
-    let parts: Vec<&str> = inner.splitn(2, ',').collect();
-    let [child_id, target] = parts.as_slice() else { return Err(format!("flow child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
-}
-fn enc_text_child(c: &ProcedureTextChild) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
-fn dec_text_child(s: &str) -> Result<ProcedureTextChild, String> {
-    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
-    let parts: Vec<&str> = inner.splitn(2, ',').collect();
-    let [child_id, target] = parts.as_slice() else { return Err(format!("text child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
-}
-//#endregion 🔖️ChildCodecPrimitives
-
-//#region 🔖️TextPrimitives
-/// 🛤️ The composed children's CONTENT — the flow child's program and the text child's seed —
-/// hex-encoded first-party JSON beside their handles. The body used to be the two bare handles, and the
-/// program lives only in the handles' local owners, so it did not survive one `print_dsl`/`parse_dsl`
-/// round trip: the committed `🎬️demo` asset carried no steps and the imperative play pane showed an
-/// empty `# / Id / Kind` table (ticket 26/09/19, `📓️knowledge.md` §14). `🕸️dag`'s snapshot module
-/// states the rule: a codec persisting only the bare handle produces an UNRECOVERABLE snapshot.
-fn enc_path(path: &crate::Path) -> String {
-    enc_str(&dsl::os_pack::json::to_json_string(path))
-}
-fn enc_seed(seed: &std::collections::BTreeMap<String, crate::Value>) -> String {
-    enc_str(&dsl::os_pack::json::to_json_string(seed))
-}
-
-fn print_procedure_snapshot_body(s: &ProcedureSnapshot) -> String {
-    let scene = crate::procedure_working_scene(s);
-    format!("schema={}\nflow={}\ntext={}\npath={}\nseed={}", enc_str(&s.schema), enc_flow_child(&s.flow), enc_text_child(&s.text), enc_path(&scene.path), enc_seed(&scene.seed))
-}
-
-/// 🏗️ Every line of `📖️.grammar.semio` is required, and the content lines are decoded only after all
-/// of them are present, straight into the owners of the exact handles the document names (never
-/// re-minted ones, which would discard the identity the document carried).
-fn parse_procedure_snapshot_body(body: &str) -> Result<ProcedureSnapshot, String> {
-    let mut lines: std::collections::BTreeMap<&str, &str> = std::collections::BTreeMap::new();
-    for line in body.lines().map(str::trim).filter(|line| !line.is_empty()) {
-        let (key, value) = line.split_once('=').ok_or_else(|| format!("imperative snapshot: unknown line {line:?}"))?;
-        if !matches!(key, "schema" | "flow" | "text" | "path" | "seed") || lines.insert(key, value).is_some() {
-            return Err(format!("imperative snapshot: unknown or repeated line {line:?}"));
-        }
+    fn into_snapshot(self) -> Result<ProcedureSnapshot, String> {
+        let (mut flow, mut text) = (self.flow, self.text);
+        let seed: std::collections::BTreeMap<String, crate::Value> = dsl::FromValue::from_value(self.seed).map_err(|error| error.to_string())?;
+        text.set_local_owner(std::sync::Arc::new(crate::ProcedureTextWorkingData { seed }));
+        let path: crate::Path = dsl::FromValue::from_value(self.path).map_err(|error| error.to_string())?;
+        flow.set_local_owner(std::sync::Arc::new(crate::ProcedureFlowWorkingData { path }));
+        Ok(ProcedureSnapshot { schema: self.schema, flow, text })
     }
-    let line = |key: &str| lines.get(key).copied().ok_or_else(|| format!("imperative snapshot: missing {key} line"));
-    let (schema, flow, text, path, seed) = (line("schema")?, line("flow")?, line("text")?, line("path")?, line("seed")?);
-    let (schema, mut flow, mut text) = (dec_str(schema)?, dec_flow_child(flow)?, dec_text_child(text)?);
-    let (path, seed) = (dec_str(path)?, dec_str(seed)?);
-    let seed: std::collections::BTreeMap<String, crate::Value> = dsl::os_pack::json::from_json_str(&seed).map_err(|error| error.to_string())?;
-    text.set_local_owner(std::sync::Arc::new(crate::ProcedureTextWorkingData { seed }));
-    let path: crate::Path = dsl::os_pack::json::from_json_str(&path).map_err(|error| error.to_string())?;
-    flow.set_local_owner(std::sync::Arc::new(crate::ProcedureFlowWorkingData { path }));
-    Ok(ProcedureSnapshot { schema, flow, text })
-}
-//#endregion 🔖️TextPrimitives
-
-//#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
-    write_str_lp(out, &r.to_uri());
-}
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
-}
-fn write_flow_child(out: &mut Vec<u8>, c: &ProcedureFlowChild) {
-    write_str_lp(out, &c.child_id);
-    write_ref(out, &c.target);
-}
-fn read_flow_child(reader: &mut store::ByteReader<'_>) -> Result<ProcedureFlowChild, String> {
-    let child_id = read_str_lp(reader)?;
-    let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
-}
-fn write_text_child(out: &mut Vec<u8>, c: &ProcedureTextChild) {
-    write_str_lp(out, &c.child_id);
-    write_ref(out, &c.target);
-}
-fn read_text_child(reader: &mut store::ByteReader<'_>) -> Result<ProcedureTextChild, String> {
-    let child_id = read_str_lp(reader)?;
-    let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
 }
 
-/// 🔢️ Pack format 2 — format 1 carried the two bare handles and no content (see `enc_path`).
-const PACK_BINARY_FORMAT: u8 = 2;
+/// 🖨️ The derived text body: the same `ProcedurePackRecord` the pack encodes, printed by the spec-driven engine.
+pub(crate) fn print_pack_record_text(snapshot: &ProcedureSnapshot) -> String {
+    dsl::print(&ProcedurePackRecord::from_snapshot(snapshot).__dsl_to_record(), &ProcedurePackRecord::__dsl_spec(), dsl::JoinMode::Document)
+}
 
-fn encode_procedure_snapshot_binary(s: &ProcedureSnapshot) -> Vec<u8> {
-    let scene = crate::procedure_working_scene(s);
-    let mut out = vec![PACK_BINARY_FORMAT];
-    write_str_lp(&mut out, &s.schema);
-    write_flow_child(&mut out, &s.flow);
-    write_text_child(&mut out, &s.text);
-    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&scene.path));
-    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&scene.seed));
-    out
+/// 📖️ Parses a derived text body back through `ProcedurePackRecord`, with the same decode steps as the pack.
+pub(crate) fn parse_pack_record_text(body: &str) -> Result<ProcedureSnapshot, store::TextError> {
+    let record = dsl::parse(body, &ProcedurePackRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+    ProcedurePackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
 }
-fn decode_procedure_snapshot_binary(bytes: &[u8]) -> Result<ProcedureSnapshot, String> {
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
-        return Err(format!("unsupported pack format {format}"));
-    }
-    let (schema, mut flow, mut text) = (read_str_lp(&mut reader)?, read_flow_child(&mut reader)?, read_text_child(&mut reader)?);
-    let (path, seed) = (read_str_lp(&mut reader)?, read_str_lp(&mut reader)?);
-    let seed: std::collections::BTreeMap<String, crate::Value> = dsl::os_pack::json::from_json_str(&seed).map_err(|error| error.to_string())?;
-    text.set_local_owner(std::sync::Arc::new(crate::ProcedureTextWorkingData { seed }));
-    let path: crate::Path = dsl::os_pack::json::from_json_str(&path).map_err(|error| error.to_string())?;
-    flow.set_local_owner(std::sync::Arc::new(crate::ProcedureFlowWorkingData { path }));
-    Ok(ProcedureSnapshot { schema, flow, text })
-}
-//#endregion 🔖️BinaryPrimitives
+//#endregion 🔖️PackRecord
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🎁 Handcrafted `ArtifactDsl`/`ArtifactPack`, real hex/bracket text + LEB128 binary primitives —
-/// the same upgrade `📐️cad`/`💠️lowpoly`/`✒️writer`/`🌊️flow` made when they gained a real
-/// `ArtifactChild<S>` slot (the old `dsl::DslRecord`-derive-driven `Self::__dsl_spec()` path cannot
-/// express a composed child slot, which has no `dsl::DslField` impl reachable from this crate).
+/// 🎁 `ArtifactDsl` and `ArtifactPack` are the derived text and pack of `ProcedurePackRecord`.
 impl store::ArtifactDsl for ProcedureSnapshot {
     const EXTENSION: &'static str = "imperative";
     fn envelope_id() -> &'static str {
@@ -204,10 +86,10 @@ impl store::ArtifactDsl for ProcedureSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_procedure_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_pack_record_text(body)
     }
     fn print_dsl(&self) -> String {
-        let body = print_procedure_snapshot_body(self);
+        let body = print_pack_record_text(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -215,18 +97,20 @@ impl store::ArtifactDsl for ProcedureSnapshot {
 
 impl store::ArtifactPack for ProcedureSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_procedure_snapshot_binary(self);
+        let inner = store::pack_rt::encode_document(&ProcedurePackRecord::__dsl_spec(), &ProcedurePackRecord::from_snapshot(self).__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        decode_procedure_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        let (record, _report) = store::pack_rt::decode_document(&inner, &ProcedurePackRecord::__dsl_spec(), options)?;
+        ProcedurePackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(store::PackError::Schema)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(ProcedurePackRecord::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -262,8 +146,9 @@ pub fn parse_procedure_dsl(text: &str) -> Result<ProcedureSnapshot, String> {
 }
 
 /// 📝️ Renders an [`ProcedureSnapshot`] back as `.imperative.dsl.semio` text — the inverse of
-/// [`parse_procedure_dsl`], preamble and both hex-encoded child-handle lines included.
+/// [`parse_procedure_dsl`], preamble and both composed child handles included.
 pub fn print_procedure_dsl(snapshot: &ProcedureSnapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }
 //#endregion 🌉️ExternalCodecBridge
+

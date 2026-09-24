@@ -15138,6 +15138,25 @@ impl WorldAssetIoAuthority {
         }
     }
 
+    /// 🗺️ Cancels every pending `MapTile` claim for one surface so a closed map returns its shared
+    /// renderer-asset slots — without this, fixture paints that reserve visible tiles and then close
+    /// the host leave the process-wide lane at `ItemCapacity` and later maps reserve nothing.
+    pub fn cancel_map_tiles_for_surface(&mut self, surface: &str) {
+        for claim in self.slots.iter_mut().flatten() {
+            let WorldAssetRequestKind::MapTile { surface: claim_surface, .. } = claim.kind else { continue };
+            if claim_surface.as_str() != surface {
+                continue;
+            }
+            claim.cancelled = true;
+            if !claim.in_flight {
+                if let Some(owner) = claim.owner.as_mut() {
+                    owner.begin_close();
+                }
+                claim.fetch_complete = true;
+            }
+        }
+    }
+
     pub fn retire_cancelled_step(&mut self) -> bool {
         let Some(slot) = self.slots.iter().position(|claim| claim.as_ref().is_some_and(|claim| !claim.in_flight && claim.owner.as_ref().is_some_and(|owner| owner.closing))) else {
             return false;
@@ -15159,7 +15178,11 @@ impl WorldAssetIoAuthority {
     pub fn close_step(&mut self) -> bool {
         self.closing = true;
         let Some(slot) = self.slots.iter().position(Option::is_some) else {
-            return self.reserved_bytes == 0;
+            let empty = self.reserved_bytes == 0;
+            if empty {
+                self.closing = false;
+            }
+            return empty;
         };
         let claim = self.slots[slot].as_mut().expect("asset close claim");
         if claim.in_flight {
@@ -15171,6 +15194,10 @@ impl WorldAssetIoAuthority {
         }
         self.reserved_bytes -= claim.reserved_bytes;
         self.slots[slot] = None;
+        if self.reserved_bytes == 0 && self.slots.iter().all(Option::is_none) {
+            self.closing = false;
+            return true;
+        }
         false
     }
 

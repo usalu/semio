@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/presentation` (case suite plus inline `import.meta.vitest`). */
+/** @emoji 🧪️ Vitest for `@semio-tech/presentation`: the owner's canonical cases. */
 export default {
   root,
   resolve: {
@@ -18,9 +18,8 @@ export default {
     name: "@semio-tech/presentation",
     mode: "test",
     environment: "node",
-    include: ["🧪️tests/🧭️slide-glob-assembly/🟦️.ts"],
+    include: ["../../🧪️tests/🧭️slide-glob-assembly/🟦️.ts", "../../🧪️tests/📽️presentation-core/🟦️.ts"],
     coverage: { include: ["🟦️.ts"] },
-    includeSource: ["🟦️.ts"],
     passWithNoTests: false,
   },
 };

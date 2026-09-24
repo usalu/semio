@@ -14,7 +14,6 @@
     "doctor",
     "format-fix",
     "fuzz",
-    "generator-inputs",
     "install",
     "migrate",
     "new",
@@ -49,6 +48,7 @@
     "deps-tex"
   ],
   "cachedExact": [
+    "generator-inputs",
     "hub-live-catalog-check",
     "hub-live-catalog-native-check",
     "hub-live-catalog-oracle"

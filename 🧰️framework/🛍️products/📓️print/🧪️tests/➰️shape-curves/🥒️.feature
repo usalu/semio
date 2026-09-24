@@ -16,7 +16,7 @@ Feature: Every curve interpolator emits the control points d3-shape emits
   @level-quick
   @mode-differential
   Scenario: The eighteen d3 interpolators agree on one six-point series
-    Given the committed probe document local://shape-curves.tex and the series
+    Given the committed probe document shared://➰️shape-curves/shape-curves.tex and the series
       | points                       | curves                                                                                                                                                                                                                    |
       | 0,0; 1,3; 2,1; 3,4; 4,2; 5,5 | linear, linear-closed, step, step-before, step-after, basis, basis-open, basis-closed, bundle, cardinal, cardinal-open, cardinal-closed, catmull-rom, catmull-rom-open, catmull-rom-closed, monotone-x, monotone-y, natural |
     Then the compiled probe and the reference implementation agree on every value
@@ -25,7 +25,7 @@ Feature: Every curve interpolator emits the control points d3-shape emits
   @level-quick
   @mode-differential
   Scenario: Tension, alpha and beta move the control points the way d3 moves them
-    Given the committed probe document local://shape-curves.tex and the parameterised curves
+    Given the committed probe document shared://➰️shape-curves/shape-curves.tex and the parameterised curves
       | curve       | parameter   |
       | cardinal    | tension=0.5 |
       | catmull-rom | alpha=0     |
@@ -37,7 +37,7 @@ Feature: Every curve interpolator emits the control points d3-shape emits
   @level-quick
   @mode-differential
   Scenario: One- and two-point lines degrade exactly as d3 degrades them
-    Given the committed probe document local://shape-curves.tex and the short series
+    Given the committed probe document shared://➰️shape-curves/shape-curves.tex and the short series
       | curve       | points        |
       | linear      | 2,7           |
       | basis       | 2,7; 4,9      |

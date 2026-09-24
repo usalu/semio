@@ -39,7 +39,6 @@ async fn render_builder_emits_playbook_list_component_scene() {
     let semio_framework_ui_contract::Component::Surface(props) = tree.root.component else { panic!("builder must render a semantic surface") };
     let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");
     let expected = app.snapshot().expect("snapshot").as_kernel();
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.steps_json).unwrap(), serde_json::to_value(&expected.steps).unwrap());
     assert_eq!(serde_json::from_str::<Vec<serde_json::Value>>(&scene.palette_json).unwrap().len(), PLAYBOOK_BUILTIN_KINDS.len());
 }

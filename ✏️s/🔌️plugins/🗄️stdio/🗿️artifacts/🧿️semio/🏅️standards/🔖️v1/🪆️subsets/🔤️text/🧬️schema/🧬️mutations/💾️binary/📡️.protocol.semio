@@ -5,14 +5,23 @@ schema s.stdio.semio.text
 start body
 framing record
 
-# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM text wave: real binary op frame. `format u8`
-# (`OP_BINARY_FORMAT` convention) + `tag u8` (the `SemioTextMutation` variant ordinal,
-# `../💾️binary/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`, 0-6 matching
-# `parse_text_mutation`'s keyword match) as two REAL fixed fields, then the variant's own argument
-# payload as one opaque trailing `bytes` chain — the same honest boundary the sibling
-# `../../🔺️diff/💾️binary/📡️.protocol.semio` uses.
+# Real `SemioTextMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record insert-run tag=0
+field payload bytes
+record remove-run tag=1
+field payload bytes
+record edit-run tag=2
+field payload bytes
+record change-run-language tag=3
+field payload bytes
+record reorder-runs tag=4
+field payload bytes
+record add-mark tag=5
+field payload bytes
+record remove-mark tag=6
+field payload bytes

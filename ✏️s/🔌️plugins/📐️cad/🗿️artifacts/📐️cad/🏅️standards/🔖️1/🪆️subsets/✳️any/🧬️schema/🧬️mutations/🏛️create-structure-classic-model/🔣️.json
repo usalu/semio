@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateStructureClassicModel",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-structure-classic-model",
-  "binaryTag": null,
+  "binaryTag": 6,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

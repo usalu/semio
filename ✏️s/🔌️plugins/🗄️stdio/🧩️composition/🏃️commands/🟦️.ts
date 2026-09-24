@@ -1,5 +1,6 @@
 import { BundleScript } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { buildStdioComposition, checkStdioComposition, testStdioComposition } from "../../🏗️build/🟦️.ts";
+import { buildStdioComposition, checkStdioComposition } from "../🏗️build/🟦️.ts";
+import { testStdioComposition } from "../../🧪️tests/🧩️composition-consumption/🟦️.ts";
 
 /** 📦️ Builds the Stdio composition package. */
 export class StdioCompositionBuildScript extends BundleScript {

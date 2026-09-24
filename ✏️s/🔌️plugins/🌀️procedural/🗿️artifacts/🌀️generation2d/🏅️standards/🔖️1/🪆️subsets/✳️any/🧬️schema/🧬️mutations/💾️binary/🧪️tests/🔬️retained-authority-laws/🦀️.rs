@@ -173,7 +173,7 @@ fn retained_pack_outer_cancellation_preserves_subexact_source_and_releases_exact
 
     let operation = semio_framework_job::OperationId(74);
     let generation = semio_framework_job::Generation(3);
-    let mut session = crate::standards::v1::subsets::any::schema::snapshot::binary::Generation2dMountedPackSession::new(4 + store::mounted_pack_rt::RETAINED_PACK_PAGE_BYTES, 8).expect("outer retained Pack session credits");
+    let mut session = crate::standards::v1::subsets::any::schema::snapshot::binary::generation2d_mounted_pack_session(4 + store::mounted_pack_rt::RETAINED_PACK_PAGE_BYTES, 8).expect("outer retained Pack session credits");
     for byte in *b"P2D2" {
         session.admit_byte(byte).expect("outer retained Pack discriminator");
     }

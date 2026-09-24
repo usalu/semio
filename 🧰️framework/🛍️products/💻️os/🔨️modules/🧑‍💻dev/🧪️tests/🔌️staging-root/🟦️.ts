@@ -17,12 +17,18 @@ import {
   GENERATED_COMPONENT_OWNER_FILES,
   UNWATCHED_COMPONENT_SOURCE_DIRECTORIES,
   healthyPreparedComponents,
+  componentSourceContentHash,
   newestComponentSourceMtime,
   preparedComponentReportLines,
   preparedComponentVerdict,
   pluginModulesRoot,
   pluginModulesRootIn,
+  readStagedSourceContentHash,
+  readStagedSourceStatIndex,
+  resolveBootSourceContentHashes,
   stagedModuleMtime,
+  writeStagedSourceContentHash,
+  writeStagedSourceFreshness,
   stagedModuleReportLines,
   stagedModuleVerdict,
   type StagedModuleFacts,
@@ -203,7 +209,99 @@ describe("staged module freshness", () => {
       writeFileSync(join(sourceRoot, "🦀️rust", "later.rs"), "fn later() {}");
       utimesSync(join(sourceRoot, "🦀️rust", "later.rs"), new Date(3_000_000), new Date(3_000_000));
       expect(newestComponentSourceMtime(sourceRoot)?.mtimeMs).toBe(3_000_000);
-      expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: stagedModuleMtime(stagedDirectory), newestSourceMs: newestComponentSourceMtime(sourceRoot)?.mtimeMs }).kind).toBe("source-newer");
+      const before = componentSourceContentHash(sourceRoot);
+      writeStagedSourceContentHash(stagedDirectory, before);
+      expect(readStagedSourceContentHash(stagedDirectory)).toBe(before);
+      expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: stagedModuleMtime(stagedDirectory), newestSourceMs: newestComponentSourceMtime(sourceRoot)?.mtimeMs, sourceContentSha256: componentSourceContentHash(sourceRoot), stagedSourceContentSha256: before }).kind).toBe("fresh");
+      writeFileSync(join(sourceRoot, "changed.rs"), "changed");
+      const after = componentSourceContentHash(sourceRoot);
+      expect(after).not.toBe(before);
+      expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: stagedModuleMtime(stagedDirectory), newestSourceMs: newestComponentSourceMtime(sourceRoot)?.mtimeMs, sourceContentSha256: after, stagedSourceContentSha256: before }).kind).toBe("source-changed");
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  it("boot freshness: unchanged tree reuses every file digest and stays fresh", () => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-stat-index-unchanged-"));
+    try {
+      const stagedDirectory = join(sandbox, "staged"), sourceRoot = join(sandbox, "source");
+      mkdirSync(join(sourceRoot, "src"), { recursive: true });
+      writeFileSync(join(sourceRoot, "src", "a.rs"), "fn a() {}");
+      utimesSync(join(sourceRoot, "src", "a.rs"), new Date(1_000_000), new Date(1_000_000));
+      const content = writeStagedSourceFreshness(stagedDirectory, sourceRoot);
+      const first = resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
+      expect(first.hashedFileCount).toBe(0);
+      expect(first.reusedFileCount).toBe(1);
+      expect(first.sourceContentSha256).toBe(content);
+      expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: 1, sourceContentSha256: first.sourceContentSha256, stagedSourceContentSha256: content }).kind).toBe("fresh");
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  it("boot freshness: touched-but-identical file rehashes one entry and stays fresh", () => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-stat-index-touch-"));
+    try {
+      const stagedDirectory = join(sandbox, "staged"), sourceRoot = join(sandbox, "source");
+      mkdirSync(join(sourceRoot, "src"), { recursive: true });
+      const file = join(sourceRoot, "src", "a.rs");
+      writeFileSync(file, "fn a() {}");
+      utimesSync(file, new Date(1_000_000), new Date(1_000_000));
+      const content = writeStagedSourceFreshness(stagedDirectory, sourceRoot);
+      utimesSync(file, new Date(2_000_000), new Date(2_000_000));
+      const second = resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
+      expect(second.hashedFileCount).toBe(1);
+      expect(second.reusedFileCount).toBe(0);
+      expect(second.sourceContentSha256).toBe(content);
+      expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: 1, sourceContentSha256: second.sourceContentSha256, stagedSourceContentSha256: content }).kind).toBe("fresh");
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  it("boot freshness: edited file is detected as source-changed", () => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-stat-index-edit-"));
+    try {
+      const stagedDirectory = join(sandbox, "staged"), sourceRoot = join(sandbox, "source");
+      mkdirSync(join(sourceRoot, "src"), { recursive: true });
+      const file = join(sourceRoot, "src", "a.rs");
+      writeFileSync(file, "fn a() {}");
+      utimesSync(file, new Date(1_000_000), new Date(1_000_000));
+      const content = writeStagedSourceFreshness(stagedDirectory, sourceRoot);
+      writeFileSync(file, "fn a() { /* edited */ }");
+      utimesSync(file, new Date(2_000_000), new Date(2_000_000));
+      const second = resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
+      expect(second.hashedFileCount).toBe(1);
+      expect(second.sourceContentSha256).not.toBe(content);
+      expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: 1, sourceContentSha256: second.sourceContentSha256, stagedSourceContentSha256: content }).kind).toBe("source-changed");
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  it("boot freshness: added or removed file is detected as source-changed", () => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-stat-index-add-remove-"));
+    try {
+      const stagedDirectory = join(sandbox, "staged"), sourceRoot = join(sandbox, "source");
+      mkdirSync(join(sourceRoot, "src"), { recursive: true });
+      writeFileSync(join(sourceRoot, "src", "a.rs"), "fn a() {}");
+      utimesSync(join(sourceRoot, "src", "a.rs"), new Date(1_000_000), new Date(1_000_000));
+      const content = writeStagedSourceFreshness(stagedDirectory, sourceRoot);
+      expect(readStagedSourceStatIndex(stagedDirectory)?.files).toHaveLength(1);
+      writeFileSync(join(sourceRoot, "src", "b.rs"), "fn b() {}");
+      utimesSync(join(sourceRoot, "src", "b.rs"), new Date(2_000_000), new Date(2_000_000));
+      const added = resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
+      expect(added.sourceContentSha256).not.toBe(content);
+      expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: 1, sourceContentSha256: added.sourceContentSha256, stagedSourceContentSha256: content }).kind).toBe("source-changed");
+      rmSync(join(sourceRoot, "src", "b.rs"));
+      writeStagedSourceFreshness(stagedDirectory, sourceRoot);
+      const afterAddPersisted = readStagedSourceContentHash(stagedDirectory)!;
+      rmSync(join(sourceRoot, "src", "a.rs"));
+      writeFileSync(join(sourceRoot, "src", "only.rs"), "fn only() {}");
+      const removed = resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: afterAddPersisted });
+      expect(removed.sourceContentSha256).not.toBe(afterAddPersisted);
+      expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: 1, sourceContentSha256: removed.sourceContentSha256, stagedSourceContentSha256: afterAddPersisted }).kind).toBe("source-changed");
     } finally {
       rmSync(sandbox, { recursive: true, force: true });
     }
@@ -260,6 +358,27 @@ describe("staged module freshness", () => {
     const declared = [...source.matchAll(/export const DESCRIPTOR_(?:PACK|JSON)_FILENAME = "([^"]+)";/g)].map((match) => match[1]!);
     expect(declared.length, "DESCRIPTOR_PACK_FILENAME / DESCRIPTOR_JSON_FILENAME moved — re-derive GENERATED_COMPONENT_OWNER_FILES").toBe(2);
     expect(declared.sort()).toEqual([...GENERATED_COMPONENT_OWNER_FILES].sort());
+  });
+
+  it("hashes plugin-owner sources stably and ignores declared output directories", () => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-staging-hash-"));
+    try {
+      const sourceRoot = join(sandbox, "source");
+      mkdirSync(join(sourceRoot, "src"), { recursive: true });
+      writeFileSync(join(sourceRoot, "src", "main.rs"), "fn main() {}");
+      for (const directory of fixture.freshness.walk.outputDirectories) {
+        mkdirSync(join(sourceRoot, directory), { recursive: true });
+        writeFileSync(join(sourceRoot, directory, "noise.bin"), "noise");
+      }
+      const first = componentSourceContentHash(sourceRoot);
+      expect(first).toMatch(/^[a-f0-9]{64}$/);
+      writeFileSync(join(sourceRoot, "dist", "more.bin"), "more");
+      expect(componentSourceContentHash(sourceRoot)).toBe(first);
+      writeFileSync(join(sourceRoot, "src", "extra.rs"), "fn extra() {}");
+      expect(componentSourceContentHash(sourceRoot)).not.toBe(first);
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
   });
 
   it("stops at its declared entry bound instead of walking an unbounded tree", () => {

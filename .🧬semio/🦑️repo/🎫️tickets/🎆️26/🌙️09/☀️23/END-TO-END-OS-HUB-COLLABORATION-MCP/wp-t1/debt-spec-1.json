@@ -1,0 +1,135 @@
+[
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🔮️oracles/🔣️.json",
+  "oracle": "ajv-ticket-schema",
+  "debt": {
+   "reachableFrom": [
+    "package.json",
+    "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
+    "🌎️hub/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."
+  }
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/🔮️oracles/🔣️.json",
+  "oracle": "ajv-goal-document",
+  "debt": {
+   "reachableFrom": [
+    "package.json",
+    "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
+    "🌎️hub/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."
+  }
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/🔮️oracles/🔣️.json",
+  "oracle": "ajv-model-schema",
+  "debt": {
+   "reachableFrom": [
+    "package.json",
+    "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
+    "🌎️hub/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."
+  }
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/🔮️oracles/🔣️.json",
+  "oracle": "ajv-todo-line-vectors",
+  "debt": {
+   "reachableFrom": [
+    "package.json",
+    "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
+    "🌎️hub/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."
+  }
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/🔮️oracles/🔣️.json",
+  "oracle": "ajv-repo-events",
+  "debt": {
+   "reachableFrom": [
+    "package.json",
+    "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
+    "🌎️hub/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."
+  }
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/🔮️oracles/🔣️.json",
+  "oracle": "ajv-contributor-document",
+  "debt": {
+   "reachableFrom": [
+    "package.json",
+    "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
+    "🌎️hub/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."
+  }
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🔮️oracles/🔣️.json",
+  "oracle": "modelcontextprotocol-sdk",
+  "debt": {
+   "reachableFrom": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp",
+   "plan": "The os MCP server links the official SDK at runtime. This oracle judges the repository's own Rust MCP server, which never links it, so independence holds. The debt retires when the os server speaks the protocol through the repository's own implementation. No path may join."
+  }
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+  "oracle": "image-bmp-3-mutate-reader",
+  "debt": {
+   "reachableFrom": [
+    "🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
+   ],
+   "owner": "🧰️framework/🔨️modules/🗺️surface",
+   "plan": "The same package the `image-bmp` oracle records: raster decode in the framework surface, intrinsic sizing and the os world and renderer crates. None of them is the stdio bmp codec under test. The debt retires when those call sites decode through stdio's own decoders. No path may join."
+  }
+ }
+]

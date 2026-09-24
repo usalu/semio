@@ -4,6 +4,82 @@ version 1
 schema remodeling.remodeling.op
 start frame
 framing record
-header fixed 1
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
 field format u8
-chain payload bytes
+field tag varint
+record create-stream tag=0
+field payload bytes
+record delete-stream tag=1
+field payload bytes
+record change-stream-sync tag=2
+field payload bytes
+record add-stream-frame tag=3
+field payload bytes
+record remove-stream-frame tag=4
+field payload bytes
+record replace-stream-source tag=5
+field payload bytes
+record create-asset tag=6
+field payload bytes
+record delete-asset tag=7
+field payload bytes
+record create-camera-calibration tag=8
+field payload bytes
+record update-camera-calibration tag=9
+field payload bytes
+record delete-camera-calibration tag=10
+field payload bytes
+record create-rig-extrinsic tag=11
+field payload bytes
+record delete-rig-extrinsic tag=12
+field payload bytes
+record update-rig-extrinsic tag=13
+field payload bytes
+record create-gcp tag=14
+field payload bytes
+record delete-gcp tag=15
+field payload bytes
+record add-gcp-observation tag=16
+field payload bytes
+record remove-gcp-observation tag=17
+field payload bytes
+record update-ingest-params tag=18
+field payload bytes
+record update-feature-params tag=19
+field payload bytes
+record update-match-params tag=20
+field payload bytes
+record update-sfm-params tag=21
+field payload bytes
+record update-dense-params tag=22
+field payload bytes
+record update-mesh-params tag=23
+field payload bytes
+record update-motion-params tag=24
+field payload bytes
+record update-geo-params tag=25
+field payload bytes
+record replace-sparse tag=26
+field payload bytes
+record replace-dense tag=27
+field payload bytes
+record replace-mesh-result tag=28
+field payload bytes
+record replace-trajectory tag=29
+field payload bytes
+record replace-tracks tag=30
+field payload bytes
+record replace-geo-products tag=31
+field payload bytes
+record replace-qc tag=32
+field payload bytes
+record append-content tag=33
+field payload bytes
+record remove-content tag=34
+field payload bytes
+record commit-reconstruction tag=35
+field payload bytes

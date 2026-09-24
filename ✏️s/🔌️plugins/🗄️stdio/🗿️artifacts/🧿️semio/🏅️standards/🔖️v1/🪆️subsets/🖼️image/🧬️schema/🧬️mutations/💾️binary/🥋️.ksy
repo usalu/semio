@@ -14,7 +14,7 @@ seq:
     doc: "OP_BINARY_FORMAT, currently 1"
   - id: tag
     type: u1
-    doc: "SemioImageMutation variant ordinal, 0-12 — see OP_KEYWORDS in ../../🦀️.rs"
+    doc: "the kind's record tag in 📡️.protocol.semio"
   - id: payload
     size-eos: true
     doc: |

@@ -25,7 +25,7 @@ Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at t
 
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for work fleets of maximum possible parallel agents.
-Plan for a main Opus 5 High agent for plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
+Plan for a main Opus 5.5 High agent for plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 Everything end to end (ignore everything inside ./compose folder).
 Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit:
 
@@ -49,25 +49,31 @@ There are other agents working on other logical parts, even if they work on the 
 
 ---
 
-Use the main chat with Fable 5.1 High for main plan coordination, use multiple Opus 5 High agents for task execution, use multiple Sonnet 5 High agents for read-only exploration and audits.
+Use the main chat with Fable 5.1 High for main plan coordination, use multiple Opus 5.5 High agents for task execution, use multiple Sonnet 5 High agents for read-only exploration and audits.
 Always use a work fleet of maximum possible parallel agents.
 There are other agents working on other logical parts, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
 ---
 
-Use the main chat with Opus 5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
+Use the main chat with Opus 5.5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 Always use a work fleet of maximum possible parallel agents.
 There are other agents working on other logical parts, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
 ---
 
-Use the main chat with Opus 5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
+Use the main chat with Opus 5.5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 Always use a work fleet of maximum possible parallel agents.
 There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
 ---
 
-Use the main chat with Cursor Grok 4.7 Extra High for main plan coordination, use multiple Cursor Grok 4.7 High agents for task execution, use multiple Composer 2.5 agents for read-only exploration and audits.
+Use the main chat with Opus 5.5 Extra High for main plan coordination, use multiple Grok 4.7 High agents for task execution, use multiple Composer 2.5 agents for read-only exploration and audits.
+Always use a work fleet of maximum possible parallel agents.
+There are other agents working on other logical parts, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
+
+---
+
+Use the main chat with Grok 4.7 Extra High for main plan coordination, use multiple Grok 4.7 High agents for task execution, use multiple Composer 2.5 agents for read-only exploration and audits.
 Always use a work fleet of maximum possible parallel agents.
 There are other agents working on other logical parts, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
@@ -80,14 +86,14 @@ Implement everything end to end. The plan is trusted, no need to double check it
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for work fleets of maximum possible parallel agents.
 Everything end to end.
-Use the main chat with Fable 5 High for creating the plan, use the main chat with Opus 5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
+Use the main chat with Fable 5 High for creating the plan, use the main chat with Opus 5.5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 
 ---
 
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for work fleets of maximum possible parallel agents.
 Everything end to end.
-Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.5 High agent for main plan coordination, multiple Composer 2.5 agents for task execution, multiple Composer 2.5 agents for read-only exploration.
+Use a single Opus 5 agent for creating the plan, a single Grok 4.5 High agent for main plan coordination, multiple Composer 2.5 agents for task execution, multiple Composer 2.5 agents for read-only exploration.
 
 ---
 

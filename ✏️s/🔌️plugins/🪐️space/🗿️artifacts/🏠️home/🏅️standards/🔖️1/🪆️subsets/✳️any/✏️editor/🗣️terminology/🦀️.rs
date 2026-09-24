@@ -22,6 +22,9 @@ app_labels! {
         action_delete: native_en "delete", native_de "löschen", reuse_en "delete", reuse_de "löschen";
         // 🏛️ Author-only administration pane (members, roles, invites) — see `row_actions`.
         action_manage: native_en "manage", native_de "verwalten", reuse_en "manage", reuse_de "verwalten";
+        action_promote: native_en "Promote to hub", native_de "Zum Hub hochstufen", reuse_en "Promote to hub", reuse_de "Zum Hub hochstufen";
+        action_persist: native_en "Persist locally", native_de "Lokal speichern", reuse_en "Persist locally", reuse_de "Lokal speichern";
+        ephemeral_share_blocked: native_en "This studio is ephemeral and local-only. Share and collaboration require promoting it to a hub space or persisting it locally first.", native_de "Dieses Studio ist flüchtig und nur lokal. Teilen und Zusammenarbeit erfordern zuerst die Hochstufung zum Hub oder lokales Speichern.", reuse_en "This studio is ephemeral and local-only. Share and collaboration require promoting it to a hub space or persisting it locally first.", reuse_de "Dieses Studio ist flüchtig und nur lokal. Teilen und Zusammenarbeit erfordern zuerst die Hochstufung zum Hub oder lokales Speichern.";
     }
 }
 //#endregion 🔖️Terminology

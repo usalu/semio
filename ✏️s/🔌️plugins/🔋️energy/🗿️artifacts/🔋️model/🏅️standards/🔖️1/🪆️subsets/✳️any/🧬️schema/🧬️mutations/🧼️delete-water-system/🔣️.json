@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteWaterSystem",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-water-system",
-  "binaryTag": null,
+  "binaryTag": 232,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

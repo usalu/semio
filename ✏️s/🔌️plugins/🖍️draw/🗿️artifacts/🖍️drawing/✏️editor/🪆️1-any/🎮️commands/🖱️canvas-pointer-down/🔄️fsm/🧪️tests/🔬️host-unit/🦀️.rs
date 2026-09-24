@@ -1,6 +1,23 @@
 mod tests {
     use super::*;
 
+    use super::super::kernel::{MachineDefinition, NodeDef, NodeKind};
+
+    const HOST_DOUBLE_NODES: &[NodeDef] = &[
+        NodeDef {
+            stable_id: "root",
+            kind: NodeKind::Atomic,
+            parent: None,
+            initial: None,
+            children: &[],
+            entry_actions: &[],
+            exit_actions: &[],
+            invokes: &[],
+            timers: &[],
+            doc_index: 0,
+        },
+    ];
+
     struct DummyMachine;
     impl Machine for DummyMachine {
         type Context = ();
@@ -9,8 +26,19 @@ mod tests {
         type Output = ();
         type Effect = &'static str;
         type Config = crate::BitSet<1>;
-        fn definition() -> &'static super::super::kernel::MachineDefinition<Self> {
-            unimplemented!("host tests never step a machine")
+        fn definition() -> &'static MachineDefinition<Self> {
+            static DEF: MachineDefinition<DummyMachine> = MachineDefinition {
+                id: "host_double",
+                nodes: HOST_DOUBLE_NODES,
+                transitions: &[],
+                context_from_input: |_| (),
+                make_output: None,
+                guards: &[],
+                actions: &[],
+                fingerprint: 1,
+                manifest_json: "{}",
+            };
+            &DEF
         }
     }
 

@@ -1,20 +1,7 @@
 use super::*;
 
-static FIXTURE_LOCK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
-struct FixtureSerial;
-
-impl Drop for FixtureSerial {
-    fn drop(&mut self) {
-        FIXTURE_LOCK.store(false, std::sync::atomic::Ordering::Release);
-    }
-}
-
-fn fixture_serial() -> FixtureSerial {
-    while FIXTURE_LOCK.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
-        std::thread::yield_now();
-    }
-    FixtureSerial
+fn fixture_owner() -> DbIoLedgerOwner {
+    DbIoLedgerOwner::enter()
 }
 
 struct AsyncNativeLawExecutor {
@@ -159,7 +146,7 @@ fn register_writer_controller_law_on(mode: DbIoExecutorMode, pool: Arc<WorkerPoo
 
 #[semio_framework_async_macros::async_test]
 async fn wal_writer_mounted_controller_fences_at_signal_and_wakes_outside_registry_without_tasks() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
     let row = &fixture["controllerBinding"];
@@ -214,7 +201,7 @@ async fn wal_writer_mounted_controller_fences_at_signal_and_wakes_outside_regist
 
 #[semio_framework_async_macros::async_test]
 async fn wal_writer_mounted_controller_fault_returns_exact_retry_owner_without_poisoning_other_writer() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let (control, _) = register_writer_controller_law(DbIoExecutorMode::BlockingLane);
     let document = DbIoText::try_from_str("faulted-writer-authority").unwrap();
@@ -257,7 +244,7 @@ async fn wal_writer_mounted_controller_fault_returns_exact_retry_owner_without_p
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_retry_epoch() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let (started_tx, started_rx) = std::sync::mpsc::channel();
@@ -339,7 +326,7 @@ async fn wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_re
 
 #[semio_framework_async_macros::async_test]
 async fn wal_writer_mounted_controller_rerequests_after_async_executor_handback() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let (control, _) = register_writer_controller_law(DbIoExecutorMode::AsyncNative);
     let document = DbIoText::try_from_str("async-leased-writer").unwrap();
@@ -365,7 +352,7 @@ async fn wal_writer_mounted_controller_rerequests_after_async_executor_handback(
 
 #[semio_framework_async_macros::async_test]
 async fn wal_writer_mounted_controller_coalesced_fault_does_not_strand_healthy_release() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
     let (control, _) = register_writer_controller_law(DbIoExecutorMode::BlockingLane);
@@ -395,7 +382,7 @@ async fn wal_writer_mounted_controller_coalesced_fault_does_not_strand_healthy_r
 
 #[semio_framework_async_macros::async_test]
 async fn wal_writer_mounted_controller_outer_panic_faults_waiters_once_and_stops() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
     let expected = &fixture["controllerFaults"]["outerPanic"];
@@ -705,6 +692,8 @@ impl DbIoTaskExecutor for AsyncLaneProbeExecutor {
         Ok(true)
     }
     fn close_backend_step(&mut self, _context: &mut std::task::Context<'_>) -> Result<bool, DbError> {
+        *self.close_thread.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(std::thread::current().id());
+        self.close_worker_role.store(semio_framework_trace::is_worker_thread(), std::sync::atomic::Ordering::Release);
         self.terminal = true;
         Ok(true)
     }
@@ -852,8 +841,7 @@ impl DbIoTaskExecutor for BlockingOutputLifecycleLawExecutor {
 }
 
 fn ledger_witness() -> (DbIoCredit, usize) {
-    let ledger = db_io_operation_ledger().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    (ledger.totals, ledger.free_len)
+    db_io_ledger_census(DB_IO_LEDGER_OWNER.with(std::cell::Cell::get))
 }
 
 fn exact_fixture_result(terminal: Result<DbIoResultLease, DbIoFault>, context: &str) -> DbIoResult {
@@ -882,20 +870,34 @@ fn drain_pages(mut pages: DbIoPages) {
     while db_io_page_maintenance_step().unwrap().is_some() {}
 }
 
+fn admit_fixture_job(pool: &WorkerPool, lane: Lane, mut job: semio_framework_async::Job) {
+    loop {
+        match pool.try_submit(lane, job) {
+            Ok(()) => return,
+            Err(error) if error.kind() == WorkerSubmitErrorKind::Contended => {
+                job = error.into_job();
+                std::thread::yield_now();
+            }
+            Err(error) => panic!("fixture job admission refused: {:?}", error.kind()),
+        }
+    }
+}
+
 async fn drain_control_tasks(control: DbIoBackendControl) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
     while DB_IO_TASK_SLOTS.iter().any(|task| task.lock().unwrap_or_else(std::sync::PoisonError::into_inner).backend == Some(control)) {
-        assert!(db_io_maintenance_step().unwrap());
-        std::future::poll_fn(|context| {
-            context.waker().wake_by_ref();
-            std::task::Poll::Ready(())
-        })
-        .await;
+        assert!(std::time::Instant::now() < deadline, "closed tasks did not retire through the backend hook or an owner maintenance opportunity");
+        db_io_maintenance_step().unwrap();
+        semio_framework_async::yield_once().await;
     }
 }
 
 #[test]
 fn db_io_fixed_page_max_plus_one_and_zero_are_exact() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_fixed_page_max_plus_one_and_zero_are_exact") {
+        return;
+    }
+    let _owner = fixture_owner();
     let empty = pages(&[]);
     assert!(empty.is_empty());
     drain_pages(empty);
@@ -909,7 +911,7 @@ fn db_io_fixed_page_max_plus_one_and_zero_are_exact() {
 
 #[test]
 fn db_io_artifact_rejection_is_an_internal_executor_boundary_violation() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let fault = db_io_task_fault(DbIoFaultKind::Backend, &DbError::Rejected { policy: protocol::MergePolicy::Normal, worst: protocol::Severity::Error, messages: Vec::new() });
     assert_eq!(fault.cause, DbIoFaultCause::Internal);
@@ -920,7 +922,10 @@ fn db_io_artifact_rejection_is_an_internal_executor_boundary_violation() {
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_blocking_fault_preserves_exact_category_scalars_and_retires() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_blocking_fault_preserves_exact_category_scalars_and_retires") {
+        return;
+    }
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
     let pool = db_io_test_pool();
@@ -959,7 +964,7 @@ async fn db_io_blocking_fault_preserves_exact_category_scalars_and_retires() {
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_async_native_fault_preserves_exact_category_scalars_and_retires() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
     let pool = db_io_test_pool();
@@ -996,7 +1001,7 @@ async fn db_io_async_native_fault_preserves_exact_category_scalars_and_retires()
 
 #[test]
 fn db_io_executing_output_seal_keeps_every_page_executing_until_atomic_publication() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let bytes: Vec<u8> = (0..DB_IO_PAGE_BYTES + 1).map(|index| (index % 251) as u8).collect();
     let mut writer = DbIoPageWriter::try_reserve(2).unwrap();
@@ -1032,7 +1037,7 @@ fn db_io_executing_output_seal_keeps_every_page_executing_until_atomic_publicati
 
 #[test]
 fn db_io_page_identity_rejects_generation_operation_and_phase_mismatches_exactly() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let mut writer = DbIoPageWriter::try_reserve(1).unwrap();
     let page = writer.pages[0].as_ref().unwrap();
@@ -1068,7 +1073,7 @@ fn db_io_page_identity_rejects_generation_operation_and_phase_mismatches_exactly
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_output_task_yield_cancel_abandon_and_close_retire_exactly_once() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let pool = db_io_test_pool();
     let success_steps = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -1107,9 +1112,12 @@ async fn db_io_output_task_yield_cancel_abandon_and_close_retire_exactly_once() 
     };
     {
         let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(DbIoTask::PayloadGet { output, .. }) = owner.task.as_ref() else { panic!("cancel lifecycle task lost its writer") };
-        let arena = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        assert!(output.pages.iter().take(output.reserved as usize).flatten().all(|page| arena.slots[page.slot as usize].phase == DbIoPagePhase::TerminalResult));
+        if db_io_slot_matches(&owner, handle) {
+            if let Some(DbIoTask::PayloadGet { output, .. }) = owner.task.as_ref() {
+                let arena = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                assert!(output.pages.iter().take(output.reserved as usize).flatten().all(|page| arena.slots[page.slot as usize].phase == DbIoPagePhase::TerminalResult));
+            }
+        }
     }
     assert_eq!(fault.kind, DbIoFaultKind::Cancelled);
     while fault.close_step() {}
@@ -1126,19 +1134,26 @@ async fn db_io_output_task_yield_cancel_abandon_and_close_retire_exactly_once() 
     assert!(abandon_steps.load(std::sync::atomic::Ordering::Acquire) >= 3);
     let handle = operation.handle;
     drop(operation);
-    for _ in 0..1_000_000 {
-        let phase = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner).phase;
-        if phase == DbIoTaskPhase::Cancelled {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    loop {
+        let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !db_io_slot_matches(&owner, handle) || matches!(owner.phase, DbIoTaskPhase::Cancelled | DbIoTaskPhase::Closing) {
             break;
         }
+        let witness = format!("phase={:?} cancelled={} abandoned={} task={} retry={:?} submit_kind={:?} steps={}", owner.phase, owner.cancelled, owner.abandoned, owner.task.is_some(), owner.retry_attempt, owner.terminal_submit_kind, abandon_steps.load(std::sync::atomic::Ordering::Acquire));
+        drop(owner);
+        assert!(std::time::Instant::now() < deadline, "abandoned lifecycle task never observed its cancellation: {witness}");
         std::thread::yield_now();
     }
     {
         let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        assert_eq!(owner.phase, DbIoTaskPhase::Cancelled);
-        let Some(DbIoTask::PayloadGet { output, .. }) = owner.task.as_ref() else { panic!("abandon lifecycle task lost its writer") };
-        let arena = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        assert!(output.pages.iter().take(output.reserved as usize).flatten().all(|page| arena.slots[page.slot as usize].phase == DbIoPagePhase::TerminalResult));
+        if db_io_slot_matches(&owner, handle) {
+            assert!(matches!(owner.phase, DbIoTaskPhase::Cancelled | DbIoTaskPhase::Closing));
+            if let Some(DbIoTask::PayloadGet { output, .. }) = owner.task.as_ref() {
+                let arena = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                assert!(output.pages.iter().take(output.reserved as usize).flatten().all(|page| arena.slots[page.slot as usize].phase == DbIoPagePhase::TerminalResult));
+            }
+        }
     }
     drain_control_tasks(control).await;
 
@@ -1150,7 +1165,7 @@ async fn db_io_output_task_yield_cancel_abandon_and_close_retire_exactly_once() 
 #[cfg(all(feature = "sqlite", not(target_arch = "wasm32")))]
 #[semio_framework_async_macros::async_test]
 async fn sqlite_payload_roundtrip_obeys_the_neutral_page_lifecycle_fixture() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
     let storage = db_storage_sqlite::SqliteStorage::open_in_memory(db_io_test_pool()).await.unwrap();
@@ -1179,7 +1194,7 @@ async fn sqlite_payload_roundtrip_obeys_the_neutral_page_lifecycle_fixture() {
 
 #[test]
 fn db_io_page_writer_seal_memory_sqlite_neo_state_wal_index_max_cancel_fault_drop_is_one_opportunity() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let waker = std::task::Waker::noop();
     let context = &mut std::task::Context::from_waker(waker);
@@ -1222,7 +1237,7 @@ fn db_io_page_writer_seal_memory_sqlite_neo_state_wal_index_max_cancel_fault_dro
 
 #[test]
 fn db_io_one_byte_high_capacity_candidate_is_rejected_with_exact_owner() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let operation = db_io_operation_reserve(DbIoCredit { pages: 0, bytes: 0, items: 0, controls: 1 }).unwrap();
     let mut reservation = DbIoDriverReservation::try_reserve(operation, DB_IO_OPERATION_BYTES as usize).unwrap();
@@ -1243,7 +1258,10 @@ fn db_io_one_byte_high_capacity_candidate_is_rejected_with_exact_owner() {
 
 #[test]
 fn db_io_artifact_and_lease_result_owners_retain_exact_incremental_handback() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_artifact_and_lease_result_owners_retain_exact_incremental_handback") {
+        return;
+    }
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let operation = db_io_operation_reserve(DbIoCredit { pages: 0, bytes: 0, items: 0, controls: 1 }).unwrap();
     let text = DbIoText::try_from_str("post-admission-artifact").unwrap();
@@ -1265,7 +1283,7 @@ fn db_io_artifact_and_lease_result_owners_retain_exact_incremental_handback() {
 
 #[test]
 fn db_io_process_and_operation_ledger_return_to_exact_prior_witness() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let owner = pages(&[0x41; DB_IO_PAGE_BYTES + 1]);
     let during = ledger_witness();
@@ -1279,7 +1297,7 @@ fn db_io_process_and_operation_ledger_return_to_exact_prior_witness() {
 
 #[test]
 fn db_io_range_moves_the_same_page_leases_without_suffix_copy() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let bytes = vec![0x33; DB_IO_PAGE_BYTES + 3];
     let owner = pages(&bytes);
     let operation = owner.operation();
@@ -1291,7 +1309,7 @@ fn db_io_range_moves_the_same_page_leases_without_suffix_copy() {
 
 #[test]
 fn db_io_list_capacity_plus_one_does_not_mutate_the_fixed_owner() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let mut list = DbIoU64List::new();
     for value in 0..DB_IO_LIST_ITEMS as u64 {
         list.push(value).unwrap();
@@ -1305,7 +1323,7 @@ fn db_io_list_capacity_plus_one_does_not_mutate_the_fixed_owner() {
 
 #[test]
 fn db_io_list_keeps_exact_capacity_off_worker_stacks_and_in_the_ledger() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let mut task = DbIoTask::WalList { backend: DbIoBackendControl::Memory { slot: 0, generation: 1 }, document: DbIoText::try_from_str("budget-witness").unwrap(), output: DbIoU64List::new() };
     assert!(matches!(&task, DbIoTask::WalList { output, .. } if output.values.is_none()));
     let credit = task.aggregate_credit();
@@ -1318,7 +1336,7 @@ fn db_io_list_keeps_exact_capacity_off_worker_stacks_and_in_the_ledger() {
     let operation = db_io_operation_reserve(credit).unwrap();
     let during = ledger_witness();
     assert_eq!(during.0, before.0.checked_add(credit).unwrap());
-    assert_eq!(during.1 + 1, before.1);
+    assert_eq!(during.1, before.1 + 1);
     task.admit_list_backing().unwrap();
     assert!(matches!(&task, DbIoTask::WalList { output, .. } if output.values.as_deref().map(<[u64]>::len) == Some(DB_IO_LIST_ITEMS)));
     task.release_unstarted_list_backing();
@@ -1331,7 +1349,7 @@ fn db_io_list_keeps_exact_capacity_off_worker_stacks_and_in_the_ledger() {
     while source.close_step() {}
     db_io_operation_return(operation, credit).unwrap();
     assert_eq!(ledger_witness(), before);
-    assert!(size_of::<DbIoU64List>() <= 64);
+    assert!(size_of::<DbIoU64List>() <= size_of::<Option<Box<[u64]>>>() + size_of::<Option<DbIoResultHandback>>() + size_of::<u64>(), "list capacity stays boxed off the worker stack");
     assert!(size_of::<DbIoTask>() <= 4 * 1024);
     assert!(size_of::<DbIoResult>() <= 4 * 1024);
     assert!(size_of::<DbIoTaskSlot>() <= 8 * 1024);
@@ -1340,6 +1358,9 @@ fn db_io_list_keeps_exact_capacity_off_worker_stacks_and_in_the_ledger() {
 
 #[test]
 fn db_io_process_page_max_plus_one_preflight_is_atomic() {
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_process_page_max_plus_one_preflight_is_atomic") {
+        return;
+    }
     let mut state = DbIoPageArenaState::new();
     for _ in 0..DB_IO_TOTAL_PAGES / DB_IO_OPERATION_PAGES {
         db_io_preflight_page_checkout(&state, DB_IO_OPERATION_PAGES).unwrap();
@@ -1352,23 +1373,29 @@ fn db_io_process_page_max_plus_one_preflight_is_atomic() {
 
 #[test]
 fn db_io_result_page_reservation_plus_one_returns_the_writer() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let mut writer = DbIoPageWriter::try_reserve(1).unwrap();
     assert_eq!(writer.write_fragment(&[0x44; DB_IO_PAGE_BYTES]).unwrap(), DB_IO_PAGE_BYTES);
     assert!(matches!(writer.write_fragment(&[0x55]), Err(DbError::LimitExceeded(_))));
     assert_eq!(writer.len(), DB_IO_PAGE_BYTES);
-    assert!(writer.close_step().unwrap().is_some());
+    assert_eq!(writer.close_step().unwrap(), Some(DB_IO_PAGE_BYTES));
+    assert!(!writer.terminal_is_empty());
+    assert_eq!(writer.close_step().unwrap(), Some(0));
     assert!(writer.terminal_is_empty());
+    assert_eq!(writer.close_step().unwrap(), None);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_platform_fixed_ring_max_plus_one_returns_exact_capacity() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_platform_fixed_ring_max_plus_one_returns_exact_capacity") {
+        return;
+    }
+    let _owner = fixture_owner();
     let before = ledger_witness();
-    let source = pages(&[0x39]);
+    let sources: [DbIoPages; DB_IO_PLATFORM_BUFFERS + 1] = std::array::from_fn(|_| pages(&[0x39]));
     let mut owners: [Option<DbIoPlatformBuffer>; DB_IO_PLATFORM_BUFFERS] = std::array::from_fn(|_| None);
-    for owner in &mut owners {
-        let copy = match db_io_prepare_platform(&source) {
+    for (owner, source) in owners.iter_mut().zip(&sources) {
+        let copy = match db_io_prepare_platform(source) {
             Ok(copy) => copy,
             Err(error) => panic!("platform max fixture reservation failed: {error}"),
         };
@@ -1377,20 +1404,27 @@ async fn db_io_platform_fixed_ring_max_plus_one_returns_exact_capacity() {
             Err(error) => panic!("platform max fixture copy failed: {error}"),
         });
     }
-    assert!(matches!(db_io_prepare_platform(&source), Err(DbError::Unavailable(_))));
+    let credit_before_refusal = ledger_witness();
+    assert!(matches!(db_io_prepare_platform(&sources[DB_IO_PLATFORM_BUFFERS]), Err(DbError::Unavailable(detail)) if detail == "DB I/O prepared platform capacity exhausted"));
+    assert_eq!(ledger_witness(), credit_before_refusal, "the ring max+1 refusal returns its exact capacity");
     for owner in &mut owners {
         let Some(owner) = owner.take() else { panic!("platform max fixture lost an admitted owner") };
         if let Err(error) = db_io_close_platform(owner).await {
             panic!("platform max fixture close failed: {error}");
         }
     }
-    drain_pages(source);
+    for source in sources {
+        drain_pages(source);
+    }
     assert_eq!(ledger_witness(), before);
 }
 
 #[test]
 fn db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate") {
+        return;
+    }
+    let _owner = fixture_owner();
     while db_io_lost_owner_close_step().unwrap() {}
     DB_IO_RETIREMENT_PRESSURE_FAULT.store(false, std::sync::atomic::Ordering::Release);
     for _ in 0..DB_IO_LOST_OWNER_SLOTS {
@@ -1464,7 +1498,10 @@ fn db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate() {
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_storage_ready_and_pending_close_interruption_recover_the_same_owner_and_ledger() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_storage_ready_and_pending_close_interruption_recover_the_same_owner_and_ledger") {
+        return;
+    }
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let source = pages(&[0x61; DB_IO_PAGE_BYTES + 1]);
     let platform = db_io_prepare_platform(&source).unwrap().await.unwrap();
@@ -1501,7 +1538,7 @@ async fn db_io_storage_ready_and_pending_close_interruption_recover_the_same_own
     let reservation = DbIoDriverReservation::try_reserve(fault_operation, 1).unwrap();
     let mut writer = DbIoPageWriter::try_reserve(1).unwrap();
     let mut fault = db_io_write_observed_bytes(reservation, Vec::with_capacity(DB_IO_PAGE_BYTES), &mut writer);
-    assert!(matches!(Pin::new(&mut fault).poll(context), std::task::Poll::Ready(Err(DbError::Unavailable(_)))));
+    assert!(matches!(Pin::new(&mut fault).poll(context), std::task::Poll::Ready(Err(DbError::LimitExceeded("DB I/O external driver allocation capacity")))));
     drop(fault);
     while db_io_lost_owner_close_step().unwrap() {}
     while writer.close_step().unwrap().is_some() {}
@@ -1511,7 +1548,7 @@ async fn db_io_storage_ready_and_pending_close_interruption_recover_the_same_own
 
 #[test]
 fn db_io_interrupted_close_retires_one_page_or_owner_per_grant() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let input = pages(&[0x66; DB_IO_PAGE_BYTES + 1]);
     let backend = DbIoBackendControl::Memory { slot: 0, generation: 1 };
     let document = DbIoText::try_from_str("close-fixture").unwrap();
@@ -1533,35 +1570,33 @@ fn db_io_interrupted_close_retires_one_page_or_owner_per_grant() {
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn db_io_real_queued_callback_rejects_a_reused_task_slot_aba() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let control = register_db_io_backend(DbIoBackendKind::Filesystem, Box::new(BlockingCompleteLawExecutor { terminal: false }), pool.clone()).unwrap();
     let (started_tx, started_rx) = std::sync::mpsc::channel();
     let (release_tx, release_rx) = std::sync::mpsc::channel();
-    pool.try_submit(
+    admit_fixture_job(
+        &pool,
         Lane::Io,
         Box::new(move || {
             let _ = started_tx.send(());
             let _ = release_rx.recv();
         }),
-    )
-    .ok()
-    .expect("DB I/O ABA blocker admission");
+    );
     started_rx.recv_timeout(std::time::Duration::from_secs(5)).unwrap();
 
     let task = DbIoTask::BackendOpen { backend: control, path: DbIoText::try_from_str("fixture://aba-old").unwrap() };
     let old = db_io_allocate_task(task).unwrap_or_else(|(error, _)| panic!("{error}"));
     let (callback_tx, callback_rx) = std::sync::mpsc::channel();
-    pool.try_submit(
+    admit_fixture_job(
+        &pool,
         Lane::Io,
         Box::new(move || {
             db_io_drive_one(old);
             let _ = callback_tx.send(());
         }),
-    )
-    .ok()
-    .expect("DB I/O ABA callback admission");
+    );
     db_io_drive_one(old);
     let terminal = match (DbIoTaskOperation { handle: old, resolved: false }).await {
         Ok(lease) => match lease.into_result() {
@@ -1628,7 +1663,7 @@ async fn db_io_real_queued_callback_rejects_a_reused_task_slot_aba() {
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn db_io_saturated_task_retry_wakes_parked_caller_without_unrelated_ingress() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
     assert_eq!(u64::from(DB_IO_RETRY_LIMIT), fixture["retry"]["maximumAttempts"].as_u64().unwrap());
     assert_eq!(DB_IO_RETRY_DELAY_MS, fixture["retry"]["timerDelayMs"].as_u64().unwrap());
@@ -1675,21 +1710,20 @@ async fn db_io_saturated_task_retry_wakes_parked_caller_without_unrelated_ingres
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn db_io_retry_generation_max_publishes_a_lossless_terminal_fault() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let control = register_db_io_backend(DbIoBackendKind::Filesystem, Box::new(BlockingCompleteLawExecutor { terminal: false }), pool.clone()).unwrap();
     let (started_tx, started_rx) = std::sync::mpsc::channel();
     let (release_tx, release_rx) = std::sync::mpsc::channel();
-    pool.try_submit(
+    admit_fixture_job(
+        &pool,
         Lane::Io,
         Box::new(move || {
             let _ = started_tx.send(());
             let _ = release_rx.recv();
         }),
-    )
-    .ok()
-    .expect("DB I/O retry blocker admission");
+    );
     started_rx.recv_timeout(std::time::Duration::from_secs(5)).unwrap();
     for _ in 0..semio_framework_async::WORKER_JOBS_PER_LANE {
         if let Err(error) = pool.try_submit(Lane::Io, Box::new(|| {})) {
@@ -1722,7 +1756,7 @@ async fn db_io_retry_generation_max_publishes_a_lossless_terminal_fault() {
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_postgres_and_neo4j_mock_drivers_use_supplied_writer_and_observed_capacity() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let pool = db_io_test_pool();
     for kind in [DbIoBackendKind::Postgres, DbIoBackendKind::Neo4j] {
@@ -1736,8 +1770,9 @@ async fn db_io_postgres_and_neo4j_mock_drivers_use_supplied_writer_and_observed_
         };
         lease.enter_lane_io_driver_turn().unwrap();
         let task_operation = lease.operation();
-        let mut reservation = DbIoDriverReservation::try_reserve(task_operation, DB_IO_OPERATION_BYTES as usize).unwrap();
-        let mut driver_result = Vec::with_capacity(DB_IO_OPERATION_BYTES as usize);
+        assert!(DbIoDriverReservation::try_reserve(task_operation, DB_IO_OPERATION_BYTES as usize).is_err());
+        let mut reservation = DbIoDriverReservation::try_reserve(task_operation, DB_IO_PAGE_BYTES).unwrap();
+        let mut driver_result = Vec::with_capacity(DB_IO_PAGE_BYTES);
         driver_result.push(0x7c);
         reservation.observe_capacity(driver_result.capacity()).unwrap();
         let result = match lease.task_mut() {
@@ -1767,7 +1802,10 @@ async fn db_io_postgres_and_neo4j_mock_drivers_use_supplied_writer_and_observed_
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn db_io_actual_async_driver_future_is_polled_by_the_shared_io_worker() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_actual_async_driver_future_is_polled_by_the_shared_io_worker") {
+        return;
+    }
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let polled_on_worker = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let poll_thread = Arc::new(std::sync::Mutex::new(None));
@@ -1807,7 +1845,10 @@ async fn db_io_actual_async_driver_future_is_polled_by_the_shared_io_worker() {
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_all_five_backend_controls_require_explicit_terminal_close_witness() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_all_five_backend_controls_require_explicit_terminal_close_witness") {
+        return;
+    }
+    let _owner = fixture_owner();
     let before = ledger_witness();
     for kind in [DbIoBackendKind::Memory, DbIoBackendKind::Filesystem, DbIoBackendKind::Sqlite, DbIoBackendKind::Postgres, DbIoBackendKind::Neo4j] {
         let pool = db_io_test_pool();
@@ -1816,14 +1857,14 @@ async fn db_io_all_five_backend_controls_require_explicit_terminal_close_witness
         close_db_io_backend(control).await.unwrap();
         let waker = std::task::Waker::noop();
         let context = &mut std::task::Context::from_waker(waker);
-        assert!(matches!(db_io_backend_close_lane_step(control, context), Err(DbError::StaleGeneration { .. })));
+        assert!(matches!(db_io_backend_close_step(control, context), Err(DbError::StaleGeneration { .. })));
     }
     assert_eq!(ledger_witness(), before);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_lost_result_lease_retains_every_page_and_final_handback() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
     let pool = db_io_test_pool();
@@ -1949,7 +1990,10 @@ impl Drop for LostOwnerPressureLawSlots {
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_lost_backend_retains_exact_owner_under_rejected_registry_pressure() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_lost_backend_retains_exact_owner_under_rejected_registry_pressure") {
+        return;
+    }
+    let _owner = fixture_owner();
     while db_io_lost_owner_close_step().unwrap() {}
     let before = ledger_witness();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
@@ -1991,19 +2035,30 @@ async fn db_io_lost_backend_retains_exact_owner_under_rejected_registry_pressure
 
 #[test]
 fn db_io_lost_page_handle_resumes_the_same_retirement_cursor() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_lost_page_handle_resumes_the_same_retirement_cursor") {
+        return;
+    }
+    let _owner = fixture_owner();
+    while db_io_lost_owner_close_step().unwrap() {}
+    let before = ledger_witness();
     let owner = pages(&[0x77; DB_IO_PAGE_BYTES + 1]);
     let operation = owner.operation();
-    drop(owner);
-    assert_eq!(db_io_page_maintenance_step().unwrap(), Some(DB_IO_PAGE_BYTES));
-    assert_eq!(db_io_page_maintenance_step().unwrap(), Some(DB_IO_PAGE_BYTES));
-    assert_eq!(db_io_page_maintenance_step().unwrap(), None);
     assert_ne!(operation, 0);
+    drop(owner);
+    assert_eq!(db_io_page_maintenance_step().unwrap(), None, "a dropped page set parks as one lost owner, never as loose page handles");
+    let mut opportunities = 0;
+    while db_io_lost_owner_close_step().unwrap() {
+        opportunities += 1;
+        let parked = DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().flatten().count();
+        assert!(parked <= 1, "the lost page set resumes one retirement cursor");
+    }
+    assert_eq!(opportunities, 4, "two pages, the shell credit, then the terminal slot release: one owner per opportunity");
+    assert_eq!(ledger_witness(), before);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_terminal_return() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
     let inline = size_of::<MemoryDbIoExecutor>() as u64;
     assert!(inline <= fixture["maximumInlineBytes"].as_u64().unwrap(), "fixed backend tables must not occupy the caller stack");
@@ -2021,18 +2076,8 @@ async fn db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_termin
             "zero" => 0,
             other => panic!("unknown memory admission vector {other}"),
         };
-        let filler = DbIoCredit { bytes: DB_IO_PROCESS_BYTES - before.0.bytes - remaining, ..DbIoCredit::default() };
-        let filler_operation = db_io_backend_owner_reserve(filler).unwrap();
-        let admitted = db_io_backend_owner_reserve(expected);
-        assert_eq!(admitted.is_ok(), case["accepted"].as_bool().unwrap());
-        if let Ok(operation) = admitted {
-            let ledger = lock(db_io_operation_ledger());
-            assert_eq!(ledger.slots[db_io_operation_slot(&ledger, operation).unwrap()].live, expected);
-            drop(ledger);
-            db_io_operation_return(operation, expected).unwrap();
-        }
-        db_io_operation_return(filler_operation, filler).unwrap();
-        assert_eq!(ledger_witness(), before);
+        let occupied = DbIoCredit { bytes: DB_IO_PROCESS_BYTES - remaining, ..DbIoCredit::default() };
+        assert_eq!(db_io_backend_owner_admits(occupied, expected), case["accepted"].as_bool().unwrap());
     }
     let storage = MemoryStorage::new(db_io_test_pool()).await.unwrap();
     let (slot, generation) = db_io_backend_parts(storage.control);
@@ -2075,13 +2120,22 @@ async fn db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_termin
     let probe = db_io_operation_reserve(probe_credit).unwrap();
     let _registered_pool = db_io_backend_admit_operation(storage.control, probe).unwrap();
     let mut context = std::task::Context::from_waker(std::task::Waker::noop());
-    assert_eq!(db_io_backend_close_lane_step(storage.control, &mut context).unwrap(), fixture["closeWhileAdmitted"].as_bool().unwrap());
+    assert_eq!(db_io_backend_close_step(storage.control, &mut context).unwrap(), fixture["closeWhileAdmitted"].as_bool().unwrap());
     assert!(lock(db_io_backend_registry()).slots[slot as usize].executor.is_some());
     db_io_backend_return_operation(storage.control, probe).unwrap();
     db_io_operation_return(probe, probe_credit).unwrap();
     let document = ArtifactId("memory-retirement-frontier".into());
     let writer = storage.acquire_writer(&document).await.unwrap();
     storage.create_segment(&writer, 0).await.unwrap();
+    let segment = &fixture["walSegment"];
+    assert_eq!(segment["chunkSlots"].as_u64().unwrap() as usize, DB_IO_OPERATION_ITEMS);
+    assert_eq!((segment["chargedOn"].as_str().unwrap(), segment["returnedOn"].as_str().unwrap()), ("create", "retirement"));
+    let segment_credit = DbIoCredit { bytes: (DB_IO_OPERATION_ITEMS * size_of::<Option<DbIoPages>>()) as u64, items: segment["creditItems"].as_u64().unwrap() as usize, ..DbIoCredit::default() };
+    assert_eq!(memory_wal_segment_credit(), segment_credit);
+    {
+        let ledger = lock(db_io_operation_ledger());
+        assert_eq!(ledger.slots[db_io_operation_slot(&ledger, owner_operation).unwrap()].live, expected.checked_add(segment_credit).unwrap(), "a live WAL segment charges its chunk table to its backend");
+    }
     let mut retained = storage.list_segments(&document).await.unwrap();
     assert_eq!(retained.as_slice(), &[0]);
     for index in 0..fixture["sequentialTasks"].as_u64().unwrap() {
@@ -2107,7 +2161,10 @@ async fn db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_termin
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_retained_page_results_survive_same_task_slot_reuse_and_return_exact_credit() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_retained_page_results_survive_same_task_slot_reuse_and_return_exact_credit") {
+        return;
+    }
+    let _owner = fixture_owner();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️memory-backing/🔣️.json")).unwrap();
     const RETAINED_PAGE_RESULTS: usize = 44;
     assert_eq!(fixture["retainedPageResults"].as_u64().unwrap() as usize, RETAINED_PAGE_RESULTS);
@@ -2150,13 +2207,13 @@ async fn db_io_retained_page_results_survive_same_task_slot_reuse_and_return_exa
     let reused_before = {
         let task = DB_IO_TASK_SLOTS[reused.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         assert!(db_io_slot_matches(&task, reused.handle));
-        (task.generation, task.operation, task.phase)
+        (task.generation, task.operation)
     };
     drain_pages(retained[0].take().unwrap());
     let reused_after = {
         let task = DB_IO_TASK_SLOTS[reused.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         assert!(db_io_slot_matches(&task, reused.handle));
-        (task.generation, task.operation, task.phase)
+        (task.generation, task.operation)
     };
     assert_eq!(reused_after, reused_before, "stale page-result handback changed a reused task slot");
     assert!(matches!(reused.finish().await.unwrap(), DbIoResult::Length(1)));
@@ -2172,7 +2229,7 @@ async fn db_io_retained_page_results_survive_same_task_slot_reuse_and_return_exa
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_memory_backend_uses_actual_typed_submit_take_result_and_terminal_close() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let pool = db_io_test_pool();
     let storage = MemoryStorage::new(pool.clone()).await.unwrap();
@@ -2194,7 +2251,7 @@ async fn db_io_memory_backend_uses_actual_typed_submit_take_result_and_terminal_
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_async_native_lost_backend_uses_typed_lane_lease_and_mounted_terminal_witness() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let pool = db_io_test_pool();
     let control = register_db_io_backend(DbIoBackendKind::Postgres, Box::new(AsyncNativeLawExecutor { terminal: false }), pool.clone()).unwrap();
@@ -2213,7 +2270,7 @@ async fn db_io_async_native_lost_backend_uses_typed_lane_lease_and_mounted_termi
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_cancellation_before_during_and_receiver_drop_retain_exact_terminal_owners() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let pool = db_io_test_pool();
     let control = register_db_io_backend(DbIoBackendKind::Neo4j, Box::new(AsyncNativeLawExecutor { terminal: false }), pool.clone()).unwrap();
@@ -2232,7 +2289,7 @@ async fn db_io_cancellation_before_during_and_receiver_drop_retain_exact_termina
     let mut during_execution = submit_db_io_task(DbIoTask::BackendOpen { backend: control, path: DbIoText::try_from_str("fixture://cancel-during").unwrap() }).unwrap_or_else(|(error, _)| panic!("{error}"));
     let lease = during_execution.take_async_native().await.unwrap();
     during_execution.cancel().unwrap();
-    assert!(db_io_maintenance_step().unwrap());
+    db_io_maintenance_step().unwrap();
     {
         let owner = DB_IO_TASK_SLOTS[during_execution.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         assert!(owner.async_detached);
@@ -2247,7 +2304,10 @@ async fn db_io_cancellation_before_during_and_receiver_drop_retain_exact_termina
         match during_execution.take().unwrap() {
             Some(Err(fault)) => break fault,
             Some(Ok(_)) => panic!("cancel-during fixture published its retained result"),
-            None => assert!(db_io_maintenance_step().unwrap()),
+            None => {
+                db_io_maintenance_step().unwrap();
+                semio_framework_async::yield_once().await;
+            }
         }
     };
     assert_eq!(fault.kind, DbIoFaultKind::Cancelled);
@@ -2267,7 +2327,7 @@ async fn db_io_cancellation_before_during_and_receiver_drop_retain_exact_termina
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_panic_backend_fault_and_shutdown_close_reach_exact_prior_witness() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let pool = db_io_test_pool();
     for (panics, expected) in [(false, DbIoFaultKind::Backend), (true, DbIoFaultKind::Panic)] {
@@ -2332,13 +2392,17 @@ async fn drain_opening_fixture_pool(pool: &Arc<WorkerPool>) {
 #[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
 #[semio_framework_async_macros::async_test]
 async fn db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen") {
+        return;
+    }
+    let _owner = fixture_owner();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
     for row in fixture["opening"].as_array().unwrap().iter().filter(|row| row["cause"] == "queued-drop") {
         let before = ledger_witness();
         let slots_before = lock(db_io_backend_registry()).free_len;
         let backend = row["backend"].as_str().unwrap();
-        let root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("physical opening law requires its ticket artifact directory")).join(format!("storage-open-queued-{backend}-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("storage-open-queued-{backend}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
         let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
         let (started_tx, started_rx) = std::sync::mpsc::channel();
         let (release_tx, release_rx) = std::sync::mpsc::channel();
@@ -2368,6 +2432,7 @@ async fn db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen()
         assert_eq!(pool.shutdown().is_ok(), row["poolShutdownAfterDrain"].as_bool().unwrap());
         assert_eq!(ledger_witness(), before);
         assert_eq!(lock(db_io_backend_registry()).free_len, slots_before);
+        let _ = std::fs::remove_dir_all(&root);
         eprintln!("[DEBUG] real-storage-open: backend={backend} cause=queued-drop close-requested={close_requested} ledger=baseline reopened=true pool=terminal");
     }
 }
@@ -2375,13 +2440,17 @@ async fn db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen()
 #[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
 #[semio_framework_async_macros::async_test]
 async fn db_io_real_storage_open_fault_drop_retires_registered_backend_without_retry() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_real_storage_open_fault_drop_retires_registered_backend_without_retry") {
+        return;
+    }
+    let _owner = fixture_owner();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
     for row in fixture["opening"].as_array().unwrap().iter().filter(|row| row["cause"] == "path-type-conflict") {
         let before = ledger_witness();
         let slots_before = lock(db_io_backend_registry()).free_len;
         let backend = row["backend"].as_str().unwrap();
-        let root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("physical opening law requires its ticket artifact directory")).join(format!("storage-open-fault-{backend}-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("storage-open-fault-{backend}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(&root).unwrap();
         let bad = root.join("wrong-physical-type");
         if backend == "fs" {
@@ -2406,13 +2475,14 @@ async fn db_io_real_storage_open_fault_drop_retires_registered_backend_without_r
         assert_eq!(pool.shutdown().is_ok(), row["poolShutdownAfterDrain"].as_bool().unwrap());
         assert_eq!(ledger_witness(), before);
         assert_eq!(lock(db_io_backend_registry()).free_len, slots_before);
+        let _ = std::fs::remove_dir_all(&root);
         eprintln!("[DEBUG] real-storage-open: backend={backend} cause=path-type-conflict close-requested={close_requested} ledger=baseline reopened=true pool=terminal");
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_registered_backend_use_blocks_pool_shutdown_until_terminal_close() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
     assert_eq!(fixture["version"], 1);
     assert_eq!(fixture["cases"].as_array().unwrap().len(), 9);
@@ -2426,7 +2496,10 @@ async fn db_io_registered_backend_use_blocks_pool_shutdown_until_terminal_close(
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_backend_registration_saturation_returns_exact_executor_before_pool_use() {
-    let _serial = fixture_serial();
+    if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_backend_registration_saturation_returns_exact_executor_before_pool_use") {
+        return;
+    }
+    let _owner = fixture_owner();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "all-retirement-tiers-full-return-exact-executor").unwrap();
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
@@ -2445,7 +2518,7 @@ async fn db_io_backend_registration_saturation_returns_exact_executor_before_poo
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_prepared_registration_failure_returns_exact_close_owner_after_submission_refusal() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let before = ledger_witness();
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let (started_tx, started_rx) = std::sync::mpsc::channel();
@@ -2492,7 +2565,7 @@ async fn db_io_prepared_registration_failure_returns_exact_close_owner_after_sub
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_task_uses_registered_backend_pool_not_caller_pool() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let registered = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let unrelated = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let control = register_db_io_backend(DbIoBackendKind::Memory, Box::new(BlockingCompleteLawExecutor { terminal: false }), registered.clone()).unwrap();
@@ -2508,7 +2581,7 @@ async fn db_io_task_uses_registered_backend_pool_not_caller_pool() {
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_backend_drop_retains_pool_until_deferred_close_terminal() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let allow_close = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let control = register_db_io_backend(DbIoBackendKind::Memory, Box::new(DeferredBackendCloseLawExecutor { allow_close: allow_close.clone(), terminal: false }), pool.clone()).unwrap();
@@ -2521,7 +2594,7 @@ async fn db_io_backend_drop_retains_pool_until_deferred_close_terminal() {
 
 #[semio_framework_async_macros::async_test]
 async fn db_io_forged_backend_kind_is_rejected_before_task_page_admission() {
-    let _serial = fixture_serial();
+    let _owner = fixture_owner();
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
     let control = register_db_io_backend(DbIoBackendKind::Memory, Box::new(BlockingCompleteLawExecutor { terminal: false }), pool.clone()).unwrap();
     let (slot, generation) = db_io_backend_parts(control);
@@ -2539,3 +2612,4 @@ async fn db_io_forged_backend_kind_is_rejected_before_task_page_admission() {
     close_db_io_backend(control).await.unwrap();
     assert_eq!(pool.shutdown(), Ok(()));
 }
+

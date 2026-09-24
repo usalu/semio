@@ -745,7 +745,10 @@
       ]
     },
     "energy-history-fixture-audit": {
-      "retired": { "ticket": "2026/08/23/END-TO-END-TESTING-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/23/END-TO-END-TESTING-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w14-audit/fixtures2.json",
       "sha256": "904d9ce36a0d9231b22a5d1b63adca68a0a0286f673a61b32ec950e0bd72f003",
       "schemaVersion": null,
@@ -1023,7 +1026,10 @@
       ]
     },
     "draw-evidence-coordinator-official-tool-jobs-live-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️coordinator-official-tool-jobs-live-2026-08-26.json",
       "sha256": "2de8e5ad239ce4808066e003798bddf60a889dbaa7c5b5328e2a99046413027d",
       "schemaVersion": null,
@@ -1039,7 +1045,10 @@
       ]
     },
     "draw-evidence-sol-draw-envelope-peer-roots-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-envelope-peer-roots-2026-08-26.json",
       "sha256": "daf759dc5bbbd2e262c08313aa03678ccd7b19c5571c67009c6d5fb88bbd780e",
       "schemaVersion": null,
@@ -1055,7 +1064,10 @@
       ]
     },
     "draw-evidence-sol-draw-instance-owner-preview-final-2-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-instance-owner-preview-final-2-2026-08-26.json",
       "sha256": "bc437d1a4b767f7dad77e45a11c505d19ac674f805b1a334a2f85d2555efff7a",
       "schemaVersion": null,
@@ -1071,7 +1083,10 @@
       ]
     },
     "draw-evidence-sol-draw-instance-owner-preview-final-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-instance-owner-preview-final-2026-08-26.json",
       "sha256": "d0f64b510556abd3c8af6392f3fc2378d67bc63aa2f090ce8965a3bc37ba955a",
       "schemaVersion": null,
@@ -1087,7 +1102,10 @@
       ]
     },
     "draw-evidence-sol-draw-instance-owner-preview-official-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-instance-owner-preview-official-2026-08-26.json",
       "sha256": "08e5af739b6f21299ca867058289e64fbc99533ca1abf493a4ae1ffca650ae7e",
       "schemaVersion": null,
@@ -1103,7 +1121,10 @@
       ]
     },
     "draw-evidence-sol-draw-real-owner-checkpoint-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-real-owner-checkpoint-2026-08-26.json",
       "sha256": "74ea5fbd10a342260ad2d9e169a059d42be1996dd4373df6e366272734504bad",
       "schemaVersion": null,
@@ -1119,7 +1140,10 @@
       ]
     },
     "draw-evidence-sol-draw-semantic-honesty-final-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-semantic-honesty-final-2026-08-26.json",
       "sha256": "c62a8c65aeba6c62244d1f2dc3aab7c90ed907456389f70ec1a4a96b0c9ca5f1",
       "schemaVersion": null,
@@ -1135,7 +1159,10 @@
       ]
     },
     "draw-evidence-sol-envelope-peer-roots-final-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-envelope-peer-roots-final-2026-08-26.json",
       "sha256": "92d7ae5ac228f4e129caeba3ae2817fe05a9907b3e04f05f4dbc82794bf92ffa",
       "schemaVersion": null,
@@ -1151,7 +1178,10 @@
       ]
     },
     "draw-evidence-sol-fem2d-mounted-final-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-fem2d-mounted-final-2026-08-26.json",
       "sha256": "015fe475f5232a00d780170f881831bc3c95b584db9c656cb9ec1899a37d979d",
       "schemaVersion": null,
@@ -1167,7 +1197,10 @@
       ]
     },
     "draw-evidence-sol-fixed-operation-language-neutral-draw-honesty-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-fixed-operation-language-neutral-draw-honesty-2026-08-26.json",
       "sha256": "2de8e5ad239ce4808066e003798bddf60a889dbaa7c5b5328e2a99046413027d",
       "schemaVersion": null,
@@ -1183,7 +1216,10 @@
       ]
     },
     "draw-evidence-sol-fixed-operation-registry-foundation-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-fixed-operation-registry-foundation-2026-08-26.json",
       "sha256": "bdb8c4bbab347f0d18aa34aca4879ba302d65deb1f3985dfd4f0b87fbf8695f6",
       "schemaVersion": null,
@@ -1199,7 +1235,10 @@
       ]
     },
     "draw-evidence-sol-fixed-operation-registry-qualified-final-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-fixed-operation-registry-qualified-final-2026-08-26.json",
       "sha256": "35a12078ce7c4f36c2803c6f149798a04e18371837279c330edfcf1655c4d7c1",
       "schemaVersion": null,
@@ -1215,7 +1254,10 @@
       ]
     },
     "draw-evidence-sol-global-payload-inventory-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-global-payload-inventory-2026-08-26.json",
       "sha256": "459d4436ba1ee609b06fe18ba11007688c68f31f4f1176851b64c6e80ce027df",
       "schemaVersion": null,
@@ -1231,7 +1273,10 @@
       ]
     },
     "draw-evidence-sol-global-payload-inventory-live-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-global-payload-inventory-live-2026-08-26.json",
       "sha256": "1432fbe712c91be71303ae2a0ed17cc4e32024813442a249e89ece18aec97c2f",
       "schemaVersion": null,
@@ -1247,7 +1292,10 @@
       ]
     },
     "draw-evidence-sol-global-payload-owner-local-1-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-global-payload-owner-local-1-2026-08-26.json",
       "sha256": "2f912eedec6d565198bc24d9c78186665dff58ebeb64cb2160917e7713323dd9",
       "schemaVersion": null,
@@ -1263,7 +1311,10 @@
       ]
     },
     "draw-evidence-sol-media-mounted-after-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-media-mounted-after-2026-08-26.json",
       "sha256": "de83b6a80772984b7999f52bfeabe1aed452c50d4ca22d18148a16da1275859c",
       "schemaVersion": null,
@@ -1279,7 +1330,10 @@
       ]
     },
     "draw-evidence-sol-member-owner-final-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-member-owner-final-2026-08-26.json",
       "sha256": "372ca8d2577478a4b6dfafebdf1d7b2924d9c0030b74caa171dd845942febb3e",
       "schemaVersion": null,
@@ -1295,7 +1349,10 @@
       ]
     },
     "draw-evidence-sol-present-writer-envelope-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-present-writer-envelope-2026-08-26.json",
       "sha256": "9e743827fa9f5e7a13bcfe3c53315987cdd8c7fe89a0a7cd29fb6cfd62d25c0b",
       "schemaVersion": null,
@@ -1311,7 +1368,10 @@
       ]
     },
     "draw-evidence-sol-structural-universal-final-2-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-structural-universal-final-2-2026-08-26.json",
       "sha256": "d01ef79a6ee8f0747bb3e6814accdb42eef81c17849079e19871b536a3e15ec5",
       "schemaVersion": null,
@@ -1327,7 +1387,10 @@
       ]
     },
     "draw-evidence-sol-structural-universal-final-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-structural-universal-final-2026-08-26.json",
       "sha256": "77c9721affa30196b38b8db499a2ce8016559ee993ccc8bfd6fdf18f0e2b9da7",
       "schemaVersion": null,
@@ -1343,7 +1406,10 @@
       ]
     },
     "draw-evidence-sol-structural-universal-final-3-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-structural-universal-final-3-2026-08-26.json",
       "sha256": "ba3fdc304c2c628230eaa608de2803f77561fd3189f37a06bb5295f5ee999a40",
       "schemaVersion": null,
@@ -1359,7 +1425,10 @@
       ]
     },
     "draw-evidence-sol-universal-media-final-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-universal-media-final-2026-08-26.json",
       "sha256": "9b9d63881d343c5a1f18842ba30b21f43d494b2978ea6c023dd99d143436c4cd",
       "schemaVersion": null,
@@ -1375,7 +1444,10 @@
       ]
     },
     "draw-evidence-sol-universal-paged-after-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-universal-paged-after-2026-08-26.json",
       "sha256": "4f97dbc42ac85f2676146f5807b190868a105622dcc106d50009920543764400",
       "schemaVersion": null,
@@ -1391,7 +1463,10 @@
       ]
     },
     "draw-evidence-sol-universal-retained-after-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-universal-retained-after-2026-08-26.json",
       "sha256": "5138526e71ccf4d273c40fefd60ebc54fa65c17fc18b01f5204fe9ed4245b822",
       "schemaVersion": null,
@@ -1407,7 +1482,10 @@
       ]
     },
     "draw-evidence-sol-universal-retained-baseline-2026-08-26": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-universal-retained-baseline-2026-08-26.json",
       "sha256": "19e9b8941e078f9d9fbe61226ffee4d79670cfe81ebbfba47b2d36d223b294fe",
       "schemaVersion": null,
@@ -1423,7 +1501,10 @@
       ]
     },
     "draw-evidence-coordinator-writer-set-locale-tool-jobs": {
-      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🧪️coordinator-writer-set-locale-tool-jobs.json",
       "sha256": "c3f00acdcac166117673951676fd74934ecbec407cb5152d5632475653a64c92",
       "schemaVersion": null,
@@ -1470,7 +1551,10 @@
       ]
     },
     "readme-authored-correction-vector-v1": {
-      "retired": { "ticket": "2026/08/17/END-TO-END-TAXONOMY-NORMALIZATION", "reason": "ticket-close-generated-output-removed" },
+      "retired": {
+        "ticket": "2026/08/17/END-TO-END-TAXONOMY-NORMALIZATION",
+        "reason": "ticket-close-generated-output-removed"
+      },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🔣️readme-authored-correction.json",
       "sha256": "35db5a0ae52f6e4779453782708ee65efbda63e40439bc1124e022f78cd183b0",
       "schemaVersion": 1,
@@ -4711,20 +4795,12 @@
         "hub"
       ]
     },
-    "hub-tests-schema": {
-      "emoji": "🧬️",
-      "slugPattern": "^schema$",
-      "allowEmojiOnly": false,
-      "parentKindIds": [
-        "hub-tests"
-      ]
-    },
     "hub-fixture-expectation": {
       "emoji": "🛂️",
-      "slugPattern": "^expectation$",
+      "slugPattern": "^fixture-expectation$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "hub-tests-schema"
+        "hub-schema"
       ]
     },
     "hub-local-bootstrap": {
@@ -4821,14 +4897,6 @@
       "allowEmojiOnly": false,
       "parentKindIds": [
         "hub-tests"
-      ]
-    },
-    "hub-foundation-source-execution": {
-      "emoji": "🏃️",
-      "slugPattern": "^execution$",
-      "allowEmojiOnly": false,
-      "parentKindIds": [
-        "hub-foundation-source-test"
       ]
     },
     "hub-auth-tests": {
@@ -9286,7 +9354,6 @@
         "🏷️rename-tiles",
         "🌀️add-vortex",
         "➖️remove-vortex",
-        "🌊️workflow",
         "🌍️world",
         "🧹️clear-tiles",
         "↩️reset-grid",
@@ -9310,7 +9377,6 @@
         "➖️remove-grip",
         "➖️remove-handle",
         "🎛️engagement",
-        "🎛️terminal-dashboard",
         "🎥️camera",
         "🎥️focus-selection",
         "🎥️set-camera",
@@ -9431,7 +9497,6 @@
         "👥️directory-upsert-member",
         "📇️fold-directory-events",
         "📬️apply-directory-event-page",
-        "📇️playground-catalog-query",
         "📈️increment-counter",
         "📋copy-invite-link",
         "📋️duplicate-widget",
@@ -9448,7 +9513,6 @@
         "📜️node-graph-edit",
         "📜️patch-nodes",
         "📜️reset-rule",
-        "📜️root-script-delegation",
         "📜️set-lhs-json",
         "📜️set-parameter",
         "📜️set-rhs-json",
@@ -9480,7 +9544,6 @@
         "🔄️transform",
         "🔄️translate-selection",
         "🔄️world-relocate",
-        "🔌️plugin-registry",
         "❎️close-focused-instance",
         "🔍️lint-document",
         "🔍️open-instance",
@@ -9611,7 +9674,6 @@
         "🖌️set-kind-weight",
         "🖌️set-suggestion-offset",
         "🖌️suggestions-tick",
-        "🖥️terminal-dashboard-daemon",
         "🖨️export",
         "🖨️template-pdf-build",
         "🖱️canvas-commit-draft",
@@ -9696,7 +9758,6 @@
         "🛍️set-active-example",
         "🛍️set-catalogue-sections",
         "🛍️set-fixture-json",
-        "🛝️playground-development-session",
         "🛠️workshop",
         "🤝️engagement",
         "🤝️engagement-abort",
@@ -9744,8 +9805,6 @@
         "🧬️select-generation",
         "🧬️set-active-example",
         "🧬️update-generation-values",
-        "⌨️cli-usage-presentation",
-        "🌳️command-tree-discovery",
         "🧭️go-home",
         "🧭️gumball",
         "🧭️navigate-virtual-file-system-node",
@@ -12491,7 +12550,7 @@
         "📌️set-active-asset",
         "📌️set-default-app",
         "📍️move-block",
-        "📍️move-grip-2d",
+        "📍️move-grip2d",
         "📍️move-handle",
         "📍️move-node",
         "📍️move-object",
@@ -12510,7 +12569,7 @@
         "🧩️change-shear-area-mm2",
         "📏️change-shot-width",
         "📏️resize-frame",
-        "📏️resize-grip-3d",
+        "📏️resize-grip3d",
         "📏️resize-vortex",
         "📏️scale",
         "📏️scale-node",
@@ -12836,7 +12895,7 @@
         "🖋️rename-vortex-kind",
         "🖌️change-stroke-color",
         "🖌️set-layer-blend-mode",
-        "🖌️update-part-2d",
+        "🖌️update-part2d",
         "🖌️update-presentation",
         "🖍️change-node-label",
         "🖐️drag-nodes",
@@ -13094,7 +13153,7 @@
         "🧊️replace-node-geometry",
         "🧊️replace-part2d-geometry",
         "🧊️replace-stock-solid",
-        "🧊️update-part-3d",
+        "🧊️update-part3d",
         "🧨️delete-mesh",
         "🧨️delete-shape-model",
         "🧩️add-attribute",
@@ -13105,7 +13164,7 @@
         "🧬️duplicate-step",
         "🗂️change-category",
         "🧭️change-scene-sun-azimuth",
-        "🧭️move-grip-3d",
+        "🧭️move-grip3d",
         "🧭️move-node",
         "🧭️reorder-routes",
         "🧮️change-node-operator-kind",
@@ -15759,18 +15818,9 @@
       ],
       "source": "registry"
     },
-    "os-dev-parity-tests": {
-      "ownerKindIds": [
-        "tests"
-      ],
-      "memberNames": [
-        "⚖️parity"
-      ],
-      "source": "registry"
-    },
     "os-dev-parity-structure": {
       "ownerKindIds": [
-        "os-dev-parity-tests"
+        "repo-test-parity"
       ],
       "memberNames": [
         "🏗️structure"
@@ -15779,7 +15829,7 @@
     },
     "os-dev-parity-pixels": {
       "ownerKindIds": [
-        "os-dev-parity-tests"
+        "repo-test-parity"
       ],
       "memberNames": [
         "🖼️pixels"
@@ -15788,7 +15838,7 @@
     },
     "os-dev-parity-probe": {
       "ownerKindIds": [
-        "os-dev-parity-tests"
+        "repo-test-parity"
       ],
       "memberNames": [
         "🔬️probe"
@@ -15797,7 +15847,7 @@
     },
     "os-dev-parity-server-pool": {
       "ownerKindIds": [
-        "os-dev-parity-tests"
+        "repo-test-parity"
       ],
       "memberNames": [
         "🌐️server-pool"
@@ -15806,7 +15856,7 @@
     },
     "os-dev-parity-report": {
       "ownerKindIds": [
-        "os-dev-parity-tests"
+        "repo-test-parity"
       ],
       "memberNames": [
         "📊️report"
@@ -15815,7 +15865,7 @@
     },
     "os-dev-parity-execution": {
       "ownerKindIds": [
-        "os-dev-parity-tests"
+        "repo-test-parity"
       ],
       "memberNames": [
         "🏃️execution"
@@ -15930,12 +15980,12 @@
       ],
       "source": "registry"
     },
-    "os-dev-benchmark-stub": {
+    "os-dev-benchmark-measured-row": {
       "ownerKindIds": [
         "plugins"
       ],
       "memberNames": [
-        "🧪️stub"
+        "📏️measured-row"
       ],
       "source": "registry"
     },
@@ -21614,7 +21664,7 @@
       "expires": null
     },
     "dev-vendor-cli": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser CLI module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -21625,7 +21675,7 @@
       "expires": null
     },
     "dev-vendor-clocks": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/clocks.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/clocks.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser clocks module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -21636,7 +21686,7 @@
       "expires": null
     },
     "dev-vendor-config": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/config.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/config.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser configuration module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -21647,7 +21697,7 @@
       "expires": null
     },
     "dev-vendor-environment": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/environment.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/environment.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser environment module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -21658,7 +21708,7 @@
       "expires": null
     },
     "dev-vendor-filesystem": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/filesystem.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/filesystem.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser filesystem module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -21669,7 +21719,7 @@
       "expires": null
     },
     "dev-vendor-http": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/http.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/http.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser HTTP module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -21680,7 +21730,7 @@
       "expires": null
     },
     "dev-vendor-index": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/index.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/index.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser public module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -21691,7 +21741,7 @@
       "expires": null
     },
     "dev-vendor-io": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser IO module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -21702,7 +21752,7 @@
       "expires": null
     },
     "dev-vendor-random": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/random.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/random.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser randomness module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -21713,7 +21763,7 @@
       "expires": null
     },
     "dev-vendor-sockets": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/sockets.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/sockets.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser sockets module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -24105,6 +24155,61 @@
       },
       "verification": "storybook preview configuration loading",
       "expires": null
+    },
+    "dev-vendor-common": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/common.js",
+      "authority": "Bytecode Alliance preview2-shim",
+      "reason": "Exact installed browser common module with fixed internal import identity",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "deployed vendor transport: installed browser byte equality",
+      "expires": null
+    },
+    "dev-vendor-in-memory-filesystem": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/in-memory-filesystem.js",
+      "authority": "Bytecode Alliance preview2-shim",
+      "reason": "Exact installed browser in-memory filesystem module with fixed internal import identity",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "deployed vendor transport: installed browser byte equality",
+      "expires": null
+    },
+    "dev-vendor-in-memory-http": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/in-memory-http.js",
+      "authority": "Bytecode Alliance preview2-shim",
+      "reason": "Exact installed browser in-memory HTTP module with fixed internal import identity",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "deployed vendor transport: installed browser byte equality",
+      "expires": null
+    },
+    "dev-vendor-in-memory-sockets": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/in-memory-sockets.js",
+      "authority": "Bytecode Alliance preview2-shim",
+      "reason": "Exact installed browser in-memory sockets module with fixed internal import identity",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "deployed vendor transport: installed browser byte equality",
+      "expires": null
+    },
+    "dev-vendor-opfs-filesystem": {
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/opfs-filesystem.js",
+      "authority": "Bytecode Alliance preview2-shim",
+      "reason": "Exact installed browser OPFS filesystem module with fixed internal import identity",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "deployed vendor transport: installed browser byte equality",
+      "expires": null
     }
   },
   "fixedFilenameRejectionContracts": {
@@ -25425,16 +25530,16 @@
       "expires": null
     },
     "repo-analyzer-path-fixture": {
-      "pathPattern": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some",
+      "pathPattern": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some",
       "authority": "Repo analyzer fixture contract",
       "reason": "This fixture intentionally preserves generic and colliding path identities as analyzer input and expected autofix evidence",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "exact-path",
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/📁️some"
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧫️fixtures/📁️some"
       },
       "descendants": "reserved",
-      "verification": "repo client analyzer fixture tests",
+      "verification": "repo statutes analyzer fixture tests",
       "expires": null
     },
     "repo-command-entry": {
@@ -27620,6 +27725,41 @@
       "authority": "Installed browser sockets identity without purity exemption",
       "verification": "deployed vendor transport"
     },
+    "dev-vendor-common": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Installed browser common identity without purity exemption",
+      "verification": "deployed vendor transport"
+    },
+    "dev-vendor-in-memory-filesystem": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Installed browser in-memory-filesystem identity without purity exemption",
+      "verification": "deployed vendor transport"
+    },
+    "dev-vendor-in-memory-http": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Installed browser in-memory-http identity without purity exemption",
+      "verification": "deployed vendor transport"
+    },
+    "dev-vendor-in-memory-sockets": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Installed browser in-memory-sockets identity without purity exemption",
+      "verification": "deployed vendor transport"
+    },
+    "dev-vendor-opfs-filesystem": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Installed browser opfs-filesystem identity without purity exemption",
+      "verification": "deployed vendor transport"
+    },
     "jco-vendor-cli": {
       "contractKind": "fixed",
       "disposition": "adapter-source",
@@ -28585,6 +28725,7 @@
             "🧰️framework/🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts",
             "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
+            "🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🟦️.ts",
             "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
             "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts",
             "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
@@ -28707,6 +28848,7 @@
         "🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts",
         "🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
+        "🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🟦️.ts",
         "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
         "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts",
         "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
@@ -29305,6 +29447,14 @@
         ],
         "reason": "A domain-neutral framework module owns the contracts its two independent consumers share."
       },
+      "product-root": {
+        "pathPatterns": [
+          "🧰️framework/🛍️products/*",
+          "♻️mit-bestand/*",
+          "🏢️semio-tech/*"
+        ],
+        "reason": "A product root owns the contracts its modules and its authored product data share, such as a product-wide catalogue no single module may claim."
+      },
       "product-module": {
         "pathPatterns": [
           "🧰️framework/🛍️products/*/🔨️modules/**",
@@ -29392,7 +29542,7 @@
     "rustEntriesContractId": "schema-export-registry-entries-v1",
     "scopeIdPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*$",
     "scopeIdSeparator": ".",
-    "uriPattern": "^schema://(?<scope>[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*)/(?<export>[A-Z][A-Za-z0-9]*)$",
+    "uriPattern": "^schema://(?<scope>[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*)/(?<export>[A-Z][A-Za-z0-9]*)(?:\\?format=(?<format>[a-z]+))?$",
     "uriScheme": "schema"
   },
   "artifactComponentDirs": [
@@ -29695,10 +29845,6 @@
       "pattern": "\\.test-d\\.ts$"
     },
     {
-      "id": "go-test-suffix",
-      "pattern": "_test\\.go$"
-    },
-    {
       "id": "python-test-affix",
       "pattern": "(?:^test_.+|.+_test)\\.py$"
     },
@@ -29711,6 +29857,18 @@
       "pattern": "^🧪️"
     }
   ],
+  "testInPackageImplementations": [
+    {
+      "id": "go-package-test",
+      "implementation": "go",
+      "fileKindId": "go-source",
+      "filenameSuffix": "_test.go",
+      "rationale": "The Go toolchain compiles a _test.go file only together with the package in its own directory and only under go test, so a Go test that exercises package internals cannot live in a 🧪️tests/<case>/ leaf. It is a canonical test implementation when it sits beside at least one production source of the same package."
+    }
+  ],
+  "testRunnerConfigurationCaseName": "🎚️config",
+  "_testSubjectBoundaryOwnerKindsComment": "🔬️ A case's subject package in one language is the nearest `📦️packages/<language>` from its owner up to and including the nearest member of one of these owner collections. Products and plugins are independent delivery units, so a package of an enclosing framework never implements them and an adapter in that language only hosts a reference.",
+  "testSubjectBoundaryOwnerKinds": ["🛍️products", "🔌️plugins"],
   "testDeliveryScopeDirectoryNames": [
     "📦️packages",
     "⚡️implementations",

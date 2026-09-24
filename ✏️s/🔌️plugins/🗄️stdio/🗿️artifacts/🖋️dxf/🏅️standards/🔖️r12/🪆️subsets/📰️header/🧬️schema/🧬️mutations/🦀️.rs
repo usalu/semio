@@ -416,6 +416,29 @@ impl OpText for DxfMutation {
     }
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `DxfMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_SET_HEADER_VAR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-header-var");
+const TAG_REMOVE_HEADER_VAR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-header-var");
+const TAG_INSERT_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-layer");
+const TAG_REMOVE_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-layer");
+const TAG_SET_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-layer");
+const TAG_INSERT_STYLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-style");
+const TAG_REMOVE_STYLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-style");
+const TAG_SET_STYLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-style");
+const TAG_INSERT_LINETYPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-linetype");
+const TAG_REMOVE_LINETYPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-linetype");
+const TAG_SET_LINETYPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-linetype");
+const TAG_INSERT_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-entity");
+const TAG_REMOVE_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-entity");
+const TAG_SET_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-entity");
+const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-block");
+const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
+const TAG_SET_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-block");
+//#endregion 🏷️WireTags
+
 /// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
@@ -426,24 +449,24 @@ impl OpText for DxfMutation {
 impl OpBinary for DxfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            DxfMutation::SetSnapshot(_) => 0,
-            DxfMutation::SetHeaderVar(_) => 1,
-            DxfMutation::RemoveHeaderVar(_) => 2,
-            DxfMutation::InsertLayer(_) => 3,
-            DxfMutation::RemoveLayer(_) => 4,
-            DxfMutation::SetLayer(_) => 5,
-            DxfMutation::InsertStyle(_) => 6,
-            DxfMutation::RemoveStyle(_) => 7,
-            DxfMutation::SetStyle(_) => 8,
-            DxfMutation::InsertLinetype(_) => 9,
-            DxfMutation::RemoveLinetype(_) => 10,
-            DxfMutation::SetLinetype(_) => 11,
-            DxfMutation::InsertEntity(_) => 12,
-            DxfMutation::RemoveEntity(_) => 13,
-            DxfMutation::SetEntity(_) => 14,
-            DxfMutation::InsertBlock(_) => 15,
-            DxfMutation::RemoveBlock(_) => 16,
-            DxfMutation::SetBlock(_) => 17,
+            DxfMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+            DxfMutation::SetHeaderVar(_) => TAG_SET_HEADER_VAR,
+            DxfMutation::RemoveHeaderVar(_) => TAG_REMOVE_HEADER_VAR,
+            DxfMutation::InsertLayer(_) => TAG_INSERT_LAYER,
+            DxfMutation::RemoveLayer(_) => TAG_REMOVE_LAYER,
+            DxfMutation::SetLayer(_) => TAG_SET_LAYER,
+            DxfMutation::InsertStyle(_) => TAG_INSERT_STYLE,
+            DxfMutation::RemoveStyle(_) => TAG_REMOVE_STYLE,
+            DxfMutation::SetStyle(_) => TAG_SET_STYLE,
+            DxfMutation::InsertLinetype(_) => TAG_INSERT_LINETYPE,
+            DxfMutation::RemoveLinetype(_) => TAG_REMOVE_LINETYPE,
+            DxfMutation::SetLinetype(_) => TAG_SET_LINETYPE,
+            DxfMutation::InsertEntity(_) => TAG_INSERT_ENTITY,
+            DxfMutation::RemoveEntity(_) => TAG_REMOVE_ENTITY,
+            DxfMutation::SetEntity(_) => TAG_SET_ENTITY,
+            DxfMutation::InsertBlock(_) => TAG_INSERT_BLOCK,
+            DxfMutation::RemoveBlock(_) => TAG_REMOVE_BLOCK,
+            DxfMutation::SetBlock(_) => TAG_SET_BLOCK,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -508,64 +531,64 @@ impl OpBinary for DxfMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            0 => Ok(DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_dxf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? })),
-            1 => {
+            TAG_SET_SNAPSHOT => Ok(DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_dxf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? })),
+            TAG_SET_HEADER_VAR => {
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 let header_var = dec_header_var_bin(&mut reader).map_err(|e| malformed("op header_var", reader.position(), e))?;
                 Ok(DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, header_var }))
             }
-            2 => Ok(DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? })),
-            3 => {
+            TAG_REMOVE_HEADER_VAR => Ok(DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? })),
+            TAG_INSERT_LAYER => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let layer = dec_layer_bin(&mut reader).map_err(|e| malformed("op layer", reader.position(), e))?;
                 Ok(DxfMutation::InsertLayer(insert_layer::InsertLayer { index, layer }))
             }
-            4 => Ok(DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? })),
-            5 => {
+            TAG_REMOVE_LAYER => Ok(DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? })),
+            TAG_SET_LAYER => {
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 let layer = dec_layer_bin(&mut reader).map_err(|e| malformed("op layer", reader.position(), e))?;
                 Ok(DxfMutation::SetLayer(set_layer::SetLayer { name, layer }))
             }
-            6 => {
+            TAG_INSERT_STYLE => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", reader.position(), e))?;
                 Ok(DxfMutation::InsertStyle(insert_style::InsertStyle { index, style }))
             }
-            7 => Ok(DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? })),
-            8 => {
+            TAG_REMOVE_STYLE => Ok(DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? })),
+            TAG_SET_STYLE => {
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", reader.position(), e))?;
                 Ok(DxfMutation::SetStyle(set_style::SetStyle { name, style }))
             }
-            9 => {
+            TAG_INSERT_LINETYPE => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let linetype = dec_linetype_bin(&mut reader).map_err(|e| malformed("op linetype", reader.position(), e))?;
                 Ok(DxfMutation::InsertLinetype(insert_linetype::InsertLinetype { index, linetype }))
             }
-            10 => Ok(DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? })),
-            11 => {
+            TAG_REMOVE_LINETYPE => Ok(DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? })),
+            TAG_SET_LINETYPE => {
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 let linetype = dec_linetype_bin(&mut reader).map_err(|e| malformed("op linetype", reader.position(), e))?;
                 Ok(DxfMutation::SetLinetype(set_linetype::SetLinetype { name, linetype }))
             }
-            12 => {
+            TAG_INSERT_ENTITY => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
                 Ok(DxfMutation::InsertEntity(insert_entity::InsertEntity { index, entity }))
             }
-            13 => Ok(DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize })),
-            14 => {
+            TAG_REMOVE_ENTITY => Ok(DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize })),
+            TAG_SET_ENTITY => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
                 Ok(DxfMutation::SetEntity(set_entity::SetEntity { index, entity }))
             }
-            15 => {
+            TAG_INSERT_BLOCK => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(DxfMutation::InsertBlock(insert_block::InsertBlock { index, block }))
             }
-            16 => Ok(DxfMutation::RemoveBlock(remove_block::RemoveBlock { index: reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize })),
-            17 => {
+            TAG_REMOVE_BLOCK => Ok(DxfMutation::RemoveBlock(remove_block::RemoveBlock { index: reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize })),
+            TAG_SET_BLOCK => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(DxfMutation::SetBlock(set_block::SetBlock { index, block }))

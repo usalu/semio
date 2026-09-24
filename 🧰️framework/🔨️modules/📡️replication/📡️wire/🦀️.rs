@@ -1118,6 +1118,8 @@ pub struct PresenceWindowView {
     /// @emoji 📍️ In view coordinates: world point (Orbit), `[x, y, 0]` canvas point (Canvas),
     /// `[lng, lat, 0]` (Geo).
     pub pointer: Option<[f64; 3]>,
+    /// World-space ray origin for 3D presence (Orbit); absent for canvas/geo.
+    pub ray_origin: Option<[f64; 3]>,
 }
 
 /// 🌱️ Hand-written, not derived — same DAG reason as `SelectionMode` above. The real wire path is
@@ -1133,6 +1135,9 @@ impl crate::value::ToValue for PresenceWindowView {
         if self.pointer.is_some() {
             entries.push(("pointer".to_string(), crate::value::ToValue::to_value(&self.pointer)));
         }
+        if self.ray_origin.is_some() {
+            entries.push(("rayOrigin".to_string(), crate::value::ToValue::to_value(&self.ray_origin)));
+        }
         crate::value::DslValue::object(entries)
     }
 }
@@ -1146,6 +1151,7 @@ impl crate::value::FromValue for PresenceWindowView {
         let mut kind = None;
         let mut size = None;
         let mut pointer = None;
+        let mut ray_origin = None;
         for (key, entry) in fields {
             match key.as_str() {
                 "windowId" => window_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("windowId"))?),
@@ -1153,6 +1159,7 @@ impl crate::value::FromValue for PresenceWindowView {
                 "kind" => kind = Some(<PresenceViewKind as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("kind"))?),
                 "size" => size = Some(<[f64; 2] as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("size"))?),
                 "pointer" => pointer = <Option<[f64; 3]> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("pointer"))?,
+                "rayOrigin" => ray_origin = <Option<[f64; 3]> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("rayOrigin"))?,
                 _ => {}
             }
         }
@@ -1162,6 +1169,7 @@ impl crate::value::FromValue for PresenceWindowView {
             kind: kind.ok_or_else(|| crate::value::ValueError::new("PresenceWindowView missing kind"))?,
             size: size.ok_or_else(|| crate::value::ValueError::new("PresenceWindowView missing size"))?,
             pointer,
+            ray_origin,
         })
     }
 }
@@ -1319,6 +1327,12 @@ async fn encode_presence_window_view(view: &PresenceWindowView, out: &mut Vec<u8
             crate::write_f64(out, value);
         }
     }
+    crate::write_bool(out, view.ray_origin.is_some());
+    if let Some(ray_origin) = view.ray_origin {
+        for value in ray_origin {
+            crate::write_f64(out, value);
+        }
+    }
 }
 
 async fn write_vec_presence_window_view(out: &mut Vec<u8>, values: &[PresenceWindowView]) {
@@ -1381,6 +1395,8 @@ pub struct PresencePeer {
     /// sends with the kind it authenticated, so a human session can never claim to be an agent and
     /// an agent session can never hide behind a human.
     pub principal_kind: Option<PresencePrincipalKind>,
+    /// @emoji 🛠️ Active editor tool/utility id (ARTIFACT scope). Distinct from `tool_run`.
+    pub active_tool: Option<String>,
 }
 
 /// @emoji 🤖️ Which kind of principal holds a presence slot. An `Agent` peer is an AI agent acting
@@ -1555,6 +1571,9 @@ impl crate::value::ToValue for PresencePeer {
         if let Some(principal_kind) = self.principal_kind {
             entries.push(("principalKind".to_string(), crate::value::DslValue::String(principal_kind.wire_name().to_string())));
         }
+        if let Some(active_tool) = &self.active_tool {
+            entries.push(("activeTool".to_string(), crate::value::ToValue::to_value(active_tool)));
+        }
         crate::value::DslValue::object(entries)
     }
 }
@@ -1577,6 +1596,7 @@ impl crate::value::FromValue for PresencePeer {
         let mut ui = None;
         let mut tool_run = None;
         let mut principal_kind = None;
+        let mut active_tool = None;
         for (key, entry) in fields {
             match key.as_str() {
                 "actor" => actor = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
@@ -1606,6 +1626,7 @@ impl crate::value::FromValue for PresencePeer {
                         other => return Err(crate::value::ValueError::new(format!("PresencePeer.principalKind must be a string, found {other:?}")).under("principalKind")),
                     }
                 }
+                "activeTool" => active_tool = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeTool"))?,
                 _ => {}
             }
         }
@@ -1624,6 +1645,7 @@ impl crate::value::FromValue for PresencePeer {
             ui,
             tool_run,
             principal_kind,
+            active_tool,
         })
     }
 }
@@ -1640,7 +1662,7 @@ impl crate::value::FromValue for PresencePeer {
 /// present. `flags` widened from a single `u8` to a varint (ticket 26/08/17/SHARED-PRESENCE-SESSION-
 /// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.1) now that bit 9 exceeds a byte's range. Bit 10 carries
 /// `tool_run` as `tool_id str | state u8 | stage varint | completed varint | total bool+varint?`.
-/// Bit 11 carries `principal_kind` as one declaration-order tag byte (`0` human, `1` agent); a peer
+/// Bit 11 carries `principal_kind` as one declaration-order tag byte (`0` human, `1` agent); bit 12 carries `active_tool`; a peer
 /// that leaves it unset is the pre-agent wire shape and reads back as `None`, so every encoder and
 /// decoder written before the agent principal existed still round-trips byte-for-byte.
 pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
@@ -1683,6 +1705,9 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if peer.principal_kind.is_some() {
         flags |= 1 << 11;
     }
+    if peer.active_tool.is_some() {
+        flags |= 1 << 12;
+    }
     crate::wire::write_varint_u64(&mut out, flags);
     crate::wire::write_varint_u64(&mut out, peer.connected_at_ms as u64);
     if let Some(label) = &peer.label {
@@ -1720,6 +1745,9 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     }
     if let Some(principal_kind) = peer.principal_kind {
         out.push(principal_kind as u8);
+    }
+    if let Some(active_tool) = &peer.active_tool {
+        crate::write_str(&mut out, active_tool);
     }
     out
 }
@@ -1890,7 +1918,8 @@ impl<'a> PresencePeerReader<'a> {
             let kind = self.view_kind()?;
             let size = [self.number("presence view width")?, self.number("presence view height")?];
             let pointer = if self.boolean("presence view pointer")? { Some(self.triple("presence view pointer")?) } else { None };
-            views.push(PresenceWindowView { window_id, space, kind, size, pointer });
+            let ray_origin = if self.boolean("presence view ray origin")? { Some(self.triple("presence view ray origin")?) } else { None };
+            views.push(PresenceWindowView { window_id, space, kind, size, pointer, ray_origin });
         }
         Ok(views)
     }
@@ -1941,7 +1970,7 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
     let mut reader = PresencePeerReader { bytes, position: 0, limits };
     let actor = reader.text("presence peer actor")?;
     let flags = reader.varint("presence peer flags")?;
-    if flags >> 12 != 0 { return Err(reader.malformed("presence peer flags", format!("unknown flag bits set: {flags:#x}"))); }
+    if flags >> 13 != 0 { return Err(reader.malformed("presence peer flags", format!("unknown flag bits set: {flags:#x}"))); }
     let connected_at = reader.varint("presence peer connected at")?;
     if connected_at > limits.maximum_connected_at_ms { return Err(crate::ProtocolError::LimitExceeded("presence peer connected at")); }
     let connected_at_ms = connected_at as i64;
@@ -1957,8 +1986,9 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
     let ui = if flags & (1 << 9) != 0 { Some(reader.ui()?) } else { None };
     let tool_run = if flags & (1 << 10) != 0 { Some(reader.tool_run()?) } else { None };
     let principal_kind = if flags & (1 << 11) != 0 { Some(reader.principal_kind()?) } else { None };
+    let active_tool = if flags & (1 << 12) != 0 { Some(reader.text("presence peer active tool")?) } else { None };
     if reader.position != bytes.len() { return Err(reader.malformed("presence peer", "trailing bytes")); }
-    Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui, tool_run, principal_kind })
+    Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui, tool_run, principal_kind, active_tool })
 }
 
 #[cfg(test)]

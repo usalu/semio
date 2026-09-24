@@ -7,7 +7,7 @@
   "aggregateVariant": "AddThermalEnclosureZone",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-thermal-enclosure-zone",
-  "binaryTag": null,
+  "binaryTag": 250,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeFenestrationVlt",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-vlt",
-  "binaryTag": null,
+  "binaryTag": 41,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

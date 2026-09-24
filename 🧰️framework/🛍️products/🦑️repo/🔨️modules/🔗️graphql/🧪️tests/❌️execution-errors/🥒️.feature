@@ -20,7 +20,7 @@ Feature: A request the executor cannot answer is refused with the executor's own
   @mode-error
   Scenario: Every refusal of the corpus produces exactly the recorded message
     Given the frozen repository shared://🔣️repo-records.json
-    And the refusal corpus local://🔣️refusals.json
+    And the refusal corpus shared://❌️execution-errors/🔣️refusals.json
     When each implementation executes every input against the schema
     Then every input is refused with the recorded message and none is answered
 
@@ -29,6 +29,6 @@ Feature: A request the executor cannot answer is refused with the executor's own
   @mode-conformance
   Scenario: A refused mutation leaves the record set exactly as it found it
     Given the frozen repository shared://🔣️repo-records.json
-    And the refusal corpus local://🔣️refusals.json
+    And the refusal corpus shared://❌️execution-errors/🔣️refusals.json
     When each implementation runs only the mutations of the corpus against one context
     Then the record set is unchanged and no event was written

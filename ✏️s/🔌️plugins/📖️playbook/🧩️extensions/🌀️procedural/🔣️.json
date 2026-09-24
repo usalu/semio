@@ -215,7 +215,7 @@
                 "expectedRevision": true,
                 "cancellable": false,
                 "class": "interactive",
-                "interactiveJob": "batchOnlyPendingRewrite"
+                "interactiveJob": "migrated"
               }
             }
           },
@@ -332,7 +332,7 @@
                 "expectedRevision": true,
                 "cancellable": false,
                 "class": "interactive",
-                "interactiveJob": "batchOnlyPendingRewrite"
+                "interactiveJob": "migrated"
               }
             }
           },
@@ -1458,8 +1458,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "7a3e0030350215cb229639dde684382a26ba799339b3e598143eda3af192e48d",
-    "coreWasmSha256": "62760703b9e08d48101612919331173f3cbd77ee568078b4fb46a332b3704e5e",
-    "descriptorSha256": "64fc5262bbb11f76a397d695f62df4ef90b8e9db2b57d0afaf45f8378fc4c7bf"
+    "wasmSha256": "7eb555fc90e4d41e292a22f5fbcc048f4faf4614dc35f7d158df9befd7f2b443",
+    "coreWasmSha256": "166faeeed77a4110de020222ab74bc5e0cf53eed4bbcbbfb2287c99cb21dc575",
+    "descriptorSha256": "62f77186bbe1947fdd2e5ff0f4ffc6f441058526a124ef5aa157a27886f8e26f"
   }
 }

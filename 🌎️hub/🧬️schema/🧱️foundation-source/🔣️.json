@@ -8,8 +8,8 @@
     "schemaVersion": { "const": 1 },
     "owners": {
       "type": "array",
-      "minItems": 10,
-      "maxItems": 10,
+      "minItems": 9,
+      "maxItems": 9,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -25,8 +25,8 @@
     },
     "contexts": {
       "type": "array",
-      "minItems": 26,
-      "maxItems": 26,
+      "minItems": 24,
+      "maxItems": 24,
       "items": {
         "type": "object",
         "additionalProperties": false,

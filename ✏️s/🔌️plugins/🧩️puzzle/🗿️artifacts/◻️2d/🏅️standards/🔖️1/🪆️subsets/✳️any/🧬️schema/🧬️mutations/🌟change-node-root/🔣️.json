@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeNodeRoot",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-node-root",
-  "binaryTag": null,
+  "binaryTag": 10,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

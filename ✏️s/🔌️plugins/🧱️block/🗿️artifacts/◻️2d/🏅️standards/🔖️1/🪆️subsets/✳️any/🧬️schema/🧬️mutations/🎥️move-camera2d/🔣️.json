@@ -7,7 +7,7 @@
   "aggregateVariant": "MoveCamera2d",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "move-camera2d",
-  "binaryTag": null,
+  "binaryTag": 23,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

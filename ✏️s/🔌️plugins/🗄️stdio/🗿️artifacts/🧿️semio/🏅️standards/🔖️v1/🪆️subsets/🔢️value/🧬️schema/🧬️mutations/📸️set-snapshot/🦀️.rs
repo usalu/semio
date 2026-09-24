@@ -14,7 +14,7 @@ pub mod inverse;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSnapshot {
-    pub(crate) snapshot: SemioValueSnapshot,
+    pub snapshot: SemioValueSnapshot,
 }
 
 impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for SetSnapshot {

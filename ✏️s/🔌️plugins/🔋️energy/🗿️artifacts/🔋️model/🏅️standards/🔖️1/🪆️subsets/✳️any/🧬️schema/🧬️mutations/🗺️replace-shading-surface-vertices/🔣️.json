@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceShadingSurfaceVertices",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-shading-surface-vertices",
-  "binaryTag": null,
+  "binaryTag": 48,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -1,8 +1,10 @@
 # 🧭️ Own workspace root: never joins the repository's root workspace, whose root manifest is a shared,
 # contended file.
 #
-# 🚫️ DEPENDS ON `serde_json` AND NOTHING ELSE. It independently writes and reads the complete
-# `{graph, geometry, equation}` foreign carrier without linking production code.
+# 🚫️ DEPENDS ON `json` (json-rust) AND NOTHING ELSE. `serde_json` is a production runtime dependency
+# of the equation plugin, so a reader built on it would compare the implementation with itself. It
+# independently writes and reads the complete `{graph, geometry, equation}` foreign carrier without
+# linking production code.
 [workspace]
 
 [package]
@@ -24,4 +26,4 @@ name = "equation_json"
 path = "../../🦀️.rs"
 
 [dependencies]
-serde_json = "1"
+json = "0.12"

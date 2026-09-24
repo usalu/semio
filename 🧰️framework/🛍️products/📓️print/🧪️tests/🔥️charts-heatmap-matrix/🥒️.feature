@@ -23,7 +23,7 @@ Feature: The heatmap family lays its cells on two band scales and shades them by
   @level-long
   @mode-differential
   Scenario: Cells sit on two unpadded band scales
-    Given the committed probe document local://heatmap.tex and the frame
+    Given the committed probe document shared://🔥️charts-heatmap-matrix/heatmap.tex and the frame
       | width | height | pad |
       | 64    | 40     | 4   |
     Then the compiled probe and the reference implementation agree on every cell rectangle
@@ -32,14 +32,14 @@ Feature: The heatmap family lays its cells on two band scales and shades them by
   @level-long
   @mode-differential
   Scenario: Every cell reports its raw value and its share of the matrix extent
-    Given the committed probe document local://cells.tex
+    Given the committed probe document shared://🔥️charts-heatmap-matrix/cells.tex
     Then the compiled probe and the reference implementation agree on every cell record
 
   @id-heatmap-padded
   @level-long
   @mode-differential
   Scenario: The padding key insets each cell by a fraction of the cell
-    Given the committed probe document local://heatmap-padded.tex and the frame
+    Given the committed probe document shared://🔥️charts-heatmap-matrix/heatmap-padded.tex and the frame
       | width | height | pad | padding |
       | 64    | 40     | 4   | 0.2     |
     Then the compiled probe and the reference implementation agree on every cell rectangle

@@ -69,9 +69,7 @@ async fn assert_artifact_wal_fail_stop_case(name: &str) {
         }
         suffix => panic!("unknown WAL fail-stop fixture suffix {suffix}"),
     }
-    while wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    wal.close().await.unwrap();
     assert!(wal.terminal_is_empty());
 
     let inner_wal = inner.wal().await;
@@ -84,9 +82,7 @@ async fn assert_artifact_wal_fail_stop_case(name: &str) {
         assert_eq!(recovered, baseline, "reopen must retain exactly the last complete prefix");
         assert_eq!(report.torn_tail_bytes, after_failure.len() as u64 - baseline.len() as u64);
     }
-    while reopened.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    reopened.close().await.unwrap();
     assert!(reopened.terminal_is_empty());
 }
 
@@ -202,16 +198,12 @@ async fn artifact_wal_repeated_open_close_is_page_budget_neutral() {
     let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
     let document = ArtifactId::from("retained-artifact-wal-close-budget");
     let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
-    while wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    wal.close().await.unwrap();
     assert!(wal.terminal_is_empty());
 
     for turn in 0..18 {
         let (mut wal, _) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), turn as u64 + 1).await.unwrap();
-        while wal.close_step().unwrap() {
-            semio_framework_async::yield_once().await;
-        }
+        wal.close().await.unwrap();
         assert!(wal.terminal_is_empty());
     }
 
@@ -222,9 +214,7 @@ async fn artifact_wal_repeated_open_close_is_page_budget_neutral() {
     assert!(batch.push(WalRecord::Command(command)).is_ok());
     assert!(wal.submit(&storage, &batch, DurabilityClass::Fsync, 101).await.unwrap().committed);
     while batch.close_step().unwrap() {}
-    while wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    wal.close().await.unwrap();
     assert!(wal.terminal_is_empty());
 }
 
@@ -240,12 +230,10 @@ async fn artifact_wal_close_rejects_pending_records_and_closed_writes() {
     assert!(batch.push(WalRecord::Command(command)).is_ok());
     assert!(!wal.submit(&storage, &batch, DurabilityClass::Memory, 1).await.unwrap().committed);
     while batch.close_step().unwrap() {}
-    assert!(matches!(wal.close_step(), Err(DbError::InvalidArgument(message)) if message.contains("force_flush")));
+    assert!(matches!(std::future::poll_fn(|context| wal.poll_close(context)).await, Err(DbError::InvalidArgument(message)) if message.contains("force_flush")));
     assert!(!wal.terminal_is_empty());
     assert!(wal.force_flush(&storage).await.unwrap());
-    while wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    wal.close().await.unwrap();
     assert!(wal.terminal_is_empty());
 
     let empty = WalRecordBatch::new();
@@ -290,9 +278,7 @@ async fn artifact_wal_successor_failure_after_seal_is_fail_stop_until_reopen() {
     assert!(matches!(wal.force_flush(&storage).await, Err(DbError::Closed)));
     assert!(matches!(wal.rotate(&storage, 2).await, Err(DbError::Closed)));
     assert_eq!(storage.append_calls().await, append_calls);
-    while wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    wal.close().await.unwrap();
     assert!(wal.terminal_is_empty());
 
     let inner_wal = inner.wal().await;
@@ -312,8 +298,6 @@ async fn artifact_wal_successor_failure_after_seal_is_fail_stop_until_reopen() {
     }
     assert_eq!(commands, 1, "reopen must expose the pre-seal transaction exactly once");
     while replay.close_step().await.unwrap() {}
-    while reopened.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    reopened.close().await.unwrap();
     assert!(reopened.terminal_is_empty());
 }

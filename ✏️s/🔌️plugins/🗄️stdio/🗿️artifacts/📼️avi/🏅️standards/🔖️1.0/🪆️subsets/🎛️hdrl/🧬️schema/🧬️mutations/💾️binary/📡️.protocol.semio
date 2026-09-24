@@ -1,2 +1,37 @@
-dialect protocol stdio.avi.mutations
-document = json:UTF8(*)
+dialect protocol
+protocol None
+version 1
+schema None
+start op
+framing record
+
+# Real `AviMutation` op frame (`dsl::tagged_value_binary`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`, then
+# the variant's `ToValue` tree without its variant name, as one framework wire value (`pack_rt::encode_wire_value`).
+# Each record is one mutation kind at its wire tag; this file is the only source of those tags.
+header fixed 2
+field format u8
+field tag varint
+record set-snapshot tag=0
+field payload bytes
+record set-main-header tag=1
+field payload bytes
+record set-idx1-present tag=2
+field payload bytes
+record insert-stream tag=3
+field payload bytes
+record remove-stream tag=4
+field payload bytes
+record set-stream-header tag=5
+field payload bytes
+record set-stream-format tag=6
+field payload bytes
+record insert-chunk tag=7
+field payload bytes
+record remove-chunk tag=8
+field payload bytes
+record set-chunk-keyframe tag=9
+field payload bytes
+record add-unknown-chunk tag=10
+field payload bytes
+record remove-unknown-chunk tag=11
+field payload bytes

@@ -1,5 +1,5 @@
 ; Real binary frame for `SemioBrepMutation` (protocol::OpBinary) -- `format` byte + `tag` byte
-; (the variant ordinal, see 🧬️mutations/🦀️.rs's OP_KEYWORDS/variant_ordinal) + the
+; (the kind's record tag in `📡️.protocol.semio`) + the
 ; variant's own opaque "key=value ..." argument text tail (see ../📝️text/🔤️.ebnf for
 ; that text's real per-keyword grammar, restated here for a self-contained ABNF reading of the
 ; frame only).

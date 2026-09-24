@@ -28,33 +28,33 @@ Feature: The distribution transforms bin, estimate and accumulate exactly like d
   @level-quick
   @mode-differential
   Scenario: Ten thresholds over demo-distribution reproduce d3's bins
-    Given the committed probe document local://bins.tex
+    Given the committed probe document shared://📶️charts-histogram-density/bins.tex
     Then the compiled probe and the reference implementation agree on every bin edge and count
 
   @id-bins-coarse
   @level-quick
   @mode-differential
   Scenario: Four thresholds take the branch that pops the last threshold
-    Given the committed probe document local://bins-coarse.tex
+    Given the committed probe document shared://📶️charts-histogram-density/bins-coarse.tex
     Then the compiled probe and the reference implementation agree on every bin edge and count
 
   @id-ticks
   @level-quick
   @mode-differential
   Scenario: The tick generator agrees with d3 on integer, fractional and sub-unit steps
-    Given the committed probe document local://ticks.tex
+    Given the committed probe document shared://📶️charts-histogram-density/ticks.tex
     Then the compiled probe and the reference implementation agree on every tick
 
   @id-density
   @level-quick
   @mode-differential
   Scenario: The gaussian kernel density estimate matches the textbook formula
-    Given the committed probe document local://density.tex
+    Given the committed probe document shared://📶️charts-histogram-density/density.tex
     Then the compiled probe and the reference implementation agree on the bandwidth and the curve
 
   @id-ecdf
   @level-quick
   @mode-differential
   Scenario: The empirical CDF steps once per sorted observation
-    Given the committed probe document local://ecdf.tex
+    Given the committed probe document shared://📶️charts-histogram-density/ecdf.tex
     Then the compiled probe and the reference implementation agree on every step

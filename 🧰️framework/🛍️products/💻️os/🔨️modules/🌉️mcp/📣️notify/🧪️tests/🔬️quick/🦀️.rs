@@ -251,7 +251,7 @@ fn a_job_minted_inside_a_progress_scope_pushes_notifications_progress() {
     let slot = notification_slot();
     slot.set(sink.clone() as Arc<dyn NotificationSink>).ok().expect("a fresh slot is empty");
     let job_id = {
-        let _scope = enter_progress_scope(Some(ProgressBinding { token: serde_json::json!("tok-m5b-1"), request_id: Some(serde_json::json!(41)), slot: slot.clone() }));
+        let _scope = enter_progress_scope(Some(ProgressBinding { token: serde_json::json!("tok-m5b-1"), slot: slot.clone() }));
         let job_id = crate::ui::job_registry().begin("m5b-scoped");
         crate::ui::job_registry().report_progress(&job_id, 0.25, Some("quarter".to_string()));
         crate::ui::job_registry().report_progress(&job_id, 0.75, None);
@@ -274,10 +274,10 @@ fn a_job_minted_inside_a_progress_scope_pushes_notifications_progress() {
 #[test]
 fn a_progress_scope_restores_the_one_it_replaced() {
     let slot = notification_slot();
-    let outer = ProgressBinding { token: serde_json::json!("outer"), request_id: None, slot: slot.clone() };
+    let outer = ProgressBinding { token: serde_json::json!("outer"), slot: slot.clone() };
     let _outer_scope = enter_progress_scope(Some(outer));
     {
-        let _inner = enter_progress_scope(Some(ProgressBinding { token: serde_json::json!("inner"), request_id: None, slot }));
+        let _inner = enter_progress_scope(Some(ProgressBinding { token: serde_json::json!("inner"), slot }));
         assert_eq!(active_progress_binding().map(|binding| binding.token), Some(serde_json::json!("inner")));
     }
     assert_eq!(active_progress_binding().map(|binding| binding.token), Some(serde_json::json!("outer")));
@@ -300,7 +300,8 @@ fn notifications_cancelled_requests_cancel_of_every_job_minted_under_that_reques
     let slot = notification_slot();
     let request_id = serde_json::json!(4242);
     let job_id = {
-        let _scope = enter_progress_scope(Some(ProgressBinding { token: serde_json::json!("tok-m5b-3"), request_id: Some(request_id.clone()), slot }));
+        let _request = enter_request_scope(Some(&request_id));
+        let _scope = enter_progress_scope(Some(ProgressBinding { token: serde_json::json!("tok-m5b-3"), slot }));
         let job_id = crate::ui::job_registry().begin("m5b-cancellable");
         crate::ui::job_registry().report_progress(&job_id, 0.1, None);
         job_id
@@ -310,6 +311,46 @@ fn notifications_cancelled_requests_cancel_of_every_job_minted_under_that_reques
     let (mut server, _sink) = server_with_sink();
     assert!(server.dispatch(&notification("notifications/cancelled", serde_json::json!({ "requestId": request_id }))).is_none(), "a notification must never be answered");
     assert!(crate::ui::job_registry().is_cancel_requested(&job_id), "notifications/cancelled did not reach the job registry's cancel path");
+    crate::ui::job_registry().mark_cancelled(&job_id);
+}
+#[test]
+fn notifications_cancelled_reaches_a_job_minted_without_a_progress_token() {
+    let request_id = serde_json::json!(4243);
+    let job_id = {
+        let _request = enter_request_scope(Some(&request_id));
+        let job_id = crate::ui::job_registry().begin("g4-untokened");
+        crate::ui::job_registry().report_progress(&job_id, 0.1, None);
+        job_id
+    };
+    cancel_request(&request_id);
+    assert!(crate::ui::job_registry().is_cancel_requested(&job_id), "a call without _meta.progressToken must still be cancellable by its request id");
+    crate::ui::job_registry().mark_cancelled(&job_id);
+}
+
+#[test]
+fn a_cancel_that_overtakes_its_request_cancels_the_job_the_moment_it_is_minted() {
+    let request_id = serde_json::json!(4244);
+    cancel_request(&request_id);
+    let _request = enter_request_scope(Some(&request_id));
+    let job_id = crate::ui::job_registry().begin("g4-overtaken");
+    assert!(crate::ui::job_registry().is_cancel_requested(&job_id));
+    assert_eq!(crate::ui::job_registry().snapshot(&job_id).unwrap().status, crate::ui::JobStatus::Cancelled);
+}
+
+#[test]
+fn the_stdio_reader_consumes_notifications_cancelled_out_of_band() {
+    let request_id = serde_json::json!(4245);
+    let job_id = {
+        let _request = enter_request_scope(Some(&request_id));
+        let job_id = crate::ui::job_registry().begin("g4-out-of-band");
+        crate::ui::job_registry().report_progress(&job_id, 0.1, None);
+        job_id
+    };
+    assert!(!crate::protocol::intercept_cancellation(r#"{"jsonrpc":"2.0","id":9,"method":"ping"}"#));
+    assert!(!crate::protocol::intercept_cancellation(r#"{"jsonrpc":"2.0","id":9,"method":"notifications/cancelled","params":{"requestId":4245}}"#), "a REQUEST named like the notification is not the notification");
+    assert!(!crate::ui::job_registry().is_cancel_requested(&job_id));
+    assert!(crate::protocol::intercept_cancellation("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/cancelled\",\"params\":{\"requestId\":4245}}\n"));
+    assert!(crate::ui::job_registry().is_cancel_requested(&job_id));
     crate::ui::job_registry().mark_cancelled(&job_id);
 }
 //#endregion 🧪️Progress

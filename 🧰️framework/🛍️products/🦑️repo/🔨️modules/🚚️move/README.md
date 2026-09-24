@@ -15,6 +15,6 @@ across all three case foldings.
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
 `🧪️test` harness; there is no third party that shares this repository's section grammar, casing
 folding or documentation-index convention, so every case rests on a recorded no-oracle decision in
-`🔮️oracle/🔣️.json` backed by specification vectors and round-trip metamorphic laws.
+`🔮️oracles/🔣️.json` backed by specification vectors and round-trip metamorphic laws.
 
 `🚚️file-folder-move`, `📥️file-integrate`, `🧲️section-extract`, `📑️section-move`, `🔤️rename-casings`.

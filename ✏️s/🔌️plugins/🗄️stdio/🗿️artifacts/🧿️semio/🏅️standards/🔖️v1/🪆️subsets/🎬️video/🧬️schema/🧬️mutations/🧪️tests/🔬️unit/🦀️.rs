@@ -67,16 +67,16 @@ fn sweep_b() -> SemioVideoSnapshot {
 
 //#region 🔖️KindsLaw
 /// 🧪️ `kinds_match_the_enum_and_the_catalog`: `KINDS` names every declared variant, in the
-/// declaration order `variant_ordinal` assigns and the spelling `print_semio_video_mutation`
+/// declaration order `wire_tag` assigns and the spelling `print_semio_video_mutation`
 /// emits, and every one of those names also appears in the committed oracle manifest's
 /// catalog. The bijection against `sample_mutations` is what makes a newly added variant fail
 /// here instead of silently shrinking the vocabulary `🎥️mutate-semio-video` claims to cover.
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
-    assert_eq!(KINDS, &OP_KEYWORDS[..], "KINDS must be exactly the op keyword table — one kebab-case name per declared variant, in declaration order");
+    assert_eq!(KINDS, dsl::protocol_record::records(WIRE_PROTOCOL).map(|(kind, _)| kind).collect::<Vec<_>>(), "KINDS must be exactly the 📡️.protocol.semio records — one kebab-case name per declared variant, in tag order");
     let mut seen = vec![false; KINDS.len()];
     for mutation in sample_mutations() {
-        let ordinal = variant_ordinal(&mutation) as usize;
+        let ordinal = wire_tag(&mutation) as usize;
         assert!(!seen[ordinal], "ordinal {ordinal} is represented twice — sample_mutations must carry exactly one case per declared variant");
         seen[ordinal] = true;
         assert_eq!(KINDS[ordinal], print_semio_video_mutation(&mutation).split(' ').next().unwrap_or_default(), "KINDS[{ordinal}] must be the keyword {mutation:?} prints");

@@ -4,7 +4,7 @@ import { BundleScript, runExactCargoLaws } from "../../../../../🧰️framework
 import { compileGisScopeExport } from "../../🧬️schema/🟦️.ts";
 
 const GIS_MAP_ARTIFACT_SCHEMA_MODULE = "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
-const GIS_MAP_CONTROL_SCHEMA_MODULE = "✏️s/🔌️plugins/🌍️gis/🧪️tests/🧩️map-create-region-group/🧬️schema/🔣️.json";
+const GIS_MAP_CONTROL_SCHEMA_MODULE = "✏️s/🔌️plugins/🌍️gis/🧫️fixtures/🧩️map-create-region-group/📐️schema/🔣️.json";
 const GIS_MAP_SCHEMA_DEPENDENCIES = [
   "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
   "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",

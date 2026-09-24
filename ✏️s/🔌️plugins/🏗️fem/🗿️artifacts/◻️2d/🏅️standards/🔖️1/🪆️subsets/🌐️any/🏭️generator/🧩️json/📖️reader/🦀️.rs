@@ -1,25 +1,26 @@
-//! 🔍️ The READER: projects a committed fem2d JSON carrier through the first-party JSON value tree and compares two of
+//! 🔍️ The READER: projects a committed fem2d JSON carrier through `json` (json-rust) and compares two of
 //! them. Nothing here applies a mutation or predicts what one should produce.
 //!
 //! usage: reader project <file.json> | reader compare <expected.json> <actual.json>
 use std::process::exit;
 
 use fem2d_json::project;
-use pack::json;
+use json::{object, JsonValue};
 
-fn report(probe: &str, status: &str, measurements: pack::json::Value) -> String {
-    pack::json::to_string(&json!({
+fn report(probe: &str, status: &str, measurements: JsonValue) -> String {
+    object! {
         "schema": "semio.repository-test.probe-report/v2",
         "probe": probe,
-        "probeVersion": "pack-json@1",
-        "engine": {"family": "pack-json", "implementation": "semio pack JSON value tree", "version": "1"},
+        "probeVersion": "json@0.12",
+        "engine": {"family": "json-rust", "implementation": "json-rust 0.12 value tree", "version": "0.12"},
         "status": status,
         "durationMs": 0,
         "measurements": measurements,
-    }))
+    }
+    .dump()
 }
 
-fn read(path: &str) -> Result<pack::json::Value, String> {
+fn read(path: &str) -> Result<JsonValue, String> {
     project(&std::fs::read(path).map_err(|error| error.to_string())?)
 }
 
@@ -29,7 +30,7 @@ fn main() {
         Some("project") => match read(args.get(2).expect("usage: reader project <file.json>")) {
             Ok(value) => println!("{}", report("fem2d-json-project", "ok", value)),
             Err(error) => {
-                println!("{}", report("fem2d-json-project", "failed", json!({"error": error})));
+                println!("{}", report("fem2d-json-project", "failed", object! {"error": error}));
                 exit(1);
             }
         },
@@ -37,9 +38,9 @@ fn main() {
             let expected = args.get(2).expect("usage: reader compare <expected> <actual>");
             let actual = args.get(3).expect("usage: reader compare <expected> <actual>");
             match (read(expected), read(actual)) {
-                (Ok(left), Ok(right)) => println!("{}", report("fem2d-json-compare", "ok", json!({"equal": left == right, "expected": left, "actual": right}))),
+                (Ok(left), Ok(right)) => println!("{}", report("fem2d-json-compare", "ok", object! {"equal": left == right, "expected": left, "actual": right})),
                 (Err(error), _) | (_, Err(error)) => {
-                    println!("{}", report("fem2d-json-compare", "failed", json!({"error": error})));
+                    println!("{}", report("fem2d-json-compare", "failed", object! {"error": error}));
                     exit(1);
                 }
             }

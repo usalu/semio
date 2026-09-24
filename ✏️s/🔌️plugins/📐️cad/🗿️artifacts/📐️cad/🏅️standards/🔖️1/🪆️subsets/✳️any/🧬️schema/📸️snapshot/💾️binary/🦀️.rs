@@ -1,4 +1,4 @@
-//! 🎒️ CAD artifact — the binary document surface: `encode`/`decode` over the derive-generated
+//! 🎒️ CAD artifact — the binary document surface: `encode`/`decode` over the derived-record
 //! `store::ArtifactPack`, and the law that pack and dsl are two projections of the same `CadSnapshot`.
 
 use crate::CadSnapshot;

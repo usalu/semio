@@ -7,7 +7,7 @@ use super::super::{
 use super::ResizePage;
 
 //#region 🔖️Codec
-pub const TAG: u8 = 3;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "resize-page");
 
 pub fn encode(mutation: &PdfMutation) -> Option<Result<Vec<u8>, String>> {
     let PdfMutation::ResizePage(payload) = mutation else {

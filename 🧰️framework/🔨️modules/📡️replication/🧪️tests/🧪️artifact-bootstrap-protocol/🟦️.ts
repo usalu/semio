@@ -273,8 +273,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(peer.color).toBe(5);
         expect(peer.surface).toBe("s.space.home@1/*#editor");
         expect(peer.views).toHaveLength(2);
-        expect(peer.views[0]).toEqual({ windowId: "w1", space: "world", kind: { kind: "orbit", position: [1, 2, 3], target: [0, 0, 0], up: [0, 1, 0], fov: 45 }, size: [1024, 768], pointer: [0.5, 0.5, 0.5] });
-        expect(peer.views[1]).toEqual({ windowId: "w2", space: "canvas", kind: { kind: "canvas", x: 12.5, y: -4, zoom: 1 }, size: [800, 600], pointer: undefined });
+        expect(peer.views[0]).toEqual({ windowId: "w1", space: "world", kind: { kind: "orbit", position: [1, 2, 3], target: [0, 0, 0], up: [0, 1, 0], fov: 45 }, size: [1024, 768], pointer: [0.5, 0.5, 0.5], rayOrigin: [1, 2, 3] });
+        expect(peer.views[1]).toEqual({ windowId: "w2", space: "canvas", kind: { kind: "canvas", x: 12.5, y: -4, zoom: 1 }, size: [800, 600], pointer: undefined, rayOrigin: undefined });
         expect(peer.ui).toEqual({ hoveredPath: "row[2]#t1", focusedPath: undefined, pressedPath: undefined });
         expect(peer.interaction?.app_id).toBe("space");
         expect(peer.interaction?.domains).toEqual([

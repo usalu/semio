@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePvSystemArea",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-pv-system-area",
-  "binaryTag": null,
+  "binaryTag": 202,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

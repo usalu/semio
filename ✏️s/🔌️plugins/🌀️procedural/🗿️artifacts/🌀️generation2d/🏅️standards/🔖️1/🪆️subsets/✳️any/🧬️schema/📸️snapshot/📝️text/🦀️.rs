@@ -382,6 +382,10 @@ impl store::ArtifactPack for Generation2dSnapshot {
         let parsed = Generation2dSnapshotDsl::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?;
         generation2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        <Generation2dSnapshotDsl as store::ArtifactPack>::record_spec()
+    }
 }
 //#endregion 🔖️DslMirror
 

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeIdealLoadsSystemZone",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-ideal-loads-system-zone",
-  "binaryTag": null,
+  "binaryTag": 137,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

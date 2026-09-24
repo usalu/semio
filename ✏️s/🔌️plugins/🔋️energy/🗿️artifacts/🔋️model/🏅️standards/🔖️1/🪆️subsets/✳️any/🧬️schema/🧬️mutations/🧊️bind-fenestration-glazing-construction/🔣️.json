@@ -7,7 +7,7 @@
   "aggregateVariant": "BindFenestrationGlazingConstruction",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "bind-fenestration-glazing-construction",
-  "binaryTag": null,
+  "binaryTag": 52,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

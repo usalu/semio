@@ -53,6 +53,64 @@ class WorkerMaintenanceCheckScript extends BundleScript {
   }
 }
 
+/** 🛌️ Neutral worker-parking protocol (AJV + an independent JS model) and, with --native, the Rust laws. */
+class WorkerParkingCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-parking-check accepts only --native");
+    const owner = join(this.root, "../../🔔️worker-parking"), export_ = "WorkerParkingFixture";
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const module_ = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module_).getSchema(`${module_.$id}#/$defs/${export_}`)!;
+    assert(validate(fixture), JSON.stringify(validate.errors));
+    const model = (kase: string, timerDue: boolean): string => {
+      let signal = 0, closed = false, keeper = false, sleepers = 0;
+      const observed = () => signal;
+      const park = (seen: number, due: boolean, wakeAfter?: () => void): string => {
+        if (closed) return "closed";
+        if (signal !== seen) return "signalled";
+        if (due && !keeper) { keeper = true; if (!wakeAfter) return "timer-due"; wakeAfter(); keeper = false; return "woken"; }
+        sleepers += 1; wakeAfter?.(); sleepers -= 1; return "woken";
+      };
+      const signalWork = () => { signal += 1; };
+      if (kase === "signal-before-park") { const seen = observed(); signalWork(); return park(seen, timerDue); }
+      if (kase === "close-before-park") { signal += 1; closed = true; return park(observed(), timerDue); }
+      if (kase === "keeper-deadline-elapses") return park(observed(), timerDue);
+      return park(observed(), timerDue, () => { assert(sleepers > 0 || keeper, `${kase}: nobody to notify`); });
+    };
+    for (const row of fixture.protocol) assert.equal(model(row.case, row.timerDue), row.expected, row.case);
+    assert.equal(fixture.idle.maximumSleepsInQuietWindow, 0);
+    assert.equal(fixture.periodicTimer.maximumSleepsPerTick, 1);
+    const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
+    for (const marker of ["fn signal_work(", "fn signal_timer(", "fn signal_timer_from_firing_worker(", "fn hand_off_timers(", "fn park(", "Ordering::SeqCst"]) assert(source.includes(marker), `missing parking primitive: ${marker}`);
+    const crate = readFileSync(join(owner, "../🦀️.rs"), "utf8");
+    const pool = crate.slice(crate.indexOf("mod native_pool {"), crate.indexOf("//#endregion 🧵️WorkerPoolNative"));
+    assert(pool.length > 0 && !pool.includes("wait_timeout(guard") && !pool.includes("notify_all"), "the native pool must not poll or broadcast");
+    console.log(`worker-parking-independent-oracle: AJV=1 protocol=${fixture.protocol.length} quiet-window=${fixture.idle.quietWindowMs}ms periodic-ticks=${fixture.periodicTimer.ticks}`);
+    if (segments[0] !== "--native") return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: [{
+        package: "semio-framework-async",
+        target: { kind: "lib", name: "semio_framework_async" },
+        laws: [
+          "worker_parking::tests::worker_parking_protocol_matches_the_neutral_fixture",
+          "worker_parking::tests::an_ancestor_cancel_wakes_a_descendant_waiter_once_and_drop_retains_nothing",
+          "native_pool::tests::an_idle_native_pool_sleeps_without_a_poll_interval",
+          "native_pool::tests::a_timer_deadline_wakes_exactly_the_parked_keeper",
+          "native_pool::tests::a_timer_re_armed_from_its_own_callback_wakes_only_the_keeper",
+        ],
+      }],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) { console.log(`worker-parking-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+    });
+    for (const receipt of receipts) console.log(`worker-parking-native-receipt: ${JSON.stringify(receipt)}`);
+  }
+}
+
 /** 💤️ Proves the fixed deferred-waker runtime and hostile retry admission fence. */
 class WorkerDeferredWakeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -271,6 +329,6 @@ class PreviewGeneratedScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript).register("worker-pool-use-check", WorkerPoolUseCheckScript);
+const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript).register("worker-parking-check", WorkerParkingCheckScript).register("worker-pool-use-check", WorkerPoolUseCheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

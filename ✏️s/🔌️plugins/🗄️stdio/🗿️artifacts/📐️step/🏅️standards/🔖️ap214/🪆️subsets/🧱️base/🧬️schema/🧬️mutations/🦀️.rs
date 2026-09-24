@@ -226,6 +226,21 @@ impl OpText for StepMutation {
     }
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `StepMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_SET_FILE_DESCRIPTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-description");
+const TAG_SET_FILE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-name");
+const TAG_SET_FILE_SCHEMA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-schema");
+const TAG_INSERT_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-entity");
+const TAG_REMOVE_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-entity");
+const TAG_SET_ENTITY_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-entity-name");
+const TAG_SET_ENTITY_ARG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-entity-arg");
+const TAG_INSERT_ENTITY_ARG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-entity-arg");
+const TAG_REMOVE_ENTITY_ARG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-entity-arg");
+//#endregion 🏷️WireTags
+
 /// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
@@ -238,16 +253,16 @@ impl OpText for StepMutation {
 impl OpBinary for StepMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            StepMutation::SetSnapshot(_) => 0,
-            StepMutation::SetFileDescription(_) => 1,
-            StepMutation::SetFileName(_) => 2,
-            StepMutation::SetFileSchema(_) => 3,
-            StepMutation::InsertEntity(_) => 4,
-            StepMutation::RemoveEntity(_) => 5,
-            StepMutation::SetEntityName(_) => 6,
-            StepMutation::SetEntityArg(_) => 7,
-            StepMutation::InsertEntityArg(_) => 8,
-            StepMutation::RemoveEntityArg(_) => 9,
+            StepMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+            StepMutation::SetFileDescription(_) => TAG_SET_FILE_DESCRIPTION,
+            StepMutation::SetFileName(_) => TAG_SET_FILE_NAME,
+            StepMutation::SetFileSchema(_) => TAG_SET_FILE_SCHEMA,
+            StepMutation::InsertEntity(_) => TAG_INSERT_ENTITY,
+            StepMutation::RemoveEntity(_) => TAG_REMOVE_ENTITY,
+            StepMutation::SetEntityName(_) => TAG_SET_ENTITY_NAME,
+            StepMutation::SetEntityArg(_) => TAG_SET_ENTITY_ARG,
+            StepMutation::InsertEntityArg(_) => TAG_INSERT_ENTITY_ARG,
+            StepMutation::RemoveEntityArg(_) => TAG_REMOVE_ENTITY_ARG,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -288,49 +303,49 @@ impl OpBinary for StepMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            0 => {
+            TAG_SET_SNAPSHOT => {
                 let snapshot = dec_step_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
-            1 => {
+            TAG_SET_FILE_DESCRIPTION => {
                 let file_description = dec_file_description_bin(&mut reader).map_err(|e| malformed("op file_description", reader.position(), e))?;
                 Ok(StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description }))
             }
-            2 => {
+            TAG_SET_FILE_NAME => {
                 let file_name = dec_file_name_bin(&mut reader).map_err(|e| malformed("op file_name", reader.position(), e))?;
                 Ok(StepMutation::SetFileName(set_file_name::SetFileName { file_name }))
             }
-            3 => {
+            TAG_SET_FILE_SCHEMA => {
                 let file_schema = dec_file_schema_bin(&mut reader).map_err(|e| malformed("op file_schema", reader.position(), e))?;
                 Ok(StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema }))
             }
-            4 => {
+            TAG_INSERT_ENTITY => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
                 Ok(StepMutation::InsertEntity(insert_entity::InsertEntity { index, entity }))
             }
-            5 => {
+            TAG_REMOVE_ENTITY => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 Ok(StepMutation::RemoveEntity(remove_entity::RemoveEntity { id }))
             }
-            6 => {
+            TAG_SET_ENTITY_NAME => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 let name = read_str_bin(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 Ok(StepMutation::SetEntityName(set_entity_name::SetEntityName { id, name }))
             }
-            7 => {
+            TAG_SET_ENTITY_ARG => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
                 let value = dec_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id, arg_index, value }))
             }
-            8 => {
+            TAG_INSERT_ENTITY_ARG => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
                 let value = dec_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id, arg_index, value }))
             }
-            9 => {
+            TAG_REMOVE_ENTITY_ARG => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
                 Ok(StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, arg_index }))

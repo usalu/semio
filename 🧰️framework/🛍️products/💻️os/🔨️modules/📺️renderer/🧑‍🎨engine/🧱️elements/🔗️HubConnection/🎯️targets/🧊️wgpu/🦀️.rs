@@ -331,15 +331,16 @@ fn input(id: &str, value: &str, placeholder: &str, action: &str, submit: Option<
 /// 🏠️ That last line is not decoration. `hub_session_allows_local_work` is `true` in every phase by
 /// construction, and the surface says so in every phase too, so a human who cannot reach a hub is
 /// never left guessing whether their work is going anywhere.
+///
+/// 🗣️ The bootstrap entry's label is resolved at paint time, never stored: the book is built once,
+/// before the shell knows its locale, so a persisted label would pin whichever language the process
+/// happened to start in.
 fn hub_sign_in_section(state: &HubWorkspaceState, locale: Locale) -> UiNode {
     let signed_in = state.session.phase == HubSessionPhase::SignedIn;
     let busy = matches!(state.session.phase, HubSessionPhase::SigningIn | HubSessionPhase::SigningOut);
     let mut children = vec![tagged_row(hub_sign_in_label(HubSignInLabel::Title, locale), &[("data-semio-hub-phase", state.session.phase.as_str()), ("data-semio-hub-connection", selected_hub_connection(&state.book).id.as_str())])];
     for connection in &state.book.connections {
         let selected = connection.id == state.book.selected_id;
-        // 🏠️ The bootstrap entry's label is resolved at PAINT time, not stored: the book is built
-        // once, before the shell knows its locale, so a persisted label would pin whichever language
-        // the process happened to start in.
         let label = match connection.kind {
             crate::hub_sign_in::HubConnectionKind::LocalBootstrap => hub_sign_in_label(HubSignInLabel::ThisDevice, locale).to_string(),
             crate::hub_sign_in::HubConnectionKind::Remote => connection.label.clone(),
@@ -396,10 +397,7 @@ fn hub_spaces_section(state: &HubWorkspaceState, locale: Locale) -> UiNode {
         button(
             &format!("{HUB_SPACES_LIST_ID}.refresh"),
             IconName::RotateCw,
-            match locale {
-                Locale::En => "Refresh",
-                Locale::De => "Aktualisieren",
-            },
+            space_browser_label(SpaceBrowserLabel::Refresh, locale),
             descriptor(action::REFRESH_SPACES, None),
             !matches!(state.phase, SpaceBrowserPhase::Loading | SpaceBrowserPhase::Submitting),
         ),

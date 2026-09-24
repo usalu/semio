@@ -1,4 +1,4 @@
-import { REPO_TEST_DOMAIN_REL, REPO_TEST_RUST_PACKAGE_REL, REPO_TEST_GO_PACKAGE_REL, REPO_TEST_PYTHON_HOST_REL, REPO_TEST_DOTNET_PACKAGE_REL, type MaterializedHost } from "../../🧱️contract/🟦️.ts";
+import { REPO_TEST_DOMAIN_REL, REPO_TEST_RUST_PACKAGE_REL, REPO_TEST_PYTHON_HOST_REL, REPO_TEST_DOTNET_PACKAGE_REL, type MaterializedHost } from "../../🧱️contract/🟦️.ts";
 import {
   type DiscoveredCase,
   type Implementation,
@@ -45,8 +45,9 @@ export function hostDirFor(repoRoot: string, discovered: DiscoveredCase, role: T
 
 /**
  * 🔬️ Whether this repository actually SHIPS an implementation of the case's owner in
- * `implementation`'s language — the owner root, or the nearest ancestor of it, carrying a package
- * directory for that language.
+ * `implementation`'s language — the owner root, or the nearest ancestor of it up to its product or
+ * plugin root (`testSubjectBoundaryOwnerKinds`), carrying a package directory for that language. A
+ * package of an enclosing framework never implements a product or plugin nested inside it.
  *
  * The subject role means "this repository's own implementation, on the same inputs". An adapter file
  * in a language the owner ships no package in exists to HOST a reference library (that is what every
@@ -61,14 +62,13 @@ export function hostDirFor(repoRoot: string, discovered: DiscoveredCase, role: T
  * `testImplementationIds`, so no language is named here.
  */
 export function ownerShipsImplementation(repoRoot: string, discovered: DiscoveredCase, implementation: Implementation): boolean {
-  const languageDir = Object.entries(testTaxonomy(repoRoot).testImplementationIds).find(([, id]) => id === implementation)?.[0];
+  const taxonomy = testTaxonomy(repoRoot);
+  const languageDir = Object.entries(taxonomy.testImplementationIds).find(([, id]) => id === implementation)?.[0];
   if (languageDir === undefined) return false;
-  let dir = discovered.owner;
-  for (let depth = 0; depth < 16; depth += 1) {
-    if (existsSync(join(repoRoot, dir, "📦️packages", languageDir))) return true;
-    const parent = dir.split("/").slice(0, -1).join("/");
-    if (parent === "" || parent === dir) break;
-    dir = parent;
+  const segments = discovered.owner.split("/");
+  for (let length = segments.length; length > 0; length -= 1) {
+    if (existsSync(join(repoRoot, ...segments.slice(0, length), "📦️packages", languageDir))) return true;
+    if (length >= 2 && taxonomy.testSubjectBoundaryOwnerKinds.includes(segments[length - 2]!)) return false;
   }
   return false;
 }
@@ -91,8 +91,17 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
   // 🦀️A Cargo dependency is linked by path or it is not linked at all; a crates.io coordinate would
   // be an unreviewed third-party dependency of the generated host, which is what the local-crate
   // rule exists to prevent.
-  const oraclePackages = declared.filter((entry) => entry.path !== undefined);
+  // 🧩️Two ancestors may contribute the same crate (a plugin root and one of its subsets); Cargo accepts
+  // one key per package, so identical contributions merge their features and a divergent path is a problem.
+  const merged = new Map<string, OracleHostPackage>();
   const problems = declared.filter((entry) => entry.path === undefined).map((entry) => `${discovered.caseDir}: rust oracle host package ${entry.package} declares no path — a Rust host links contributed crates by path`);
+  for (const entry of declared.filter((candidate) => candidate.path !== undefined)) {
+    const previous = merged.get(entry.package);
+    if (previous === undefined) merged.set(entry.package, entry);
+    else if (previous.path !== entry.path) problems.push(`${discovered.caseDir}: rust oracle host package ${entry.package} is contributed from two paths (${previous.path} and ${entry.path})`);
+    else merged.set(entry.package, { ...previous, features: [...new Set([...(previous.features ?? []), ...(entry.features ?? [])])] });
+  }
+  const oraclePackages = [...merged.values()];
   mkdirSync(join(dir, "src"), { recursive: true });
   writeFileSync(
     join(dir, "Cargo.toml"),
@@ -153,17 +162,36 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
   };
 }
 
-/** 🐹️ Materializes a cache-local Go module whose generated entrypoint delegates to the committed adapter. */
+/**
+ * 🐹️ The repository's Go workspace (`go.work`) as `go work edit -json` reads it: every module path
+ * absolute, so a generated host resolves each repository module from disk and never from a proxy.
+ * @see https://go.dev/ref/mod#workspaces
+ */
+export function repositoryGoWorkspace(repoRoot: string): { go: string; uses: string[] } {
+  const probe = runProbe("go", ["work", "edit", "-json", join(repoRoot, "go.work")], { cwd: repoRoot, env: repoToolCacheEnv(repoRoot, { ...process.env }), budgetMs: testLevelBudgetMs("quick") });
+  if (probe.status !== 0) throw new Error(`go work edit -json failed: ${probe.stderr}`);
+  const workspace = JSON.parse(probe.stdout) as { Go: string; Use?: { DiskPath: string }[] };
+  return { go: workspace.Go, uses: (workspace.Use ?? []).map((use) => join(repoRoot, use.DiskPath)) };
+}
+
+/**
+ * 🐹️ Materializes a cache-local Go module whose generated entrypoint delegates to the committed adapter.
+ * The host joins a generated workspace that uses the repository's own workspace modules, so the
+ * adapter's `github.com/usalu/semio/…` and `semio.tech/repo/test` imports resolve locally.
+ */
 export function materializeGoHost(repoRoot: string, discovered: DiscoveredCase, role: TestRole, planPath: string, outPath: string): MaterializedHost {
   const dir = hostDirFor(repoRoot, discovered, role, "go");
   const adapterAbs = join(repoRoot, discovered.adapters.go!);
+  const workspace = repositoryGoWorkspace(repoRoot);
+  writeFileSync(join(dir, "go.mod"), ["// 🤖️ Generated — safe to delete, never commit.", "module semio.test/host", "", `go ${workspace.go}`, ""].join("\n"));
   writeFileSync(
-    join(dir, "go.mod"),
-    ["// 🤖️ Generated — safe to delete, never commit.", "module semio.test/host", "", "go 1.23", "", "require semio.tech/repo/test v0.0.0", "", `replace semio.tech/repo/test => ${join(repoRoot, REPO_TEST_GO_PACKAGE_REL)}`, ""].join("\n"),
+    join(dir, "go.work"),
+    ["// 🤖️ Generated — safe to delete, never commit.", `go ${workspace.go}`, "", "use (", "\t.", ...workspace.uses.map((use) => `\t${JSON.stringify(use)}`), ")", ""].join("\n"),
   );
+  if (existsSync(join(repoRoot, "go.work.sum"))) writeFileSync(join(dir, "go.work.sum"), readFileSync(join(repoRoot, "go.work.sum")));
   writeFileSync(join(dir, "adapter.go"), readFileSync(adapterAbs, "utf8").replace(/^package\s+\w+/m, "package main"));
   writeFileSync(join(dir, "main.go"), ["// 🤖️ Generated native entrypoint.", "package main", "", 'import host "semio.tech/repo/test"', "", "func main() {", "\thost.RunMain(Adapter())", "}", ""].join("\n"));
-  return { command: "go", args: ["run", ".", "--plan", planPath, "--out", outPath], cwd: dir, env: repoToolCacheEnv(repoRoot, { ...process.env, GOFLAGS: "-mod=mod", GOWORK: "off" }), hostDir: dir, problems: [] };
+  return { command: "go", args: ["run", ".", "--plan", planPath, "--out", outPath], cwd: dir, env: repoToolCacheEnv(repoRoot, { ...process.env, GOWORK: join(dir, "go.work"), GOFLAGS: "" }), hostDir: dir, problems: [] };
 }
 
 /**

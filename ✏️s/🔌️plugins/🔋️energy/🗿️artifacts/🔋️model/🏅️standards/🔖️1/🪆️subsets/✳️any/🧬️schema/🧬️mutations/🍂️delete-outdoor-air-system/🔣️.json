@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteOutdoorAirSystem",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-outdoor-air-system",
-  "binaryTag": null,
+  "binaryTag": 188,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -1,0 +1,1 @@
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/../🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🦀️.rs

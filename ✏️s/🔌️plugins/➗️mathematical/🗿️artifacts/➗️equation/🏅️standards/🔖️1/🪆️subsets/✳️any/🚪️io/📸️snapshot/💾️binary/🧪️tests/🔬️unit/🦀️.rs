@@ -16,6 +16,16 @@ async fn equation_snapshot_dsl_pack_equivalence_with_seed_and_empty_collections(
 }
 
 #[semio_framework_async_macros::async_test]
+async fn equation_pack_schema_identity_is_derived_and_keeps_the_owned_scene() {
+    let snapshot = EquationSnapshot::default();
+    store::os_store::test_support::assert_pack_schema_identity(&snapshot);
+    let decoded = decode(&encode(&snapshot)).expect("decode");
+    let (before, after) = (crate::equation_scene(&snapshot), crate::equation_scene(&decoded));
+    assert!(!before.graph.nodes.is_empty());
+    assert_eq!((after.graph, after.geometry), (before.graph, before.geometry));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::op::EquationMutation;
     use crate::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::UpdateGraphAlgorithm;

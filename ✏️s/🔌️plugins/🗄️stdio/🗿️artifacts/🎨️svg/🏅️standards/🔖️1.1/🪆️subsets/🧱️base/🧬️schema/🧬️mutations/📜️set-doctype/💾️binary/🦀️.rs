@@ -1,6 +1,6 @@
 //! 💾️ Operation-specific binary payload codec for set-doctype/SetDoctype.
 use super::SetDoctypePayload;
-pub const BINARY_TAG: u32 = 2;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "set-doctype");
 pub fn encode_payload(value: &SetDoctypePayload) -> Result<Vec<u8>, String> {
     Ok(pack::to_json_string(value).into_bytes())
 }

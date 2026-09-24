@@ -8,6 +8,14 @@ async fn cad_scene_round_trips_through_pack() {
     assert_eq!(decode(&bytes).expect("decode"), sample_scene());
 }
 
+#[semio_framework_async_macros::async_test]
+async fn cad_pack_schema_identity_is_derived_and_rejects_foreign_children() {
+    let mut scene = sample_scene();
+    store::os_store::test_support::assert_pack_schema_identity(&scene);
+    scene.drawings.push(store::ArtifactChild::new("drawing-1".into(), store::os_io::ArtifactRef::parse_uri("other-id!s.stdio.semio@v1/drawing").expect("uri")));
+    assert!(decode(&encode(&scene)).is_err(), "a child whose id differs from its target must not decode");
+}
+
 //#region 🔖️CommandEnvelopeTests
 /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
 /// `CadMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's

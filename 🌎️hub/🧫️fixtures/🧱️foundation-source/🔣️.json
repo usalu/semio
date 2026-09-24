@@ -9,11 +9,11 @@
       "contextChain": ["hub-build", "hub-build-staging-environment"]
     },
     {
-      "path": "🌎️hub/🧪️tests/🧬️schema/🛂expectation/🟦️.ts",
+      "path": "🌎️hub/🧬️schema/🛂️fixture-expectation/🟦️.ts",
       "declarations": ["HubFixtureExpectationV1", "assertHubFixtureExpectation"],
       "imports": [],
       "rootImports": ["assertHubFixtureExpectation", "HubFixtureExpectationV1"],
-      "contextChain": ["hub-tests", "hub-tests-schema", "hub-fixture-expectation"]
+      "contextChain": ["hub-schema", "hub-fixture-expectation"]
     },
     {
       "path": "🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts",
@@ -92,21 +92,12 @@
       "imports": [],
       "rootImports": ["proveMcpCredentialSourceOrder", "proveNativeCredentialSourceOrder"],
       "contextChain": ["hub-auth", "hub-auth-tests", "hub-auth-credential-source-order"]
-    },
-    {
-      "path": "🌎️hub/🧪️tests/🧱️foundation-source/🏃️execution/🟦️.ts",
-      "declarations": ["HubFoundationSourceScript"],
-      "imports": [],
-      "rootImports": ["HubFoundationSourceScript"],
-      "contextChain": ["hub-tests", "hub-foundation-source-test", "hub-foundation-source-execution"]
     }
   ],
   "contexts": [
     { "directoryName": "🏗️build", "parentKindId": "hub", "kindId": "hub-build" },
     { "directoryName": "🛂staging-environment", "parentKindId": "hub-build", "kindId": "hub-build-staging-environment" },
     { "directoryName": "🧪️tests", "parentKindId": "hub", "kindId": "hub-tests" },
-    { "directoryName": "🧬️schema", "parentKindId": "hub-tests", "kindId": "hub-tests-schema" },
-    { "directoryName": "🛂expectation", "parentKindId": "hub-tests-schema", "kindId": "hub-fixture-expectation" },
     { "directoryName": "🚀️local-bootstrap", "parentKindId": "hub", "kindId": "hub-local-bootstrap" },
     { "directoryName": "📡️framing", "parentKindId": "hub-local-bootstrap", "kindId": "hub-local-bootstrap-framing" },
     { "directoryName": "🛂authentication", "parentKindId": "hub-local-bootstrap", "kindId": "hub-local-bootstrap-authentication" },
@@ -119,12 +110,12 @@
     { "directoryName": "🧪️tests", "parentKindId": "hub-directory-publication", "kindId": "hub-directory-publication-tests" },
     { "directoryName": "🧾️ordered-append-broadcast", "parentKindId": "hub-directory-publication-tests", "kindId": "hub-directory-ordered-append-broadcast" },
     { "directoryName": "🧱️foundation-source", "parentKindId": "hub-tests", "kindId": "hub-foundation-source-test" },
-    { "directoryName": "🏃️execution", "parentKindId": "hub-foundation-source-test", "kindId": "hub-foundation-source-execution" },
     { "directoryName": "🧪️tests", "parentKindId": "hub-auth", "kindId": "hub-auth-tests" },
     { "directoryName": "🧭️credential-source-order", "parentKindId": "hub-auth-tests", "kindId": "hub-auth-credential-source-order" },
     { "directoryName": "💡️inference", "parentKindId": "hub", "kindId": "hub-inference" },
     { "directoryName": "🧬️schema", "parentKindId": "hub-inference", "kindId": "hub-inference-schema" },
     { "directoryName": "🧬️schema", "parentKindId": "hub", "kindId": "hub-schema" },
+    { "directoryName": "🛂️fixture-expectation", "parentKindId": "hub-schema", "kindId": "hub-fixture-expectation" },
     { "directoryName": "🧱️foundation-source", "parentKindId": "hub-schema", "kindId": "hub-foundation-source-schema" },
     { "directoryName": "🧫️fixtures", "parentKindId": "hub", "kindId": "hub-fixtures" },
     { "directoryName": "🧱️foundation-source", "parentKindId": "hub-fixtures", "kindId": "hub-foundation-source-fixture" }
@@ -138,7 +129,7 @@
     "launchOrder": 411.10755,
     "inputs": [
       "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
-      "{workspaceRoot}/🌎️hub/🧪️tests/🧬️schema/🛂expectation/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🧬️schema/🛂️fixture-expectation/{🟦️.ts,🔣️.json}",
       "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",
@@ -146,8 +137,7 @@
       "{workspaceRoot}/🌎️hub/🔐️auth/📤️credential-delivery/🟦️.ts",
       "{workspaceRoot}/🌎️hub/📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts",
-      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🔮️oracles/🦀️.rs",
-      "{workspaceRoot}/🌎️hub/🧪️tests/🧱️foundation-source/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🦀️.rs",
       "{workspaceRoot}/🌎️hub/💡️inference/🧬️schema/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🧬️schema/🧱️foundation-source/🔣️.json",
       "{workspaceRoot}/🌎️hub/🧫️fixtures/🧱️foundation-source/🔣️.json",

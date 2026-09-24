@@ -80,13 +80,13 @@ export default defineTestAdapter({
   scenarios: {
     "corpus-projects-identically": {
       oracle: (ctx) => {
-        const corpus = JSON.parse(Buffer.from(ctx.fixtureBytes("local://🔣️documents.json")).toString("utf8")) as Corpus;
+        const corpus = JSON.parse(Buffer.from(ctx.fixtureBytes("shared://📃️document-parsing/🔣️documents.json")).toString("utf8")) as Corpus;
         return { projection: { documents: corpus.documents.map((entry) => ({ id: entry.id, document: projectDocument(entry.source) })) } };
       },
     },
     "operation-kind-is-recovered": {
       oracle: (ctx) => {
-        const corpus = JSON.parse(Buffer.from(ctx.fixtureBytes("local://🔣️documents.json")).toString("utf8")) as Corpus;
+        const corpus = JSON.parse(Buffer.from(ctx.fixtureBytes("shared://📃️document-parsing/🔣️documents.json")).toString("utf8")) as Corpus;
         return { projection: { documents: corpus.documents.map((entry) => ({ id: entry.id, operation: operationOf(entry.source).operation })) } };
       },
     },

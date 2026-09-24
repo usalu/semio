@@ -1,0 +1,1 @@
+/Users/ueli/Documents/semio/.tmp-ticket-0918/📓️s11-thirty-five-kinds-inside-s.md

@@ -1,0 +1,252 @@
+{
+  "schema": "semio.history.durable-collaborative-redo.v1",
+  "version": 1,
+  "documentId": "doc-collab-redo",
+  "edits": [
+    {
+      "id": "a1",
+      "actor": "author-a",
+      "logicalMs": 1,
+      "mutationIds": [
+        "op-a1"
+      ]
+    },
+    {
+      "id": "b1",
+      "actor": "author-b",
+      "logicalMs": 2,
+      "mutationIds": [
+        "op-b1"
+      ]
+    },
+    {
+      "id": "a2",
+      "actor": "author-a",
+      "logicalMs": 3,
+      "mutationIds": [
+        "op-a2"
+      ]
+    },
+    {
+      "id": "b2",
+      "actor": "author-b",
+      "logicalMs": 4,
+      "mutationIds": [
+        "op-b2"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "kind": "expect",
+      "label": "all-applied",
+      "expect": {
+        "applied": [
+          "a1",
+          "b1",
+          "a2",
+          "b2"
+        ],
+        "redo": []
+      }
+    },
+    {
+      "kind": "revert",
+      "id": "t-a-undo-a2",
+      "actor": "author-a",
+      "mutationIds": [
+        "op-a2"
+      ],
+      "logicalMs": 10
+    },
+    {
+      "kind": "expect",
+      "label": "a-undid-own-tail",
+      "expect": {
+        "applied": [
+          "a1",
+          "b1",
+          "b2"
+        ],
+        "redo": [
+          "a2"
+        ]
+      }
+    },
+    {
+      "kind": "revert",
+      "id": "t-b-undo-b2",
+      "actor": "author-b",
+      "mutationIds": [
+        "op-b2"
+      ],
+      "logicalMs": 11
+    },
+    {
+      "kind": "expect",
+      "label": "b-undid-own-tail",
+      "expect": {
+        "applied": [
+          "a1",
+          "b1"
+        ],
+        "redo": [
+          "a2",
+          "b2"
+        ]
+      }
+    },
+    {
+      "kind": "revert",
+      "id": "t-a-undo-a1",
+      "actor": "author-a",
+      "mutationIds": [
+        "op-a1"
+      ],
+      "logicalMs": 12
+    },
+    {
+      "kind": "expect",
+      "label": "a-undid-mid-history",
+      "expect": {
+        "applied": [
+          "b1"
+        ],
+        "redo": [
+          "a2",
+          "b2",
+          "a1"
+        ]
+      }
+    },
+    {
+      "kind": "reload",
+      "label": "client-reload"
+    },
+    {
+      "kind": "expect",
+      "label": "reload-preserves-redo",
+      "expect": {
+        "applied": [
+          "b1"
+        ],
+        "redo": [
+          "a2",
+          "b2",
+          "a1"
+        ]
+      }
+    },
+    {
+      "kind": "hub-restart",
+      "label": "hub-restart"
+    },
+    {
+      "kind": "expect",
+      "label": "hub-restart-preserves-redo",
+      "expect": {
+        "applied": [
+          "b1"
+        ],
+        "redo": [
+          "a2",
+          "b2",
+          "a1"
+        ]
+      }
+    },
+    {
+      "kind": "reinstate",
+      "id": "t-a-redo-a1",
+      "actor": "author-a",
+      "mutationIds": [
+        "op-a1"
+      ],
+      "logicalMs": 20
+    },
+    {
+      "kind": "expect",
+      "label": "a-redid-own",
+      "expect": {
+        "applied": [
+          "a1",
+          "b1"
+        ],
+        "redo": [
+          "a2",
+          "b2"
+        ]
+      }
+    },
+    {
+      "kind": "reinstate",
+      "id": "t-b-redo-b2",
+      "actor": "author-b",
+      "mutationIds": [
+        "op-b2"
+      ],
+      "logicalMs": 21
+    },
+    {
+      "kind": "expect",
+      "label": "b-redid-own",
+      "expect": {
+        "applied": [
+          "a1",
+          "b1",
+          "b2"
+        ],
+        "redo": [
+          "a2"
+        ]
+      }
+    },
+    {
+      "kind": "reinstate",
+      "id": "t-a-redo-a2",
+      "actor": "author-a",
+      "mutationIds": [
+        "op-a2"
+      ],
+      "logicalMs": 22
+    },
+    {
+      "kind": "expect",
+      "label": "a-redid-remaining",
+      "expect": {
+        "applied": [
+          "a1",
+          "b1",
+          "a2",
+          "b2"
+        ],
+        "redo": []
+      }
+    },
+    {
+      "kind": "reload",
+      "label": "final-reload"
+    },
+    {
+      "kind": "expect",
+      "label": "final-reload-converged",
+      "expect": {
+        "applied": [
+          "a1",
+          "b1",
+          "a2",
+          "b2"
+        ],
+        "redo": []
+      }
+    }
+  ],
+  "observations": [
+    "selective-per-author-undo",
+    "selective-per-author-redo",
+    "durable-collaborative-redo",
+    "survives-client-reload",
+    "survives-hub-restart",
+    "peers-observe-same-fold"
+  ]
+}

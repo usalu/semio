@@ -9,7 +9,7 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The committed goldens every scenario reads.
     fn goldens(ctx: &Context) -> Result<Json, String> {
-        ctx.fixture_json("local://📖️usage-goldens.json")
+        ctx.fixture_json("shared://📖️usage-text/📖️usage-goldens.json")
     }
 
     /// 📜️ A `/`-joined command path as its segments.

@@ -18,7 +18,7 @@ Feature: A temporal scale reads ISO timestamps as UTC and ticks on calendar boun
   @level-quick
   @mode-differential
   Scenario: Timestamps map and invert as scaleUtc does
-    Given the committed probe document local://scale-temporal.tex and the temporal scales
+    Given the committed probe document shared://⏳️scale-temporal/scale-temporal.tex and the temporal scales
       | name    | domain                              | range |
       | tm      | 2026-01-01,2026-12-31               | 0,364 |
       | tmhours | 2026-03-01T00:00,2026-03-02T00:00   | 0,240 |
@@ -28,7 +28,7 @@ Feature: A temporal scale reads ISO timestamps as UTC and ticks on calendar boun
   @level-quick
   @mode-differential
   Scenario: Day ticks are the utcDay boundaries inside the domain
-    Given the committed probe document local://scale-temporal.tex and the domain
+    Given the committed probe document shared://⏳️scale-temporal/scale-temporal.tex and the domain
       | domain                | interval |
       | 2026-02-25,2026-03-04 | day      |
     Then the compiled probe and the reference implementation agree on every tick date
@@ -37,7 +37,7 @@ Feature: A temporal scale reads ISO timestamps as UTC and ticks on calendar boun
   @level-quick
   @mode-differential
   Scenario: Week ticks are the Sunday boundaries inside the domain
-    Given the committed probe document local://scale-temporal.tex and the domain
+    Given the committed probe document shared://⏳️scale-temporal/scale-temporal.tex and the domain
       | domain                | interval |
       | 2026-01-01,2026-03-01 | week     |
     Then the compiled probe and the reference implementation agree on every tick date
@@ -46,7 +46,7 @@ Feature: A temporal scale reads ISO timestamps as UTC and ticks on calendar boun
   @level-quick
   @mode-differential
   Scenario: Month ticks are the first days of the months inside the domain
-    Given the committed probe document local://scale-temporal.tex and the domain
+    Given the committed probe document shared://⏳️scale-temporal/scale-temporal.tex and the domain
       | domain                | interval |
       | 2026-01-01,2026-12-31 | month    |
     Then the compiled probe and the reference implementation agree on every tick date
@@ -55,7 +55,7 @@ Feature: A temporal scale reads ISO timestamps as UTC and ticks on calendar boun
   @level-quick
   @mode-differential
   Scenario: Year ticks are the first days of the years inside the domain
-    Given the committed probe document local://scale-temporal.tex and the domain
+    Given the committed probe document shared://⏳️scale-temporal/scale-temporal.tex and the domain
       | domain                | interval |
       | 2019-06-01,2024-06-01 | year     |
     Then the compiled probe and the reference implementation agree on every tick date

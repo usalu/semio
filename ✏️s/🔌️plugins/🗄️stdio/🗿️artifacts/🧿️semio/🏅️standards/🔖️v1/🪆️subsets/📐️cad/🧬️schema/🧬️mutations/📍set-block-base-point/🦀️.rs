@@ -9,8 +9,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetBlockBasePoint {
-    pub(crate) name: String,
-    pub(crate) base_point: SemioPoint2,
+    pub name: String,
+    pub base_point: SemioPoint2,
 }
 
 impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetBlockBasePoint {

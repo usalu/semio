@@ -202,5 +202,9 @@ impl store::ArtifactPack for ShootingSnapshot {
         let parsed = <ShootingSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         shooting_snapshot_from_dsl(parsed).map_err(store::PackError::Schema)
     }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        <ShootingSnapshotDsl as store::ArtifactPack>::record_spec()
+    }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

@@ -544,6 +544,44 @@ fn evaluate_channels_budgeted_resumes_across_calls_until_complete() {
     reg.retire_cold();
 }
 
+/// ⚖️ LAW: a node whose dispatch FAILS is answered once per input, like a success. The resumed walk
+/// serves the failure from the cache and reaches the nodes behind it; before, the failing node was
+/// re-dispatched first on every call, a one-dispatch budget never got past it, and the run never
+/// converged (`sphere-cut-with-torus` ticked a refused boolean for 900 s).
+#[test]
+fn evaluate_channels_budgeted_serves_a_failed_dispatch_from_the_cache_on_resume() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    let tree = Tree {
+        neurons: vec![Neuron::with_kind("a", "double", Dictionary::new()), Neuron::with_kind("b", "echo", Dictionary::new())],
+        synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "doubled".into(), to_port: "x".into() }],
+    };
+    let mut reg = Registry::new();
+    reg.register_schema(number_schema());
+    reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
+    reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operator: Box::new(Double) }], &["number"]);
+    let evaluator = Evaluator::new(&reg);
+    let cache = NeuralCache::new();
+    let calls = AtomicUsize::new(0);
+    let mut dispatch = |kind: &str, input: &Dictionary| {
+        calls.fetch_add(1, Ordering::Relaxed);
+        reg.dispatch(kind, input)
+    };
+    cache.begin_epoch();
+    let tick1 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1)).unwrap();
+    assert_eq!(calls.load(Ordering::Relaxed), 1);
+    assert!(tick1.channels.outputs.get("a").and_then(|dict| dict.get("error")).is_some(), "\"a\" has no number input, so its dispatch fails");
+    assert_eq!(tick1.remaining, vec!["b".to_string()]);
+    let tick2 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1)).unwrap();
+    assert_eq!(calls.load(Ordering::Relaxed), 2, "resuming must serve the failed \"a\" from the cache and spend the budget on \"b\"");
+    assert!(tick2.remaining.is_empty(), "the walk got past the failed node and converged");
+    assert!(tick2.channels.outputs.get("a").and_then(|dict| dict.get("error")).is_some(), "the cached answer is the same failure");
+    tick1.retire_cold();
+    tick2.retire_cold();
+    cache.retire_cold();
+    tree.retire_cold();
+    reg.retire_cold();
+}
+
 /// 🕰️ A clock that is always past ANY deadline — the worst case a wall-clock budget must survive.
 fn always_expired_now_us() -> Option<u64> {
     Some(u64::MAX)

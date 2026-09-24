@@ -20,7 +20,6 @@ export function executeOne(repoRoot: string, discovered: DiscoveredCase, level: 
   if (host.problems.length > 0) return { results: [], problems: [...problems, ...host.problems] };
   let command = host.command;
   if (host.preparation !== undefined) {
-    console.log(`[DEBUG] Preparing ${implementation} ${role} host for ${discovered.case}`);
     const prepared = runProbe(host.preparation.command, [...host.preparation.args], { cwd: host.cwd, env: host.env, budgetMs: buildBudgetMs() });
     if ((prepared.status ?? 1) !== 0) {
       problems.push(`${discovered.caseDir}: ${implementation} ${role} host preparation exited ${prepared.status}`);
@@ -30,7 +29,6 @@ export function executeOne(repoRoot: string, discovered: DiscoveredCase, level: 
     }
     command = host.preparation.executableFromStdout(prepared.stdout) ?? "";
     if (command === "") return { results: [], problems: [...problems, `${discovered.caseDir}: ${implementation} ${role} host preparation emitted no executable`] };
-    console.log(`[DEBUG] Prepared ${implementation} ${role} host for ${discovered.case}`);
   }
   const probe = runProbe(command, [...host.args], { cwd: host.cwd, env: host.env, budgetMs: testLevelBudgetMs(level) });
   if (probe.stdout.trim() !== "") console.log(probe.stdout.trimEnd());

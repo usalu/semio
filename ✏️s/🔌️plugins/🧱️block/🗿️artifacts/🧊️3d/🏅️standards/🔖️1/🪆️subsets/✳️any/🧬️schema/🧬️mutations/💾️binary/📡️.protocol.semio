@@ -3,14 +3,85 @@ protocol 3d.mutations
 version 1
 schema block.block3d.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record rename-object-kind tag=0
+field payload bytes
+record change-object-kind-label tag=1
+field payload bytes
+record change-object-kind-variant tag=2
+field payload bytes
+record change-object-kind-description tag=3
+field payload bytes
+record change-object-kind-icon tag=4
+field payload bytes
+record change-object-kind-unit tag=5
+field payload bytes
+record create-representation tag=6
+field payload bytes
+record delete-representation tag=7
+field payload bytes
+record rename-representation tag=8
+field payload bytes
+record change-representation-mesh-url tag=9
+field payload bytes
+record change-representation-lod tag=10
+field payload bytes
+record change-representation-description tag=11
+field payload bytes
+record add-representation-tag tag=12
+field payload bytes
+record remove-representation-tag tag=13
+field payload bytes
+record add-representation-attribute tag=14
+field payload bytes
+record remove-representation-attribute tag=15
+field payload bytes
+record create-vortex-kind tag=16
+field payload bytes
+record delete-vortex-kind tag=17
+field payload bytes
+record rename-vortex-kind tag=18
+field payload bytes
+record change-vortex-kind-label tag=19
+field payload bytes
+record change-vortex-kind-color tag=20
+field payload bytes
+record change-vortex-kind-default-cable-kind tag=21
+field payload bytes
+record create-vortex tag=22
+field payload bytes
+record delete-vortex tag=23
+field payload bytes
+record move-vortex tag=24
+field payload bytes
+record resize-vortex tag=25
+field payload bytes
+record change-vortex-vortex-kind tag=26
+field payload bytes
+record change-vortex-label tag=27
+field payload bytes
+record add-compatibility-rule tag=28
+field payload bytes
+record remove-compatibility-rule tag=29
+field payload bytes
+record add-attribute tag=30
+field payload bytes
+record remove-attribute tag=31
+field payload bytes
+record add-author tag=32
+field payload bytes
+record remove-author tag=33
+field payload bytes
+record move-camera3d tag=34
+field payload bytes
+record scale-camera3d tag=35
+field payload bytes
+record change-meta-description tag=36
+field payload bytes

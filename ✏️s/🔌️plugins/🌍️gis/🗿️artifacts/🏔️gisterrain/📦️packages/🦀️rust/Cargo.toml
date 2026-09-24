@@ -34,7 +34,7 @@ semio-s-artifact-stdio-las = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-ply = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-mesh"] }
 semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }
@@ -50,3 +50,6 @@ semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+# 🔮 Test-only glTF ORACLE (never a `[dependencies]` entry): the third-party `gltf` reader loads the
+# terrain's glTF export and counts its vertices and indices.
+gltf = { version = "1.4.1", default-features = false, features = ["import", "utils"] }

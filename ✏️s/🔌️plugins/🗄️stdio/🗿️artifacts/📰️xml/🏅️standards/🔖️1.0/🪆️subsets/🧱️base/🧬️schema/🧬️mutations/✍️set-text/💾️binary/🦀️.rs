@@ -1,6 +1,6 @@
 //! 💾️ Operation-specific binary payload codec for set-text/SetText.
 use super::SetTextPayload;
-pub const BINARY_TAG: u32 = 6;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "set-text");
 pub fn encode_payload(value: &SetTextPayload) -> Result<Vec<u8>, String> {
     Ok(pack::to_json_string(value).into_bytes())
 }

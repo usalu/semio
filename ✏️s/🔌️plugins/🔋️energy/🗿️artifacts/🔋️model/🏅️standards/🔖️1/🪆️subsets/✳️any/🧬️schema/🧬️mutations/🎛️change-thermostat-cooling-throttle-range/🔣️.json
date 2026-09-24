@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeThermostatCoolingThrottleRange",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-thermostat-cooling-throttle-range",
-  "binaryTag": null,
+  "binaryTag": 127,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

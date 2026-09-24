@@ -30,7 +30,7 @@ Feature: Every infographic chart kind draws geometry of its own
   @level-long
   @mode-conformance
   Scenario: The eleven infographic kinds emit geometry and are pairwise distinct inside their family
-    Given the committed probe document local://infographic-kinds.tex and the infographic families
+    Given the committed probe document shared://📰️infographic-kinds/infographic-kinds.tex and the infographic families
       | family                   | kinds |
       | infographic-number       | 2     |
       | infographic-list         | 2     |

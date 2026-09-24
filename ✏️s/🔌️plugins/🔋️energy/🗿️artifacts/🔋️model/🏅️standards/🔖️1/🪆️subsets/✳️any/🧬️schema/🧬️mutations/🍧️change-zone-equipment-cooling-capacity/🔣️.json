@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeZoneEquipmentCoolingCapacity",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-zone-equipment-cooling-capacity",
-  "binaryTag": null,
+  "binaryTag": 150,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

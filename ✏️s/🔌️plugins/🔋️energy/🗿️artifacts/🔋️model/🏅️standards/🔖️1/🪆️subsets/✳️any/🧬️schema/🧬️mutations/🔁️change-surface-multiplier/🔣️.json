@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeSurfaceMultiplier",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-surface-multiplier",
-  "binaryTag": null,
+  "binaryTag": 34,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -11,7 +11,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "math-functions-sampling";
-const FIXTURE = "local://math-functions-sampling.tex";
+const FIXTURE = "shared://➗️math-functions-sampling/math-functions-sampling.tex";
 const DECIMALS = 6;
 const PI = Math.PI;
 

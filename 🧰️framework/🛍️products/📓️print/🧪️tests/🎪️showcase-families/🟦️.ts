@@ -96,13 +96,13 @@ export default defineTestAdapter({
       /** 🗂️ The catalogue itself: every registered kind of the eight capability families. */
       oracle: () => ({ projection: catalogueProjection(CAPABILITY_FAMILIES) }),
       /** 🎯️ Every capability kind drawn once, reduced to presence and pairwise distinctness. */
-      subject: async (ctx: AdapterContext) => await subject(ctx, "local://showcase-capabilities.tex", CAPABILITY_FAMILIES),
+      subject: async (ctx: AdapterContext) => await subject(ctx, "shared://🎪️showcase-families/showcase-capabilities.tex", CAPABILITY_FAMILIES),
     },
     namespaces: {
       /** 🗂️ The catalogue itself: every registered §76 namespace. */
       oracle: () => ({ projection: catalogueProjection(NAMESPACE_FAMILIES) }),
       /** 🎯️ Every namespace rendered by its own canonical family, reduced the same way. */
-      subject: async (ctx: AdapterContext) => await subject(ctx, "local://showcase-namespaces.tex", NAMESPACE_FAMILIES),
+      subject: async (ctx: AdapterContext) => await subject(ctx, "shared://🎪️showcase-families/showcase-namespaces.tex", NAMESPACE_FAMILIES),
     },
   },
 });

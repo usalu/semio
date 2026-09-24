@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteShwSystem",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-shw-system",
-  "binaryTag": null,
+  "binaryTag": 214,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

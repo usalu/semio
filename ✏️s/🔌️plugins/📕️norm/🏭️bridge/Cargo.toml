@@ -1,0 +1,33 @@
+# 🧭️ Own workspace root: the repository root manifest is a shared leased file, and a member crate would serialise
+# every concurrent session behind that lease.
+[workspace]
+
+[package]
+name = "semio-norm-mutation-bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🏭️ Production mutation bridge for 📕️norm — answers listMutations from the production dispatch aggregates themselves."
+
+[[bin]]
+name = "semio-norm-mutation-bridge"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-s-artifact-norm-din16798 = { path = "../🗿️artifacts/🌬️din16798/📦️packages/🦀️rust" }
+semio-s-artifact-norm-din18599 = { path = "../🗿️artifacts/⚡️din18599/📦️packages/🦀️rust" }
+semio-s-artifact-norm-din4108 = { path = "../🗿️artifacts/🧱️din4108/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1990 = { path = "../🗿️artifacts/⚖️en1990/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1991 = { path = "../🗿️artifacts/🏋️en1991/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1992 = { path = "../🗿️artifacts/🏛️en1992/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1993 = { path = "../🗿️artifacts/🔩️en1993/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1994 = { path = "../🗿️artifacts/🧩️en1994/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1995 = { path = "../🗿️artifacts/🪵️en1995/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1996 = { path = "../🗿️artifacts/🪨️en1996/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1997 = { path = "../🗿️artifacts/🌍️en1997/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1998 = { path = "../🗿️artifacts/🫨️en1998/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1999 = { path = "../🗿️artifacts/🪶️en1999/📦️packages/🦀️rust" }
+semio-s-artifact-norm-iso16757 = { path = "../🗿️artifacts/📇️iso16757/📦️packages/🦀️rust" }
+semio-s-artifact-norm-vdi3805 = { path = "../🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust" }

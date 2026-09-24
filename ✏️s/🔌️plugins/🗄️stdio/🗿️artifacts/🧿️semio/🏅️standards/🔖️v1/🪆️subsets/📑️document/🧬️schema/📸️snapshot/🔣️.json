@@ -32,7 +32,10 @@
             "type": "string"
           },
           "basedOn": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       }
@@ -99,14 +102,17 @@
             "kind": {
               "const": "paragraph"
             },
-            "styleId": {
-              "type": "string"
-            },
             "runs": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/DocRun"
               }
+            },
+            "style_id": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           }
         },
@@ -120,14 +126,17 @@
               "minimum": 1,
               "maximum": 255
             },
-            "styleId": {
-              "type": "string"
-            },
             "runs": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/DocRun"
               }
+            },
+            "style_id": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           }
         },
@@ -190,7 +199,10 @@
               "const": "code"
             },
             "language": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "text": {
               "type": "string"
@@ -215,17 +227,23 @@
             "kind": {
               "const": "image"
             },
-            "imageId": {
-              "type": "string"
-            },
             "alt": {
               "type": "string"
             },
             "width": {
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "height": {
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "image_id": {
+              "type": "string"
             }
           }
         },
@@ -266,16 +284,28 @@
           "type": "boolean"
         },
         "size": {
-          "type": "number"
+          "type": [
+            "number",
+            "null"
+          ]
         },
         "font": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "color": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "link": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

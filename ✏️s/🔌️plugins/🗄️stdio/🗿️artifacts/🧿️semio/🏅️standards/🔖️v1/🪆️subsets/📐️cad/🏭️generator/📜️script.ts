@@ -28,7 +28,7 @@
 // `SEMIO_FIXTURE_OUT` (set by `test fixture generate|reproduce`) is a FIXTURES ROOT; every recipe
 // writes `<root>/<recipe>/<file>`. Absent it, the committed 🧫️fixtures directory is the root.
 //
-// @see ../🔬️probes/🔮️oracle/🦀️.rs — the builders and the ruststep verification
+// @see ../🔬️probes/📖️reader/🦀️.rs — the builders and the ruststep verification
 // @see ../🔣️oracle.json — the fixture manifests these files are hashed into
 
 //#endregion 🧲️Header
@@ -36,6 +36,8 @@
 //#region 🔌️Adapters
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🗂️Recipes
@@ -62,15 +64,25 @@ const DXF_RECIPES = [
 /** 📐️ Written by us, VERIFIED by ruststep — handcrafted, and labelled handcrafted. */
 const STEP_RECIPES = ["step-no-mutation-identity", "step-set-snapshot-replaces-entities", "step-add-entity-circle", "step-remove-entity-line", "step-set-entity-geometry-circle-radius"] as const;
 
-const CRATE_DIR = join(import.meta.dir, "..", "🔬️probes", "🔮️oracle", "📦️packages", "🦀️rust");
+const CRATE_DIR = join(import.meta.dir, "..", "🔬️probes", "📖️reader", "📦️packages", "🦀️rust");
 const COMMITTED_FIXTURES = join(import.meta.dir, "..", "🧫️fixtures");
 //#endregion 🗂️Recipes
+
+//#region 🧩️Carrier
+/** 🧩️ Builds the standalone json-rust carrier engine and writes its reviewed JSON-carrier pair into the committed fixtures. */
+function carrier(): number {
+  const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
+  if (build.status !== 0) return build.status ?? 1;
+  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
+}
+//#endregion 🧩️Carrier
 
 //#region 🚪️Entry
 function main(argv: readonly string[]): number {
   const [command = "generate"] = argv;
+  if (command === "carrier") return carrier();
   if (command !== "generate") {
-    console.error(`[generator] unknown command ${JSON.stringify(command)} — expected generate [--only <recipe>]`);
+    console.error(`[generator] unknown command ${JSON.stringify(command)} — expected generate [--only <recipe>] | carrier`);
     return 2;
   }
   const onlyIndex = argv.indexOf("--only");

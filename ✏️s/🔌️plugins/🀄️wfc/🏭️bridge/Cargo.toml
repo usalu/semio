@@ -1,0 +1,23 @@
+# 🧭️ Own workspace root: the repository root manifest is a shared leased file, and a member crate would serialise
+# every concurrent session behind that lease.
+[workspace]
+
+[package]
+name = "semio-wfc-mutation-bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🏭️ Production mutation bridge for 🀄️wfc — answers listMutations from the production dispatch aggregates themselves."
+
+[[bin]]
+name = "semio-wfc-mutation-bridge"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-s-artifact-wfc-2d = { path = "../🗿️artifacts/◻️2d/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-3d = { path = "../🗿️artifacts/🧊️3d/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-bitmap = { path = "../🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-grid2d = { path = "../🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-grid3d = { path = "../🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust" }

@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateSolarThermalSystem",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-solar-thermal-system",
-  "binaryTag": null,
+  "binaryTag": 219,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

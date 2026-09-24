@@ -9,8 +9,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveMapEntry {
-    pub(crate) path: SemioValuePath,
-    pub(crate) key: String,
+    pub path: SemioValuePath,
+    pub key: String,
 }
 
 impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for RemoveMapEntry {

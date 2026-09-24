@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetImageBytes {
-    pub(crate) id: String,
-    pub(crate) mime: String,
-    pub(crate) bytes: Vec<u8>,
+    pub id: String,
+    pub mime: String,
+    pub bytes: Vec<u8>,
 }
 
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for SetImageBytes {

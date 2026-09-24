@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/mutations.json",
   "title": "SemioMutation",
-  "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "description": "Adjacently tagged union over this module's mutation leaves (`mutation` + `payload`): `setSnapshot`, and one `apply<Arm>` wrapper per arm, each payload the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",

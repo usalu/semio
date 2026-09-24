@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeOutdoorAirSystemEconomizerEnabled",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-outdoor-air-system-economizer-enabled",
-  "binaryTag": null,
+  "binaryTag": 191,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

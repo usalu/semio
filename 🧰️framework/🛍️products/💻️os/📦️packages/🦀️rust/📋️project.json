@@ -196,6 +196,15 @@
       },
       "outputs": []
     },
+    "wal-writer-fence-live": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts wal-writer-fence-live",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      },
+      "outputs": []
+    },
     "wal-capacity-check": {
       "executor": "nx:run-commands",
       "cache": true,

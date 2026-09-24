@@ -6,12 +6,37 @@
   "noOracleDecisions": [
     {
       "id": "raw-buffer-no-format",
-      "capabilities": [],
+      "capabilities": [
+        "binary-raw-mutate"
+      ],
       "rationale": "A raw byte buffer carries no format — it is bytes, full stop. There is no grammar for a third-party library to parse, no independent reader to project both sides through, and no credible reference WRITER either: agreeing or disagreeing with some arbitrary crate would measure that crate's own opinion of what 'a buffer' is, not a defect in this subset. The specification IS the mutation vocabulary itself (`BinaryMutation`'s five variants and their documented offset/remove_len contract in `../🧬️schema/🧬️mutations/🦀️.rs`), so the evidence is the specification vectors below plus the inverse law as a metamorphic property — both discharged by this module's own independently written splice/append/truncate implementation (`../🦀️oracle.rs`), which never touches the subject's `BinaryDiff`/`apply_binary_mutation`. [Narrowed 2026-09-02, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION shard D2: capabilities emptied because a real mutationManifest now requires a qualifying third-party oracle for this exact capability, and noOracleMisuseBreaches correctly refuses to let a recorded decision paper over a real runtime requirement (per shard A10's precedent for mathematical/sequence/draw) -- the honest state is a visible missing-external-oracle gap, not a hidden one. Rationale above is kept for the record: it still explains why no third-party library is credible for this domain, which is exactly why the gap is expected to stay open rather than be filled.]",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
-      ]
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "pypi",
+          "crates.io",
+          "posix"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "coreutils dd/truncate",
+            "ecosystem": "posix",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Rewrites or truncates bytes at an offset, but has no notion of this vocabulary's contract: which offsets and remove lengths are refused, what an out-of-range splice returns, or the inverse each kind must yield."
+          },
+          {
+            "package": "numpy",
+            "ecosystem": "pypi",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Array insert/delete reproduce byte arithmetic only; the refusal and inverse semantics under test are this subset's own definitions."
+          }
+        ],
+        "whyNoneQualifies": "A raw buffer has no format, so the mutation vocabulary (offset/remove_len splice, append, truncate, snapshot) is itself the specification; a byte tool reproduces arithmetic but cannot adjudicate the refusals and inverses this subset defines."
+      }
     }
   ],
   "mutationCatalogs": [

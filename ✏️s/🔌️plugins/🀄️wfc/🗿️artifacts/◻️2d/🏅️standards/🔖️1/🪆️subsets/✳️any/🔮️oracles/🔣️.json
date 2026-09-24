@@ -6,18 +6,26 @@
       "id": "wfc2d-python-independent",
       "ecosystem": "python",
       "package": "",
+      "version": "",
       "capabilities": [
         "wfc2d-1-mutate"
       ],
       "comparisonProfiles": [
         "ordered-json-v1"
       ],
-      "license": "in-repo",
+      "license": "AGPL-3.0-only",
       "testOnly": true,
-      "kind": "verified-native-second-implementation",
       "rationale": "A wfc2d document is the INPUT to a wave-function-collapse solve, not its output: free-placed rectangular slots, an explicit adjacency edge list with named relation classes, a tile alphabet carrying inline 2D media, and a rule set, all under one seed. Every published WFC implementation surveyed computes a collapse from a model it builds itself and none of them carries the problem statement as a readable document, so none can confirm or refute this document algebra. The differential is therefore taken against an independent Python second implementation written from the normative JSON Schema leaves and the committed quintets, never from this repository's Rust.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
       "nativeSecondImplementation": {
-        "path": "🧪️tests/🧩️mutate-wfc2d-1/🐍️.py",
+        "format": "s.wfc.wfc2d",
         "noThirdPartySurvey": {
           "ecosystemsSearched": [
             "pypi",
@@ -25,14 +33,28 @@
             "npm"
           ],
           "candidatesConsidered": [
-            "mxgmn/WaveFunctionCollapse (reference C# implementation) — computes a collapse from its own in-memory model; carries no document format",
-            "wfc (crates.io) — overlapping-model solver only, no problem-spec carrier",
-            "wfc-rs / fast-wfc — same shape: solver, not a document"
+            {
+              "package": "mxgmn/WaveFunctionCollapse (reference C# implementation)",
+              "reason": "computes a collapse from its own in-memory model; carries no document format"
+            },
+            {
+              "package": "wfc (crates.io)",
+              "reason": "overlapping-model solver only, no problem-spec carrier"
+            },
+            {
+              "package": "wfc-rs / fast-wfc",
+              "reason": "same shape: solver, not a document"
+            }
           ]
         },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/🔣️.json; ../🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json; ../../../../../🧫️fixtures/🧬️mutations",
         "fixtureCoverage": {
           "vectors": 15,
-          "kinds": 15
+          "capabilitiesCovered": [
+            "wfc2d-1-mutate"
+          ]
         }
       }
     }
@@ -44,11 +66,28 @@
       "capability": "wfc2d-1-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "change-seed",
+        "create-slot",
+        "delete-slot",
+        "move-slot",
+        "resize-slot",
+        "connect-slots",
+        "disconnect-slots",
+        "pin-slot",
+        "unpin-slot",
+        "create-tile",
+        "delete-tile",
+        "change-tile-weight",
+        "change-tile-media",
+        "create-rule",
+        "delete-rule"
+      ],
       "vectors": [
         {
           "mutationId": "change-seed",
           "sourceMutationDirectoryName": "🎲️change-seed",
-          "mutationDirectoryName": "change-seed",
+          "mutationDirectoryName": "🎲️change-seed",
           "scenarios": [
             {
               "id": "reseeds-the-solve-from-7-to-99",
@@ -59,7 +98,7 @@
         {
           "mutationId": "create-slot",
           "sourceMutationDirectoryName": "🧩️create-slot",
-          "mutationDirectoryName": "create-slot",
+          "mutationDirectoryName": "🧩️create-slot",
           "scenarios": [
             {
               "id": "inserts-slot-d-in-canonical-order",
@@ -70,7 +109,7 @@
         {
           "mutationId": "delete-slot",
           "sourceMutationDirectoryName": "🕳️delete-slot",
-          "mutationDirectoryName": "delete-slot",
+          "mutationDirectoryName": "🕳️delete-slot",
           "scenarios": [
             {
               "id": "removes-slot-a-and-cascades-edge-ab",
@@ -81,7 +120,7 @@
         {
           "mutationId": "move-slot",
           "sourceMutationDirectoryName": "↔️move-slot",
-          "mutationDirectoryName": "move-slot",
+          "mutationDirectoryName": "↔️move-slot",
           "scenarios": [
             {
               "id": "drags-slot-b-down",
@@ -92,7 +131,7 @@
         {
           "mutationId": "resize-slot",
           "sourceMutationDirectoryName": "📐️resize-slot",
-          "mutationDirectoryName": "resize-slot",
+          "mutationDirectoryName": "📐️resize-slot",
           "scenarios": [
             {
               "id": "widens-slot-b",
@@ -103,7 +142,7 @@
         {
           "mutationId": "connect-slots",
           "sourceMutationDirectoryName": "🔗️connect-slots",
-          "mutationDirectoryName": "connect-slots",
+          "mutationDirectoryName": "🔗️connect-slots",
           "scenarios": [
             {
               "id": "joins-slot-a-to-slot-c",
@@ -114,7 +153,7 @@
         {
           "mutationId": "disconnect-slots",
           "sourceMutationDirectoryName": "✂️disconnect-slots",
-          "mutationDirectoryName": "disconnect-slots",
+          "mutationDirectoryName": "✂️disconnect-slots",
           "scenarios": [
             {
               "id": "severs-edge-ab",
@@ -125,7 +164,7 @@
         {
           "mutationId": "pin-slot",
           "sourceMutationDirectoryName": "📌️pin-slot",
-          "mutationDirectoryName": "pin-slot",
+          "mutationDirectoryName": "📌️pin-slot",
           "scenarios": [
             {
               "id": "pins-slot-a-to-the-roof-tile",
@@ -136,7 +175,7 @@
         {
           "mutationId": "unpin-slot",
           "sourceMutationDirectoryName": "🔓️unpin-slot",
-          "mutationDirectoryName": "unpin-slot",
+          "mutationDirectoryName": "🔓️unpin-slot",
           "scenarios": [
             {
               "id": "releases-the-slot-c-pin",
@@ -147,7 +186,7 @@
         {
           "mutationId": "create-tile",
           "sourceMutationDirectoryName": "🀄️create-tile",
-          "mutationDirectoryName": "create-tile",
+          "mutationDirectoryName": "🀄️create-tile",
           "scenarios": [
             {
               "id": "adds-the-window-tile",
@@ -158,7 +197,7 @@
         {
           "mutationId": "delete-tile",
           "sourceMutationDirectoryName": "🗑️delete-tile",
-          "mutationDirectoryName": "delete-tile",
+          "mutationDirectoryName": "🗑️delete-tile",
           "scenarios": [
             {
               "id": "removes-the-wall-tile-and-cascades-rules-and-pins",
@@ -169,7 +208,7 @@
         {
           "mutationId": "change-tile-weight",
           "sourceMutationDirectoryName": "⚖️change-tile-weight",
-          "mutationDirectoryName": "change-tile-weight",
+          "mutationDirectoryName": "⚖️change-tile-weight",
           "scenarios": [
             {
               "id": "raises-the-wall-tile-bias",
@@ -180,7 +219,7 @@
         {
           "mutationId": "change-tile-media",
           "sourceMutationDirectoryName": "🎨️change-tile-media",
-          "mutationDirectoryName": "change-tile-media",
+          "mutationDirectoryName": "🎨️change-tile-media",
           "scenarios": [
             {
               "id": "repaints-the-roof-tile-as-a-raster",
@@ -191,7 +230,7 @@
         {
           "mutationId": "create-rule",
           "sourceMutationDirectoryName": "🚦️create-rule",
-          "mutationDirectoryName": "create-rule",
+          "mutationDirectoryName": "🚦️create-rule",
           "scenarios": [
             {
               "id": "forbids-roof-over-roof",
@@ -202,11 +241,323 @@
         {
           "mutationId": "delete-rule",
           "sourceMutationDirectoryName": "❌delete-rule",
-          "mutationDirectoryName": "delete-rule",
+          "mutationDirectoryName": "❌delete-rule",
           "scenarios": [
             {
               "id": "removes-the-wall-wall-rule",
               "directoryName": "🚫️removes-the-wall-wall-rule"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.wfc.wfc2d",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-seed",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-seed",
+            "bridgeVersion": 1,
+            "variant": "ChangeSeed"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-slot",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-slot",
+            "bridgeVersion": 1,
+            "variant": "CreateSlot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-slot",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-slot",
+            "bridgeVersion": 1,
+            "variant": "DeleteSlot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "move-slot",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-slot",
+            "bridgeVersion": 1,
+            "variant": "MoveSlot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "resize-slot",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "resize-slot",
+            "bridgeVersion": 1,
+            "variant": "ResizeSlot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "connect-slots",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "connect-slots",
+            "bridgeVersion": 1,
+            "variant": "ConnectSlots"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-slots",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-slots",
+            "bridgeVersion": 1,
+            "variant": "DisconnectSlots"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "pin-slot",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "pin-slot",
+            "bridgeVersion": 1,
+            "variant": "PinSlot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "unpin-slot",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "unpin-slot",
+            "bridgeVersion": 1,
+            "variant": "UnpinSlot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-tile",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-tile",
+            "bridgeVersion": 1,
+            "variant": "CreateTile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-tile",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-tile",
+            "bridgeVersion": 1,
+            "variant": "DeleteTile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-tile-weight",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-tile-weight",
+            "bridgeVersion": 1,
+            "variant": "ChangeTileWeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-tile-media",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-tile-media",
+            "bridgeVersion": 1,
+            "variant": "ChangeTileMedia"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-rule",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-rule",
+            "bridgeVersion": 1,
+            "variant": "CreateRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-rule",
+          "capability": "wfc2d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-rule",
+            "bridgeVersion": 1,
+            "variant": "DeleteRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc2d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

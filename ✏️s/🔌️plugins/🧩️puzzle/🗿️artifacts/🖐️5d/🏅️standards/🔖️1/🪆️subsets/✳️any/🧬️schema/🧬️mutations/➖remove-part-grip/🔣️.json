@@ -7,7 +7,7 @@
   "aggregateVariant": "RemovePartGrip",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-part-grip",
-  "binaryTag": null,
+  "binaryTag": 16,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

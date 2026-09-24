@@ -351,7 +351,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-1-4-conformance-a-v1",
       "reproducible": true,
@@ -400,7 +400,7 @@
         "engineFamily": "lopdf",
         "engineVersion": "0.44",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/📜️script.ts generate",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-pdf-1-4-conformance-a-v1",
       "reproducible": true,

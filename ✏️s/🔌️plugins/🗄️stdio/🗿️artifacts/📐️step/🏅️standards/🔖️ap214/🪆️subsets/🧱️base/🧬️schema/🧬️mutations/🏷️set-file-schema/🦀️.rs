@@ -9,7 +9,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetFileSchema {
-    pub(crate) file_schema: StepFileSchema,
+    pub file_schema: StepFileSchema,
 }
 
 impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileSchema {

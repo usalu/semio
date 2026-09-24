@@ -1,0 +1,1 @@
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts

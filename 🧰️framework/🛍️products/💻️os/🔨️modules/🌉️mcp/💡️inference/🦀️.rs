@@ -1717,12 +1717,22 @@ fn inference_field_invalid(field: &str, message: impl Into<String>) -> GatewayEr
 /// 🔗️ The named artifact's canonical pair, for an inference whose contract binds one. `None` when
 /// no artifact was named or the contract declares no binding; a NAMED artifact this workspace
 /// cannot read is `NOT_FOUND`, never a silent empty document.
-fn resolve_inference_artifact_document(workspace: &Arc<HeadlessWorkspace>, item: &DeclaredInference, artifact_id: Option<&str>) -> Result<Option<crate::actions::ArtifactDocumentBinding>, GatewayError> {
+///
+/// ⏳️ Binding is the job's own first expensive step — on the first call of a session it activates
+/// the plugin guest the artifact lives in — so it runs as a job: each phase it actually runs is
+/// pushed to the client as progress (`crate::actions::ActivationPhase`), and a cancel is answered as
+/// soon as it lands. Laws: `🧫️fixtures/⏱️binding-cancellation-law.json` and
+/// `🏠️workspace/🧫️fixtures/⏱️compile-cancellation-law.json`.
+fn resolve_inference_artifact_document(workspace: &Arc<HeadlessWorkspace>, item: &DeclaredInference, artifact_id: Option<&str>, job_id: &str, cancel: &semio_framework_async::CancelToken) -> Result<Option<crate::actions::ArtifactDocumentBinding>, GatewayError> {
     let Some(artifact_id) = artifact_id else { return Ok(None) };
     if item.payload.as_ref().and_then(|contract| contract.artifact_binding.as_ref()).is_none() {
         return Err(inference_field_invalid("artifactId", format!("`{}` publishes no artifact binding, so naming `artifactId` cannot change what it computes — send `payload` instead", item.inference_schema)));
     }
-    match workspace.read_artifact_bytes(artifact_id)? {
+    let job_id = job_id.to_string();
+    let scope = crate::actions::ActivationScope::new(cancel.clone(), move |phase, fraction| {
+        crate::ui::job_registry().report_progress(&job_id, INFERENCE_BINDING_PROGRESS_START + INFERENCE_BINDING_PROGRESS_SPAN * phase.at(fraction), Some(format!("binding: {}", phase.id())));
+    });
+    match workspace.bind_artifact_document_cancellably(artifact_id, scope)? {
         Some((pack, spr)) => Ok(Some(crate::actions::ArtifactDocumentBinding { pack, spr })),
         None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no readable document for artifact `{artifact_id}` — open or create it before running an inference on it"))),
     }
@@ -1768,6 +1778,7 @@ fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_js
     let requested_artifact = arguments.get("artifactId").and_then(serde_json::Value::as_str);
     let caller_payload = arguments.get("payload").filter(|value| !value.is_null());
     let cancellation_id = arguments.get("cancellationId").and_then(serde_json::Value::as_str).map(str::to_string).unwrap_or_else(mint_inference_request_id);
+    let cancel = crate::actions::InferenceCancel::default();
 
     // 🎫️ The job is minted BEFORE the contract is checked, and that ordering is load-bearing:
     // `JobRegistry::begin` binds the id to this call's `_meta.progressToken`, so every step from
@@ -1784,6 +1795,8 @@ fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_js
         "cancellationId": cancellation_id,
         "artifactId": requested_artifact.unwrap_or_default(),
     });
+    let hook = cancel.0.clone();
+    jobs.bind_cancel(&job_id, move || hook.cancel_now());
     jobs.report_progress(&job_id, 0.05, Some(format!("checking `{}` against its published payload contract", item.inference_schema)));
     if let Err(error) = validate_inference_request(&item, caller_payload, requested_artifact) {
         let field = inference_error_field(&error);
@@ -1795,8 +1808,12 @@ fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_js
         Some(artifact_id) => format!("binding artifact `{artifact_id}` into the request body"),
         None => "no artifact binding declared — the caller's own body travels verbatim".to_string(),
     }));
-    let artifact_document = match resolve_inference_artifact_document(workspace, &item, requested_artifact) {
+    let artifact_document = match resolve_inference_artifact_document(workspace, &item, requested_artifact, &job_id, &cancel.0) {
         Ok(document) => document,
+        Err(_) if jobs.is_cancel_requested(&job_id) => {
+            jobs.mark_cancelled(&job_id);
+            return CallToolResult::ok(vec![ContentBlock::Text { text: format!("inference job {job_id} was cancelled while its artifact was being bound") }], Some(merge_inference_run_fields(base, serde_json::json!({ "status": "CANCELLED", "complete": false }))));
+        }
         Err(error) => {
             let error = error.with_details(merge_inference_run_fields(base.clone(), serde_json::json!({ "field": "artifactId" })));
             jobs.fail(&job_id, error.clone());
@@ -1815,19 +1832,19 @@ fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_js
         canonical_payload: inference_run_payload_bytes(&arguments),
         artifact_id: requested_artifact.unwrap_or_default().to_string(),
         artifact_document,
+        cancel,
     };
     jobs.report_progress(&job_id, 0.25, Some(format!("routing `{}/{}` to `{}`", command.artifact_kind, command.inference_schema, command.plugin_id)));
-    // 🛑️ Cooperative cancellation, at the two points this handler genuinely owns: before the guest
-    // is ever dispatched, and again once it returns. The SAME `cancellationId` also travels on the
-    // wire, where the guest's own `semio.infer` loop polls it — so a cancel issued mid-run is
-    // observed by the guest, not silently ignored, even though this synchronous call cannot itself
-    // be interrupted.
     if jobs.is_cancel_requested(&job_id) {
         jobs.mark_cancelled(&job_id);
         return CallToolResult::ok(vec![ContentBlock::Text { text: format!("inference job {job_id} was cancelled before dispatch") }], Some(merge_inference_run_fields(base, serde_json::json!({ "status": "CANCELLED", "complete": false }))));
     }
     jobs.report_progress(&job_id, 0.35, Some("running in the plugin's guest".to_string()));
     match context.actions.run_inference(INFERENCE_ROUTED_INSTANCE, command) {
+        Err(_) if jobs.is_cancel_requested(&job_id) => {
+            jobs.mark_cancelled(&job_id);
+            CallToolResult::ok(vec![ContentBlock::Text { text: format!("inference job {job_id} was cancelled") }], Some(merge_inference_run_fields(base, serde_json::json!({ "status": "CANCELLED", "complete": false }))))
+        }
         Ok(outcome) => {
             if jobs.is_cancel_requested(&job_id) {
                 jobs.mark_cancelled(&job_id);
@@ -1857,6 +1874,11 @@ fn merge_inference_run_fields(mut base: serde_json::Value, extra: serde_json::Va
     }
     base
 }
+
+/// 📈️ The span of `inference_run`'s job progress its artifact binding reports into, between the
+/// binding row and routing.
+const INFERENCE_BINDING_PROGRESS_START: f64 = 0.15;
+const INFERENCE_BINDING_PROGRESS_SPAN: f64 = 0.1;
 
 /// ⏱️ The default work-unit budget one `inference_run` grants when the caller names none — the same
 /// order of magnitude `job_infer`'s own user-visible lane clamps to.

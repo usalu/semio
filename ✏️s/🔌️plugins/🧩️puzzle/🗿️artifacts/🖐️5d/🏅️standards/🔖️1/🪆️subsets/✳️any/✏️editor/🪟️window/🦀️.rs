@@ -153,9 +153,15 @@ macro_rules! config_mutation {
 config_mutation!(Puzzle5dBoardWindowConfigMutation, Puzzle5dBoardWindowConfig, "Set Puzzle 5D Board Window Configuration", "puzzle.5dboardwindowconfig");
 config_mutation!(Puzzle5dWorldWindowConfigMutation, Puzzle5dWorldWindowConfig, "Set Puzzle 5D World Window Configuration", "puzzle.5dworldwindowconfig");
 
+/// 🎣️ The grip suggestion menu one window has open — puzzle 3d's record verbatim, because the world host's
+/// suggestion protocol (`suggestionMenu` on the interaction lane, `openVortexSuggestions`) is shared.
+pub use semio_s_artifact_puzzle_3d::editor::puzzle3d::config::Puzzle3dSuggestionMenu as Puzzle5dSuggestionMenu;
+
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dWindowTransient {
+    #[value(default)]
+    pub suggestion_menu: Option<Puzzle5dSuggestionMenu>,
     pub engagement_input: String,
     pub brush_candidate_index: usize,
 }
@@ -260,7 +266,7 @@ impl protocol::MutationDiff<Puzzle5dWindowTransient> for Puzzle5dWindowTransient
     fn absorb(&mut self, other: Self) { *self = other; }
 }
 
-store::artifact_retire_struct!(Puzzle5dWindowTransient { engagement_input, brush_candidate_index });
+store::artifact_retire_struct!(Puzzle5dWindowTransient { suggestion_menu, engagement_input, brush_candidate_index });
 
 impl store::retirement::RetireOwned for Puzzle5dWindowTransientMutation {
     fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
@@ -272,7 +278,10 @@ impl store::retirement::RetireOwned for Puzzle5dWindowTransientMutation {
 
 fn puzzle5d_window_transient_preflight(mutation: &Puzzle5dWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let Puzzle5dWindowTransientMutation::Snapshot { transient } = mutation;
-    let retained_bytes = std::mem::size_of::<Puzzle5dWindowTransient>().checked_add(transient.engagement_input.capacity()).ok_or_else(|| "Puzzle 5D window transient footprint overflowed".to_string())?;
+    let menu = transient.suggestion_menu.as_ref().map_or(Some(0), |menu| menu.window_id.capacity().checked_add(menu.vortex_full_id.capacity()));
+    let retained_bytes = menu
+        .and_then(|menu| std::mem::size_of::<Puzzle5dWindowTransient>().checked_add(transient.engagement_input.capacity())?.checked_add(menu))
+        .ok_or_else(|| "Puzzle 5D window transient footprint overflowed".to_string())?;
     Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
 }
 
@@ -430,6 +439,7 @@ pub fn runtime(
     runtime.engagement_input_by_window.clear();
     runtime.engagement_input_by_window.insert(window_id.to_string(), transient.engagement_input.clone());
     runtime.brush_candidate_index = transient.brush_candidate_index;
+    runtime.suggestion_menu = transient.suggestion_menu.clone();
     runtime
 }
 
@@ -468,7 +478,7 @@ pub fn config_from_runtime(runtime: &Puzzle5dRuntime) -> Puzzle5dWindowConfig {
 }
 
 pub fn transient_from_runtime(runtime: &Puzzle5dRuntime, window_id: &str) -> Puzzle5dWindowTransient {
-    Puzzle5dWindowTransient { engagement_input: runtime.engagement_input_by_window.get(window_id).cloned().unwrap_or_default(), brush_candidate_index: runtime.brush_candidate_index }
+    Puzzle5dWindowTransient { suggestion_menu: runtime.suggestion_menu.clone(), engagement_input: runtime.engagement_input_by_window.get(window_id).cloned().unwrap_or_default(), brush_candidate_index: runtime.brush_candidate_index }
 }
 
 pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle5dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {

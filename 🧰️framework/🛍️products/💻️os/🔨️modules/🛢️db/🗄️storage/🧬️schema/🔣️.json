@@ -200,6 +200,7 @@
         "maximumInlineBytes",
         "writerTable",
         "controllerCredit",
+        "walSegment",
         "tables",
         "admission",
         "closeWhileAdmitted",
@@ -231,6 +232,17 @@
             "separateBox": {
               "const": true
             }
+          }
+        },
+        "walSegment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["chunkSlots", "creditItems", "chargedOn", "returnedOn"],
+          "properties": {
+            "chunkSlots": { "const": 64 },
+            "creditItems": { "const": 1 },
+            "chargedOn": { "const": "create" },
+            "returnedOn": { "const": "retirement" }
           }
         },
         "controllerCredit": {

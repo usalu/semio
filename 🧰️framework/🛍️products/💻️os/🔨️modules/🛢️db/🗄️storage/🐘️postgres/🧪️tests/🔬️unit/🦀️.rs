@@ -189,3 +189,29 @@ async fn payload_hash_is_deterministic_and_content_addressed() {
     assert_ne!(a.0, c.0, "different bytes hash differently");
 }
 //#endregion 🔖️ContentAddressing
+
+//#region 🔖️WriterFence
+#[test]
+fn writer_fence_constants_and_lock_keys_match_the_neutral_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️writer/🧫️fixtures/🌐️remote-guard/🔣️.json")).unwrap();
+    let postgres = &fixture["postgres"];
+    assert_eq!(postgres["lockNamespace"], WAL_WRITER_LOCK_NAMESPACE);
+    assert_eq!(postgres["applicationName"], WAL_WRITER_APPLICATION_NAME);
+    let keepalive = &postgres["keepalive"];
+    assert_eq!(
+        WAL_WRITER_KEEPALIVE.map(|(_, value)| value.parse::<u64>().unwrap()),
+        [keepalive["idleSeconds"].as_u64().unwrap(), keepalive["intervalSeconds"].as_u64().unwrap(), keepalive["count"].as_u64().unwrap()]
+    );
+    for row in postgres["lockKeys"].as_array().unwrap() {
+        assert_eq!(wal_writer_lock_key(row["document"].as_str().unwrap()).to_string(), row["key"].as_str().unwrap());
+    }
+}
+
+#[test]
+fn only_session_ending_errors_fence_the_writer() {
+    assert!(matches!(map_session_error(sqlx::Error::Io(std::io::Error::other("reset"))), DbError::Fenced { .. }));
+    assert!(matches!(map_session_error(sqlx::Error::PoolClosed), DbError::Fenced { .. }));
+    assert!(matches!(map_session_error(sqlx::Error::RowNotFound), DbError::NotFound(_)));
+    assert!(matches!(map_create_error(sqlx::Error::RowNotFound, || "exists".to_string()), DbError::NotFound(_)));
+}
+//#endregion 🔖️WriterFence

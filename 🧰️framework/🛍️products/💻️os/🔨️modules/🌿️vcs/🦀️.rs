@@ -31,10 +31,13 @@ pub async fn edit_scoped_id(edit_id: &str, ordinal: u32) -> String {
     format!("scoped-{hex16}")
 }
 
-/// @emoji ✏️ Content-addressed edit id from actor + sequence + forwards fingerprint (no global counter).
-pub async fn mint_edit_id(actor: Option<&str>, sequence: i32, forwards_fingerprint: &[u8]) -> String {
-    let mut payload = Vec::new();
-    payload.extend_from_slice(actor.unwrap_or("").as_bytes());
+/// @emoji ✏️ Globally unique edit id from the authoring replica + its sequence + the forwards
+/// fingerprint. `replica` is the Store's per-instance entropy identity (its clock actor), so two
+/// processes, tabs or guest instances that author identical content as their first edit never mint
+/// the same id — an id collision is a silent replay at every ledger that dedupes by id.
+pub async fn mint_edit_id(replica: u64, sequence: i32, forwards_fingerprint: &[u8]) -> String {
+    let mut payload = Vec::with_capacity(14 + forwards_fingerprint.len());
+    payload.extend_from_slice(&replica.to_le_bytes());
     payload.push(0);
     payload.extend_from_slice(&sequence.to_le_bytes());
     payload.push(0);
@@ -58,9 +61,16 @@ pub async fn mint_alternative_id(name: &str, checkpoint_ids: &[String]) -> Strin
     content_addressed_entity_id("alternative", &payload).await
 }
 
-/// @emoji ⚙️ Content-addressed operation id from the operation's binary (or other) fingerprint bytes.
-pub async fn mint_mutation_id(mutation_bytes: &[u8]) -> String {
-    content_addressed_entity_id("mutation", mutation_bytes).await
+/// @emoji ⚙️ Globally unique operation id from the operation's bytes and the replica clock tick
+/// that stamped it (`actor` is the replica identity, `physical_ms`/`logical` strictly advance per
+/// replica), so identical operations authored twice, or by two replicas, never share an id.
+pub async fn mint_mutation_id(mutation_bytes: &[u8], stamp: (u64, u64, u64)) -> String {
+    let mut payload = Vec::with_capacity(mutation_bytes.len() + 24);
+    payload.extend_from_slice(mutation_bytes);
+    for part in [stamp.0, stamp.1, stamp.2] {
+        payload.extend_from_slice(&part.to_le_bytes());
+    }
+    content_addressed_entity_id("mutation", &payload).await
 }
 
 /// @emoji 🆔️ Legacy-compatible prefix-only mint — identical inputs collide.

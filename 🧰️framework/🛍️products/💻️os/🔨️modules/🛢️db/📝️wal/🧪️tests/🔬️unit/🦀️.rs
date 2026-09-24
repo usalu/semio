@@ -461,6 +461,9 @@ async fn wal_recovery_abort_cancellation_has_one_durable_boundary() {
 
 #[semio_framework_async_macros::async_test]
 async fn wal_recovery_abort_capacity_exact_and_plus_one_preserves_source() {
+    if !crate::db_storage::process_isolated_law("db_wal::tests::wal_recovery_abort_capacity_exact_and_plus_one_preserves_source") {
+        return;
+    }
     let suffix = wal_frame_bytes(8).unwrap() + protocol::format::COMMIT_FRAME_LEN;
     for extra in [0, 1] {
         let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
@@ -942,16 +945,12 @@ async fn capacity_backend(storage: &impl WalStorage, fixture: &serde_json::Value
     for (index, length) in case["lengths"].as_array().unwrap().iter().enumerate() {
         assert_eq!(storage.segment_len(&document, index as u64).await.unwrap(), length.as_u64().unwrap());
     }
-    while wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    wal.close().await.unwrap();
     let (mut reopened, _) = ArtifactWal::open(storage, document.clone(), policy, 1).await.unwrap();
     assert_eq!(reopened.next_tx_id, 4);
     assert_eq!(segment_bytes(storage, &document, 0).await, before);
     assert_eq!(replay_summaries(storage, &document).await.iter().filter(|record| matches!(record, ReplaySummary::Command(_))).count(), 3);
-    while reopened.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    reopened.close().await.unwrap();
 }
 
 #[semio_framework_async_macros::async_test]
@@ -975,13 +974,9 @@ async fn wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries
     let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
     capacity_submission(&storage, &mut wal, fixture["exactPayloadBytes"].as_u64().unwrap() as usize, DurabilityClass::Fsync).await.unwrap();
     assert_eq!(storage.segment_len(&document, 0).await.unwrap(), fixture["maxSegmentBytes"].as_u64().unwrap());
-    while wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    wal.close().await.unwrap();
     let (mut wal, _) = ArtifactWal::open(&storage, document, GroupCommitPolicy::default(), 0).await.unwrap();
-    while wal.close_step().unwrap() {
-        semio_framework_async::yield_once().await;
-    }
+    wal.close().await.unwrap();
     println!("[DEBUG] WAL capacity: Memory and filesystem Fsync/grouped submissions rotate before overflow, reject one-over without effects and reopen the exact maximum");
 }
 

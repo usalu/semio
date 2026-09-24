@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeMaterialThermalAbsorptance",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-material-thermal-absorptance",
-  "binaryTag": null,
+  "binaryTag": 67,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

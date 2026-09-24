@@ -1,31 +1,21 @@
-//! 🚪️ curation -> zip — foreign `Serializer<CurationSnapshot>` (ticket 26/08/17/CLEAN-ARTIFACT-
-//! STANDARD-SUBSET-MECHANISM design.md §3). See the sibling `Deserializer`'s doc comment: this
-//! direction is symmetrically non-functional for real content, preserved byte-for-byte and labeled
-//! `IoFidelity::Lossy` honestly rather than claiming a working conversion.
+//! 🗂️ curation → zip — the shared document archive (`encode_document_archive`): this artifact's DSL as the
+//! authoritative member plus its rfc8259 rendition (`IoFidelity::Exact`).
 use crate::CurationSnapshot;
-use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_artifact_stdio_zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_zip::io::{decode_zip, encode_document_archive};
 
 pub const ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId::ANY };
-
-pub fn serialize(snapshot: &CurationSnapshot) -> Result<ZipSnapshot, store::TextError> {
-    let _ = STDIO_ZIP_DOCUMENT_SCHEMA;
-    ZipSnapshot::from_value(snapshot.to_value()).map_err(|e| store::TextError::new(format!("curation->zip: {e}"), dsl::TextSpan::at(1, 1)))
-}
-
-pub fn serialize_bytes(snapshot: &CurationSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<ZipSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
-}
 
 pub struct CurationIntoZip;
 
 impl Serializer<CurationSnapshot> for CurationIntoZip {
     const INTO: Dialect = ZIP_DIALECT;
-    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(from: &CurationSnapshot) -> IoResult<IoPayload> {
-        serialize_bytes(from).map(|bytes| IoOutcome::clean(IoPayload::Binary(bytes))).map_err(|error| IoError { message: format!("CurationIntoZip: {error}"), diagnostics: Vec::new() })
+        let error = |message: String| IoError { message: format!("CurationIntoZip: {message}"), diagnostics: Vec::new() };
+        let archive = decode_zip(&encode_document_archive(from).map_err(|e| error(e.to_string()))?).map_err(|e| error(e.to_string()))?;
+        Ok(IoOutcome::clean(IoPayload::Binary(store::ArtifactPack::encode_pack(&archive))))
     }
 }

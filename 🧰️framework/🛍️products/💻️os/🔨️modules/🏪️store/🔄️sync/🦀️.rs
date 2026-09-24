@@ -83,6 +83,62 @@ mod envelope_serde {
 //#region 🔖️Protocol
 /// @emoji 🗃️ A durable place a document synchronizes with. A document may bind to several at once
 /// (folder-only, semio_hub-only, or both); the actor treats each as an independent peer.
+/// @emoji 🗃️ Durability × sharing class for persistence bindings and replication lanes.
+/// Preview/presence lanes are always `EphemeralShared` and must never be mistaken for durable WAL state.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub enum PersistenceDataClass {
+    PersistedLocalOnly,
+    PersistedShared,
+    EphemeralLocalOnly,
+    EphemeralShared,
+}
+
+impl PersistenceDataClass {
+    pub const fn is_durable(self) -> bool {
+        matches!(self, Self::PersistedLocalOnly | Self::PersistedShared)
+    }
+
+    pub const fn is_shared(self) -> bool {
+        matches!(self, Self::PersistedShared | Self::EphemeralShared)
+    }
+
+    pub const fn allows_share(self) -> bool {
+        matches!(self, Self::PersistedShared)
+    }
+
+    pub const fn allows_collaboration(self) -> bool {
+        matches!(self, Self::PersistedShared)
+    }
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::PersistedLocalOnly => "persistedLocalOnly",
+            Self::PersistedShared => "persistedShared",
+            Self::EphemeralLocalOnly => "ephemeralLocalOnly",
+            Self::EphemeralShared => "ephemeralShared",
+        }
+    }
+}
+
+/// @emoji 🛤️ Classifies a wire lane. Preview and presence are broadcast-only (never WAL).
+pub fn wire_lane_data_class(lane: &str) -> PersistenceDataClass {
+    match lane {
+        "preview" | "presence" => PersistenceDataClass::EphemeralShared,
+        "command" => PersistenceDataClass::PersistedShared,
+        _ => PersistenceDataClass::EphemeralLocalOnly,
+    }
+}
+
+/// @emoji 🗃️ Resolves the data class of an actor's bindings. Empty bindings are ephemeral local-only
+/// (in-memory draft / studio with no backbone).
+pub fn bindings_data_class(bindings: &[PersistenceBinding]) -> PersistenceDataClass {
+    match bindings.first() {
+        None => PersistenceDataClass::EphemeralLocalOnly,
+        Some(binding) => binding.data_class(),
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum PersistenceBinding {
@@ -90,7 +146,7 @@ pub enum PersistenceBinding {
     /// a `*.json` path uses the single-blob `file://` export format.
     Folder { path: std::path::PathBuf },
     /// @emoji ☁️ A semio_hub node reachable over WebSocket
-    /// (`remote://host:port` → `ws://host:port/spaces/{space_id}/documents/{id}/socket/v1`).
+    /// (`remote://host:port` → `ws://host:port/scopes/{space_id}%2F{id}/document/ws`).
     Hub {
         base_url: String,
         space_id: String,
@@ -100,6 +156,15 @@ pub enum PersistenceBinding {
         #[value(default, skip_serializing_if = "Option::is_none")]
         surface: Option<String>,
     },
+}
+
+impl PersistenceBinding {
+    pub const fn data_class(&self) -> PersistenceDataClass {
+        match self {
+            Self::Folder { .. } => PersistenceDataClass::PersistedLocalOnly,
+            Self::Hub { .. } => PersistenceDataClass::PersistedShared,
+        }
+    }
 }
 
 /// @emoji 🧾️ Everything {@link ArtifactHost::open} needs to spawn one document's actor.
@@ -660,6 +725,7 @@ fn validate_artifact_bootstrap_identity(bootstrap: &ArtifactBootstrap, document_
     Ok(())
 }
 
+
 fn frontier_reaches(actual: &RuntimeFrontierSummary, required: &RuntimeFrontierSummary) -> bool {
     actual == required
 }
@@ -885,19 +951,19 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
 }
 
 /// @emoji 🔗️ Derives a semio_hub WebSocket URL: `remote://host:port` (or `http(s)://`, `ws(s)://`) →
-/// `ws(s)://host:port/spaces/{space_id}/documents/{document_id}/socket/v1`, with an out-of-band
+/// `ws(s)://host:port/scopes/{space_id}%2F{document_id}/document/ws`, with an out-of-band
 /// `?surface=` appended when the binding carries one (contract §C0's presence scope, ticket
 /// 26/08/16/HUB-SPACES-…: `(space_id, document_id, surface)` — `surface` rides outside the wire
-/// protocol rather than widening `PresencePeer`'s already-full flag byte).
+/// protocol rather than widening `PresencePeer`'s already-full flag byte). Actor identity is never
+/// a query parameter — the server binds it from the session credential.
 async fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: Option<&str>) -> String {
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
     let authority = base_url.split_once("://").map(|(_, rest)| rest).unwrap_or(base_url).split('/').next().unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
-    let space_id = crate::os_directory::client::encode_url_component(space_id);
-    let document_id = crate::os_directory::client::encode_url_component(document_id);
+    let scope = crate::os_directory::client::encode_url_component(&format!("{space_id}/{document_id}"));
     match surface {
-        Some(surface) => format!("{scheme}://{authority}/spaces/{space_id}/documents/{document_id}/socket/v1?surface={}", crate::os_directory::client::encode_url_component(surface)),
-        None => format!("{scheme}://{authority}/spaces/{space_id}/documents/{document_id}/socket/v1"),
+        Some(surface) => format!("{scheme}://{authority}/scopes/{scope}/document/ws?surface={}", crate::os_directory::client::encode_url_component(surface)),
+        None => format!("{scheme}://{authority}/scopes/{scope}/document/ws"),
     }
 }
 //#endregion 🔖️Endpoints
@@ -1622,6 +1688,7 @@ mod native_actor {
         resume_token: Option<String>,
         pending_resume_token: Option<String>,
         required_tail_frontier: Option<RuntimeFrontierSummary>,
+        artifact_rebootstrap_required: bool,
         artifact_bootstrap: Option<PendingArtifactBootstrap>,
         backoff_ms: u64,
         reconnect_at: Option<Instant>,
@@ -1649,11 +1716,16 @@ mod native_actor {
         command_turns: u8,
         drive_phase: ArtifactDrivePhase,
         closing: bool,
+        close_drain_deadline: Option<Instant>,
         readiness: Option<Arc<dyn Fn() + Send + Sync>>,
         readiness_requested: Arc<std::sync::atomic::AtomicBool>,
         #[cfg(test)]
         fail_bootstrap_local_replay_once: bool,
     }
+
+    /// ⏳️ How long a closing actor keeps reading its hub socket so a catch-up in flight can complete
+    /// and flush operations the store handed over before the close; after it the outbox is dropped.
+    const ARTIFACT_CLOSE_OUTBOX_DRAIN: Duration = Duration::from_secs(2);
 
     impl ArtifactActor {
         pub(super) async fn new(
@@ -1720,6 +1792,7 @@ mod native_actor {
                 pending_resume_token: None,
                 required_tail_frontier: None,
                 artifact_bootstrap: None,
+                artifact_rebootstrap_required: false,
                 backoff_ms: 500,
                 reconnect_at: None,
                 pending_batches: std::collections::HashMap::new(),
@@ -1742,6 +1815,7 @@ mod native_actor {
                 command_turns: 0,
                 drive_phase: ArtifactDrivePhase::Connect,
                 closing: false,
+                close_drain_deadline: None,
                 readiness: None,
                 readiness_requested: Arc::new(std::sync::atomic::AtomicBool::new(false)),
                 #[cfg(test)]
@@ -1772,6 +1846,18 @@ mod native_actor {
                 match self.relay_one_backbone().await {
                     Ok(true) | Err(_) => return ArtifactDrive::MoreWork,
                     Ok(false) => {}
+                }
+                if !self.outbox.is_empty() && self.semio_hub.is_some() {
+                    let deadline = *self.close_drain_deadline.get_or_insert_with(|| Instant::now() + ARTIFACT_CLOSE_OUTBOX_DRAIN);
+                    if Instant::now() < deadline {
+                        return match self.poll_hub_message() {
+                            Some(message) => {
+                                self.on_hub_message(message).await;
+                                ArtifactDrive::MoreWork
+                            }
+                            None => ArtifactDrive::Idle { deadline: Some(deadline) },
+                        };
+                    }
                 }
                 self.connect_future = None;
                 return ArtifactDrive::Terminal;
@@ -1808,15 +1894,7 @@ mod native_actor {
             match phase {
                 ArtifactDrivePhase::Connect => self.start_connect_hub().await,
                 ArtifactDrivePhase::Hub => {
-                    let message = self.readiness.clone().and_then(|readiness| {
-                        let waker = std::task::Waker::from(Arc::new(ArtifactReadinessWake(readiness)));
-                        let mut context = std::task::Context::from_waker(&waker);
-                        match self.semio_hub.as_mut().map(|connection| connection.read.poll_next_unpin(&mut context)) {
-                            Some(std::task::Poll::Ready(message)) => Some(message),
-                            Some(std::task::Poll::Pending) | None => None,
-                        }
-                    });
-                    if let Some(message) = message {
+                    if let Some(message) = self.poll_hub_message() {
                         self.drive_phase = ArtifactDrivePhase::Hub;
                         self.on_hub_message(message).await;
                     }
@@ -1868,6 +1946,17 @@ mod native_actor {
                 }
             }
             ArtifactDrive::MoreWork
+        }
+
+        /// @emoji 📡️ Polls one hub frame under the actor's readiness waker; `None` parks until the socket wakes it.
+        fn poll_hub_message(&mut self) -> Option<Option<Result<Message, tokio_tungstenite::tungstenite::Error>>> {
+            let readiness = self.readiness.clone()?;
+            let waker = std::task::Waker::from(Arc::new(ArtifactReadinessWake(readiness)));
+            let mut context = std::task::Context::from_waker(&waker);
+            match self.semio_hub.as_mut().map(|connection| connection.read.poll_next_unpin(&mut context)) {
+                Some(std::task::Poll::Ready(message)) => Some(message),
+                Some(std::task::Poll::Pending) | None => None,
+            }
         }
 
         /// @emoji 🌱️ Seeds persistence state from any already-stored recursive archive and installs the file watcher.
@@ -2082,7 +2171,15 @@ mod native_actor {
 
             if lost.is_empty() && !new_ids.is_empty() {
                 let Ok(events) = spr_events(&spr, &self.document_id, &self.schema).await else { return };
-                let appended: Vec<MutationEnvelope> = events.into_iter().filter(|event| new_ids.contains(&event.mutation_id.0)).collect();
+                let mut appended: Vec<MutationEnvelope> = events.into_iter().filter(|event| new_ids.contains(&event.mutation_id.0)).collect();
+                // Append-only spr events decoded without HistoryOpMeta carry HLT(0,0). Ingest merges
+                // by HLC, so a zero stamp would reorder under already-applied local edits and leave
+                // the live snapshot at the older head. Stamp each new envelope with this actor clock.
+                for envelope in &mut appended {
+                    if envelope.timestamp == crate::os_spr::HybridLogicalTimestamp::new(0, 0) {
+                        envelope.timestamp = next_timestamp(self.hlc_seed, &mut self.hlc_counter).await;
+                    }
+                }
                 self.known_op_ids.extend(new_ids);
                 self.current_pack = Some(pack);
                 self.current_spr = Some(spr);
@@ -2167,6 +2264,28 @@ mod native_actor {
             self.schedule_reconnect().await;
         }
 
+        /// @emoji ♻️ Hub lag forces a canonical pair refresh: clear the live projection tokens, keep
+        /// unacked work queued, and reconnect — mirrors the browser worker's `requireArtifactRebootstrap`.
+        async fn require_artifact_rebootstrap(&mut self) {
+            self.requeue_pending_batches();
+            self.abort_artifact_bootstrap();
+            self.current_pack = None;
+            self.current_spr = None;
+            self.current_archive = None;
+            self.server_frontier = None;
+            self.resume_token = None;
+            self.pending_resume_token = None;
+            self.required_tail_frontier = None;
+            self.artifact_rebootstrap_required = true;
+            self.known_op_ids.clear();
+            self.semio_hub = None;
+            self.clear_socket_epoch();
+            self.set_remote_state(RemoteState::Connecting).await;
+            let retry = self.backoff_ms;
+            self.reconnect_at = Some(Instant::now() + Duration::from_millis(retry));
+            self.backoff_ms = (self.backoff_ms * 2).min(30_000);
+        }
+
         async fn flush_outbox(&mut self) {
             if self.outbox.is_empty() || self.semio_hub.is_none() {
                 return;
@@ -2194,10 +2313,10 @@ mod native_actor {
             if self.semio_hub.is_some() || self.connect_future.is_some() || self.reconnect_at.is_some_and(|deadline| deadline > Instant::now()) {
                 return;
             }
-            if self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            let Some(credential) = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone() else {
                 self.schedule_reconnect().await;
                 return;
-            }
+            };
             let Some(source) = self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone() else {
                 self.schedule_reconnect().await;
                 return;
@@ -2231,16 +2350,22 @@ mod native_actor {
                 if base_url.trim_end_matches('/') != admission.authority.hub_origin.trim_end_matches('/') {
                     return Err(());
                 }
-                let url = hub_ws_url(&admission.authority.hub_origin, &admission.authority.scope.space_id, &admission.authority.scope.document_id, Some(&admission.authority.surface.surface_id)).await;
                 let crate::os_directory::client::DocumentSocketAdmissionV1 { mut socket, authority } = admission;
+                let url = hub_ws_url(
+                    &authority.hub_origin,
+                    &authority.scope.space_id,
+                    &authority.scope.document_id,
+                    Some(&authority.surface.surface_id),
+                )
+                .await;
                 let mut request = url.into_client_request().map_err(|_| ())?;
-                let protocol_header = WipeSocketHeader(format!("{}, {}", socket.protocol, socket.grant));
-                request.headers_mut().insert("Sec-WebSocket-Protocol", protocol_header.0.parse().map_err(|_| ())?);
-                let (mut stream, response) = tokio::time::timeout(Duration::from_secs(5), tokio_tungstenite::connect_async(request)).await.map_err(|_| ())?.map_err(|_| ())?;
-                if response.headers().get("Sec-WebSocket-Protocol").and_then(|value| value.to_str().ok()) != Some("semio.socket.v1") {
-                    let _ = stream.close(None).await;
-                    return Err(());
-                }
+                let session = credential.capability().map_err(|_| ())?;
+                let protocol_header = format!("{}, {session}", socket.protocol);
+                request.headers_mut().insert(
+                    tokio_tungstenite::tungstenite::http::header::SEC_WEBSOCKET_PROTOCOL,
+                    protocol_header.parse().map_err(|_| ())?,
+                );
+                let (mut stream, _response) = tokio::time::timeout(Duration::from_secs(5), tokio_tungstenite::connect_async(request)).await.map_err(|_| ())?.map_err(|_| ())?;
                 if ctx.cancel.is_cancelled_now() || authority.expires_at_unix_ms <= now_ms().await {
                     let _ = stream.close(None).await;
                     return Err(());
@@ -2520,7 +2645,7 @@ mod native_actor {
         }
 
         #[cfg(test)]
-        pub(super) fn bootstrap_test_state(&self) -> (Option<Vec<u8>>, Option<Vec<u8>>, Option<RuntimeFrontierSummary>, Option<RuntimeFrontierSummary>, Option<String>, Option<String>, RemoteState, Vec<String>) {
+        pub(super) fn bootstrap_test_state(&self) -> (Option<Vec<u8>>, Option<Vec<u8>>, Option<RuntimeFrontierSummary>, Option<RuntimeFrontierSummary>, Option<String>, Option<String>, RemoteState, Vec<String>, bool) {
             (
                 self.current_pack.clone(),
                 self.current_spr.clone(),
@@ -2530,6 +2655,21 @@ mod native_actor {
                 self.pending_resume_token.clone(),
                 self.remote_state.clone(),
                 self.outbox.iter().map(|envelope| envelope.mutation_id.0.clone()).collect(),
+                self.artifact_rebootstrap_required,
+            )
+        }
+
+        #[cfg(test)]
+        pub(super) fn parity_test_state(&self) -> (Option<String>, Option<String>, RemoteState, Vec<String>, usize, bool, bool, Vec<String>) {
+            (
+                self.resume_token.clone(),
+                self.server_frontier.as_ref().map(|frontier| frontier.head_edit_id.clone()),
+                self.remote_state.clone(),
+                self.outbox.iter().map(|envelope| envelope.mutation_id.0.clone()).collect(),
+                self.pending_batches.len(),
+                self.socket_actor_confirmed,
+                self.artifact_rebootstrap_required,
+                self.known_op_ids.iter().cloned().collect(),
             )
         }
 
@@ -2539,6 +2679,10 @@ mod native_actor {
                     self.requeue_pending_batches();
                     match bootstrap {
                         Bootstrap::None => {
+                            if self.artifact_rebootstrap_required {
+                                self.fail_artifact_bootstrap("artifact rebootstrap returned no canonical pair").await;
+                                return;
+                            }
                             self.abort_artifact_bootstrap();
                             self.resume_token = Some(resume_token);
                             self.server_frontier = Some(server_frontier);
@@ -2546,6 +2690,10 @@ mod native_actor {
                             self.flush_outbox().await;
                         }
                         Bootstrap::Tail => {
+                            if self.artifact_rebootstrap_required {
+                                self.fail_artifact_bootstrap("artifact rebootstrap returned tail without a canonical pair").await;
+                                return;
+                            }
                             self.abort_artifact_bootstrap();
                             self.pending_resume_token = Some(resume_token);
                             self.required_tail_frontier = Some(server_frontier);
@@ -2555,6 +2703,7 @@ mod native_actor {
                             self.fail_artifact_bootstrap("database-private snapshot cannot seed an artifact client").await;
                         }
                         Bootstrap::ArtifactBootstrap(bootstrap) => {
+                            self.artifact_rebootstrap_required = false;
                             self.start_artifact_bootstrap(*bootstrap, resume_token, server_frontier).await;
                         }
                     }
@@ -2566,7 +2715,7 @@ mod native_actor {
                     if control.document_id != self.document_id || self.hub_space_id.as_deref() != Some(control.space_id.as_str()) || control.baseline_frontier.document_id.0 != self.document_id {
                         self.fail_artifact_bootstrap("rebootstrap control scope mismatch").await;
                     } else {
-                        self.fail_artifact_bootstrap("rebootstrap-required").await;
+                        self.require_artifact_rebootstrap().await;
                     }
                 }
                 ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index, bytes } => {
@@ -2601,11 +2750,16 @@ mod native_actor {
                         return;
                     }
                     if self.socket_actor.as_deref() != Some(origin.0.as_str()) {
-                        let converted = envelopes;
-                        self.persist_operations(&converted).await;
-                        if !self.deliver_remote_operations(converted).await {
-                            self.fail_artifact_bootstrap("artifact tail could not be installed").await;
-                            return;
+                        let converted: Vec<MutationEnvelope> = envelopes.into_iter().filter(|envelope| !self.known_op_ids.contains(&envelope.mutation_id.0)).collect();
+                        if !converted.is_empty() {
+                            self.persist_operations(&converted).await;
+                            for envelope in &converted {
+                                self.known_op_ids.insert(envelope.mutation_id.0.clone());
+                            }
+                            if !self.deliver_remote_operations(converted).await {
+                                self.fail_artifact_bootstrap("artifact tail could not be installed").await;
+                                return;
+                            }
                         }
                     }
                     self.server_frontier = Some(frontier);
@@ -2738,7 +2892,7 @@ mod native_actor {
             }
             let mut failed = false;
             if let Some(conn) = self.semio_hub.as_mut() {
-                if !matches!(tokio::time::timeout(Duration::from_millis(4), conn.write.send(message)).await, Ok(Ok(()))) {
+                if conn.write.send(message).await.is_err() {
                     failed = true;
                 }
             }
@@ -3169,7 +3323,7 @@ mod native_actor {
                         self.enqueue(true);
                         return;
                     }
-                    if self.close_requested.load(std::sync::atomic::Ordering::Acquire) && outcome != ArtifactDrive::Terminal {
+                    if self.close_requested.load(std::sync::atomic::Ordering::Acquire) && !actor.closing && outcome != ArtifactDrive::Terminal {
                         actor.closing = true;
                         actor.cmd_rx.close();
                         outcome = ArtifactDrive::MoreWork;
@@ -3196,7 +3350,9 @@ mod native_actor {
                     *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Future(future));
                     self.begin_terminal(ArtifactActorTerminalReason::TurnFault);
                     self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                    self.enqueue(true);
+                    // TurnFault retains the future in `terminal_turn`. Do not `enqueue` a drain job:
+                    // against a shut-down pool that would mint a second `Pool(Shutdown)` terminal_job
+                    // grant and leak mailbox ownership (one-owner-per-grant). Host `close_one` drains.
                 }
             }
         }
@@ -3405,6 +3561,7 @@ mod native_actor {
                 readiness_requested.store(true, std::sync::atomic::Ordering::Release);
                 readiness_schedule();
             });
+            actor.remote.set_outbound_wake(schedule.clone());
             actor.cmd_rx.set_wake(schedule);
             actor.set_readiness(readiness);
         }
@@ -3751,6 +3908,12 @@ mod wasm_actor {
                         self.disconnect();
                         return;
                     }
+                    self.requeue_pending_batches();
+                    self.abort_artifact_bootstrap();
+                    self.server_frontier = None;
+                    self.resume_token = None;
+                    self.pending_resume_token = None;
+                    self.required_tail_frontier = None;
                     self.disconnect();
                 }
                 ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index, bytes } => {
@@ -4263,8 +4426,17 @@ impl FolderEventLogStorage {
         Ok(event)
     }
 
+    /// 🚫 The repository root is not a document space. An `nx.json` marker means this folder is the git workspace, and writing `.semio/events.semio` there recreates a tracked event log.
+    fn refuse_repository_root(&self) -> Result<(), vcs::VcsError> {
+        if self.folder.join("nx.json").is_file() {
+            return Err(vcs::VcsError::Backbone(format!("refusing to write {} at the repository root", self.event_path().display())));
+        }
+        Ok(())
+    }
+
     fn append(&self, event: &FolderEvent) -> Result<(), vcs::VcsError> {
         use std::io::Write;
+        self.refuse_repository_root()?;
         let payload = Self::encode_event(event)?;
         if payload.len() as u64 > MAX_FOLDER_EVENT_BYTES {
             return Err(vcs::VcsError::Backbone("folder event exceeds the 16 GiB record boundary".into()));
@@ -4490,8 +4662,8 @@ impl FolderTextStorage {
         std::fs::write(self.dsl_path(document_id, envelope_id).await, dsl_mirror).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
-    /// @emoji ➕️ Appends already-printed op-log lines (one {@link print_edit_lines} block) to the `.ops`
-    /// file without rewriting it — the hot-path append unit, O(new edit) instead of O(whole history).
+    /// @emoji ➕️ Appends already-printed op-log lines (one complete {@link print_edit_lines} unit:
+    /// edit + inverse + metadata) to the `.ops` file without rewriting it — O(new edit).
     pub async fn append_ops(&self, document_id: &str, envelope_id: &str, lines: &str) -> Result<(), vcs::VcsError> {
         use std::io::Write;
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
@@ -4558,3 +4730,6 @@ impl crate::os_store::BlobStore for FolderEventLogStorage {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️persistence-data-class/🦀️.rs"]
+mod persistence_data_class_tests;

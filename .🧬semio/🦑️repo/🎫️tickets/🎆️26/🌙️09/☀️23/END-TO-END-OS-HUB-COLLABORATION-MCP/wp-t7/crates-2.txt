@@ -1,0 +1,4 @@
+semio-s-artifact-stdio-pptx
+semio-s-artifact-draw-drawing
+semio-s-artifact-stdio-dwg
+semio-s-artifact-fem-2d

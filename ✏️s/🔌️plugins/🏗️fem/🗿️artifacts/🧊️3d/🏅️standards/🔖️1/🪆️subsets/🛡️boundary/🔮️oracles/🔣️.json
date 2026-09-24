@@ -7,7 +7,7 @@
       "id": "fem3d-1-boundary",
       "capability": "fem3d-1-mutate",
       "standardDirectoryName": "🔖️1",
-      "subsetDirectoryName": "✳️boundary",
+      "subsetDirectoryName": "🛡️boundary",
       "vectors": [
         {
           "mutationId": "create-support",

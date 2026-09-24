@@ -13,7 +13,7 @@ Windsurf, Claude, Droid, Codex, Antigravity, Kiro. Process execution never happe
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
 `🧪️test` harness; `git` itself is registered as the third-party reference for version control in
-`🔮️oracle/🔣️.json`. The `🌿️git-version-control` scenarios are `@level-long` because they spawn a
+`🔮️oracles/🔣️.json`. The `🌿️git-version-control` scenarios are `@level-long` because they spawn a
 real version control system, so they run under `parity long`, never `fundamental` or `quick`.
 
 `🪪️mcp-client-kind-parse`, `🪝️editor-hook-output-format`, `🐙️github-management-transcripts`,

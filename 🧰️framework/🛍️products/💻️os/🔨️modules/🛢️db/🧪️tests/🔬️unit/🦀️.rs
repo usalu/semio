@@ -50,6 +50,10 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::Art
 /// 🔖️Database`/`//#region 🔖️Family` would fail this test to compile.
 #[semio_framework_async_macros::async_test]
 async fn full_round_trip_reachable_purely_through_facade_reexports() {
+    if !crate::db_storage::process_isolated_law("db_facade::tests::full_round_trip_reachable_purely_through_facade_reexports") {
+        return;
+    }
+    let _history_capacity = crate::db_artifact::history_capacity_test_lock();
     let root = tempdir("round-trip").await;
     let mut database = Database::open_at(test_pool(), &root, Profile::Dev).await.unwrap();
     let document = protocol::ArtifactId("doc-1".to_string());

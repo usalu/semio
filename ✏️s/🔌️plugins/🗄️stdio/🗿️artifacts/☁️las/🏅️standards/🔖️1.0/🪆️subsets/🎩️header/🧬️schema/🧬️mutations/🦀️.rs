@@ -396,21 +396,24 @@ fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<LasSnapshot, S
     Ok(LasSnapshot { schema, header, vlrs, points })
 }
 
-/// 🔢️ Variant tag byte — declaration order, matching `LasMutation`'s own enum order exactly.
-const TAG_SET_SNAPSHOT: u8 = 0;
-const TAG_SET_VERSION: u8 = 1;
-const TAG_SET_SYSTEM_IDENTIFIER: u8 = 2;
-const TAG_SET_SOFTWARE_INFO: u8 = 3;
-const TAG_SET_CREATION_DATE: u8 = 4;
-const TAG_SET_SCALE_AND_OFFSET: u8 = 5;
-const TAG_SET_BOUNDS: u8 = 6;
-const TAG_SET_POINTS_BY_RETURN: u8 = 7;
-const TAG_INSERT_VLR: u8 = 8;
-const TAG_REMOVE_VLR: u8 = 9;
-const TAG_SET_VLR_DATA: u8 = 10;
-const TAG_INSERT_POINT: u8 = 11;
-const TAG_REMOVE_POINT: u8 = 12;
-const TAG_SET_POINT: u8 = 13;
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `LasMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_SET_VERSION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-version");
+const TAG_SET_SYSTEM_IDENTIFIER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-system-identifier");
+const TAG_SET_SOFTWARE_INFO: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-software-info");
+const TAG_SET_CREATION_DATE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-creation-date");
+const TAG_SET_SCALE_AND_OFFSET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-scale-and-offset");
+const TAG_SET_BOUNDS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-bounds");
+const TAG_SET_POINTS_BY_RETURN: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-points-by-return");
+const TAG_INSERT_VLR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-vlr");
+const TAG_REMOVE_VLR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-vlr");
+const TAG_SET_VLR_DATA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-vlr-data");
+const TAG_INSERT_POINT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-point");
+const TAG_REMOVE_POINT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-point");
+const TAG_SET_POINT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-point");
+//#endregion 🏷️WireTags
 //#endregion 🔖️BinaryOpCodec
 
 impl protocol::OpBinary for LasMutation {

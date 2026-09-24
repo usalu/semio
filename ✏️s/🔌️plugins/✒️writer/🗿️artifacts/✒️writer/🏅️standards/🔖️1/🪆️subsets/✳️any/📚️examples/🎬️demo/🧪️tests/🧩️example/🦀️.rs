@@ -17,7 +17,7 @@ async fn every_demo_asset_is_the_printers_own_content_addressed_output() {
         let canonical = crate::document_dsl::print_writer_dsl(&crate::writer_snapshot_with_text(&example.schema, &example.id, &example.language_id, &example.uri, &crate::writer_text(&example)));
         let minted = crate::document_child_handle(&example.id, &crate::writer_text(&example), &example.language_id);
         assert_eq!(minted.child_id, minted.target.artifact_id, "{label}: a content-addressed child handle owns its target artifact id");
-        assert_eq!(canonical, asset.strip_suffix('\n').unwrap_or(asset), "{label}: the committed asset must be this crate's own printed output");
+        assert_eq!(canonical, asset, "{label}: the committed asset must be this crate's own printed output");
     }
 }
 

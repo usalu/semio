@@ -131,12 +131,61 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn trace_impact_collects_upstream() {
+    async fn csv_round_trip_preserves_adjacency_endpoints() {
+        let program = sample_plugin();
+        assert!(!program.adjacencies.is_empty(), "sample_plugin must carry adjacencies for this fidelity case");
+        let csv = export_registers_csv(&program).expect("csv export");
+        let mut reloaded = crate::empty_plugin();
+        for element in &program.elements {
+            reloaded.elements.push(element.clone());
+        }
+        import_registers_csv(&mut reloaded, &csv, MergeStrategy::Upsert).expect("csv import");
+        assert_eq!(reloaded.adjacencies.len(), program.adjacencies.len());
+        for expected in &program.adjacencies {
+            let got = reloaded.adjacencies.iter().find(|a| a.header.id == expected.header.id).expect("adjacency id");
+            assert_eq!(got.header.name, expected.header.name);
+            assert_eq!(got.element_a_id, expected.element_a_id);
+            assert_eq!(got.element_b_id, expected.element_b_id);
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn csv_round_trip_preserves_knowledge_and_benchmark_names() {
+        let program = sample_plugin();
+        assert!(!program.knowledge_payload.is_empty());
+        assert!(!program.benchmarks_payload.is_empty());
+        let csv = export_registers_csv(&program).expect("csv export");
+        let mut reloaded = crate::empty_plugin();
+        import_registers_csv(&mut reloaded, &csv, MergeStrategy::Upsert).expect("csv import");
+        assert_eq!(reloaded.knowledge_payload.len(), program.knowledge_payload.len());
+        assert_eq!(reloaded.benchmarks_payload.len(), program.benchmarks_payload.len());
+        assert_eq!(reloaded.knowledge_payload[0].header.name, program.knowledge_payload[0].header.name);
+        assert_eq!(reloaded.benchmarks_payload[0].header.name, program.benchmarks_payload[0].header.name);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn csv_import_creates_relationship_via_mutation_with_endpoints() {
         let mut program = sample_plugin();
-        let req_id = EntityId::new_serial("requirement", "requirement");
-        let elem_id = program.elements[0].header.id.clone();
-        add_trace_link(&mut program, req_id.clone(), elem_id.clone(), TraceKind::ObjectiveToRequirement);
-        let impact = trace_impact(&mut program, &elem_id);
-        assert!(impact.upstream_ids.contains(&req_id));
+        let a = program.elements[0].header.id.clone();
+        let b = program.elements[1].header.id.clone();
+        let csv = format!("register,id,name,status,priority,tags,source\nrelationships,rel-1,Link AB,Draft,Preferred,,{a}>{b}\n");
+        import_registers_csv(&mut program, &csv, MergeStrategy::Upsert).expect("relationship import");
+        let got = program.relationships.iter().find(|r| r.header.id.0 == "rel-1").expect("created");
+        assert_eq!(got.header.name, "Link AB");
+        assert_eq!(got.source_id, a);
+        assert_eq!(got.target_id, b);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn csv_upsert_renames_existing_adjacency_via_mutation() {
+        let mut program = sample_plugin();
+        let id = program.adjacencies[0].header.id.clone();
+        let csv = format!(
+            "register,id,name,status,priority,tags,source\nadjacencies,{id},Renamed Pair,Draft,Preferred,,{}>{}\n",
+            program.adjacencies[0].element_a_id,
+            program.adjacencies[0].element_b_id
+        );
+        import_registers_csv(&mut program, &csv, MergeStrategy::Upsert).expect("rename import");
+        assert_eq!(program.adjacencies.iter().find(|a| a.header.id == id).expect("row").header.name, "Renamed Pair");
     }
 }

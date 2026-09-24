@@ -5,7 +5,7 @@
   "description": "Ordered, lexeme-preserving typed value graph — mirrors the 🦀️.rs sibling's real fields.",
   "$defs": {
     "SemioValue": {
-      "type": "value",
+      "type": "object",
       "properties": {
         "kind": {
           "enum": [
@@ -50,7 +50,7 @@
       ]
     },
     "SemioValueEntry": {
-      "type": "value",
+      "type": "object",
       "properties": {
         "key": {
           "type": "string"
@@ -65,7 +65,7 @@
       ]
     },
     "SemioValueNode": {
-      "type": "value",
+      "type": "object",
       "properties": {
         "id": {
           "$ref": "#/$defs/ValueId"
@@ -80,7 +80,7 @@
       ]
     },
     "ValueId": {
-      "type": "value",
+      "type": "object",
       "properties": {
         "value": {
           "type": "string"
@@ -91,7 +91,7 @@
       ]
     }
   },
-  "type": "value",
+  "type": "object",
   "properties": {
     "schema": {
       "type": "string",

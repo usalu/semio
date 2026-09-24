@@ -51,7 +51,7 @@ export type BootstrapUiAction = BootstrapUiStatus | { readonly kind: "snapshot-r
 export type BootstrapUiState = Readonly<Record<string, BootstrapUiStatus>>;
 
 function lifecycleKey(documentId: string, scope?: DocumentScope): string {
-  return scope === undefined ? documentId : documentRuntimeKeyV1({ kind: "hub", ...scope });
+  return scope === undefined ? documentId : documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...scope });
 }
 
 /** 🛰️ Replaces one document status atomically and clears only after replacement or detach. */
@@ -165,7 +165,7 @@ export function inferencePortStatusRuntimeKeyV1(
 ): string | null {
   if (owner === null || message.operationEpoch !== operationEpoch || message.operationEpoch !== owner.operationEpoch) return null;
   if (message.scope.spaceId !== owner.scope.spaceId || message.scope.documentId !== owner.scope.documentId) return null;
-  const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...message.scope });
+  const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...message.scope });
   return runtimeKey === owner.runtimeKey ? runtimeKey : null;
 }
 

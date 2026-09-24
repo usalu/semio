@@ -61,7 +61,7 @@ impl ServerModule for CountingModule {
     type Instance = TestInstance;
 
     async fn manifest(&self) -> ModuleManifest {
-        ModuleManifest { id: "counting".into(), policies: vec![PolicyTemplate { name: "author".into(), grants: vec![PolicyGrant { point: PolicyPoint::CommandAdmission, resource: "*".into(), action: "*".into() }] }], ..Default::default() }
+        ModuleManifest { id: "counting".into(), policies: vec![PolicyTemplate { name: "author".into(), auto_apply: false, grants: vec![PolicyGrant { point: PolicyPoint::CommandAdmission, resource: "*".into(), action: "*".into() }] }], ..Default::default() }
     }
 
     async fn deciders(&self) -> Vec<TestDeciders> {
@@ -210,7 +210,13 @@ impl PrincipalResolver for BearerTokenResolver {
         if credential.bearer.as_deref() != Some(self.bearer.as_str()) {
             return None;
         }
-        Some(Resolved { principal: self.principal.clone(), session: Some(SessionId(format!("session-{}", self.name))), device: Some(DeviceId("d1".to_string())), via: self.name.clone() })
+        Some(Resolved {
+            principal: self.principal.clone(),
+            session: Some(SessionId(format!("session-{}", self.name))),
+            device: Some(DeviceId("d1".to_string())),
+            via: self.name.clone(),
+            actor: Some(format!("actor-{}", self.name)),
+        })
     }
 
     async fn name(&self) -> &str {

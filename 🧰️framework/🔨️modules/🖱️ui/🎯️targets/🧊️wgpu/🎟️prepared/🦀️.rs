@@ -3573,8 +3573,14 @@ pub struct OffscreenPresentToken {
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 impl OffscreenPresentToken {
     pub fn mint_for_dedicated_worker() -> Result<Self, &'static str> {
-        if web_sys::window().is_some() {
-            return Err("offscreen presentation authority cannot be minted in the browser UI isolate");
+        // 🛡️ `web_sys` is target-gated; detect the UI isolate via `js_sys` only so `wgpu-engine`
+        // wasm builds do not require the `Window` binding to resolve at compile time.
+        #[cfg(feature = "wgpu-engine")]
+        {
+            let global = js_sys::global();
+            if js_sys::Reflect::has(&global, &js_sys::JsString::from("document")).unwrap_or(false) {
+                return Err("offscreen presentation authority cannot be minted in the browser UI isolate");
+            }
         }
         Ok(Self { _worker_isolate: std::marker::PhantomData })
     }

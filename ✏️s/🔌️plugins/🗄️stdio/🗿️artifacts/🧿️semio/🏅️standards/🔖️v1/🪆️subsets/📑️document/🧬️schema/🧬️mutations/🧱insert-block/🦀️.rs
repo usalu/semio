@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertBlock {
-    pub(crate) path: DocBlockPath,
-    pub(crate) block: DocBlock,
+    pub path: DocBlockPath,
+    pub block: DocBlock,
 }
 
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for InsertBlock {

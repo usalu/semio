@@ -39,14 +39,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                 vec![
                     serializer_entry::<CurationSnapshot, export::zip::v2_0::any::CurationIntoZip>(SOURCING_DIALECT),
                     deserializer_entry::<CurationSnapshot, import::zip::v2_0::any::ZipIntoCuration>(SOURCING_DIALECT),
-                    serializer_entry::<CurationSnapshot, export::png::v1_2::any::CurationIntoPng>(SOURCING_DIALECT),
-                    deserializer_entry::<CurationSnapshot, import::png::v1_2::any::PngIntoCuration>(SOURCING_DIALECT),
                     serializer_entry::<CurationSnapshot, export::json::v_rfc8259::any::CurationIntoJson>(SOURCING_DIALECT),
                     deserializer_entry::<CurationSnapshot, import::json::v_rfc8259::any::JsonIntoCuration>(SOURCING_DIALECT),
-                    serializer_entry::<CurationSnapshot, export::stl::v_ascii::any::CurationIntoStl>(SOURCING_DIALECT),
-                    deserializer_entry::<CurationSnapshot, import::stl::v_ascii::any::StlIntoCuration>(SOURCING_DIALECT),
-                    serializer_entry::<CurationSnapshot, export::obj::v3_0::any::CurationIntoObj>(SOURCING_DIALECT),
-                    deserializer_entry::<CurationSnapshot, import::obj::v3_0::any::ObjIntoCuration>(SOURCING_DIALECT),
                     serializer_entry::<CurationSnapshot, export::txt::v_utf_8::any::CurationIntoTxt>(SOURCING_DIALECT),
                     deserializer_entry::<CurationSnapshot, import::txt::v_utf_8::any::TxtIntoCuration>(SOURCING_DIALECT),
                 ]

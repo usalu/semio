@@ -14,7 +14,7 @@ import (
 
 // region 🔖️Vectors
 
-const planVectors = "local://🗺️plans.json"
+const planVectors = "shared://🗺️plan-step-extraction/🗺️plans.json"
 
 type planPayloadVector struct {
 	ID       string          `json:"id"`

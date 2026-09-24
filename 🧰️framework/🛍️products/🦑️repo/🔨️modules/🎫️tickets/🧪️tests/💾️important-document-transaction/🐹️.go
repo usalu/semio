@@ -27,7 +27,7 @@ type world struct {
 }
 
 func loadTransactionVectors(ctx *host.Context) (transactionVectors, error) {
-	data, err := ctx.FixtureBytes("local://💾️cases.json")
+	data, err := ctx.FixtureBytes("shared://💾️important-document-transaction/💾️cases.json")
 	if err != nil {
 		return transactionVectors{}, err
 	}

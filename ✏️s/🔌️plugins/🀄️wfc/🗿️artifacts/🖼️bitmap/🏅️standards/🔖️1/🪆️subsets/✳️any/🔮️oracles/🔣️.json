@@ -60,40 +60,19 @@
       "capability": "wfc-bitmap-1-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "change-seed",
+        "resize-input",
+        "set-input-pixels",
+        "add-palette-color",
+        "change-palette-color",
+        "remove-palette-color",
+        "resize-output",
+        "change-model",
+        "pin-pixel",
+        "unpin-pixel"
+      ],
       "vectors": [
-        {
-          "mutationId": "add-palette-color",
-          "sourceMutationDirectoryName": "🎨️add-palette-color",
-          "mutationDirectoryName": "🎨️add-palette-color",
-          "scenarios": [
-            {
-              "id": "appends-a-third-colour",
-              "directoryName": "🎨️appends-a-third-colour"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-model",
-          "sourceMutationDirectoryName": "⚙️change-model",
-          "mutationDirectoryName": "⚙️change-model",
-          "scenarios": [
-            {
-              "id": "widens-the-window-to-three",
-              "directoryName": "⚙️widens-the-window-to-three"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-palette-color",
-          "sourceMutationDirectoryName": "🖍️change-palette-color",
-          "mutationDirectoryName": "🖍️change-palette-color",
-          "scenarios": [
-            {
-              "id": "recolours-the-second-entry",
-              "directoryName": "🖍️recolours-the-second-entry"
-            }
-          ]
-        },
         {
           "mutationId": "change-seed",
           "sourceMutationDirectoryName": "🎲️change-seed",
@@ -102,28 +81,6 @@
             {
               "id": "reseeds-the-solve-from-7-to-99",
               "directoryName": "🎲️reseeds-the-solve-from-7-to-99"
-            }
-          ]
-        },
-        {
-          "mutationId": "pin-pixel",
-          "sourceMutationDirectoryName": "📌️pin-pixel",
-          "mutationDirectoryName": "📌️pin-pixel",
-          "scenarios": [
-            {
-              "id": "pins-the-origin-cell-to-colour-1",
-              "directoryName": "📌️pins-the-origin-cell-to-colour-1"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-palette-color",
-          "sourceMutationDirectoryName": "🧽️remove-palette-color",
-          "mutationDirectoryName": "🧽️remove-palette-color",
-          "scenarios": [
-            {
-              "id": "drops-the-unused-third-colour",
-              "directoryName": "🧽️drops-the-unused-third-colour"
             }
           ]
         },
@@ -139,6 +96,50 @@
           ]
         },
         {
+          "mutationId": "set-input-pixels",
+          "sourceMutationDirectoryName": "🖌️set-input-pixels",
+          "mutationDirectoryName": "🖌️set-input-pixels",
+          "scenarios": [
+            {
+              "id": "paints-a-2-by-2-block-of-colour-1",
+              "directoryName": "🖌️paints-a-2-by-2-block-of-colour-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-palette-color",
+          "sourceMutationDirectoryName": "🎨️add-palette-color",
+          "mutationDirectoryName": "🎨️add-palette-color",
+          "scenarios": [
+            {
+              "id": "appends-a-third-colour",
+              "directoryName": "🎨️appends-a-third-colour"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-palette-color",
+          "sourceMutationDirectoryName": "🖍️change-palette-color",
+          "mutationDirectoryName": "🖍️change-palette-color",
+          "scenarios": [
+            {
+              "id": "recolours-the-second-entry",
+              "directoryName": "🖍️recolours-the-second-entry"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-palette-color",
+          "sourceMutationDirectoryName": "🧽️remove-palette-color",
+          "mutationDirectoryName": "🧽️remove-palette-color",
+          "scenarios": [
+            {
+              "id": "drops-the-unused-third-colour",
+              "directoryName": "🧽️drops-the-unused-third-colour"
+            }
+          ]
+        },
+        {
           "mutationId": "resize-output",
           "sourceMutationDirectoryName": "🖼️resize-output",
           "mutationDirectoryName": "🖼️resize-output",
@@ -150,13 +151,24 @@
           ]
         },
         {
-          "mutationId": "set-input-pixels",
-          "sourceMutationDirectoryName": "🖌️set-input-pixels",
-          "mutationDirectoryName": "🖌️set-input-pixels",
+          "mutationId": "change-model",
+          "sourceMutationDirectoryName": "⚙️change-model",
+          "mutationDirectoryName": "⚙️change-model",
           "scenarios": [
             {
-              "id": "paints-a-2-by-2-block-of-colour-1",
-              "directoryName": "🖌️paints-a-2-by-2-block-of-colour-1"
+              "id": "widens-the-window-to-three",
+              "directoryName": "⚙️widens-the-window-to-three"
+            }
+          ]
+        },
+        {
+          "mutationId": "pin-pixel",
+          "sourceMutationDirectoryName": "📌️pin-pixel",
+          "mutationDirectoryName": "📌️pin-pixel",
+          "scenarios": [
+            {
+              "id": "pins-the-origin-cell-to-colour-1",
+              "directoryName": "📌️pins-the-origin-cell-to-colour-1"
             }
           ]
         },
@@ -189,7 +201,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "fatal"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "add-palette-color",
@@ -208,9 +220,8 @@
           "capability": "wfc-bitmap-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "info",
             "applied",
-            "fatal"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-model",
@@ -229,9 +240,8 @@
           "capability": "wfc-bitmap-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "info",
             "applied",
-            "fatal"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-palette-color",
@@ -250,7 +260,6 @@
           "capability": "wfc-bitmap-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "info",
             "applied"
           ],
           "productionDispatch": {
@@ -270,9 +279,8 @@
           "capability": "wfc-bitmap-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "info",
             "applied",
-            "fatal"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "pin-pixel",
@@ -292,7 +300,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "fatal"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-palette-color",
@@ -311,9 +319,8 @@
           "capability": "wfc-bitmap-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "info",
             "applied",
-            "fatal"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "resize-input",
@@ -332,9 +339,8 @@
           "capability": "wfc-bitmap-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "info",
             "applied",
-            "fatal"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "resize-output",
@@ -353,9 +359,8 @@
           "capability": "wfc-bitmap-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "info",
             "applied",
-            "fatal"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "set-input-pixels",
@@ -375,7 +380,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "fatal"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "unpin-pixel",
@@ -389,6 +394,19 @@
             }
           ]
         }
+      ]
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "wfc-bitmap-mount-contract-statement",
+      "capabilities": [
+        "wfc-bitmap-1-mount"
+      ],
+      "rationale": "The mount surface — editor/viewer app ids, the OS artifact kind id, the inference tool id, the window roster, the on-disk mutation vocabulary and the bundled examples — is this repository's own registration contract, which no third party implements. It is stated once, language-neutrally, in `../🧫️fixtures/🧩️mount-contract/🔣️.json`; the Rust half reads the real manifests the plugin builder produces, and the TypeScript and Python halves are independent readers that check the same statement against the kind directories on disk.",
+      "substitutes": [
+        "specification-vectors",
+        "independent-implementations"
       ]
     }
   ]

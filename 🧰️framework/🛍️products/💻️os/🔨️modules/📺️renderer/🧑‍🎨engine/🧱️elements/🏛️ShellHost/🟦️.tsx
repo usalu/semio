@@ -168,6 +168,7 @@ import {
   decodeBackboneWorkerResponse,
   decodeDocumentArchiveBytes,
   decodePackValue,
+  decodePackWire,
   BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
   DOCUMENT_ARCHIVE_MAXIMUM_BYTES,
   encodeBackboneWorkerRequest,
@@ -204,8 +205,9 @@ import {
  * package itself, not re-exported by `@semio-tech/framework-os` — same source
  * `🧰️framework/🛍️products/💻️os/🟦️.ts` (that package's own root) imports them from for its
  * own `encode`/`decodeMutationEnvelopesPack` helpers above. */
-import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
+import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type MutationEnvelope, decodePresenceInteraction } from "@semio-tech/framework-replication";
 import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
+import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../👕️canvas-presence/🟦️.ts";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, quiesceSessionWorkV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
 import { focusedProgramKeyV1, focusedProgramV1, programHistoryKeyV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1 } from "./🪟️spawned-program/🟦️.ts";
@@ -215,7 +217,7 @@ import { causalOrderKeyV1, createInputLedgerV1, createRefusalNoticeThrottleV1, c
 function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?: DocumentScope }): string | null {
   const scope = message.scope;
   if (scope === undefined || scope.documentId !== message.documentId) return null;
-  return documentRuntimeKeyV1({ kind: "hub", ...scope });
+  return documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...scope });
 }
 
 /** 🗄️ Where one browsing context remembers the hub session it minted. `sessionStorage`, not
@@ -2599,6 +2601,25 @@ function FrameworkOsShellInner({
     writeHubSessionCapabilityV1(hubSessionStorageV1(), next);
     setHubSessionCapability(next);
   }, []);
+  useEffect(() => {
+    if (!hubEnv || hubSessionCapability !== null) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch("/_semio/dev/local-session", { method: "GET", credentials: "same-origin", signal: AbortSignal.timeout(5_000) });
+        if (!response.ok || cancelled) return;
+        const body = (await response.json()) as { readonly token?: string; readonly userId?: string };
+        if (cancelled || typeof body.token !== "string" || typeof body.userId !== "string") return;
+        rememberHubSessionCapability({ token: body.token, userId: body.userId });
+      } catch {
+        /* 🔌️ Hub down or local-only serve — stay local-first; identity refresh reconnects later. */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hubEnv, hubSessionCapability, rememberHubSessionCapability]);
+
   /** 🎫️ The mount-time capability the hub port is seeded with — a ref, because the port holds the
    * live token in its own closure and must never be rebuilt underneath an in-flight request. */
   const restoredHubSessionCapabilityRef = useRef(hubSessionCapability);
@@ -3034,7 +3055,7 @@ function FrameworkOsShellInner({
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
       const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
       if (message.kind === "browser-actor-action-result") {
-        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...message.scope });
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...message.scope });
         const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         if (retained === undefined || entry === undefined || retained.clientInstanceId !== message.clientInstanceId || entry.clientInstanceId !== message.clientInstanceId || retained.sessionInstanceId !== entry.session.instanceId) return;
@@ -3043,7 +3064,7 @@ function FrameworkOsShellInner({
         return;
       }
       if (message.kind === "browser-actor-ui-patch") {
-        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", spaceId: message.scope.spaceId, documentId: message.scope.documentId });
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId: message.scope.spaceId, documentId: message.scope.documentId });
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         const expectedSurfaceId = entry?.scope !== undefined && entry.session.app.dialect ? canonicalSurfaceId(entry.session.app.dialect, entry.session.app.role) : null;
         const windowKind = entry?.session.app.windowKinds.find((candidate) => candidate.id === message.patch.surface);
@@ -3089,7 +3110,7 @@ function FrameworkOsShellInner({
         return;
       }
       if (message.kind === "browser-actor-ui-mounted") {
-        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...message.scope });
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...message.scope });
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
         if (entry === undefined || retained === undefined || !browserDocumentMountIsCurrentV1(
@@ -3124,6 +3145,7 @@ function FrameworkOsShellInner({
         const waiter = socketActorReadyRef.current.get(runtimeKey);
         if (entry?.clientInstanceId !== message.clientInstanceId || waiter?.clientInstanceId !== message.clientInstanceId) return;
         waiter.resolve(message.actorId);
+        publishLocalPresenceActorV1(runtimeKey, message.actorId);
         if (socketActorReadyRef.current.get(runtimeKey)?.clientInstanceId === message.clientInstanceId) socketActorReadyRef.current.delete(runtimeKey);
         return;
       }
@@ -3147,7 +3169,7 @@ function FrameworkOsShellInner({
         return;
       }
       if (message.kind === "inference-history-status") {
-        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...message.scope });
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...message.scope });
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         const authority = verifiedSessionAuthorityRef.current;
         if (authority === null || !directorySessionAuthorityIsCurrentV1(authority, authority) || entry === undefined || retiredSessionDocumentOwnersRef.current.has(entry) || entry.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId) return;
@@ -3230,14 +3252,14 @@ function FrameworkOsShellInner({
         return;
       }
       if (message.kind === "space-artifact-creation-catalog") {
-        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", spaceId: message.spaceId, documentId: S_SPACE_INDEX_DOCUMENT_ID });
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId: message.spaceId, documentId: S_SPACE_INDEX_DOCUMENT_ID });
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         if (entry?.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.spaceId || entry.scope.documentId !== S_SPACE_INDEX_DOCUMENT_ID) return;
         setSpaceArtifactCreationCatalog(message);
         return;
       }
       if (message.kind === "space-artifact-creation-catalog-status") {
-        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", spaceId: message.spaceId, documentId: S_SPACE_INDEX_DOCUMENT_ID });
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId: message.spaceId, documentId: S_SPACE_INDEX_DOCUMENT_ID });
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         if (entry?.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.spaceId || entry.scope.documentId !== S_SPACE_INDEX_DOCUMENT_ID) return;
         if (message.phase !== "ready") setSpaceArtifactCreationCatalog(null);
@@ -3260,7 +3282,7 @@ function FrameworkOsShellInner({
         return;
       }
       if (message.kind === "directory-scope-revoked") {
-        const key = documentRuntimeKeyV1({ kind: "hub", spaceId: message.scope.spaceId, documentId: message.scope.documentId });
+        const key = documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId: message.scope.spaceId, documentId: message.scope.documentId });
         if (!directoryScopedOwnersRef.current.delete(key)) return;
         cancelSpaceArtifactCreationsForRuntime(key, worker);
         setSpaceArtifactCreationCatalog((catalog) => catalog?.spaceId === message.scope.spaceId ? null : catalog);
@@ -3414,6 +3436,8 @@ function FrameworkOsShellInner({
           if (current[runtimeKey] === peers) return current;
           return { ...current, [runtimeKey]: peers };
         });
+        // 👕️ Full wire peers (views + interaction) for in-canvas overlays — roster chrome stays on the slim map above.
+        publishArtifactPresenceRosterV1(runtimeKey, event.peers);
       } else if (event.kind === "documentBackbone") {
         receiveDocumentBackbone(runtimeKey, entry, event.message);
       } else if (event.kind === "documentArchiveReplaced") {
@@ -6001,6 +6025,7 @@ function FrameworkOsShellInner({
       instanceId: identity.instanceId,
       surfaceRevision: retained.store.getRevisionSnapshot(),
     }, invocation, viewState);
+    for (const patch of result.historyPatches) if (current()) applyHistoryPatch(decodePackWire(Uint8Array.from(patch), "$.historyPatch") as HistoryPatch, false, { pluginId: entry.session.pluginId, instanceId: entry.session.instanceId });
     await publishBrowserActorHostEffectsV1(result.hostEffects, current, async (effect) => {
       if ("requestInferenceProposal" in effect) await requestInferenceProposal(entry.session, current);
       else window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
@@ -6016,7 +6041,7 @@ function FrameworkOsShellInner({
     if (dirty.kind !== "none" && current()) {
       await refreshUi({ ...entry.session, viewState }, dirty, undefined, leftoverReplaceRefreshBodiesV1());
     }
-  }, [directBrowserActorForSession, refreshUi, requestInferenceProposal]);
+  }, [applyHistoryPatch, directBrowserActorForSession, refreshUi, requestInferenceProposal]);
 
   const applyHostEffects = useCallback(
     async (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<typeof captureEffectOwner>) => {
@@ -6714,7 +6739,7 @@ function FrameworkOsShellInner({
         dataDir: hubEnv?.dataDir,
         surface: targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined,
       });
-      const hubBinding = resolvedBindings.find((binding): binding is Extract<PersistenceBinding, { kind: "hub" }> => binding.kind === "hub");
+      const hubBinding = resolvedBindings.find((binding): binding is Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }> => binding.kind === "hub");
       if (target?.expectedCatalogGenerationId !== undefined && hubBinding === undefined) return null;
       const creationMount = target?.expectedCatalogGenerationId === undefined ? null : createArtifactCreationCatalogMountV1(target.expectedCatalogGenerationId);
       const scope: DocumentScope | undefined = hubBinding === undefined ? undefined : { spaceId: hubBinding.spaceId, documentId: ref.documentId };
@@ -6729,7 +6754,7 @@ function FrameworkOsShellInner({
       // keyed on it. Only the worker's own document open drops it.
       const spaceIndexDocument = ref.documentId === S_SPACE_INDEX_DOCUMENT_ID;
       const workerBindings = spaceIndexDocument ? resolvedBindings.filter((binding) => binding.kind !== "hub") : resolvedBindings;
-      const runtimeKey = scope === undefined ? ref.documentId : documentRuntimeKeyV1({ kind: "hub", ...scope });
+      const runtimeKey = scope === undefined ? ref.documentId : documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...scope });
       const openingAttempt = { clientInstanceId: crypto.randomUUID() };
       const { clientInstanceId } = openingAttempt;
       let resolveReady!: () => void, rejectReady!: (error: Error) => void;
@@ -6938,11 +6963,11 @@ function FrameworkOsShellInner({
       // own canonical one — the same expression `openDocument` uses when it resolves bindings itself.
       const requestedSurfaceId = targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined;
       const bindings: PersistenceBinding[] = remote
-        ? [{ kind: "hub", baseUrl: `http://${remote.hostPort}`, spaceId: remote.spaceId, ...(requestedSurfaceId === undefined ? {} : { requestedSurfaceId }) }]
+        ? [{ kind: "hub", dataClass: "persistedShared", baseUrl: `http://${remote.hostPort}`, spaceId: remote.spaceId, ...(requestedSurfaceId === undefined ? {} : { requestedSurfaceId }) }]
         : uri.startsWith("folder://")
-          ? [{ kind: "folder", path: uri.slice("folder://".length) }]
+          ? [{ kind: "folder", dataClass: "persistedLocalOnly", path: uri.slice("folder://".length) }]
           : uri.startsWith("file://")
-            ? [{ kind: "folder", path: uri.slice("file://".length).replace(/\/[^/]*$/, "") }]
+            ? [{ kind: "folder", dataClass: "persistedLocalOnly", path: uri.slice("file://".length).replace(/\/[^/]*$/, "") }]
             : [];
       // 📐️ The artifact's OWN schema (`AppDefinition.io.artifactSchema`), not the chrome breadcrumb:
       // a hub plan states the document's schema and `documentOpenPlanAuthority`
@@ -8190,9 +8215,14 @@ function FrameworkOsShellInner({
                 label: presenceIdentity.name,
                 presencePack: snapshot?.presence,
                 connectedAtMs: presenceConnectedAtMsRef.current,
-                // 🪟️ No per-window camera/pointer tracking is wired into this heartbeat yet — an
-                // honest "no open windows reported" default, matching this field's own doc comment.
-                views: [],
+                ...(snapshot?.interaction && snapshot.interaction.length > 0
+                  ? { interaction: decodePresenceInteraction(Uint8Array.from(snapshot.interaction), [0]) }
+                  : {}),
+                ...((snapshot?.activeTool ?? collectLocalActiveToolV1(runtimeKey))
+                  ? { activeTool: snapshot?.activeTool ?? collectLocalActiveToolV1(runtimeKey) }
+                  : {}),
+                // 👕️ Per-window camera/pointer published by Board2d/World3d/TextEditor hosts (throttled).
+                views: collectLocalPresenceWindowViewsV1(runtimeKey),
               },
             },
           };
@@ -11813,7 +11843,7 @@ function FrameworkOsShellInner({
     if (!dev || typeof window === "undefined") return;
     const read = (spaceId: string, documentId: string): MountedGisMapProbeV1 | null => {
       if (typeof spaceId !== "string" || typeof documentId !== "string" || spaceId.length === 0 || documentId.length === 0) return null;
-      const retained = browserActorUiByRuntimeKeyRef.current.get(documentRuntimeKeyV1({ kind: "hub", spaceId, documentId }));
+      const retained = browserActorUiByRuntimeKeyRef.current.get(documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", spaceId, documentId }));
       if (retained?.identity === null || retained?.identity === undefined) return null;
       return mountedGisMapProbeV1({ ...retained.identity, sessionInstanceId: retained.sessionInstanceId, windowKindId: retained.windowKindId, store: retained.store });
     };

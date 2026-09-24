@@ -3027,6 +3027,27 @@ fn asset_authority_rejects_request_and_byte_capacity_plus_one_before_string_owne
 }
 
 #[test]
+fn asset_authority_reopens_after_terminal_close_so_later_reserves_succeed() {
+    let mut lane = WorldAssetIoAuthority::default();
+    lane.reserve_request(1, 1, WorldAssetRequestKind::Glb, "first").unwrap();
+    lane.begin_close();
+    while !lane.close_step() {}
+    assert!(lane.terminal_is_empty());
+    lane.reserve_request(2, 1, WorldAssetRequestKind::MapTile {
+        surface: WorldAssetMetadataId::try_from_str("map-a").unwrap(),
+        key: WorldAssetMetadataId::try_from_str("0/0/0").unwrap(),
+        vector: false,
+        z: 0,
+        x: 0,
+        y: 0,
+    }, "https://tiles/0/0/0.png").unwrap();
+    lane.cancel_map_tiles_for_surface("map-a");
+    while lane.retire_cancelled_step() {}
+    assert!(lane.terminal_is_empty());
+    lane.reserve_request(3, 1, WorldAssetRequestKind::Glb, "after-cancel").unwrap();
+}
+
+#[test]
 fn asset_response_rejects_page_plus_one_and_retires_partial_stream_one_page_per_step() {
     let bytes = vec![7; WORLD_ASSET_RESPONSE_PAGE_BYTES + 1];
     assert_eq!(WorldAssetResponsePage::try_from_owned(bytes).expect_err("page +1 exact owner").len(), WORLD_ASSET_RESPONSE_PAGE_BYTES + 1);
@@ -4222,7 +4243,7 @@ pub(super) fn drive_scene_bridge(state: &mut World3dState, scene: &UiComponentSc
     }
 }
 
-const CAMERA_FRAMING_FIXTURE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🎥️world3d-camera-framing/🔣️.json");
+const CAMERA_FRAMING_FIXTURE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎥️world3d-camera-framing/🔣️.json");
 
 fn camera_framing_fixture() -> serde_json::Value {
     serde_json::from_str(CAMERA_FRAMING_FIXTURE).expect("camera framing fixture parses")

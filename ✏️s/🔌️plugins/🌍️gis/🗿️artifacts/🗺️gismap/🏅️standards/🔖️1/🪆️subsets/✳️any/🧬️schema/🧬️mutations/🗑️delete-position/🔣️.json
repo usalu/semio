@@ -7,7 +7,7 @@
   "aggregateVariant": "DeletePosition",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-position",
-  "binaryTag": null,
+  "binaryTag": 1,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

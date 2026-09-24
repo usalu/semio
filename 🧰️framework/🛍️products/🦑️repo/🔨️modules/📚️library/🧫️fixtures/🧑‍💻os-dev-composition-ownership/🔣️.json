@@ -218,21 +218,21 @@
     },
     {
       "id": "parity-structure",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/🏗️structure/🟦️.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏗️structure/🟦️.ts",
       "exports": [
         "compareParityStructural"
       ]
     },
     {
       "id": "parity-pixels",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/🖼️pixels/🟦️.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🖼️pixels/🟦️.ts",
       "exports": [
         "compareOwnedParityPixels"
       ]
     },
     {
       "id": "parity-probe",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/🔬️probe/🟦️.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🔬️probe/🟦️.ts",
       "exports": [
         "stateProbeSnapshot",
         "stateProbeChangedPaths"
@@ -240,7 +240,7 @@
     },
     {
       "id": "parity-server-pool",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/🌐️server-pool/🟦️.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🌐️server-pool/🟦️.ts",
       "exports": [
         "findFreeParityPortPair",
         "startParityDevServer",
@@ -249,14 +249,14 @@
     },
     {
       "id": "parity-report",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/📊️report/🟦️.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/📊️report/🟦️.ts",
       "exports": [
         "writeParityReport"
       ]
     },
     {
       "id": "parity-execution",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⚖️parity/🏃️execution/🟦️.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts",
       "exports": [
         "ParityProbeScript",
         "ParitySmokeScript",
@@ -347,8 +347,8 @@
       ]
     },
     {
-      "id": "benchmark-stub",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🧪️stub/🟦️.ts",
+      "id": "benchmark-measured-row",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/📏️measured-row/🟦️.ts",
       "exports": [
         "BENCH_WEB_STUB_STATUS",
         "benchWebMeasuredRow"
@@ -850,12 +850,8 @@
       "parentKind": "members-of-modules",
       "members": [
         {
-          "name": "🧪️tests",
-          "kind": "tests"
-        },
-        {
           "name": "⚖️parity",
-          "kind": "os-dev-parity-tests"
+          "kind": "repo-test-parity"
         },
         {
           "name": "🏗️structure",
@@ -868,12 +864,8 @@
       "parentKind": "members-of-modules",
       "members": [
         {
-          "name": "🧪️tests",
-          "kind": "tests"
-        },
-        {
           "name": "⚖️parity",
-          "kind": "os-dev-parity-tests"
+          "kind": "repo-test-parity"
         },
         {
           "name": "🖼️pixels",
@@ -886,12 +878,8 @@
       "parentKind": "members-of-modules",
       "members": [
         {
-          "name": "🧪️tests",
-          "kind": "tests"
-        },
-        {
           "name": "⚖️parity",
-          "kind": "os-dev-parity-tests"
+          "kind": "repo-test-parity"
         },
         {
           "name": "🔬️probe",
@@ -904,12 +892,8 @@
       "parentKind": "members-of-modules",
       "members": [
         {
-          "name": "🧪️tests",
-          "kind": "tests"
-        },
-        {
           "name": "⚖️parity",
-          "kind": "os-dev-parity-tests"
+          "kind": "repo-test-parity"
         },
         {
           "name": "🌐️server-pool",
@@ -922,12 +906,8 @@
       "parentKind": "members-of-modules",
       "members": [
         {
-          "name": "🧪️tests",
-          "kind": "tests"
-        },
-        {
           "name": "⚖️parity",
-          "kind": "os-dev-parity-tests"
+          "kind": "repo-test-parity"
         },
         {
           "name": "📊️report",
@@ -940,12 +920,8 @@
       "parentKind": "members-of-modules",
       "members": [
         {
-          "name": "🧪️tests",
-          "kind": "tests"
-        },
-        {
           "name": "⚖️parity",
-          "kind": "os-dev-parity-tests"
+          "kind": "repo-test-parity"
         },
         {
           "name": "🏃️execution",
@@ -1112,7 +1088,7 @@
       ]
     },
     {
-      "owner": "benchmark-stub",
+      "owner": "benchmark-measured-row",
       "parentKind": "members-of-modules",
       "members": [
         {
@@ -1124,8 +1100,8 @@
           "kind": "plugins"
         },
         {
-          "name": "🧪️stub",
-          "kind": "os-dev-benchmark-stub"
+          "name": "📏️measured-row",
+          "kind": "os-dev-benchmark-measured-row"
         }
       ]
     },

@@ -8,6 +8,13 @@ import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/
 import { buildCargoArtifacts } from "../🏗️native-build/🟦️.ts";
 import { validateNativeCargoArguments } from "../🎛️native-input/🟦️.ts";
 
+/** 🧩️ The ONE cargo `rustc` argument list that links a plugin/extension component: `component-<profile>` and
+ * the plugin's own `describe` both build exactly this unit, so the shared build-dir compiles it once and the
+ * described bytes are the shipped bytes. */
+export function pluginComponentRustcArgs(packageName: string, profile: string): string[] {
+  return ["-p", packageName, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", profile, ...(process.env.SEMIO_PLUGIN_SYMBOLS === "1" ? ["--", "-C", "strip=none"] : [])];
+}
+
 /** 🦀️ Routes native Cargo and component operations to their owned behaviors. */
 export class NativeScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -27,18 +34,7 @@ export class NativeScript extends BundleScript {
       if (!cargo.package?.metadata?.component?.package || !["plugin", "extension"].includes(cargo.package?.metadata?.semio?.role)) throw new Error(`Not a plugin component manifest: ${manifest}`);
       await buildCargoArtifacts(
         manifest,
-        [
-          "-p",
-          cargo.package.name,
-          "--lib",
-          "--crate-type",
-          "cdylib",
-          "--target",
-          "wasm32-wasip2",
-          "--profile",
-          `wasm-${operation}`,
-          ...(process.env.SEMIO_PLUGIN_SYMBOLS === "1" ? ["--", "-C", "strip=none"] : []),
-        ],
+        pluginComponentRustcArgs(cargo.package.name, `wasm-${operation}`),
         this.repoRoot,
         {
           command: "rustc",

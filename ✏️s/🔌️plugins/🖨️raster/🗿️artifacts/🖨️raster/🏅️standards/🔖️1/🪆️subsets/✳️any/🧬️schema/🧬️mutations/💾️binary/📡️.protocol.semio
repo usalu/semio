@@ -4,16 +4,34 @@ version 1
 schema raster.document.mutation
 start record
 framing record
-record raster.raster-add-layer tag 1
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
 field format u8
-field ordinal varint
-field body bytes
-record raster.raster-set-stroke tag 2
-field format u8
-field ordinal varint
-field body bytes
-record raster.raster-move-layer tag 3
-field format u8
-field ordinal varint
-field body bytes
-chain hash u64
+field tag varint
+record create-layer tag=0
+field payload bytes
+record delete-layer tag=1
+field payload bytes
+record reorder-layers tag=2
+field payload bytes
+record rename-layer tag=3
+field payload bytes
+record change-layer-visible tag=4
+field payload bytes
+record change-layer-opacity tag=5
+field payload bytes
+record change-layer-blend-mode tag=6
+field payload bytes
+record move-layer tag=7
+field payload bytes
+record resize-layer tag=8
+field payload bytes
+record change-layer-adjustment-kind tag=9
+field payload bytes
+record add-layer-asset tag=10
+field payload bytes
+record remove-layer-asset tag=11
+field payload bytes

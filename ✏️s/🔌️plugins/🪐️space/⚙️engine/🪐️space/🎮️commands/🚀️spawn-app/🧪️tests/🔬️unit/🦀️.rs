@@ -112,4 +112,5 @@ async fn undo_redo_round_trip_on_spawn() {
         before + 1,
     )
     .await;
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 }

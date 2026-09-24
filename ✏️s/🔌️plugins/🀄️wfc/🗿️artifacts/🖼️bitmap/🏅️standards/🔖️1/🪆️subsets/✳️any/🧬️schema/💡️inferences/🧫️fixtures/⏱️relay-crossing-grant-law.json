@@ -1,0 +1,13 @@
+{
+  "id": "semio-infer-pump-spends-the-crossing-grant",
+  "title": "A semio.infer Pump crossing keeps driving its mounted session until the host's crossing grant is spent",
+  "rootCause": "Pump advanced exactly one mounted-session transition per step-job crossing and retired its outcome in a second crossing, so the WFC bitmap solve paid two host relay round trips for every 16-unit preview: the artifact_create genesis solve (16x16, N=3, sym 8, 24x24) settles natively in 16.6 s but crossed 541650 times in 582 s over the semio MCP without finishing.",
+  "workload": {
+    "artifactKind": "s.wfc.bitmap",
+    "inferenceSchema": "s.wfc.bitmap.solve",
+    "carrier": "artifact-create genesis pack/spr pair",
+    "workUnits": 1024,
+    "allocationBytes": 1048576
+  },
+  "wholeSolveGrant": { "fuel": 6000000000000, "deadlineMs": 600000, "maxCrossings": 48, "maxWallRatioToHeadlessNative": 2.0 }
+}

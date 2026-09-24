@@ -7,7 +7,7 @@
   "aggregateVariant": "DisconnectHandles",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "disconnect-handles",
-  "binaryTag": null,
+  "binaryTag": 16,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

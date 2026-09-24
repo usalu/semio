@@ -7,7 +7,7 @@
   "aggregateVariant": "MoveSlot",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": null,
+  "binaryTag": 2,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": ["error", "warning", "applied"],

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeInfiltrationStackHeight",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-stack-height",
-  "binaryTag": null,
+  "binaryTag": 120,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -87,7 +87,7 @@ export default defineTestAdapter({
         return { projection: { "spatial/contour": isolines(DEMO_GRID, Number(row.width), Number(row.height), thresholds, DECIMALS) } };
       },
       /** 🎯️ `\SemioVizContour` over `demo-grid` at the same thresholds. */
-      subject: async (ctx: AdapterContext) => (await subject(ctx, "local://contours.tex", DECIMALS)),
+      subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🏔️spatial-contours-density/contours.tex", DECIMALS)),
     },
     "kernel-density": {
       /** 🔮️ The exact Gaussian sum (independent implementation of the specification) and `d3-contour` on it. */
@@ -105,7 +105,7 @@ export default defineTestAdapter({
         };
       },
       /** 🎯️ `\SemioVizDensity` and `\SemioVizContour` on the grid it produced. */
-      subject: async (ctx: AdapterContext) => (await subject(ctx, "local://density.tex", DENSITY_DECIMALS)),
+      subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🏔️spatial-contours-density/density.tex", DENSITY_DECIMALS)),
     },
   },
 });

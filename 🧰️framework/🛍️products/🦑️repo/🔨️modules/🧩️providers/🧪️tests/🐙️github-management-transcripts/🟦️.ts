@@ -32,7 +32,7 @@ class Replayer {
   }
 }
 
-const TRANSCRIPTS = "local://🎞️gh-transcripts.json";
+const TRANSCRIPTS = "shared://🐙️github-management-transcripts/🎞️gh-transcripts.json";
 
 function replayer(ctx: AdapterContext): Replayer {
   const file = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(TRANSCRIPTS))) as Record<string, { exchanges: Exchange[] }>;

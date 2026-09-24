@@ -185,7 +185,7 @@ fn panel_default_width_is_uniform_and_wider_than_the_former_document_panel() {
 /// ↔️ The real panel walk publishes exactly React's resize edges and one compact-spacing hit rail.
 #[test]
 fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧪️fixtures/↔️panel-resize/🔣️.json")).expect("panel resize fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/↔️panel-resize/🔣️.json")).expect("panel resize fixture");
     let theme = Theme::default();
     assert_eq!(fixture["widthUiSpacing"], serde_json::json!(1));
     for case in fixture["cases"].as_array().expect("resize cases") {

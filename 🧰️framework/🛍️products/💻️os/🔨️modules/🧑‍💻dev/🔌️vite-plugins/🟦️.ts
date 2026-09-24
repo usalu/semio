@@ -4,20 +4,22 @@
  * through it the repository library's discovery walk) into Vite's config bundle. `bun:sqlite` stays a
  * lazy dynamic import: Vite loads this module's exports under Node before the dev server's Bun
  * runtime exists. */
+import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, backboneKindFromUri, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
 import type { PluginSourceEvent } from "@semio-tech/framework";
-import { MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, moduleIdForDirectoryName, moduleRoutePath } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { newestComponentSourceMtime, observeActivationReceipts, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
-import { EXTENSION_INSTALL_META } from "../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, resolveBootSourceContentHashes, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, writeStagedSourceFreshness, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
 import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
+/** @emoji 📥️ Filename owned by plugin store installation; inlined so the vite-plugin graph does not pull materialization. */
+const EXTENSION_INSTALL_META = "📥️install.json";
 
 /** @emoji 🗂️ Repository root derived from this module's own location — the config bundler must not
  * reach `getWorkspaceRoot` (and the discovery walk behind it) just to place two dev databases. */
-export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../..");
+export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../..");
 
 export type DescriptorRouteGuardSpec = {
   readonly route: string;
@@ -371,7 +373,7 @@ function subscribeFolderWatch(uri: string, subscriber: { write: (chunk: string) 
   };
 }
 
-type BackboneServerRequest = { method?: string; url?: string; headers?: Record<string, string | string[] | undefined>; on: (event: string, handler: (chunk?: unknown) => void) => void };
+type BackboneServerRequest = { method?: string; url?: string; headers?: Record<string, string | string[] | undefined>; on: (event: string, handler: (chunk?: unknown) => void) => void; off: (event: string, handler: (chunk?: unknown) => void) => void };
 type BackboneServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; write: (chunk: string) => void; end: (body?: string | Uint8Array) => void };
 
 function canonicalBootstrapMirrorControlFromHeaders(headers: BackboneServerRequest["headers"]): CanonicalBootstrapFolderMirrorControlV1 {
@@ -661,34 +663,42 @@ export function semioPluginHotSwapVitePlugin(options: { readonly moduleRoot: str
   };
 }
 /** @emoji 🧩️ One watched component; `installDirectory` overrides `<installRoot>/<directoryName>` when a host serves extensions from several activation lanes. */
-export type ActivationComponentSpec = Readonly<{ pluginId: string; directoryName: string; role: "plugin" | "extension"; sourceRoot: string; installDirectory?: string }>;
+export type ActivationComponentSpec = Readonly<{ pluginId: string; directoryName: string; role: "plugin" | "extension"; sourceRoot: string; installDirectory?: string; cratePath?: string }>;
 
 /** @emoji 🔎️ Re-runs the staged-module freshness rule against the receipt the dev server just observed and
  * prints one `[stale]` line per component whose served bytes are behind — the live half of the serve-start
  * pass in `📜️script.ts`. A restage that lands while the server runs therefore retires its own warning
  * without a restart, and one that never lands keeps saying so. */
 export function reportActivationFreshness(receipt: ActivationReceipt, options: { readonly moduleRoot: string; readonly installRoot: string; readonly components: readonly ActivationComponentSpec[] }): readonly string[] {
-  const activated = new Map(receipt.plugins.map((row) => [row.pluginId, row.artifactSha256]));
+  const activatedRows = new Map(receipt.plugins.map((row) => [row.pluginId, row]));
   const facts = options.components.map((component): StagedModuleFacts => {
-    const newest = newestComponentSourceMtime(component.sourceRoot);
+    const moduleDirectory = join(options.moduleRoot, component.directoryName);
+    const receiptRow = activatedRows.get(component.pluginId);
     const installedMeta = join(component.installDirectory ?? join(options.installRoot, component.directoryName), EXTENSION_INSTALL_META);
     let installedPackageHash: string | undefined;
     if (existsSync(installedMeta)) {
       try { installedPackageHash = JSON.parse(readFileSync(installedMeta, "utf8")).packageHash as string; } catch { installedPackageHash = undefined; }
     }
+    const hashes = resolveBootSourceContentHashes({
+      sourceRoot: component.sourceRoot,
+      moduleDirectory,
+      receiptSourceContentSha256: (receiptRow as { sourceContentSha256?: string } | undefined)?.sourceContentSha256,
+    });
     return {
       pluginId: component.pluginId,
       role: component.role,
       activationTracked: true,
-      stagedAtMs: stagedModuleMtime(join(options.moduleRoot, component.directoryName)),
-      newestSourceMs: newest?.mtimeMs,
-      newestSourcePath: newest ? relative(REPO_ROOT, newest.path).split(/[\\/]/).join("/") : undefined,
-      receiptArtifactSha256: activated.get(component.pluginId),
+      stagedAtMs: stagedModuleMtime(moduleDirectory),
+      newestSourcePath: hashes.newestSourcePath ? relative(REPO_ROOT, hashes.newestSourcePath).split(/[\\/]/).join("/") : undefined,
+      sourceContentSha256: hashes.sourceContentSha256,
+      stagedSourceContentSha256: hashes.stagedSourceContentSha256,
+      receiptArtifactSha256: receiptRow?.artifactSha256,
       installedPackageHash,
-    };
+    }
   });
   return stagedModuleReportLines(facts.map(stagedModuleVerdict), `bun nx run @semio-tech/framework-os-dev:activate-${receipt.variant}-react-${receipt.profile}`);
 }
+
 
 /** 📡️ Announces explicit Nx activation completion and releases every server-owned subscription. */
 export function semioActivationVitePlugin(options: { readonly receiptDirectory: string; readonly moduleRoot: string; readonly installRoot: string; readonly components: readonly ActivationComponentSpec[] }) {
@@ -696,6 +706,7 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
   let staleness: readonly string[] = [];
   return {
     name: "semio-activation",
+    enforce: "pre" as const,
     /** @emoji 📣️ The staged-module verdict belongs in the DEVELOPER's console, not only in the server log
      * they are not reading: a guest module staged behind its own source serves a wire contract the host
      * TypeScript in the same page no longer speaks, and the symptom (`actor-ui-patch.pairing`, a window
@@ -710,7 +721,7 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
     },
     configureServer(server: {
       middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void };
-      httpServer?: { once: (event: "close", listener: () => void) => unknown } | null;
+      httpServer?: { listening: boolean; once: (event: "close" | "listening", listener: () => void) => unknown } | null;
       ws?: { send: (message: { type: "full-reload" }) => void };
     }) {
       dispose();
@@ -723,14 +734,26 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
         }
       };
       const observer = observeActivationReceipts(options.receiptDirectory, (receipt) => {
-        staleness = reportActivationFreshness(receipt, options);
-        for (const line of staleness) console.warn(line);
-        if (previous) {
-          if (previous.plugins.map((row) => row.pluginId).join() !== receipt.plugins.map((row) => row.pluginId).join()) server.ws?.send({ type: "full-reload" });
-          const prior = new Map(previous.plugins.map((row) => [row.pluginId, row.artifactSha256]));
-          for (const row of receipt.plugins) if (prior.get(row.pluginId) !== row.artifactSha256) send({ kind: "built", pluginId: row.pluginId, rebuiltAt: row.rebuiltAt });
+        const apply = (): void => {
+          staleness = reportActivationFreshness(receipt, options);
+          for (const line of staleness) console.warn(line);
+          if (previous) {
+            if (previous.plugins.map((row) => row.pluginId).join() !== receipt.plugins.map((row) => row.pluginId).join()) server.ws?.send({ type: "full-reload" });
+            const prior = new Map(previous.plugins.map((row) => [row.pluginId, row.artifactSha256]));
+            for (const row of receipt.plugins) if (prior.get(row.pluginId) !== row.artifactSha256) send({ kind: "built", pluginId: row.pluginId, rebuiltAt: row.rebuiltAt });
+          }
+          previous = receipt;
+        };
+        // Serve-start owns the boot freshness pass. Skip the duplicate sync walk on first listen.
+        if (!server.httpServer?.listening) {
+          previous = receipt;
+          return;
         }
-        previous = receipt;
+        if (previous === undefined) {
+          previous = receipt;
+          return;
+        }
+        apply();
       }, (error) => console.error("Activation receipt failed:", error));
       dispose = (): void => {
         observer.close();
@@ -751,6 +774,139 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
         subscribers.set(res, stop);
         req.on("close", () => { stop(); subscribers.delete(res); });
       });
+
+      const jobs = new Map<string, { controller: AbortController; promise: Promise<void> }>();
+      const profile: "dev" | "release" = /(?:^|\/)release(?:\/|$)/.test(options.moduleRoot.replaceAll("\\", "/")) ? "release" : "dev";
+
+      const resolveProject = (component: ActivationComponentSpec): string => {
+        const roots = [component.cratePath ? join(REPO_ROOT, component.cratePath) : "", component.sourceRoot, join(component.sourceRoot, "packages")].filter(Boolean);
+        for (const base of roots) {
+          if (!existsSync(base)) continue;
+          try {
+            for (const name of readdirSync(base)) {
+              if (!name.endsWith("project.json")) continue;
+              const parsed = JSON.parse(readFileSync(join(base, name), "utf8")) as { name?: string };
+              if (typeof parsed.name === "string" && parsed.name) return parsed.name;
+            }
+          } catch { /* continue */ }
+          try {
+            for (const child of readdirSync(base)) {
+              const nested = join(base, child);
+              if (!existsSync(nested)) continue;
+              try {
+                for (const name of readdirSync(nested)) {
+                  if (!name.endsWith("project.json")) continue;
+                  const parsed = JSON.parse(readFileSync(join(nested, name), "utf8")) as { name?: string };
+                  if (typeof parsed.name === "string" && parsed.name) return parsed.name;
+                }
+              } catch { continue; }
+            }
+          } catch { continue; }
+        }
+        throw new Error(`No nx project for plugin ${component.pluginId}`);
+      };
+
+      const publishOne = async (pluginId: string): Promise<void> => {
+        const component = options.components.find((row) => row.pluginId === pluginId);
+        if (!component) throw new Error(`Unknown plugin ${pluginId}`);
+        const moduleDirectory = join(options.moduleRoot, component.directoryName);
+        if (!existsSync(join(moduleDirectory, MODULE_BRIDGE_FILE))) throw new Error(`Module still missing after materialize: ${pluginId}`);
+        const sourceContentSha256 = writeStagedSourceFreshness(moduleDirectory, component.sourceRoot);
+        const previous = existsSync(join(options.receiptDirectory, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(options.receiptDirectory) : undefined;
+        const artifactSha256 = createHash("sha256").update(readFileSync(join(moduleDirectory, MODULE_BRIDGE_FILE))).digest("hex");
+        const completed = [
+          ...(previous?.plugins.filter((row) => row.pluginId !== pluginId) ?? []).map((row) => ({ pluginId: row.pluginId, artifactSha256: row.artifactSha256, sourceContentSha256: (row as { sourceContentSha256?: string }).sourceContentSha256 })),
+          { pluginId, artifactSha256, sourceContentSha256 },
+        ];
+        const variant = previous?.variant ?? process.env.SEMIO_PLUGIN ?? "s";
+        const receiptProfile = previous?.profile ?? profile;
+        const receipt = nextActivationReceipt(variant, receiptProfile, completed, previous);
+        publishActivationReceipt(options.receiptDirectory, receipt);
+      };
+
+      const materialize = (pluginId: string): Promise<void> => {
+        const existing = jobs.get(pluginId);
+        if (existing) return existing.promise;
+        const component = options.components.find((row) => row.pluginId === pluginId);
+        if (!component) return Promise.reject(new Error(`Unknown plugin ${pluginId}`));
+        const controller = new AbortController();
+        const promise = (async () => {
+          const project = resolveProject(component);
+          const target = `${project}:materialize-${profile}`;
+          
+          for (const [subscriber] of subscribers) {
+            try { subscriber.write(`: lazy-activate ${pluginId} via ${target}\n\n`); } catch { /* closed */ }
+          }
+          console.log(`[lazy-activate] materialize ${pluginId} via ${target}`);
+          await new Promise<void>((resolvePromise, reject) => {
+            // Restage only: skip `component-*` dependsOn so a missing bridge does not rebuild wasm
+            // (and does not queue behind the fleet wasm mutex). Component outputs must already exist.
+            const child = spawn("bun", ["nx", "run", target, "--excludeTaskDependencies"], { cwd: REPO_ROOT, env: process.env, stdio: ["ignore", "pipe", "pipe"] });
+            const onAbort = (): void => { child.kill("SIGTERM"); };
+            controller.signal.addEventListener("abort", onAbort, { once: true });
+            let stderr = "";
+            const progress = (chunk: Buffer | string): void => {
+              const line = String(chunk).trim();
+              if (!line) return;
+              for (const [subscriber] of subscribers) {
+                try { subscriber.write(`: lazy-activate-progress ${pluginId} ${line.slice(0, 200)}\n\n`); } catch { /* closed */ }
+              }
+            };
+            child.stdout?.on("data", progress);
+            child.stderr?.on("data", (chunk: Buffer | string) => { stderr += String(chunk); progress(chunk); });
+            child.on("error", reject);
+            child.on("exit", (code) => {
+              controller.signal.removeEventListener("abort", onAbort);
+              if (controller.signal.aborted) return reject(new Error(`cancelled ${pluginId}`));
+              if (code !== 0) return reject(new Error(`materialize failed ${target}: ${stderr.slice(-500)}`));
+              resolvePromise();
+            });
+          });
+          await publishOne(pluginId);
+          const rebuiltAt = readActivationReceipt(options.receiptDirectory).plugins.find((row) => row.pluginId === pluginId)?.rebuiltAt ?? Date.now();
+          send({ kind: "built", pluginId, rebuiltAt });
+        })().finally(() => { jobs.delete(pluginId); });
+        jobs.set(pluginId, { controller, promise });
+        return promise;
+      };
+
+      server.middlewares.use((req, res, next) => {
+        const path = moduleRoutePath(req.url ?? "");
+        if (!path || req.method !== "GET") return next();
+        const prefix = MODULE_PLUGIN_ROUTE.endsWith("/") ? MODULE_PLUGIN_ROUTE : `${MODULE_PLUGIN_ROUTE}/`;
+        if (!path.startsWith(prefix)) return next();
+        const directoryName = path.slice(prefix.length).split("/")[0] ?? "";
+        if (!directoryName || directoryName === "watch") return next();
+        const pluginId = moduleIdForDirectoryName(directoryName);
+        if (!pluginId) return next();
+        if (existsSync(join(options.moduleRoot, directoryName, MODULE_BRIDGE_FILE))) return next();
+        const cancel = (): void => { jobs.get(pluginId)?.controller.abort(); };
+        req.on("close", cancel);
+        void materialize(pluginId).then(() => { req.off("close", cancel); next(); }).catch((error) => {
+          req.off("close", cancel);
+          res.statusCode = 503;
+          res.setHeader("content-type", "application/json");
+          res.end(`${JSON.stringify({ error: "lazy-activate-failed", pluginId, detail: String(error) })}\n`);
+        });
+      });
+
+      const prefetch = (): void => {
+        const pending = options.components.filter((row) => !existsSync(join(options.moduleRoot, row.directoryName, MODULE_BRIDGE_FILE)));
+        void (async () => {
+          for (const row of [...pending].sort((a, b) => (a.pluginId < b.pluginId ? -1 : 1))) {
+            if (existsSync(join(options.moduleRoot, row.directoryName, MODULE_BRIDGE_FILE))) continue;
+            try { await materialize(row.pluginId); }
+            catch (error) { console.warn(`[lazy-activate] prefetch ${row.pluginId}: ${String(error)}`); }
+          }
+        })();
+      };
+      server.httpServer?.once("listening", prefetch);
+      const priorDispose = dispose;
+      dispose = (): void => {
+        for (const job of jobs.values()) job.controller.abort();
+        jobs.clear();
+        priorDispose();
+      };
     },
     closeBundle(): void { dispose(); },
   };
@@ -1226,3 +1382,26 @@ export function semioAgentBridgeRendezvousVitePlugin(options: { readonly rendezv
   };
 }
 //#endregion 🛰️AgentBridgeRendezvous
+
+/** @emoji 🎫️ Serves the one-shot local-bootstrap session minted by `ensureDevLocalHub` to the shell. */
+export function semioLocalHubSessionVitePlugin() {
+  return {
+    name: "semio-local-hub-session",
+    configureServer(server: { middlewares: { use: (handler: (req: { readonly url?: string; readonly method?: string }, res: { statusCode: number; setHeader: (k: string, v: string) => void; end: (body?: string) => void }, next: () => void) => void) => void } }) {
+      server.middlewares.use((req, res, next) => {
+        if (req.method !== "GET" || req.url?.split("?")[0] !== "/_semio/dev/local-session") return next();
+        const token = process.env.SEMIO_DEV_LOCAL_HUB_TOKEN ?? "";
+        const userId = process.env.SEMIO_DEV_LOCAL_HUB_USER_ID ?? "";
+        if (!token || !userId) {
+          res.statusCode = 404;
+          res.end("local-session unavailable");
+          return;
+        }
+        res.statusCode = 200;
+        res.setHeader("content-type", "application/json");
+        res.setHeader("cache-control", "no-store");
+        res.end(JSON.stringify({ schema: "semio.os.dev-local-hub-session/v1", token, userId }));
+      });
+    },
+  };
+}

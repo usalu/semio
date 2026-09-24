@@ -15,7 +15,7 @@ Feature: A ticket opens, closes, reopens and changes without anything on disk
   @level-fundamental
   @mode-conformance
   Scenario: Opening writes the document, creates the empty important document and emits one event
-    Given the lifecycle vectors local://🔓️lifecycle.json
+    Given the lifecycle vectors shared://🔓️open-close-reopen-lifecycle/🔓️lifecycle.json
     When the open request is executed against an in-memory store
     Then every implementation projects the same document, the same store paths and the same emitted event
 
@@ -23,7 +23,7 @@ Feature: A ticket opens, closes, reopens and changes without anything on disk
   @level-fundamental
   @mode-conformance
   Scenario: Closing removes the important document bundle and records the summary
-    Given the lifecycle vectors local://🔓️lifecycle.json
+    Given the lifecycle vectors shared://🔓️open-close-reopen-lifecycle/🔓️lifecycle.json
     When the open request is executed and then the close request
     Then every implementation projects the closed document, the journal of the transaction and the store paths that remain
 
@@ -31,7 +31,7 @@ Feature: A ticket opens, closes, reopens and changes without anything on disk
   @level-fundamental
   @mode-conformance
   Scenario: Reopening recreates the empty important document and appends a reopen interaction
-    Given the lifecycle vectors local://🔓️lifecycle.json
+    Given the lifecycle vectors shared://🔓️open-close-reopen-lifecycle/🔓️lifecycle.json
     When the open, close and reopen requests are executed in order
     Then every implementation projects the reopened document, the recreated paths and the three emitted event kinds
 
@@ -39,7 +39,7 @@ Feature: A ticket opens, closes, reopens and changes without anything on disk
   @level-fundamental
   @mode-conformance
   Scenario: Changing the title moves the whole ticket folder to the new slug
-    Given the lifecycle vectors local://🔓️lifecycle.json
+    Given the lifecycle vectors shared://🔓️open-close-reopen-lifecycle/🔓️lifecycle.json
     When the open request is executed and then the change request
     Then every implementation projects the new id, the moved store paths and the changed document
 
@@ -47,7 +47,7 @@ Feature: A ticket opens, closes, reopens and changes without anything on disk
   @level-fundamental
   @mode-error
   Scenario: A second close, a close with no summary and a close with no files are all refused
-    Given the lifecycle vectors local://🔓️lifecycle.json
+    Given the lifecycle vectors shared://🔓️open-close-reopen-lifecycle/🔓️lifecycle.json
     When each malformed close is executed against an already closed and an open ticket
     Then every implementation projects the same refusal class and message for each
 
@@ -55,7 +55,7 @@ Feature: A ticket opens, closes, reopens and changes without anything on disk
   @level-fundamental
   @mode-conformance
   Scenario: Repo-relative, dotted, file-URI and excluded paths collapse to one ordered set
-    Given the lifecycle vectors local://🔓️lifecycle.json
+    Given the lifecycle vectors shared://🔓️open-close-reopen-lifecycle/🔓️lifecycle.json
     When the close request's file identifiers are normalised
     Then every implementation projects the same de-duplicated, ordered list
 
@@ -63,6 +63,6 @@ Feature: A ticket opens, closes, reopens and changes without anything on disk
   @level-quick
   @mode-conformance
   Scenario: A closed ticket loses its oversized artifacts but never its document
-    Given the lifecycle vectors local://🔓️lifecycle.json
+    Given the lifecycle vectors shared://🔓️open-close-reopen-lifecycle/🔓️lifecycle.json
     When a ticket folder holding an oversized file and a small one is purged
     Then every implementation projects the same removed paths and the same surviving paths

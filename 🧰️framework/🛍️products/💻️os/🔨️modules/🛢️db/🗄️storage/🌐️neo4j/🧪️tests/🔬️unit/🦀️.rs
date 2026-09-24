@@ -190,3 +190,20 @@ async fn capabilities_report_durable_cas_and_fsync_backed_storage() {
     assert_eq!(capabilities.max_durability, DurabilityClass::Fsync);
 }
 //#endregion 🔖️Capabilities
+
+//#region 🔖️WriterFence
+#[test]
+fn writer_lease_constants_and_schema_match_the_neutral_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔐️writer/🧫️fixtures/🌐️remote-guard/🔣️.json")).unwrap();
+    let neo4j = &fixture["neo4j"];
+    assert_eq!(neo4j["leaseTtlMs"].as_i64().unwrap(), WAL_WRITER_LEASE_TTL_MS);
+    assert_eq!(neo4j["renewEveryMs"].as_u64().unwrap(), WAL_WRITER_RENEW_EVERY_MS);
+    let label = format!("(w:{})", neo4j["label"].as_str().unwrap());
+    assert!(SCHEMA_STATEMENTS.iter().any(|statement| statement.contains(&label) && statement.contains("w.document IS UNIQUE")));
+    for cypher in [CYPHER_WAL_WRITER_ACQUIRE, CYPHER_WAL_WRITER_RENEW, CYPHER_WAL_WRITER_FENCE, CYPHER_WAL_WRITER_RELEASE] {
+        assert!(cypher.contains(&label.replace(')', " {document: $document})")), "every lease statement addresses the document's one lease node");
+        assert!(cypher.find("SET w.").unwrap() < cypher.find("WITH w").unwrap(), "every lease statement write-locks the node before reading ownership");
+    }
+    assert!(!CYPHER_WAL_WRITER_ACQUIRE.contains("$now") && CYPHER_WAL_WRITER_ACQUIRE.contains("timestamp()"), "leases expire on the server clock");
+}
+//#endregion 🔖️WriterFence

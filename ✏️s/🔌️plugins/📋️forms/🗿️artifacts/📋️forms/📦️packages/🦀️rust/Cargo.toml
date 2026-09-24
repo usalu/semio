@@ -19,6 +19,8 @@ semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-ui-contract.workspace = true
 semio-framework-job.workspace = true
 semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-xlsx = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 flow = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
@@ -36,3 +38,7 @@ semio-framework-ui-scene = { path = "../../../../../../../🧰️framework/🔨�
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+# 🔮 Test-only CSV and ZIP ORACLES (never `[dependencies]` entries): third-party readers of the
+# question grid and the document archive.
+csv = "1"
+zip = { version = "6", default-features = false, features = ["deflate"] }

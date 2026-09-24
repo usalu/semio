@@ -34,7 +34,7 @@ fn frame(members: &[Vec<u8>]) -> Vec<u8> {
 #[cfg(feature = "sut")]
 fn the_digest_is_sha_256(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_statutes as statutes;
-    let file = ctx.fixture_json("local://🔣️vectors.json")?;
+    let file = ctx.fixture_json("shared://🗜️breach-cache-envelope/🔣️vectors.json")?;
     let digests: Vec<Json> = file.array("digests").iter().map(|vector| Json::String(statutes::sha256_hex(text(vector).as_bytes()))).collect();
     let wire = file.str("envelope");
     let envelope = statutes::parse_breach_cache(&wire)?;
@@ -53,7 +53,7 @@ fn the_digest_is_sha_256(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 fn a_member_inflates_anywhere(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_statutes as statutes;
-    let file = ctx.fixture_json("local://🔣️vectors.json")?;
+    let file = ctx.fixture_json("shared://🗜️breach-cache-envelope/🔣️vectors.json")?;
     let payloads: Vec<String> = file.array("payloads").iter().map(text).collect();
     let mut members = Vec::new();
     let mut recovered: Vec<Json> = Vec::new();

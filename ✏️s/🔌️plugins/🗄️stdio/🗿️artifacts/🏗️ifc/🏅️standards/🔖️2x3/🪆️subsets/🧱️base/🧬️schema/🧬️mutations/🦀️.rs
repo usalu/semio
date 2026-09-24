@@ -196,6 +196,15 @@ fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3S
 }
 //#endregion 🔖️OpBinaryCodec
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `Ifc2x3Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_UPSERT_INSTANCE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "upsert-instance");
+const TAG_REMOVE_INSTANCE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-instance");
+const TAG_SET_HEADER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-header");
+//#endregion 🏷️WireTags
+
 /// 🧪️ REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from the literal-JSON shortcut above. `tag` is the `Ifc2x3Mutation` variant ordinal,
@@ -206,10 +215,10 @@ fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3S
 impl protocol::OpBinary for Ifc2x3Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            Ifc2x3Mutation::SetSnapshot(..) => 1,
-            Ifc2x3Mutation::UpsertInstance(..) => 2,
-            Ifc2x3Mutation::RemoveInstance(..) => 3,
-            Ifc2x3Mutation::SetHeader(..) => 4,
+            Ifc2x3Mutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
+            Ifc2x3Mutation::UpsertInstance(..) => TAG_UPSERT_INSTANCE,
+            Ifc2x3Mutation::RemoveInstance(..) => TAG_REMOVE_INSTANCE,
+            Ifc2x3Mutation::SetHeader(..) => TAG_SET_HEADER,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -230,19 +239,19 @@ impl protocol::OpBinary for Ifc2x3Mutation {
         }
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         let mutation = match tag {
-            1 => {
+            TAG_SET_SNAPSHOT => {
                 let snapshot = dec_ifc2x3_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) })
             }
-            2 => {
+            TAG_UPSERT_INSTANCE => {
                 let instance = dec_part21_instance_bin(&mut reader).map_err(|e| malformed("op instance", reader.position(), e))?;
                 Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance })
             }
-            3 => {
+            TAG_REMOVE_INSTANCE => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id })
             }
-            4 => {
+            TAG_SET_HEADER => {
                 let header = dec_part21_header_bin(&mut reader).map_err(|e| malformed("op header", reader.position(), e))?;
                 Ifc2x3Mutation::SetHeader(set_header::SetHeader { header })
             }

@@ -208,6 +208,21 @@ fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapsho
 }
 //#endregion 🔖️OpBinaryCodec
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `IfcMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_SET_FILE_DESCRIPTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-description");
+const TAG_SET_FILE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-name");
+const TAG_SET_FILE_SCHEMA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-schema");
+const TAG_INSERT_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-entity");
+const TAG_REMOVE_ENTITY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-entity");
+const TAG_SET_ENTITY_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-entity-name");
+const TAG_SET_ENTITY_ARG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-entity-arg");
+const TAG_INSERT_ENTITY_ARG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-entity-arg");
+const TAG_REMOVE_ENTITY_ARG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-entity-arg");
+//#endregion 🏷️WireTags
+
 /// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut (`IfcMutation` was one of 4
@@ -220,16 +235,16 @@ fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapsho
 impl OpBinary for IfcMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            IfcMutation::SetSnapshot(..) => 1,
-            IfcMutation::SetFileDescription(..) => 2,
-            IfcMutation::SetFileName(..) => 3,
-            IfcMutation::SetFileSchema(..) => 4,
-            IfcMutation::InsertEntity(..) => 5,
-            IfcMutation::RemoveEntity(..) => 6,
-            IfcMutation::SetEntityName(..) => 7,
-            IfcMutation::SetEntityArg(..) => 8,
-            IfcMutation::InsertEntityArg(..) => 9,
-            IfcMutation::RemoveEntityArg(..) => 10,
+            IfcMutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
+            IfcMutation::SetFileDescription(..) => TAG_SET_FILE_DESCRIPTION,
+            IfcMutation::SetFileName(..) => TAG_SET_FILE_NAME,
+            IfcMutation::SetFileSchema(..) => TAG_SET_FILE_SCHEMA,
+            IfcMutation::InsertEntity(..) => TAG_INSERT_ENTITY,
+            IfcMutation::RemoveEntity(..) => TAG_REMOVE_ENTITY,
+            IfcMutation::SetEntityName(..) => TAG_SET_ENTITY_NAME,
+            IfcMutation::SetEntityArg(..) => TAG_SET_ENTITY_ARG,
+            IfcMutation::InsertEntityArg(..) => TAG_INSERT_ENTITY_ARG,
+            IfcMutation::RemoveEntityArg(..) => TAG_REMOVE_ENTITY_ARG,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -270,49 +285,49 @@ impl OpBinary for IfcMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            1 => {
+            TAG_SET_SNAPSHOT => {
                 let snapshot = dec_ifc_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
-            2 => {
+            TAG_SET_FILE_DESCRIPTION => {
                 let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
                 Ok(IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values }))
             }
-            3 => {
+            TAG_SET_FILE_NAME => {
                 let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
                 Ok(IfcMutation::SetFileName(set_file_name::SetFileName { values }))
             }
-            4 => {
+            TAG_SET_FILE_SCHEMA => {
                 let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
                 Ok(IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values }))
             }
-            5 => {
+            TAG_INSERT_ENTITY => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
                 Ok(IfcMutation::InsertEntity(insert_entity::InsertEntity { index, entity }))
             }
-            6 => {
+            TAG_REMOVE_ENTITY => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 Ok(IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id }))
             }
-            7 => {
+            TAG_SET_ENTITY_NAME => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 let name = read_str_bin(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 Ok(IfcMutation::SetEntityName(set_entity_name::SetEntityName { id, name }))
             }
-            8 => {
+            TAG_SET_ENTITY_ARG => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id, index, value }))
             }
-            9 => {
+            TAG_INSERT_ENTITY_ARG => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id, index, value }))
             }
-            10 => {
+            TAG_REMOVE_ENTITY_ARG => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 Ok(IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, index }))

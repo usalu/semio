@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeZoneFloorAreaParticipation",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-zone-floor-area-participation",
-  "binaryTag": null,
+  "binaryTag": 16,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -1045,7 +1045,13 @@ impl ArtifactWalPageField {
                 Ok(copied) => copied,
                 Err(error) => return std::task::Poll::Ready(Err(error)),
             };
-            let written = match self.writer.as_mut().ok_or_else(|| DbError::Internal("artifact WAL page field lost writer".to_string())).and_then(|writer| writer.write_fragment(&fragment[..copied])) {
+            let written = match self.writer.as_mut().ok_or_else(|| DbError::Internal("artifact WAL page field lost writer".to_string())).and_then(|writer| {
+                let head = writer.write_fragment(&fragment[..copied])?;
+                if head == copied {
+                    return Ok(head);
+                }
+                Ok(head + writer.write_fragment(&fragment[head..copied])?)
+            }) {
                 Ok(written) => written,
                 Err(error) => return std::task::Poll::Ready(Err(error)),
             };
@@ -1835,14 +1841,9 @@ impl ArtifactEngineOpenRejected {
         match self {
             Self::BeforeWal(cause) => Ok(cause),
             Self::WalOpen(rejected) => rejected.retry_close().await.map_err(Self::WalOpen),
-            Self::RetainedWal { cause, close_error: _, mut wal } => loop {
-                match wal.close_step() {
-                    Ok(true) => semio_framework_async::yield_once().await,
-                    Ok(false) => return Ok(cause),
-                    Err(error) => {
-                        return Err(Self::RetainedWal { cause, close_error: Some(error), wal });
-                    }
-                }
+            Self::RetainedWal { cause, close_error: _, mut wal } => match wal.close().await {
+                Ok(()) => Ok(cause),
+                Err(error) => Err(Self::RetainedWal { cause, close_error: Some(error), wal }),
             },
         }
     }
@@ -1869,14 +1870,31 @@ impl std::fmt::Debug for ArtifactEngineOpenRejected {
 const MAX_RECENT_TOUCHES: usize = 256;
 
 impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
-    fn close_step(&mut self) -> Result<bool, DbError> {
-        if self.wal.close_step()? {
-            return Ok(true);
+    /// @emoji 🔕️ One close step: progress wakes the caller's waker, a pending writer release parks it
+    /// in the release signal until the backend's terminal notification.
+    fn poll_close(&mut self, context: &mut std::task::Context<'_>) -> std::task::Poll<Result<(), DbError>> {
+        if self.wal.poll_close(context)?.is_pending() {
+            return std::task::Poll::Pending;
         }
         if self.state.values.close_step()? {
-            return Ok(true);
+            context.waker().wake_by_ref();
+            return std::task::Poll::Pending;
         }
-        Ok(false)
+        std::task::Poll::Ready(Ok(()))
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn close(&mut self) -> Result<(), DbError> {
+        std::future::poll_fn(|context| self.poll_close(context)).await
+    }
+
+    fn close_flush_pending(&self) -> bool {
+        self.wal.has_pending()
+    }
+
+    async fn close_flush(&mut self) -> Result<(), DbError> {
+        let wal_facet = self.storage.wal().await;
+        self.wal.close_flush(&wal_facet).await
     }
 
     /// @emoji 🌱️ Retained constructor used by the document authority. Every storage wait remains
@@ -2172,6 +2190,14 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             }
         }
         let command_id = batch.envelopes.last().expect("CommandBatch::new guarantees at least one envelope").mutation_id.clone();
+
+        for envelope in &batch.envelopes {
+            if let Some(applied) = self.applied.get(&envelope.mutation_id.0) {
+                if applied.diff != envelope.diff || applied.inverse != envelope.inverse || applied.dependencies != envelope.dependencies {
+                    return Err(DbError::Conflict(format!("mutation id {} is already committed with different content", envelope.mutation_id.0)));
+                }
+            }
+        }
 
         // dedupe (whole-batch, keyed by the batch's designated command_id)
         if let Some(cached) = self.applied_receipts.get(&command_id.0) {
@@ -3053,6 +3079,14 @@ impl ArtifactHistoryView {
     }
 }
 
+/// 🔒️ Serializes the tests that saturate or consume the process-global history replay
+/// construction registry and admission slots, so one law's capacity never becomes another's refusal.
+#[cfg(test)]
+pub(crate) fn history_capacity_test_lock() -> std::sync::MutexGuard<'static, ()> {
+    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 pub struct HistoryReplayReservation {
     source_pages: Vec<Option<Vec<u8>>>,
     source_page_count: usize,
@@ -3615,7 +3649,7 @@ impl Drop for HistoryReplayReservationConstructionFault {
 
 impl Drop for HistoryReplayReservationCloseCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "history replay reservation reached Drop before retained retirement or exact resume");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "history replay reservation reached Drop before retained retirement or exact resume");
     }
 }
 
@@ -3893,7 +3927,7 @@ impl HistoryFrontierCursor {
 }
 
 type HistorySegmentLenFuture = Pin<Box<dyn Future<Output = Result<u64, DbError>> + Send + 'static>>;
-type HistoryPageReadFuture = Pin<Box<dyn Future<Output = Result<Vec<u8>, DbError>> + Send + 'static>>;
+type HistoryPageReadFuture = Pin<Box<dyn Future<Output = Result<db_storage::DbIoPages, DbError>> + Send + 'static>>;
 type HistorySegmentListFuture = Pin<Box<dyn Future<Output = Result<db_storage::DbIoU64List, DbError>> + Send + 'static>>;
 
 enum HistoryReplayPhase {
@@ -3902,6 +3936,7 @@ enum HistoryReplayPhase {
     SegmentLen { index: u64, future: HistorySegmentLenFuture },
     PageStart { index: u64, len: u64, offset: u64 },
     PageRead { index: u64, len: u64, offset: u64, requested: u64, future: HistoryPageReadFuture },
+    PageClose { index: u64, len: u64, offset: u64, retained: db_storage::DbIoPages },
     Verify { index: u64 },
     Frame { index: u64 },
     CommittedBody { index: u64 },
@@ -4197,17 +4232,7 @@ impl HistoryReplayFuture {
                                 len,
                                 offset,
                                 requested,
-                                future: Box::pin(async move {
-                                    let mut retained = storage.wal().await.read(&document, index, pack::ByteRange { offset, len: requested }).await?;
-                                    let mut page = Vec::with_capacity(retained.len());
-                                    for fragment in retained.fragments() {
-                                        page.extend_from_slice(fragment);
-                                    }
-                                    while !retained.terminal_is_empty() {
-                                        retained.close_step()?;
-                                    }
-                                    Ok(page.into_boxed_slice().into_vec())
-                                }),
+                                future: Box::pin(async move { storage.wal().await.read(&document, index, pack::ByteRange { offset, len: requested }).await }),
                             });
                         }
                         None => fault = Some(DbError::LimitExceeded("history page remaining bytes")),
@@ -4217,7 +4242,12 @@ impl HistoryReplayFuture {
             HistoryReplayPhase::PageRead { index, len, offset, requested, future } => match future.as_mut().poll(context) {
                 std::task::Poll::Pending => {}
                 std::task::Poll::Ready(Err(error)) => fault = Some(this.terminal_error.take().unwrap_or(error)),
-                std::task::Poll::Ready(Ok(page)) => {
+                std::task::Poll::Ready(Ok(retained)) => {
+                    let mut page = Vec::with_capacity(retained.len());
+                    for fragment in retained.fragments() {
+                        page.extend_from_slice(fragment);
+                    }
+                    let page = page.into_boxed_slice().into_vec();
                     if let Some(error) = this.terminal_error.take() {
                         this.terminal_page = Some(page);
                         fault = Some(error);
@@ -4227,13 +4257,20 @@ impl HistoryReplayFuture {
                     } else if let Some(next_offset) = offset.checked_add(*requested) {
                         this.pages.pages[this.page_count] = Some(page);
                         this.page_count += 1;
-                        next = Some(HistoryReplayPhase::PageStart { index: *index, len: *len, offset: next_offset });
+                        next = Some(HistoryReplayPhase::PageClose { index: *index, len: *len, offset: next_offset, retained });
                     } else {
                         this.terminal_page = Some(page);
                         fault = Some(DbError::LimitExceeded("history page offset"));
                     }
                 }
             },
+            HistoryReplayPhase::PageClose { index, len, offset, retained } => {
+                if retained.terminal_is_empty() {
+                    next = Some(HistoryReplayPhase::PageStart { index: *index, len: *len, offset: *offset });
+                } else if let Err(error) = retained.close_step() {
+                    fault = Some(error);
+                }
+            }
             HistoryReplayPhase::Verify { index } => {
                 let result = db_wal::WalCursorControl::new(this.cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_millis(8), 1)
                     .and_then(|mut control| this.authenticated.as_mut().ok_or(DbError::Closed)?.verify_step(&this.document, &mut control));
@@ -4658,11 +4695,58 @@ type ArtifactTurnFuture<A, V> = Pin<Box<dyn Future<Output = Box<ArtifactEngine<A
 #[cfg(not(target_arch = "wasm32"))]
 enum ArtifactTurn<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     Future(ArtifactTurnFuture<A, V>),
+    CloseFlush(ArtifactTurnFuture<A, V>),
     History { engine: Option<Box<ArtifactEngine<A, V>>>, replay: HistoryReplayFuture, reply: Option<db_actor::ReplySender<Result<ArtifactHistoryView, DbError>>> },
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 const ARTIFACT_RUNNER_RETRY_MS: u64 = 1;
+/// 🔁️ Automatic re-polls a faulted artifact-engine close receives before it waits for an explicit
+/// re-admission (`ArtifactAuthority::readmit_close_retry`, `Database::shutdown`).
+pub const ARTIFACT_CLOSE_RETRY_LIMIT: u8 = 8;
+#[cfg(not(target_arch = "wasm32"))]
+const ARTIFACT_CLOSE_RETRY_BASE_MS: u64 = 2;
+#[cfg(not(target_arch = "wasm32"))]
+const ARTIFACT_CLOSE_RETRY_CAP_MS: u64 = 512;
+
+/// 🧭️ Where the bounded retry owner of a faulted artifact-engine close stands.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ArtifactCloseRetryState {
+    Clear,
+    Scheduled,
+    Admitted,
+    Exhausted,
+    Cancelled,
+}
+
+/// 📈️ Progress of one faulted close: `attempts` counts automatic re-polls armed so far out of `limit`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ArtifactCloseRetryProgress {
+    pub state: ArtifactCloseRetryState,
+    pub attempts: u8,
+    pub limit: u8,
+}
+
+impl ArtifactCloseRetryProgress {
+    /// 🧱️ True once no automatic retry remains: only an explicit re-admission can re-poll the close.
+    pub fn is_blocked(&self) -> bool {
+        matches!(self.state, ArtifactCloseRetryState::Exhausted | ArtifactCloseRetryState::Cancelled)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct ArtifactCloseRetry {
+    state: ArtifactCloseRetryState,
+    attempts: u8,
+    generation: u64,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl ArtifactCloseRetry {
+    const fn clear() -> Self {
+        Self { state: ArtifactCloseRetryState::Clear, attempts: 0, generation: 0 }
+    }
+}
 #[cfg(not(target_arch = "wasm32"))]
 const ARTIFACT_RUNNER_RETRY_LIMIT: u8 = 8;
 
@@ -4690,10 +4774,13 @@ struct ArtifactRunnerHandoff {
     close_runner: std::sync::Mutex<Option<Arc<dyn Fn() -> bool + Send + Sync>>>,
     retirement_maintenance: std::sync::Mutex<Option<(Arc<semio_framework_async::WorkerPool>, semio_framework_async::WorkerMaintenanceTicket)>>,
     close_error: std::sync::Mutex<Option<DbError>>,
+    close_retry: std::sync::Mutex<ArtifactCloseRetry>,
     #[cfg(test)]
-    close_fault_once: std::sync::atomic::AtomicBool,
+    close_faults: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
     close_polls: std::sync::atomic::AtomicUsize,
+    #[cfg(test)]
+    retirement_turns: std::sync::atomic::AtomicUsize,
     active_history: std::sync::atomic::AtomicBool,
     driver: std::sync::atomic::AtomicU8,
     terminal: std::sync::atomic::AtomicBool,
@@ -4710,6 +4797,92 @@ impl Drop for ArtifactRunnerHandoff {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl ArtifactRunnerHandoff {
+    /// @emoji ⏲️ Arms the next bounded-backoff re-poll of a faulted close on the pool timer wheel. The
+    /// timer admits exactly one re-poll through the retirement hook; stray wakes and coalesced
+    /// maintenance requests never re-poll a faulted close.
+    fn arm_close_retry(self: &Arc<Self>) {
+        let mut retry = self.close_retry.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !matches!(retry.state, ArtifactCloseRetryState::Clear | ArtifactCloseRetryState::Admitted) {
+            return;
+        }
+        if retry.attempts >= ARTIFACT_CLOSE_RETRY_LIMIT {
+            retry.state = ArtifactCloseRetryState::Exhausted;
+            return;
+        }
+        let delay = ARTIFACT_CLOSE_RETRY_BASE_MS.checked_shl(u32::from(retry.attempts)).unwrap_or(ARTIFACT_CLOSE_RETRY_CAP_MS).min(ARTIFACT_CLOSE_RETRY_CAP_MS);
+        let Some(deadline) = self.pool.now_ms().checked_add(delay) else {
+            retry.state = ArtifactCloseRetryState::Exhausted;
+            return;
+        };
+        retry.attempts += 1;
+        retry.generation = retry.generation.wrapping_add(1);
+        retry.state = ArtifactCloseRetryState::Scheduled;
+        let generation = retry.generation;
+        drop(retry);
+        let handoff = Arc::downgrade(self);
+        self.pool.callback_at(deadline, move || {
+            if let Some(handoff) = handoff.upgrade() {
+                handoff.admit_close_retry(generation);
+            }
+        });
+    }
+
+    fn admit_close_retry(&self, generation: u64) {
+        let mut retry = self.close_retry.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if retry.state != ArtifactCloseRetryState::Scheduled || retry.generation != generation {
+            return;
+        }
+        retry.state = ArtifactCloseRetryState::Admitted;
+        drop(retry);
+        self.request_retirement_maintenance();
+    }
+
+    fn clear_close_retry(&self) {
+        *self.close_retry.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = ArtifactCloseRetry::clear();
+    }
+
+    /// 🚦️ A healthy close always polls; a faulted one polls only under its admitted retry.
+    fn close_poll_admitted(&self) -> bool {
+        let faulted = self.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
+        !faulted || self.close_retry.lock().unwrap_or_else(std::sync::PoisonError::into_inner).state == ArtifactCloseRetryState::Admitted
+    }
+
+    fn close_retry_progress(&self) -> Option<ArtifactCloseRetryProgress> {
+        if self.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            return None;
+        }
+        let retry = self.close_retry.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        Some(ArtifactCloseRetryProgress { state: retry.state, attempts: retry.attempts, limit: ARTIFACT_CLOSE_RETRY_LIMIT })
+    }
+
+    /// @emoji 🔂️ Grants an exhausted or cancelled faulted close a fresh retry budget and admits one re-poll now.
+    fn readmit_close_retry(&self) -> bool {
+        if self.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            return false;
+        }
+        let mut retry = self.close_retry.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !matches!(retry.state, ArtifactCloseRetryState::Exhausted | ArtifactCloseRetryState::Cancelled) {
+            return false;
+        }
+        retry.attempts = 0;
+        retry.generation = retry.generation.wrapping_add(1);
+        retry.state = ArtifactCloseRetryState::Admitted;
+        drop(retry);
+        self.request_retirement_maintenance();
+        true
+    }
+
+    /// @emoji 🛑️ Stops automatic re-polls of a faulted close; the exact runner stays retained for re-admission.
+    fn cancel_close_retry(&self) -> bool {
+        let mut retry = self.close_retry.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !matches!(retry.state, ArtifactCloseRetryState::Scheduled | ArtifactCloseRetryState::Admitted) {
+            return false;
+        }
+        retry.generation = retry.generation.wrapping_add(1);
+        retry.state = ArtifactCloseRetryState::Cancelled;
+        true
+    }
+
     fn request_retirement_maintenance(&self) {
         let owner = self.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
         if let Some((pool, ticket)) = owner {
@@ -4739,6 +4912,35 @@ static ARTIFACT_RUNNER_RETIREMENTS: [std::sync::Mutex<Option<ArtifactRunnerRetir
 #[cfg(not(target_arch = "wasm32"))]
 pub fn artifact_runner_retirement_live_slots() -> usize {
     ARTIFACT_RUNNER_RETIREMENTS.iter().filter(|slot| slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()).count()
+}
+
+/// 📈️ The most advanced faulted-close retry among the dropped authorities retiring on `pool`: a blocked
+/// (exhausted or cancelled) owner wins over one still retrying, so a shutdown can report exactly why
+/// its pool use is still retained.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn artifact_close_retry_progress(pool: &Arc<semio_framework_async::WorkerPool>) -> Option<ArtifactCloseRetryProgress> {
+    ARTIFACT_RUNNER_RETIREMENTS
+        .iter()
+        .filter_map(|slot| slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().filter(|owner| Arc::ptr_eq(&owner.pool, pool)).map(|owner| owner.handoff.clone()))
+        .filter_map(|handoff| handoff.close_retry_progress())
+        .max_by_key(|progress| (progress.is_blocked(), progress.attempts))
+}
+
+/// 🔂️ Re-admits every exhausted or cancelled faulted close retiring on `pool`; returns how many were re-admitted.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn artifact_close_retry_readmit(pool: &Arc<semio_framework_async::WorkerPool>) -> usize {
+    artifact_close_retry_handoffs(pool).into_iter().filter(|handoff| handoff.readmit_close_retry()).count()
+}
+
+/// 🛑️ Cancels every scheduled faulted-close retry retiring on `pool`; returns how many were cancelled.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn artifact_close_retry_cancel(pool: &Arc<semio_framework_async::WorkerPool>) -> usize {
+    artifact_close_retry_handoffs(pool).into_iter().filter(|handoff| handoff.cancel_close_retry()).count()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn artifact_close_retry_handoffs(pool: &Arc<semio_framework_async::WorkerPool>) -> Vec<Arc<ArtifactRunnerHandoff>> {
+    ARTIFACT_RUNNER_RETIREMENTS.iter().filter_map(|slot| slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().filter(|owner| Arc::ptr_eq(&owner.pool, pool)).map(|owner| owner.handoff.clone())).collect()
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -4792,6 +4994,8 @@ fn artifact_runner_retirement_step([index, generation]: [u64; 2]) -> semio_frame
     let mut cursor = row.take();
     drop(row);
     let owner = cursor.as_mut().expect("checked artifact runner retirement owner");
+    #[cfg(test)]
+    owner.handoff.retirement_turns.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
     let terminal = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| (owner.close)())) {
         Ok(terminal) => terminal,
         Err(_) => {
@@ -4800,17 +5004,9 @@ fn artifact_runner_retirement_step([index, generation]: [u64; 2]) -> semio_frame
         }
     };
     if !terminal {
-        let ready = owner.handoff.driver.load(std::sync::atomic::Ordering::Acquire) == ArtifactRunnerDriver::ClosingReady as u8;
-        let faulted = owner.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
-        let maintenance = (owner.pool.clone(), owner.ticket);
+        let blocked = owner.handoff.close_retry_progress().is_some_and(|progress| progress.is_blocked());
         *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = cursor;
-        if faulted {
-            return semio_framework_async::WorkerMaintenanceStep::Fault;
-        }
-        if ready {
-            let _ = maintenance.0.request_maintenance(maintenance.1);
-        }
-        return semio_framework_async::WorkerMaintenanceStep::Idle;
+        return if blocked { semio_framework_async::WorkerMaintenanceStep::Fault } else { semio_framework_async::WorkerMaintenanceStep::Idle };
     }
     owner.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
     owner.handoff.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
@@ -4868,7 +5064,8 @@ impl Drop for ArtifactRunnerClosePoll {
     fn drop(&mut self) {
         use std::sync::atomic::Ordering;
         let driver = self.handoff.driver.load(Ordering::Acquire);
-        let next = if driver == ArtifactRunnerDriver::ClosingPollingWake as u8 { ArtifactRunnerDriver::ClosingReady } else { ArtifactRunnerDriver::ClosingParked };
+        let faulted = self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
+        let next = if driver == ArtifactRunnerDriver::ClosingPollingWake as u8 && !faulted { ArtifactRunnerDriver::ClosingReady } else { ArtifactRunnerDriver::ClosingParked };
         if driver == ArtifactRunnerDriver::ClosingPolling as u8 || driver == ArtifactRunnerDriver::ClosingPollingWake as u8 {
             if self.handoff.driver.compare_exchange(driver, next as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() && next == ArtifactRunnerDriver::ClosingReady {
                 self.handoff.request_retirement_maintenance();
@@ -4916,7 +5113,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> Drop for ArtifactRunnerP
         loop {
             let driver = self.runner.handoff.driver.load(Ordering::Acquire);
             let cancelled = self.runner.cancelled.load(Ordering::Acquire);
+            let faulted = self.runner.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
             let next = match (driver, cancelled) {
+                (value, true) if faulted && (value == ArtifactRunnerDriver::Polling as u8 || value == ArtifactRunnerDriver::PollingWake as u8) => ArtifactRunnerDriver::ClosingParked,
                 (value, true) if value == ArtifactRunnerDriver::Polling as u8 || value == ArtifactRunnerDriver::PollingWake as u8 => ArtifactRunnerDriver::ClosingReady,
                 (value, false) if value == ArtifactRunnerDriver::Polling as u8 => ArtifactRunnerDriver::RunnableIdle,
                 (value, false) if value == ArtifactRunnerDriver::PollingWake as u8 => ArtifactRunnerDriver::Queued,
@@ -4925,6 +5124,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> Drop for ArtifactRunnerP
             if self.runner.handoff.driver.compare_exchange(driver, next as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
                 if next == ArtifactRunnerDriver::Queued {
                     self.runner.submit_scheduled();
+                } else if next == ArtifactRunnerDriver::ClosingReady {
+                    self.runner.handoff.request_retirement_maintenance();
                 }
                 return;
             }
@@ -4958,6 +5159,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
     fn close_one(self: &Arc<Self>) -> bool {
         use std::sync::atomic::Ordering;
         self.cancelled.store(true, Ordering::Release);
+        if !self.handoff.close_poll_admitted() {
+            return self.terminal.load(Ordering::Acquire);
+        }
         self.close_driving.store(true, Ordering::Release);
         loop {
             let driver = self.handoff.driver.load(Ordering::Acquire);
@@ -5024,6 +5228,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                     return;
                 }
             } else if driver == ArtifactRunnerDriver::ClosingParked as u8 {
+                if self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
+                    return;
+                }
                 if self.handoff.driver.compare_exchange(driver, ArtifactRunnerDriver::ClosingReady as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
                     self.handoff.request_retirement_maintenance();
                     return;
@@ -5114,7 +5321,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
 
     fn terminalize_retry_authority(self: &Arc<Self>, detail: &'static str) {
         self.retry_armed.store(false, std::sync::atomic::Ordering::Release);
-        if let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let retained = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some((job, attempt)) = retained {
             if self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
                 drop(job);
                 self.park_terminal_job(semio_framework_async::WorkerSubmitErrorKind::Saturated);
@@ -5139,28 +5347,44 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         }
         {
             let mut engine = self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if engine.as_ref().is_some_and(|owner| owner.close_flush_pending()) {
+                let mut turn = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if turn.is_none() {
+                    let mut owner = engine.take().expect("checked artifact engine close-flush owner");
+                    drop(engine);
+                    *turn = Some(ArtifactTurn::CloseFlush(Box::pin(async move {
+                        let _ = owner.close_flush().await;
+                        owner
+                    })));
+                    drop(turn);
+                    self.schedule();
+                    return;
+                }
+            }
             if let Some(owner) = engine.as_mut() {
                 #[cfg(test)]
                 {
                     self.handoff.close_polls.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-                    if self.handoff.close_fault_once.swap(false, std::sync::atomic::Ordering::AcqRel) {
-                        *self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DbError::Io("injected artifact engine close fault".to_string()));
+                    if self.handoff.close_faults.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |faults| faults.checked_sub(1)).is_ok() {
+                        drop(engine);
+                        self.record_close_fault(DbError::Io("injected artifact engine close fault".to_string()));
                         return;
                     }
                 }
-                match owner.close_step() {
-                    Ok(true) => {
-                        self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                let waker = std::task::Waker::from(Arc::new(ArtifactRunnerWake { runner: Arc::downgrade(self), generation: self.generation }));
+                match owner.poll_close(&mut std::task::Context::from_waker(&waker)) {
+                    std::task::Poll::Pending => {
                         drop(engine);
-                        self.schedule();
+                        self.clear_close_fault();
                         return;
                     }
-                    Ok(false) => {
-                        self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                    std::task::Poll::Ready(Ok(())) => {
                         engine.take();
+                        self.clear_close_fault();
                     }
-                    Err(error) => {
-                        *self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(error);
+                    std::task::Poll::Ready(Err(error)) => {
+                        drop(engine);
+                        self.record_close_fault(error);
                         return;
                     }
                 }
@@ -5180,6 +5404,17 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
             if let Some(done) = self.done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
                 done.send(());
             }
+        }
+    }
+
+    fn record_close_fault(self: &Arc<Self>, error: DbError) {
+        *self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(error);
+        self.handoff.arm_close_retry();
+    }
+
+    fn clear_close_fault(&self) {
+        if self.handoff.close_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+            self.handoff.clear_close_retry();
         }
     }
 
@@ -5265,12 +5500,14 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         };
         if self.cancelled.load(Ordering::Acquire) {
             let mut turn = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if let Some(ArtifactTurn::History { replay, .. }) = turn.as_mut() {
-                replay.request_close(DbError::Closed);
-            } else {
-                drop(turn);
-                self.finish();
-                return;
+            match turn.as_mut() {
+                Some(ArtifactTurn::History { replay, .. }) => replay.request_close(DbError::Closed),
+                Some(ArtifactTurn::CloseFlush(_)) => {}
+                _ => {
+                    drop(turn);
+                    self.finish();
+                    return;
+                }
             }
         }
 
@@ -5329,6 +5566,23 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                         } else if self.address.has_messages() {
                             self.schedule();
                         }
+                        return;
+                    }
+                    Err(_) => {
+                        turn.take();
+                        drop(turn);
+                        self.address.close();
+                        self.finish();
+                        return;
+                    }
+                },
+                ArtifactTurn::CloseFlush(future) => match std::panic::catch_unwind(AssertUnwindSafe(|| future.as_mut().poll(&mut context))) {
+                    Ok(std::task::Poll::Pending) => return,
+                    Ok(std::task::Poll::Ready(engine)) => {
+                        turn.take();
+                        drop(turn);
+                        *self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(engine);
+                        self.finish();
                         return;
                     }
                     Err(_) => {
@@ -5434,10 +5688,13 @@ impl ArtifactAuthority {
             close_runner: std::sync::Mutex::new(None),
             retirement_maintenance: std::sync::Mutex::new(None),
             close_error: std::sync::Mutex::new(None),
+            close_retry: std::sync::Mutex::new(ArtifactCloseRetry::clear()),
             #[cfg(test)]
-            close_fault_once: std::sync::atomic::AtomicBool::new(false),
+            close_faults: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
             close_polls: std::sync::atomic::AtomicUsize::new(0),
+            #[cfg(test)]
+            retirement_turns: std::sync::atomic::AtomicUsize::new(0),
             active_history: std::sync::atomic::AtomicBool::new(false),
             driver: std::sync::atomic::AtomicU8::new(ArtifactRunnerDriver::RunnableIdle as u8),
             terminal: std::sync::atomic::AtomicBool::new(false),
@@ -5596,6 +5853,21 @@ impl ArtifactAuthority {
             drop(owner);
         }
         true
+    }
+
+    /// 📈️ Progress of this authority's faulted close retry, `None` while its close is healthy.
+    pub fn close_retry_progress(&self) -> Option<ArtifactCloseRetryProgress> {
+        self.handoff.close_retry_progress()
+    }
+
+    /// 🔂️ Grants an exhausted or cancelled faulted close a fresh bounded retry budget.
+    pub fn readmit_close_retry(&self) -> bool {
+        self.handoff.readmit_close_retry()
+    }
+
+    /// 🛑️ Stops the automatic retries of a faulted close; the runner stays retained for re-admission.
+    pub fn cancel_close_retry(&self) -> bool {
+        self.handoff.cancel_close_retry()
     }
 
     pub fn terminal_is_empty(&self) -> bool {

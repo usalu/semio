@@ -5,12 +5,39 @@ schema s.stdio.semio.kit
 start body
 framing record
 
-# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM kit wave (W2c). Real binary op frame: `format u8` + `tag u8`
-# (the `SemioKitMutation` variant ordinal, `../💾️binary/🦀️.rs`'s
-# `OP_KEYWORDS`/`variant_ordinal`, 0-14) as two REAL fixed fields, then the variant's own argument
-# payload as one opaque trailing `bytes` chain.
+# Real `SemioKitMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record create-object tag=0
+field payload bytes
+record delete-object tag=1
+field payload bytes
+record create-model tag=2
+field payload bytes
+record delete-model tag=3
+field payload bytes
+record create-properties tag=4
+field payload bytes
+record delete-properties tag=5
+field payload bytes
+record bind-representation tag=6
+field payload bytes
+record unbind-representation tag=7
+field payload bytes
+record change-representation-pin tag=8
+field payload bytes
+record add-type tag=9
+field payload bytes
+record remove-type tag=10
+field payload bytes
+record rename-type tag=11
+field payload bytes
+record add-design tag=12
+field payload bytes
+record remove-design tag=13
+field payload bytes
+record edit-design tag=14
+field payload bytes

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeRoomAirModel",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-room-air-model",
-  "binaryTag": null,
+  "binaryTag": 164,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

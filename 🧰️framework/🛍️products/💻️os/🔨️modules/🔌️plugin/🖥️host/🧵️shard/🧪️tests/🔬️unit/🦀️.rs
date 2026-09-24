@@ -272,6 +272,7 @@ async fn spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completi
 /// 🛑️ A successful `Effect::CancelJob` removes the job in the same turn, before step.
 #[semio_framework_async_macros::async_test]
 async fn cancel_job_effect_stops_a_job_before_it_is_ever_stepped() {
+    let _replay_authority = replay_test_authority();
     let process_pages_before = JOB_REPLAY_SEED_PAGES.load(Ordering::Acquire);
     let abi_bytes_before = JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire);
     let mock = Arc::new(MockGuestRuntime::new().await);
@@ -481,9 +482,13 @@ async fn cancel_unregisters_the_instance_and_no_further_step_job_happens() {
     let outcome = decode_outcome(&outbound2[0]).await;
     assert!(matches!(outcome, ShardOutcome::Cancelled { actor: reported } if reported == 41));
 
-    // 🎯️ A third pump proves the job is truly dead: if `running_jobs` still held it, `step_job`
-    // would be called again with an EMPTY scripted queue and fault loudly (`TurnFault::
-    // Exhausted`) rather than silently succeeding — no such outcome appears.
+    // 🎯️ The cancelled job's replay seed retires one bounded close page per opportunity; once it
+    // is drained a further pump proves the job is truly dead: if `running_jobs` still held it,
+    // `step_job` would be called again with an EMPTY scripted queue and fault loudly
+    // (`TurnFault::Exhausted`) rather than silently succeeding — no such outcome appears.
+    drain_replay_lifecycle(&mut shard, actor.0).await;
+    assert!(probe.take_outbound().await.is_empty(), "retiring the cancelled seed publishes nothing");
+    assert_eq!(mock.step_admissions(), 1);
     let driven3 = pump(&mut shard).await.expect("pump 3");
     assert_eq!(driven3, 0, "nothing left to drive: no envelopes, no running_jobs, no registered instance");
     assert!(probe.take_outbound().await.is_empty(), "no further outcome of any kind for the cancelled job");

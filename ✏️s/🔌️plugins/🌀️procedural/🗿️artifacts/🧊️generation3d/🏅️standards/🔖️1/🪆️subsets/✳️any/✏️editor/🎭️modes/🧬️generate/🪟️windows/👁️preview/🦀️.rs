@@ -69,7 +69,7 @@ pub fn render(
     host_snapshot: &FlowHostSnapshot,
     generation: &GenerationPlayState,
     selected_id: Option<&str>,
-    generation_preview_text: Option<&str>,
+    preview_eval_text: Option<&str>,
     cfg: &Generation3dConfig,
     labels: &Generation3dLabels,
     active_utility: &str,
@@ -77,7 +77,7 @@ pub fn render(
     session: &FlowEvalSession,
     run: Option<&semio_framework_plugin::ToolRunView>,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let eval_json = generation_preview_text.unwrap_or_default();
+    let eval_json = preview_eval_text.unwrap_or_default();
     let (payload, preview_status) = match generation_by_id(generation, selected_id) {
         // 🧹️ `generation_host_snapshot_for` CLONES the document host_snapshot, so the patched copy owns its own
         // `layout` ordered-map root and must be retired before it leaves scope — a bare drop aborts the

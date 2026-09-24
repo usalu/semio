@@ -453,8 +453,8 @@ mod mounted_laws {
         for forbidden in ["OwnedSchemaHexAuthority", "ArtifactPack", "decode_pack", "decode_document", "RecordValue"] {
             assert!(!mounted_field.contains(forbidden), "mounted P2 envelope authority regained a whole decode edge: {forbidden}");
         }
-        for required in ["RetainedPackSourceCursor", "RetainedPackAnchorCursor", "RetainedPackSegmentCursor", "RetainedPackCatalogCursor", "RetainedValueCursor"] {
-            assert!(mounted_snapshot.contains(required), "mounted P2 route lost retained canonical layer: {required}");
+        for required in ["mounted::RetainedTypedPackSession<Generation2dMountedTypedSnapshotOwner>", "impl mounted::RetainedTypedPackOwner for Generation2dMountedTypedSnapshotOwner", "GENERATION2D_MOUNTED_PREFIX.to_vec()"] {
+            assert!(mounted_snapshot.contains(required), "mounted P2 route left the framework retained canonical session: {required}");
         }
         assert!(snapshot_source.contains("one scalar byte opportunity"));
         assert!(lifecycle_fixture.contains("complete-before-ack"));

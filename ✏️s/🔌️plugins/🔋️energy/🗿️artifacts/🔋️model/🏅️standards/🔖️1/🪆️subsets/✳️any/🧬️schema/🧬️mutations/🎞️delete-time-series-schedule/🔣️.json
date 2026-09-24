@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteTimeSeriesSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-time-series-schedule",
-  "binaryTag": null,
+  "binaryTag": 273,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -17,8 +17,8 @@ Feature: Apply the gis3d editor camera mutation to a real config record
       """
     Then the resulting record differs from the base record
     Examples:
-      | baseCamera               | value                      |
-      | "{\"position\":[0,0,0]}" | "{\"position\":[9,9,9]}" |
+      | id         | baseCamera               | value                      |
+      | set-camera | "{\"position\":[0,0,0]}" | "{\"position\":[9,9,9]}" |
 
   @id-inverse
   @level-exhaustive
@@ -31,5 +31,5 @@ Feature: Apply the gis3d editor camera mutation to a real config record
       """
     Then the record equals the base record again, field for field
     Examples:
-      | baseCamera               | value                      |
-      | "{\"position\":[0,0,0]}" | "{\"position\":[9,9,9]}" |
+      | id         | baseCamera               | value                      |
+      | set-camera | "{\"position\":[0,0,0]}" | "{\"position\":[9,9,9]}" |

@@ -1,6 +1,2 @@
 semio raster.raster.dsl v1
-schema=7261737465722e646f63756d656e74
-id=73656d696f2d64656d6f
-title=[1,53656d696f205261737465722044656d6f]
-layers=[p[6261636b64726f70,4261636b64726f70,true,1,6e6f726d616c,[0,0,1,1,0],[0],[1,512],[1,512],[1,73656d696f2d656d626c656d]],a[627269676874656e,427269676874656e,true,1,6e6f726d616c,[0,0,1,1,0],6272696768746e657373436f6e7472617374,[]]]
-assets=[[73656d696f2d656d626c656d,[7261737465722d61737365742d38316531353634653831396432303963,73656d696f2d656d626c656d2d696d61676521732e737464696f2e73656d696f4076312f696d616765]]]
+schema=raster.document id=semio-demo title="Semio Raster Demo" layers=[ "{\"kind\":\"pixel\",\"id\":\"backdrop\",\"name\":\"Backdrop\",\"visible\":true,\"opacity\":1.0,\"blendMode\":\"normal\",\"transform\":{\"x\":0.0,\"y\":0.0,\"scaleX\":1.0,\"scaleY\":1.0,\"rotation\":0.0},\"mask\":null,\"width\":512,\"height\":512,\"imageKey\":\"semio-emblem\"}" "{\"kind\":\"adjustment\",\"id\":\"brighten\",\"name\":\"Brighten\",\"visible\":true,\"opacity\":1.0,\"blendMode\":\"normal\",\"transform\":{\"x\":0.0,\"y\":0.0,\"scaleX\":1.0,\"scaleY\":1.0,\"rotation\":0.0},\"adjustmentKind\":\"brightnessContrast\",\"params\":{}}" ] assets=[ key=semio-emblem content="" child=child_id=raster-asset-81e1564e819d209c target="semio-emblem-image!s.stdio.semio@v1/image" ]

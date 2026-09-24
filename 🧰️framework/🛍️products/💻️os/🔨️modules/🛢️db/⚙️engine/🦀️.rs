@@ -3017,7 +3017,8 @@ impl DatabaseCatalogBootstrapRejectedClose {
     }
 
     fn retry(self: Arc<Self>) {
-        if let Some(job) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let retained = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some(job) = retained {
             self.scheduled.store(true, std::sync::atomic::Ordering::Release);
             self.submit_exact(job);
         }
@@ -3206,6 +3207,8 @@ struct DatabaseCatalogBootstrapState {
     #[cfg(test)]
     max_active_drivers: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
+    driver_grants: std::sync::atomic::AtomicU64,
+    #[cfg(test)]
     poll_worker_thread: std::sync::atomic::AtomicBool,
 }
 
@@ -3260,11 +3263,13 @@ impl DatabaseCatalogBootstrapState {
         if self.finished.load(Ordering::Acquire) {
             return;
         }
-        if self.driver_authority.compare_exchange(DatabaseCatalogBootstrapDriverAuthority::Idle as u8, DatabaseCatalogBootstrapDriverAuthority::Queued as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            self.wake_requested.store(true, Ordering::Release);
-            return;
+        while self.driver_authority.compare_exchange(DatabaseCatalogBootstrapDriverAuthority::Idle as u8, DatabaseCatalogBootstrapDriverAuthority::Queued as u8, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+            self.wake_requested.store(true, Ordering::SeqCst);
+            if self.driver_authority.load(Ordering::SeqCst) != DatabaseCatalogBootstrapDriverAuthority::Idle as u8 || !self.wake_requested.swap(false, Ordering::SeqCst) {
+                return;
+            }
         }
-        self.wake_requested.swap(false, Ordering::AcqRel);
+        self.wake_requested.swap(false, Ordering::SeqCst);
         self.scheduled.store(true, Ordering::Release);
         self.set_progress(DatabaseCatalogBootstrapProgress::Scheduled);
         let state = self.clone();
@@ -3314,7 +3319,8 @@ impl DatabaseCatalogBootstrapState {
         let state = self.clone();
         self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || {
             state.retry_armed.store(false, Ordering::Release);
-            if let Some((job, attempt)) = state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            let retained = state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            if let Some((job, attempt)) = retained {
                 if state.driver_authority.compare_exchange(DatabaseCatalogBootstrapDriverAuthority::Retry as u8, DatabaseCatalogBootstrapDriverAuthority::Queued as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
                     state.scheduled.store(true, Ordering::Release);
                     state.submit_exact(job, attempt);
@@ -3340,6 +3346,7 @@ impl DatabaseCatalogBootstrapState {
         self.scheduled.store(false, Ordering::Release);
         #[cfg(test)]
         {
+            self.driver_grants.fetch_add(1, Ordering::AcqRel);
             let active = self.active_drivers.fetch_add(1, Ordering::AcqRel) + 1;
             self.max_active_drivers.fetch_max(active, Ordering::AcqRel);
             if let Some(hook) = self.controlled_driver_claim_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone() {
@@ -3353,12 +3360,12 @@ impl DatabaseCatalogBootstrapState {
         }
         #[cfg(test)]
         self.active_drivers.fetch_sub(1, Ordering::AcqRel);
-        if self.driver_authority.compare_exchange(DatabaseCatalogBootstrapDriverAuthority::Driving as u8, DatabaseCatalogBootstrapDriverAuthority::Idle as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
+        if self.driver_authority.compare_exchange(DatabaseCatalogBootstrapDriverAuthority::Driving as u8, DatabaseCatalogBootstrapDriverAuthority::Idle as u8, Ordering::SeqCst, Ordering::SeqCst).is_err() {
             *self.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DbError::LimitExceeded("database catalog-bootstrap driver release authority"));
             self.retry_pressure.store(true, Ordering::Release);
             self.closing.store(true, Ordering::Release);
         }
-        if self.wake_requested.swap(false, Ordering::AcqRel) {
+        if self.wake_requested.swap(false, Ordering::SeqCst) {
             self.schedule();
         }
     }
@@ -3379,7 +3386,7 @@ impl DatabaseCatalogBootstrapState {
             self.stage_error(DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(self.observed_generation()) }, DatabaseCatalogBootstrapProgress::Fault);
             return;
         }
-        if self.cancelled.load(Ordering::Acquire) && self.phase() != DatabaseCatalogBootstrapPhase::Terminal {
+        if self.cancelled.load(Ordering::Acquire) && !matches!(self.phase(), DatabaseCatalogBootstrapPhase::Validate | DatabaseCatalogBootstrapPhase::Publish | DatabaseCatalogBootstrapPhase::Terminal) {
             let mut terminal = self.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if terminal.is_none() {
                 *terminal = Some(DbError::Closed);
@@ -3682,7 +3689,8 @@ impl DatabaseCatalogBootstrapState {
                 }
             }
         }
-        if let Some(mut result) = self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().or_else(|| self.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()) {
+        let retained = self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().or_else(|| self.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take());
+        if let Some(mut result) = retained {
             if let Ok(owner) = result.as_mut() {
                 owner.close_one();
                 if !owner.terminal_is_empty() {
@@ -3814,6 +3822,8 @@ impl DatabaseCatalogBootstrapFuture {
             active_drivers: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
             max_active_drivers: std::sync::atomic::AtomicUsize::new(0),
+            #[cfg(test)]
+            driver_grants: std::sync::atomic::AtomicU64::new(0),
             #[cfg(test)]
             poll_worker_thread: std::sync::atomic::AtomicBool::new(false),
         });
@@ -4049,10 +4059,11 @@ async fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
 }
 
+/// 🧵️ Every law owns its pool: laws shut their pool down and count its retained uses, so a
+/// process-shared pool would let concurrent laws observe or stop each other's pool.
 #[cfg(test)]
 fn test_worker_pool() -> Arc<WorkerPool> {
-    static POOL: std::sync::OnceLock<Arc<WorkerPool>> = std::sync::OnceLock::new();
-    POOL.get_or_init(|| Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 4)))).clone()
+    Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 4)))
 }
 //#endregion 🔖️Ids
 
@@ -4420,6 +4431,9 @@ impl HistoryView {
             return true;
         }
         if self.admission.take().is_some() {
+            return true;
+        }
+        if self.terminal_state.take().is_some() {
             return true;
         }
         false
@@ -5207,15 +5221,13 @@ pub mod vcs_integration {
     impl VersionGraph for VcsVersionGraph {
         fn record_change<'a>(&'a self, document: &'a ArtifactId, change: ChangeRecord) -> VersionGraphFuture<'a, String> {
             Box::pin(async move {
-                crate::db_actor::block_on(async move {
-                    let admission = record_credit(document, &change).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-                    let mut lease = self.store(document, &admission).await?;
-                    let ChangeRecord { content_hash, author, message, timestamp_ms, .. } = change;
-                    let operation = HashMutation { hash: content_hash.0, author: Some(protocol::ActorId(author.0)), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, timestamp_ms)) };
-                    let mutations = Vec::from([operation]);
-                    lease.store_mut().dispatch(store::ArtifactCommand::Apply { mutations, description: Some(message) }).await.map_err(map_vcs_error)?;
-                    Ok(lease.store_mut().envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
-                })
+                let admission = record_credit(document, &change).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+                let mut lease = self.store(document, &admission).await?;
+                let ChangeRecord { content_hash, author, message, timestamp_ms, .. } = change;
+                let operation = HashMutation { hash: content_hash.0, author: Some(protocol::ActorId(author.0)), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, timestamp_ms)) };
+                let mutations = Vec::from([operation]);
+                lease.store_mut().dispatch(store::ArtifactCommand::Apply { mutations, description: Some(message) }).await.map_err(map_vcs_error)?;
+                Ok(lease.store_mut().envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
             })
         }
 
@@ -5229,42 +5241,36 @@ pub mod vcs_integration {
         /// override that without reaching into `vcs`'s private state.
         fn checkpoint<'a>(&'a self, document: &'a ArtifactId, request: CheckpointRequest) -> VersionGraphFuture<'a, String> {
             Box::pin(async move {
-                crate::db_actor::block_on(async move {
-                    let admission = checkpoint_credit(document, &request).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-                    let mut lease = self.store(document, &admission).await?;
-                    let CheckpointRequest { message, authors: source_authors, .. } = request;
-                    let mut authors = Vec::with_capacity(source_authors.capacity());
-                    for author in source_authors {
-                        let name = author.0;
-                        authors.push(vcs::Author { id: name.clone(), name, avatar: None });
-                    }
-                    lease.store_mut().dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(message), authors }).await.map_err(map_vcs_error)?;
-                    lease.store_mut().current_checkpoint_id().map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
-                })
+                let admission = checkpoint_credit(document, &request).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+                let mut lease = self.store(document, &admission).await?;
+                let CheckpointRequest { message, authors: source_authors, .. } = request;
+                let mut authors = Vec::with_capacity(source_authors.capacity());
+                for author in source_authors {
+                    let name = author.0;
+                    authors.push(vcs::Author { id: name.clone(), name, avatar: None });
+                }
+                lease.store_mut().dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(message), authors }).await.map_err(map_vcs_error)?;
+                lease.store_mut().current_checkpoint_id().map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
             })
         }
 
         fn merge_base<'a>(&'a self, document: &'a ArtifactId, a: &'a str, b: &'a str) -> VersionGraphFuture<'a, Option<String>> {
             Box::pin(async move {
-                crate::db_actor::block_on(async move {
-                    let admission = relation_credit(document, &[a, b]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-                    let mut lease = self.store(document, &admission).await?;
-                    Ok(store::merge_base(lease.store_mut().envelope(), a, b).await)
-                })
+                let admission = relation_credit(document, &[a, b]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+                let mut lease = self.store(document, &admission).await?;
+                Ok(store::merge_base(lease.store_mut().envelope(), a, b).await)
             })
         }
 
         fn head<'a>(&'a self, document: &'a ArtifactId, alternative: &'a str) -> VersionGraphFuture<'a, Option<String>> {
             Box::pin(async move {
-                crate::db_actor::block_on(async move {
-                    let admission = relation_credit(document, &[alternative]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
-                    let mut lease = self.store(document, &admission).await?;
-                    let envelope = lease.store_mut().envelope();
-                    if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
-                        return Ok(found.checkpoint_ids.last().cloned());
-                    }
-                    Ok(lease.store_mut().current_checkpoint_id().map(str::to_string))
-                })
+                let admission = relation_credit(document, &[alternative]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+                let mut lease = self.store(document, &admission).await?;
+                let envelope = lease.store_mut().envelope();
+                if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
+                    return Ok(found.checkpoint_ids.last().cloned());
+                }
+                Ok(lease.store_mut().current_checkpoint_id().map(str::to_string))
             })
         }
 
@@ -5677,6 +5683,10 @@ impl DatabaseCreateCatalogResult {
         } else {
             self.storage.take().is_some()
         }
+    }
+
+    fn retained_owner_count(outcome: &Result<Self, DbError>) -> usize {
+        outcome.as_ref().map_or(1, |result| usize::from(result.storage.is_some()) + usize::from(result.document.is_some()) + usize::from(result.actual.is_some()))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -6269,6 +6279,16 @@ impl DatabaseCreateCatalogState {
         self.wake_requested.store(true, std::sync::atomic::Ordering::Release);
     }
 
+    fn accepts_interruption(&self) -> bool {
+        match self.phase() {
+            DatabaseCreateCatalogPhase::Publish | DatabaseCreateCatalogPhase::Terminal => false,
+            DatabaseCreateCatalogPhase::CloseWork | DatabaseCreateCatalogPhase::Revalidate | DatabaseCreateCatalogPhase::Retire => {
+                !self.closing.load(std::sync::atomic::Ordering::Acquire) && self.outcome.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            }
+            _ => true,
+        }
+    }
+
     fn set_progress(&self, progress: DatabaseCreateCatalogProgress) {
         self.progress.store(progress as u8, std::sync::atomic::Ordering::Release);
     }
@@ -6314,11 +6334,13 @@ impl DatabaseCreateCatalogState {
             self.arm_callback_close();
             return;
         }
-        if self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Idle as u8, DatabaseCreateCatalogDriverAuthority::Queued as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            self.wake_requested.store(true, Ordering::Release);
-            return;
+        while self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Idle as u8, DatabaseCreateCatalogDriverAuthority::Queued as u8, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+            self.wake_requested.store(true, Ordering::SeqCst);
+            if self.driver_authority.load(Ordering::SeqCst) != DatabaseCreateCatalogDriverAuthority::Idle as u8 || !self.wake_requested.swap(false, Ordering::SeqCst) {
+                return;
+            }
         }
-        self.wake_requested.swap(false, Ordering::AcqRel);
+        self.wake_requested.swap(false, Ordering::SeqCst);
         let state = self.clone();
         let generation = self.generation;
         self.submit_exact(Box::new(move || state.drive_one(generation)), 0);
@@ -6345,22 +6367,27 @@ impl DatabaseCreateCatalogState {
         #[cfg(test)]
         self.callback_worker_thread.store(std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-")), Ordering::Release);
         let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() else { return };
+        let interruptible = self.accepts_interruption();
+        let cancelled = self.cancelled.load(Ordering::Acquire);
+        let exhausted = attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT;
         let terminal = if !self.is_current() {
             Some((DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(self.observed_generation()) }, DatabaseCreateCatalogProgress::Fault))
-        } else if self.cancelled.load(Ordering::Acquire) {
+        } else if cancelled && interruptible {
             Some((DbError::Closed, DatabaseCreateCatalogProgress::Cancelled))
-        } else if self.pool.now_ms() >= self.deadline_ms.load(Ordering::Acquire) {
+        } else if self.pool.now_ms() >= self.deadline_ms.load(Ordering::Acquire) && interruptible {
             Some((DbError::Timeout(String::from("database create-catalog retry deadline")), DatabaseCreateCatalogProgress::Fault))
-        } else if attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT {
+        } else if exhausted && interruptible {
             Some((DbError::LimitExceeded("database create-catalog retry exhausted"), DatabaseCreateCatalogProgress::Fault))
         } else {
             None
         };
-        if let Some((error, progress)) = terminal {
+        if terminal.is_some() || cancelled || exhausted {
             if self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Retry as u8, DatabaseCreateCatalogDriverAuthority::Driving as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
                 *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(job);
                 self.retry_closing.store(true, Ordering::Release);
-                self.stage_error(error, progress);
+                if let Some((error, progress)) = terminal {
+                    self.stage_error(error, progress);
+                }
                 self.drive_callback_close_claimed(true);
             } else {
                 *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt));
@@ -6456,33 +6483,34 @@ impl DatabaseCreateCatalogState {
         }
         #[cfg(test)]
         self.active_drivers.fetch_sub(1, Ordering::AcqRel);
-        if self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Driving as u8, DatabaseCreateCatalogDriverAuthority::Idle as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
+        if self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Driving as u8, DatabaseCreateCatalogDriverAuthority::Idle as u8, Ordering::SeqCst, Ordering::SeqCst).is_err() {
             self.stage_error(DbError::LimitExceeded("database create-catalog driver release"), DatabaseCreateCatalogProgress::Fault);
         }
-        if self.wake_requested.swap(false, Ordering::AcqRel) {
+        if self.wake_requested.swap(false, Ordering::SeqCst) {
             self.schedule();
         }
     }
 
     fn drive_claimed(self: &Arc<Self>, generation: u64) {
         use std::sync::atomic::Ordering;
+        if self.finished.load(Ordering::Acquire) {
+            return;
+        }
+        if self.phase() == DatabaseCreateCatalogPhase::Terminal {
+            if self.closing.load(Ordering::Acquire) {
+                self.retire_terminal_one();
+            }
+            return;
+        }
         if !self.retry_closing.load(Ordering::Acquire) && (generation != self.generation || !self.is_current()) {
             self.stage_error(DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(self.observed_generation()) }, DatabaseCreateCatalogProgress::Fault);
             return;
         }
-        if self.closing.load(Ordering::Acquire) && self.phase() == DatabaseCreateCatalogPhase::Terminal {
-            self.retire_terminal_one();
-            return;
-        }
-        if self.cancelled.load(Ordering::Acquire)
-            && !matches!(self.phase(), DatabaseCreateCatalogPhase::CloseWork | DatabaseCreateCatalogPhase::Revalidate | DatabaseCreateCatalogPhase::Retire | DatabaseCreateCatalogPhase::Publish | DatabaseCreateCatalogPhase::Terminal)
-        {
+        if self.cancelled.load(Ordering::Acquire) && self.accepts_interruption() {
             self.stage_error(DbError::Closed, DatabaseCreateCatalogProgress::Cancelled);
             return;
         }
-        if self.pool.now_ms() >= self.deadline_ms.load(Ordering::Acquire)
-            && !matches!(self.phase(), DatabaseCreateCatalogPhase::CloseWork | DatabaseCreateCatalogPhase::Revalidate | DatabaseCreateCatalogPhase::Retire | DatabaseCreateCatalogPhase::Publish | DatabaseCreateCatalogPhase::Terminal)
-        {
+        if self.pool.now_ms() >= self.deadline_ms.load(Ordering::Acquire) && self.accepts_interruption() {
             self.stage_error(DbError::Timeout(String::from("database create-catalog deadline")), DatabaseCreateCatalogProgress::Fault);
             return;
         }
@@ -7127,7 +7155,10 @@ impl DatabaseCreateCatalogState {
             return;
         }
         drop(cursor);
-        if self.closing.load(std::sync::atomic::Ordering::Acquire) {
+        let unpublished = self.storage.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+            || self.document.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+            || self.outcome.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
+        if self.closing.load(std::sync::atomic::Ordering::Acquire) && !unpublished {
             self.set_phase(DatabaseCreateCatalogPhase::Terminal);
             return;
         }
@@ -7198,8 +7229,8 @@ impl DatabaseCreateCatalogState {
             + usize::from(self.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
             + usize::from(self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
             + usize::from(self.outcome.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
-            + usize::from(self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
-            + usize::from(self.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
+            + self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().map_or(0, DatabaseCreateCatalogResult::retained_owner_count)
+            + self.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().map_or(0, DatabaseCreateCatalogResult::retained_owner_count)
             + usize::from(self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
             + usize::from(self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
             + usize::from(self.pending_owned.load(std::sync::atomic::Ordering::Acquire))
@@ -7238,9 +7269,13 @@ impl DatabaseCreateCatalogState {
     }
 
     fn release_success(self: &Arc<Self>) {
+        if self.roots_are_empty() && self.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            self.retire_terminal_one();
+            return;
+        }
         self.closing.store(true, std::sync::atomic::Ordering::Release);
         self.wake_requested.store(true, std::sync::atomic::Ordering::Release);
-        self.schedule();
+        self.begin_callback_close();
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -7421,7 +7456,6 @@ impl Future for DatabaseCreateCatalogFuture {
         let completion = { self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
         if let Some(result) = completion {
             self.resolved = true;
-            self.state.release_success();
             return std::task::Poll::Ready(result);
         }
         #[cfg(test)]
@@ -7433,7 +7467,6 @@ impl Future for DatabaseCreateCatalogFuture {
         if let Some(result) = completion {
             self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             self.resolved = true;
-            self.state.release_success();
             return std::task::Poll::Ready(result);
         }
         std::task::Poll::Pending
@@ -7724,6 +7757,7 @@ pub enum DatabaseShutdownBlock {
     Authorities(usize),
     VersionGraph,
     Executor(semio_framework_async::WorkerSubmitErrorKind),
+    ArtifactClose(db_artifact::ArtifactCloseRetryProgress),
 }
 
 /// 🚦️ One bounded retained database shutdown result.
@@ -7824,6 +7858,32 @@ enum DatabaseDocumentMountPolicy {
 #[derive(Clone)]
 struct DatabaseDocumentMountReply {
     authority: Arc<db_artifact::ArtifactAuthority>,
+    handles: Arc<std::sync::atomic::AtomicUsize>,
+}
+
+/// 🎫️ Counts the caller-held `ArtifactHandle`s of one mounted document. Database shutdown blocks
+/// on these only; internal retained owners that still share the authority retire on their own.
+struct ArtifactHandleLease {
+    handles: Arc<std::sync::atomic::AtomicUsize>,
+}
+
+impl ArtifactHandleLease {
+    fn new(handles: Arc<std::sync::atomic::AtomicUsize>) -> Self {
+        handles.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        Self { handles }
+    }
+}
+
+impl Clone for ArtifactHandleLease {
+    fn clone(&self) -> Self {
+        Self::new(self.handles.clone())
+    }
+}
+
+impl Drop for ArtifactHandleLease {
+    fn drop(&mut self) {
+        self.handles.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+    }
 }
 
 struct DatabaseDocumentMountWaiter {
@@ -8579,7 +8639,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             Err(rejected) => return Err(Self::retained_mount_rejection(rejected, None)),
         };
         emit.emit(EmitEvent::new("db_engine.document_opened").with_document(to_core_document_id(&document).await)).await;
-        Ok(DatabaseDocumentMountReply { authority: Arc::new(authority) })
+        Ok(DatabaseDocumentMountReply { authority: Arc::new(authority), handles: Arc::new(std::sync::atomic::AtomicUsize::new(0)) })
     }
 
     async fn run_document_mount(
@@ -8633,7 +8693,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             return Self::run_open_document_mount(DatabaseMountFutureLiveGuardV1::new(), pool, pool_use, storage, document, open_config, mailbox_capacities, emit).await;
         };
         emit.emit(EmitEvent::new("db_engine.document_created").with_document(to_core_document_id(&document).await)).await;
-        Ok(DatabaseDocumentMountReply { authority: Arc::new(authority) })
+        Ok(DatabaseDocumentMountReply { authority: Arc::new(authority), handles: Arc::new(std::sync::atomic::AtomicUsize::new(0)) })
     }
 
     async fn mount_document(&self, document: protocol::ArtifactId, policy: DatabaseDocumentMountPolicy) -> Result<ArtifactHandle, DatabaseDocumentOpenRejected> {
@@ -8650,7 +8710,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                 }
                 let completion = completion.clone();
                 drop(registry);
-                return Ok(ArtifactHandle { authority: completion.authority, document, pool: self.pool.clone() });
+                return Ok(ArtifactHandle { authority: completion.authority, _lease: ArtifactHandleLease::new(completion.handles), document, pool: self.pool.clone() });
             }
             if let Some(DatabaseDocumentMountSlot::Opening { generation, owner, waiters }) = registry.slots.get_mut(&document.0) {
                 let Some(slot) = waiters.iter().position(Option::is_none) else {
@@ -8707,7 +8767,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         }
         let result = reply.await.map_err(DatabaseDocumentOpenRejected::Database)?;
         let result = result.map_err(DatabaseDocumentOpenRejected::Database)?;
-        Ok(ArtifactHandle { authority: result.authority, document, pool: self.pool.clone() })
+        Ok(ArtifactHandle { authority: result.authority, _lease: ArtifactHandleLease::new(result.handles), document, pool: self.pool.clone() })
     }
 
     /// 🪴️ Admits the exact create-document catalog transaction before any catalog owner is copied.
@@ -8761,6 +8821,9 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         }
         if let Some((_, authority)) = self.closing_authority.as_ref() {
             if !authority.shutdown_step() {
+                if let Some(progress) = authority.close_retry_progress().filter(db_artifact::ArtifactCloseRetryProgress::is_blocked) {
+                    return Ok(DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::ArtifactClose(progress)));
+                }
                 return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Authority, remaining_authorities: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len() + 1 });
             }
             self.closing_authority.take();
@@ -8787,7 +8850,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                 .slots
                 .iter()
                 .filter_map(|(document, slot)| match slot {
-                    DatabaseDocumentMountSlot::Ready(completion) if Arc::strong_count(&completion.authority) == 1 => Some(document.clone()),
+                    DatabaseDocumentMountSlot::Ready(completion) if completion.handles.load(std::sync::atomic::Ordering::Acquire) == 0 => Some(document.clone()),
                     _ => None,
                 })
                 .min()
@@ -8820,6 +8883,9 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::Emit, remaining_authorities: 0 });
         }
         if self.pool_use.as_ref().is_some_and(|pool_use| Arc::strong_count(pool_use) != 1) {
+            if let Some(progress) = db_artifact::artifact_close_retry_progress(&self.pool).filter(db_artifact::ArtifactCloseRetryProgress::is_blocked) {
+                return Ok(DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::ArtifactClose(progress)));
+            }
             return Ok(DatabaseShutdownProgress::Progress { phase: DatabaseShutdownPhase::PoolUse, remaining_authorities: 0 });
         }
         self.pool_use.take();
@@ -8827,9 +8893,26 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         Ok(DatabaseShutdownProgress::Complete)
     }
 
+    /// 🔂️ Grants every faulted artifact close this Database still retires (its closing authority and the
+    /// dropped authorities retiring on its pool) a fresh bounded retry budget.
+    pub fn readmit_artifact_close_retries(&self) -> usize {
+        let closing = self.closing_authority.as_ref().is_some_and(|(_, authority)| authority.readmit_close_retry());
+        usize::from(closing) + db_artifact::artifact_close_retry_readmit(&self.pool)
+    }
+
+    /// 🛑️ Stops the automatic retries of every faulted artifact close this Database still retires.
+    pub fn cancel_artifact_close_retries(&self) -> usize {
+        let closing = self.closing_authority.as_ref().is_some_and(|(_, authority)| authority.cancel_close_retry());
+        usize::from(closing) + db_artifact::artifact_close_retry_cancel(&self.pool)
+    }
+
     /// 🛬️ Drives bounded shutdown steps to a terminal acknowledgement while borrowing the exact
-    /// Database. Error and future cancellation therefore preserve caller retry authority.
+    /// Database. Error and future cancellation therefore preserve caller retry authority. Each call
+    /// is the product retry owner of faulted artifact closes: it re-admits exhausted or cancelled
+    /// ones once, lets the pool timer drive their bounded backoff, reports an exhausted budget as a
+    /// terminal error and cancels the retries when the caller cancels.
     pub async fn shutdown(&mut self, control: &DatabaseShutdownControl) -> Result<(), DbError> {
+        self.readmit_artifact_close_retries();
         let mut reached = None;
         loop {
             match self.shutdown_step(control).await? {
@@ -8846,7 +8929,13 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                 DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::Executor(kind)) => {
                     return Err(DbError::Unavailable(format!("database shutdown retains a non-runnable document-mount job: {kind:?}")));
                 }
+                DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::ArtifactClose(progress)) => {
+                    return Err(DbError::Unavailable(format!("database shutdown retains a faulted artifact close after {} of {} retries ({:?})", progress.attempts, progress.limit, progress.state)));
+                }
                 DatabaseShutdownProgress::Interrupted => {
+                    if control.cancelled.load(std::sync::atomic::Ordering::Acquire) {
+                        self.cancel_artifact_close_retries();
+                    }
                     return Err(control.interruption_error(DatabaseShutdownInterruptionWitness {
                         phase: reached,
                         open_artifacts: self.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len(),
@@ -9070,7 +9159,7 @@ enum ArtifactSubmitWorkOwner {
 
 struct ArtifactSubmitState {
     pool: WorkerPool,
-    authority: Arc<db_artifact::ArtifactAuthority>,
+    authority: Mutex<Option<Arc<db_artifact::ArtifactAuthority>>>,
     document: protocol::ArtifactId,
     generation: u64,
     authority_generation: GenerationId,
@@ -9139,7 +9228,12 @@ impl ArtifactSubmitState {
     fn finish(&self) {
         if !self.finished.swap(true, std::sync::atomic::Ordering::AcqRel) {
             self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            self.authority.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
         }
+    }
+
+    fn authority(&self) -> Option<Arc<db_artifact::ArtifactAuthority>> {
+        self.authority.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -9250,7 +9344,8 @@ impl ArtifactSubmitState {
     fn terminalize_retry_authority(&self, detail: &'static str) {
         self.retry_armed.store(false, std::sync::atomic::Ordering::Release);
         self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-        if let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let retained = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some((job, attempt)) = retained {
             let mut terminal = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if terminal.is_none() {
                 *terminal = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
@@ -9269,9 +9364,14 @@ impl ArtifactSubmitState {
         if generation != self.generation {
             return;
         }
-        if self.authority.generation() != self.authority_generation {
+        let Some(authority) = self.authority() else {
             self.scheduled.store(false, Ordering::Release);
-            self.terminalize_work(Err(DbError::StaleGeneration { expected: self.authority.generation(), actual: self.authority_generation }), SubmitProgress::Fault);
+            self.terminalize_work(Err(DbError::Closed), SubmitProgress::Cancelled);
+            return;
+        };
+        if authority.generation() != self.authority_generation {
+            self.scheduled.store(false, Ordering::Release);
+            self.terminalize_work(Err(DbError::StaleGeneration { expected: authority.generation(), actual: self.authority_generation }), SubmitProgress::Fault);
             return;
         }
         self.scheduled.store(false, Ordering::Release);
@@ -9285,7 +9385,7 @@ impl ArtifactSubmitState {
             let Some(ArtifactSubmitWorkOwner::Request { batch, options, submitted_at_ms }) = work.take() else {
                 return;
             };
-            *work = Some(ArtifactSubmitWorkOwner::Actor(self.authority.submit_retained(batch, options, submitted_at_ms)));
+            *work = Some(ArtifactSubmitWorkOwner::Actor(authority.submit_retained(batch, options, submitted_at_ms)));
             drop(work);
             self.schedule();
             return;
@@ -9344,7 +9444,7 @@ impl SubmitFuture {
         let (work, terminal_work) = if generation == 0 { (None, Some(request)) } else { (Some(request), None) };
         let state = Arc::new(ArtifactSubmitState {
             pool: handle.pool.as_ref().clone(),
-            authority: handle.authority.clone(),
+            authority: Mutex::new(Some(handle.authority.clone())),
             document: handle.document.clone(),
             generation,
             authority_generation: handle.authority.generation(),
@@ -9412,17 +9512,17 @@ impl SubmitFuture {
     }
 
     pub fn take_actor_terminal_job(&self) -> Option<db_artifact::ArtifactRunnerTerminalJob> {
-        self.state.authority.take_terminal_job()
+        self.state.authority().and_then(|authority| authority.take_terminal_job())
     }
 
     pub fn close_step(&self) -> bool {
-        let progressed = self.state.close_one() || self.state.authority.close_step();
+        let progressed = self.state.close_one() || self.state.authority().is_some_and(|authority| authority.close_step());
         self.state.finish_if_terminal_empty();
         progressed
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.state.terminal_is_empty() && self.state.authority.terminal_is_empty()
+        self.state.terminal_is_empty() && self.state.authority().is_none_or(|authority| authority.terminal_is_empty())
     }
 }
 
@@ -9619,14 +9719,16 @@ impl ArtifactHistoryAdmission {
 
 impl Drop for ArtifactHistoryAdmission {
     fn drop(&mut self) {
-        assert!(self.reservation.is_none(), "artifact history admission dropped a live replay reservation");
-        let mut state = ARTIFACT_HISTORY_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let entry = &mut state.slots[self.slot];
-        if !entry.occupied || entry.generation != self.generation || entry.bytes != ARTIFACT_HISTORY_OPERATION_BYTES || entry.items != ARTIFACT_HISTORY_OPERATION_ITEMS {
-            return;
+        let live = self.reservation.take().is_some();
+        {
+            let mut state = ARTIFACT_HISTORY_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let entry = &mut state.slots[self.slot];
+            if entry.occupied && entry.generation == self.generation && entry.bytes == ARTIFACT_HISTORY_OPERATION_BYTES && entry.items == ARTIFACT_HISTORY_OPERATION_ITEMS {
+                *entry = EMPTY_ARTIFACT_HISTORY_SLOT;
+                state.bytes = state.bytes.checked_sub(ARTIFACT_HISTORY_OPERATION_BYTES).expect("artifact history byte credit underflow");
+            }
         }
-        *entry = EMPTY_ARTIFACT_HISTORY_SLOT;
-        state.bytes = state.bytes.checked_sub(ARTIFACT_HISTORY_OPERATION_BYTES).expect("artifact history byte credit underflow");
+        assert!(!live || std::thread::panicking(), "artifact history admission dropped a live replay reservation");
     }
 }
 
@@ -9980,7 +10082,8 @@ impl ArtifactHistoryState {
     fn terminalize_retry_authority(&self, detail: &'static str) {
         self.retry_armed.store(false, std::sync::atomic::Ordering::Release);
         self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-        if let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let retained = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some((job, attempt)) = retained {
             let mut terminal = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if terminal.is_none() {
                 *terminal = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
@@ -10532,6 +10635,7 @@ impl Drop for ArtifactHistoryTerminalWork {
 #[derive(Clone)]
 pub struct ArtifactHandle {
     authority: Arc<db_artifact::ArtifactAuthority>,
+    _lease: ArtifactHandleLease,
     document: protocol::ArtifactId,
     pool: Arc<WorkerPool>,
 }

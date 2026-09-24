@@ -316,7 +316,8 @@
             "actionSequence",
             "outcome",
             "mutationCount",
-            "hostEffects"
+            "hostEffects",
+            "historyPatches"
           ],
           "properties": {
             "kind": {
@@ -365,6 +366,13 @@
               "items": {
                 "$ref": "#/definitions/bytes"
               }
+            },
+            "historyPatches": {
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "$ref": "#/definitions/bytes"
+              }
             }
           },
           "allOf": [
@@ -387,6 +395,10 @@
                     "maxLength": 256
                   },
                   "hostEffects": {
+                    "type": "array",
+                    "maxItems": 0
+                  },
+                  "historyPatches": {
                     "type": "array",
                     "maxItems": 0
                   }

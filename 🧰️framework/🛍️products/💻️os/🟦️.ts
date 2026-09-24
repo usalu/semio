@@ -30,7 +30,7 @@ import type { ArtifactPresencePeer, ClientFrame, ExactWireMutationEnvelope, Loca
 import { decodeClientFrame, decodeLocalInteractionQueryCommand, decodeLocalInteractionQueryReply, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodeLocalInteractionQueryCommand, encodeLocalInteractionQueryReply, encodePresencePeer, encodeServerFrame, localInteractionIdentityEquals, mutationEnvelopeFromWire, mutationEnvelopeToWire } from "@semio-tech/framework-replication";
 /** 🔢️ Shared byte-codec floor — the same primitives the wire frames are built from; os reuses them
  * for its backbone-envelope and app-channel codecs rather than keeping a second copy. */
-import { decodeCausalEnvelopeBatch, decodeDocumentBackboneEnvelopeBatchExact, encodeCausalEnvelopeBatch, readBool, readBytes, readF64, readHash32, readStr, readU8, readVarintU64, readVecBytes, readVecEnvelope, readVecStr, writeBool, writeBytes, writeF64, writeHash32, writeStr, writeVarintU64, writeVecBytes, writeVecEnvelope, writeVecStr } from "@semio-tech/framework-replication";
+import { decodeCausalEnvelopeBatch, decodeDocumentBackboneEnvelopeBatchExact, encodeCausalEnvelopeBatch, readBool, readBytes, readF64, readHash32, readStr, readU8, readVarintU64, readVarintU64Exact, readVecBytes, readVecEnvelope, readVecStr, writeBool, writeBytes, writeF64, writeHash32, writeStr, writeVarintU64, writeVarintU64Exact, writeVecBytes, writeVecEnvelope, writeVecStr } from "@semio-tech/framework-replication";
 import { parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
 import { parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
 import { parseBrowserActorViewStateRequest, type BrowserActorViewStateRequest } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
@@ -615,7 +615,7 @@ export {
   sealGisMapInferenceJobRequestV1,
 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 
-export type DocumentRuntimeScopeV1 = Readonly<{ kind: "hub"; spaceId: string; documentId: string }> | Readonly<{ kind: "local"; documentId: string }>;
+export type DocumentRuntimeScopeV1 = Readonly<{ kind: "hub", dataClass: "persistedShared"; spaceId: string; documentId: string }> | Readonly<{ kind: "local"; documentId: string }>;
 
 /** 🔑️ Canonical collision-free document runtime ownership key. Hub documents are keyed by their
  * complete authority scope; local documents occupy an explicitly separate namespace. */
@@ -631,13 +631,55 @@ export function documentRuntimeKeyV1(scope: DocumentRuntimeScopeV1): string {
   return `v1:${spaceBytes.length}:${documentBytes.length}:${scope.spaceId}${scope.documentId}`;
 }
 
+/** 🗃️ Durability × sharing class for persistence bindings and replication lanes.
+ * Preview/presence are always `ephemeralShared` and must never be treated as durable WAL state. */
+export type PersistenceDataClass = "persistedLocalOnly" | "persistedShared" | "ephemeralLocalOnly" | "ephemeralShared";
+
+export type ClassifiedWireLane =
+  | { readonly lane: "command"; readonly dataClass: "persistedLocalOnly" | "persistedShared" }
+  | { readonly lane: "preview"; readonly dataClass: "ephemeralShared" }
+  | { readonly lane: "presence"; readonly dataClass: "ephemeralShared" };
+
+export function wireLaneDataClass(lane: "command" | "preview" | "presence"): PersistenceDataClass {
+  if (lane === "preview" || lane === "presence") return "ephemeralShared";
+  return "persistedShared";
+}
+
+export function bindingsDataClass(bindings: readonly PersistenceBinding[]): PersistenceDataClass {
+  const first = bindings[0];
+  if (!first) return "ephemeralLocalOnly";
+  return first.dataClass;
+}
+
+export function folderPersistenceBinding(path: string): Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }> {
+  return { kind: "folder", path, dataClass: "persistedLocalOnly" };
+}
+
+export function ephemeralLocalPersistenceBinding(): Extract<PersistenceBinding, { kind: "ephemeral"; dataClass: "ephemeralLocalOnly" }> {
+  return { kind: "ephemeral", dataClass: "ephemeralLocalOnly" };
+}
+
+export function ephemeralSharedPersistenceBinding(lane: "preview" | "presence" = "preview"): Extract<PersistenceBinding, { kind: "ephemeral"; dataClass: "ephemeralShared" }> {
+  return { kind: "ephemeral", dataClass: "ephemeralShared", lane };
+}
+
+export function hubPersistenceBinding(
+  baseUrl: string,
+  spaceId: string,
+  extras?: Readonly<{ requestedSurfaceId?: string; installedTarget?: DocumentExecutionTargetLeaseFieldsV1 }>,
+): Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }> {
+  return { kind: "hub", baseUrl, spaceId, dataClass: "persistedShared", ...extras };
+}
+
 export type PersistenceBinding =
-  | { readonly kind: "folder"; readonly path: string }
-  /** 🪪️ A hub binding states which surface it would like (`requestedSurfaceId`) and, when a previous
+  | { readonly kind: "folder"; readonly path: string; readonly dataClass: "persistedLocalOnly" }
+  /** ☁️ A hub binding states which surface it would like (`requestedSurfaceId`) and, when a previous
    * verified installation is already known, the complete {@link DocumentExecutionTargetLeaseFieldsV1}
    * to compare the next plan against. Neither is byte ownership: a non-`react` renderer target is
    * admitted only through a live private lease minted from server-verified bytes. */
-  | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly requestedSurfaceId?: string; readonly installedTarget?: DocumentExecutionTargetLeaseFieldsV1 };
+  | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly dataClass: "persistedShared"; readonly requestedSurfaceId?: string; readonly installedTarget?: DocumentExecutionTargetLeaseFieldsV1 }
+  | { readonly kind: "ephemeral"; readonly dataClass: "ephemeralLocalOnly" }
+  | { readonly kind: "ephemeral"; readonly dataClass: "ephemeralShared"; readonly lane?: "preview" | "presence" };
 
 /** 🧾️ Everything the worker needs to open one artifact's actor — mirrors `ArtifactActorConfig`. */
 export type ArtifactActorConfig = {
@@ -2607,7 +2649,7 @@ export type AppFrameValue =
    * the command that started it returned its "started" `Invocation` long before the retained job
    * finished. `ui_scope`/`history_patch` are `store::pack_rt::encode_wire_value`-encoded exactly like
    * `Invocation`'s same-named fields. CHANNEL_VERSION 15 wire addition. */
-  | { readonly OperationCompleted: { readonly operation: number; readonly revision: number; readonly ui_scope: readonly number[]; readonly history_patch: readonly number[] } };
+  | { readonly OperationCompleted: { readonly operation: number; readonly revision: bigint; readonly ui_scope: readonly number[]; readonly history_patch: readonly number[] } };
 
 /** 🏁️ One typed operation's terminal completion, decoded from `AppFrame::OperationCompleted`.
  * `uiScope` is the operation's final `kernel::UiDirtyScope` and `historyPatch` its command-log delta,
@@ -2616,7 +2658,7 @@ export type AppFrameValue =
 export type OperationCompletionV1 = Readonly<{
   instanceId: number;
   operation: number;
-  revision: number;
+  revision: bigint;
   uiScope: unknown;
   historyPatch: unknown;
 }>;
@@ -3242,7 +3284,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
   } else if ("OperationCompleted" in frame) {
     out.push(APP_FRAME_TAGS.OperationCompleted);
     writeVarintU64(out, frame.OperationCompleted.operation);
-    writeVarintU64(out, frame.OperationCompleted.revision);
+    writeVarintU64Exact(out, frame.OperationCompleted.revision);
     writeBytes(out, frame.OperationCompleted.ui_scope);
     writeBytes(out, frame.OperationCompleted.history_patch);
   } else {
@@ -3383,7 +3425,7 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       return { UiSnapshotEnd: { revision: readVarintU64(bytes, pos) } };
     case APP_FRAME_TAGS.OperationCompleted: {
       const operation = readVarintU64(bytes, pos);
-      const revision = readVarintU64(bytes, pos);
+      const revision = readVarintU64Exact(bytes, pos);
       const ui_scope = readBytes(bytes, pos);
       const history_patch = readBytes(bytes, pos);
       return { OperationCompleted: { operation, revision, ui_scope, history_patch } };
@@ -4364,11 +4406,21 @@ export interface DirectoryRequestOptions {
   readonly signal?: AbortSignal;
 }
 
-/** 🎫 One-use, non-persistable authority for exactly one socket upgrade. */
+/** 🎫 One-use, non-persistable authority for exactly one directory socket upgrade. */
 export type SocketGrantReceiptV1 = Readonly<{
   schema: "semio.hub.socket-grant/v1";
   protocol: "semio.socket.v1";
   grant: string;
+  actorId: string;
+  expiresAtMs: number;
+}>;
+
+/** 📝️ The answer to a document open-plan exchange (`os.directory#/$defs/DocumentSocketGrantReceiptV1`):
+ * the actor the next `semio.session.v1` upgrade of the same credential is admitted as, and until when.
+ * It carries no secret — the credential itself is what that upgrade presents. */
+export type DocumentSocketGrantReceiptV1 = Readonly<{
+  schema: "semio.hub.document-socket-grant/v1";
+  protocol: "semio.session.v1";
   actorId: string;
   expiresAtMs: number;
 }>;
@@ -4527,7 +4579,6 @@ export function parseHubSessionPortResponseV1(value: unknown): HubSessionPortRes
 export interface SocketGrantIssuerV1 {
   issueDirectory(options?: DirectoryRequestOptions): Promise<SocketGrantReceiptV1>;
   issueDirectoryScoped(scope: DocumentScope, options?: DirectoryRequestOptions): Promise<SocketGrantReceiptV1>;
-  issueDocument(spaceId: string, documentId: string, options?: DirectoryRequestOptions): Promise<SocketGrantReceiptV1>;
 }
 
 /** 🌉 Credential-owning request port. Browser implementations target the local BFF; native
@@ -4541,7 +4592,6 @@ export function createSocketGrantIssuerV1(port: SocketGrantRequestPortV1): Socke
   return {
     issueDirectory: async (options) => parseSocketGrantReceiptV1(await port.post("/directory/socket-grants", options)),
     issueDirectoryScoped: async (scope, options) => parseSocketGrantReceiptV1(await port.post(`/directory/spaces/${encodeURIComponent(scope.spaceId)}/documents/${encodeURIComponent(scope.documentId)}/socket-grants`, options)),
-    issueDocument: async (spaceId, documentId, options) => parseSocketGrantReceiptV1(await port.post(`/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/socket-grants`, options)),
   };
 }
 
@@ -4563,6 +4613,22 @@ export function parseSocketGrantReceiptV1(value: unknown): SocketGrantReceiptV1 
     !Number.isSafeInteger(receipt.expiresAtMs)
   ) throw new Error("socket grant: invalid receipt");
   return receipt as SocketGrantReceiptV1;
+}
+
+/** 🛡️ Validates a document socket grant: exactly four fields, no capability. */
+export function parseDocumentSocketGrantReceiptV1(value: unknown): DocumentSocketGrantReceiptV1 {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("document socket grant: invalid receipt");
+  const receipt = value as Record<string, unknown>;
+  if (
+    Object.keys(receipt).sort().join(",") !== "actorId,expiresAtMs,protocol,schema" ||
+    receipt.schema !== "semio.hub.document-socket-grant/v1" ||
+    receipt.protocol !== "semio.session.v1" ||
+    typeof receipt.actorId !== "string" ||
+    !SOCKET_ACTOR_PATTERN.test(receipt.actorId) ||
+    !Number.isSafeInteger(receipt.expiresAtMs) ||
+    (receipt.expiresAtMs as number) < 1
+  ) throw new Error("document socket grant: invalid receipt");
+  return receipt as DocumentSocketGrantReceiptV1;
 }
 
 /** 📡 Exact ordered subprotocol offer required by the v1 upgrade boundary. */

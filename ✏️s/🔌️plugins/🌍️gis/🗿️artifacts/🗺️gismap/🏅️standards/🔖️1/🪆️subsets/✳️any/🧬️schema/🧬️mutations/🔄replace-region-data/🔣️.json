@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceRegionData",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-region-data",
-  "binaryTag": null,
+  "binaryTag": 10,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

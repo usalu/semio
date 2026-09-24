@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceObjectVortex",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-object-vortex",
-  "binaryTag": null,
+  "binaryTag": 13,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

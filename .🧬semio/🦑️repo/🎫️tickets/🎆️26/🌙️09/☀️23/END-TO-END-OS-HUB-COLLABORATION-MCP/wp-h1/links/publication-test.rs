@@ -1,0 +1,1 @@
+/Users/ueli/Documents/semio/.tmp-ticket/wp-h1/links/hub/🗿️artifact-authority/🔏️trusted-catalog/🛡️opened-root/🧪️tests/🔬️publication/🦀️.rs

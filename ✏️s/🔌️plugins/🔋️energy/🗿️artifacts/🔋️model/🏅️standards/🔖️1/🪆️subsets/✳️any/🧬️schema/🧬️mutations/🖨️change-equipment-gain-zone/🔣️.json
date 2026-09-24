@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeEquipmentGainZone",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-equipment-gain-zone",
-  "binaryTag": null,
+  "binaryTag": 95,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

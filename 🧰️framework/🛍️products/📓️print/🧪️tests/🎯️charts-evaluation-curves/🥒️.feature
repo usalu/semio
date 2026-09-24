@@ -23,26 +23,26 @@ Feature: The evaluation family sweeps a classifier's thresholds the way the text
   @level-quick
   @mode-differential
   Scenario: The ROC sweep and its rank-sum AUC
-    Given the committed probe document local://roc.tex
+    Given the committed probe document shared://🎯️charts-evaluation-curves/roc.tex
     Then the compiled probe and the reference implementation agree on every rate and on the area
 
   @id-pr
   @level-quick
   @mode-differential
   Scenario: The precision-recall sweep starts at the first ranked observation
-    Given the committed probe document local://pr.tex
+    Given the committed probe document shared://🎯️charts-evaluation-curves/pr.tex
     Then the compiled probe and the reference implementation agree on every rate
 
   @id-gain
   @level-quick
   @mode-differential
   Scenario: The cumulative-gains sweep counts population against captured positives
-    Given the committed probe document local://gain.tex
+    Given the committed probe document shared://🎯️charts-evaluation-curves/gain.tex
     Then the compiled probe and the reference implementation agree on every rate
 
   @id-confusion
   @level-long
   @mode-differential
   Scenario: The confusion matrix counts the four outcomes at the median threshold
-    Given the committed probe document local://confusion.tex
+    Given the committed probe document shared://🎯️charts-evaluation-curves/confusion.tex
     Then the compiled probe and the reference implementation agree on the four counts

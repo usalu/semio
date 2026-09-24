@@ -925,7 +925,7 @@ function inverse(ctx: AdapterContext): AdapterOutcome {
 }
 
 function specVector(ctx: AdapterContext): AdapterOutcome {
-  const uris = stepUris(ctx, "asset://");
+  const uris = stepUris(ctx, "shared://🧬️mutations/");
   const before = fixtureJson(ctx, uris[0]!) as Snapshot;
   const mutation = fixtureJson(ctx, uris[1]!) as Mutation;
   const expected = fixtureJson(ctx, uris[2]!) as Snapshot;

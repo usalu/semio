@@ -6,9 +6,14 @@
   "noOracleDecisions": [
     {
       "id": "plugin-host-relay-lifecycle-state-machine",
-      "capabilities": ["plugin-host-relay-lifecycle"],
+      "capabilities": [
+        "plugin-host-relay-lifecycle"
+      ],
       "rationale": "Replay-seed and mounted-relay retirement are repository-owned authority semantics with no external implementation that can adjudicate them. Confidence comes from schema-valid committed traces, bounded accounting and no-spin properties, and independently written Rust production-machine and TypeScript state-machine executions.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"],
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
       "coversMutations": false
     }
   ],

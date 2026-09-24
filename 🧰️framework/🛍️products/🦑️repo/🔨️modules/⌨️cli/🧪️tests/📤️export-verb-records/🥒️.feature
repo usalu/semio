@@ -8,7 +8,7 @@ Feature: The `export` verb turns a repository into one deterministic event batch
   stream is hashed into the snapshot digest, and every input id is then namespaced with that
   digest. Two exports of the same repository therefore produce the same log.
 
-  The records in local://🗄️repo-records.json are the frozen recording context 🔗️graphql owns, so
+  The records in shared://📤️export-verb-records/🗄️repo-records.json are the frozen recording context 🔗️graphql owns, so
   the batch below is a function of committed data rather than of the working tree.
 
   The digest hashes the marshalled entity records, so it holds only while 📐️model encodes a record
@@ -20,7 +20,7 @@ Feature: The `export` verb turns a repository into one deterministic event batch
   @level-fundamental
   @mode-conformance
   Scenario: The batch carries one count per entity kind and a sha-256 digest
-    Given the records local://🗄️repo-records.json
+    Given the records shared://📤️export-verb-records/🗄️repo-records.json
     When the host builds the export batch the verb would append
     Then the per-kind counts are the ones the batch states and the digest is a sha-256
 
@@ -28,7 +28,7 @@ Feature: The `export` verb turns a repository into one deterministic event batch
   @level-fundamental
   @mode-conformance
   Scenario: Every input id carries the snapshot digest and its entity kind
-    Given the records local://🗄️repo-records.json
+    Given the records shared://📤️export-verb-records/🗄️repo-records.json
     When the host builds the export batch the verb would append
     Then every input id reads `snapshot:<digest>:<kind>:<entity id>` and the ids are sorted
 
@@ -36,7 +36,7 @@ Feature: The `export` verb turns a repository into one deterministic event batch
   @level-quick
   @mode-round-trip
   Scenario: Building the batch twice produces the same digest and the same ids
-    Given the records local://🗄️repo-records.json
+    Given the records shared://📤️export-verb-records/🗄️repo-records.json
     When the host builds the export batch twice
     Then the two batches are equal
 
@@ -44,6 +44,6 @@ Feature: The `export` verb turns a repository into one deterministic event batch
   @level-fundamental
   @mode-differential
   Scenario: The snapshot digest and every encoded record are the same everywhere
-    Given the records local://🗄️repo-records.json
+    Given the records shared://📤️export-verb-records/🗄️repo-records.json
     When the host builds the export batch the verb would append
     Then every implementation states the same digest and the same encoded record for every input

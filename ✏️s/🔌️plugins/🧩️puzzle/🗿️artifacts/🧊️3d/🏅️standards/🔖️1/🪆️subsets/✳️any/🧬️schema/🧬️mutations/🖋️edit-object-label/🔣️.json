@@ -7,7 +7,7 @@
   "aggregateVariant": "EditObjectLabel",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "edit-object-label",
-  "binaryTag": null,
+  "binaryTag": 6,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

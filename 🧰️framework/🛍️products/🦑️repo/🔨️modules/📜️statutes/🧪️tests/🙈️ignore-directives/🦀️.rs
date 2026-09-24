@@ -30,7 +30,7 @@ fn render_directives(content: &str) -> Vec<Json> {
 #[cfg(feature = "sut")]
 fn a_directive_suppresses_its_prefixes(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_statutes as statutes;
-    let file = ctx.fixture_json("local://🔣️vectors.json")?;
+    let file = ctx.fixture_json("shared://🙈️ignore-directives/🔣️vectors.json")?;
     let mut directives: Vec<Json> = Vec::new();
     let mut decisions: Vec<Json> = Vec::new();
     for document in file.array("documents") {
@@ -55,7 +55,7 @@ fn a_directive_suppresses_its_prefixes(ctx: &Context) -> Result<Outcome, String>
 #[cfg(feature = "sut")]
 fn a_directive_only_reaches_forward(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_statutes as statutes;
-    let file = ctx.fixture_json("local://🔣️vectors.json")?;
+    let file = ctx.fixture_json("shared://🙈️ignore-directives/🔣️vectors.json")?;
     let document = file.array("documents").into_iter().find(|d| d.str("name") == "single-prefix").ok_or_else(|| "the single-prefix document is missing".to_string())?;
     let parsed = statutes::parse_ignore_directives(&document.str("content"));
     let kind = statutes::Statute::from("code/section/empty");

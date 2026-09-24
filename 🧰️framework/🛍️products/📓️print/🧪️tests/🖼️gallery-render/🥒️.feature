@@ -9,7 +9,7 @@ Feature: Every catalogue kind renders, in both themes and both languages
 
   No third-party library renders a semio LaTeX document, so nothing can adjudicate appearance; the
   recorded decision `viz-typeset-appearance` names what stands in its place. The evidence is
-  committed as JSON under `local://🖼️gallery-render.json` and is REGENERATED, never hand-written:
+  committed as JSON under `shared://🖼️gallery-render/🖼️gallery-render.json` and is REGENERATED, never hand-written:
   `bun ./📜️script.ts test viz fixtures` in `📦️packages/🟦️typescript` rebuilds the whole matrix,
   extracts each variant's per-kind page text with pdfjs-dist and records its rebuild-stable hash.
 
@@ -21,7 +21,7 @@ Feature: Every catalogue kind renders, in both themes and both languages
   @level-exhaustive
   @mode-conformance
   Scenario: Every variant matches its committed evidence
-    Given the committed gallery evidence local://🖼️gallery-render.json
+    Given the committed gallery evidence shared://🖼️gallery-render/🖼️gallery-render.json
     Then every catalogue kind appears on a page of its section in both themes and both languages
     And every variant's page count, per-kind page text and stable hash equal the committed evidence
 

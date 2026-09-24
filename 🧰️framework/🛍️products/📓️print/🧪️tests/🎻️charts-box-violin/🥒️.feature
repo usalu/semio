@@ -24,26 +24,26 @@ Feature: The box and violin families summarise a sample the way d3-array's quant
   @level-quick
   @mode-differential
   Scenario: The quantile function is d3's R-7 interpolation
-    Given the committed probe document local://quartiles.tex
+    Given the committed probe document shared://🎻️charts-box-violin/quartiles.tex
     Then the compiled probe and the reference implementation agree on every quantile
 
   @id-whiskers
   @level-long
   @mode-differential
   Scenario: Every group reports its Tukey five-number summary
-    Given the committed probe document local://whiskers.tex
+    Given the committed probe document shared://🎻️charts-box-violin/whiskers.tex
     Then the compiled probe and the reference implementation agree on every box summary
 
   @id-letter
   @level-long
   @mode-differential
   Scenario: A boxen plot reports the quantile pairs of its letter depths
-    Given the committed probe document local://letter.tex
+    Given the committed probe document shared://🎻️charts-box-violin/letter.tex
     Then the compiled probe and the reference implementation agree on every letter value
 
   @id-violin
   @level-long
   @mode-differential
   Scenario: A boxed violin summarises its groups exactly like the box family
-    Given the committed probe document local://violin.tex
+    Given the committed probe document shared://🎻️charts-box-violin/violin.tex
     Then the compiled probe and the reference implementation agree on every box summary

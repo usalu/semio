@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { stagePrintSources, printCompilerName } from "../📥️source-staging/🟦️.ts";
-import { compilePrintTexOnce, ensureTectonicBinary } from "../🖨️tectonic-template-compilation/🟦️.ts";
+import { compilePrintTexOnce } from "../🖨️tectonic-template-compilation/🟦️.ts";
+import { prepareTectonic } from "../🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts";
 
 //#region 🧪️ProbeProtocol
 /** 🧪️ One line of `<job>.probe.jsonl` — the `ProbeRecord` of `🧬️schema/🔣️.json`. */
@@ -166,7 +167,7 @@ const COMPILED_PROBES = new Map<string, Promise<ProbeRecord[]>>();
 
 /** 🖨️ Absolute path of the repo tectonic — downloaded and unpacked on first use, never the system one silently. */
 export async function vizProbeTectonic(): Promise<string> {
-  return await ensureTectonicBinary();
+  return await prepareTectonic();
 }
 
 /**

@@ -25,7 +25,7 @@ fn input_of(value: &SerdeJson) -> coordinator::EventInput {
 }
 
 fn fault_plan(ctx: &Context) -> Result<FaultPlan, String> {
-    let bytes = ctx.fixture_bytes("local://💥️fault-plan.json")?;
+    let bytes = ctx.fixture_bytes("shared://💥️filesystem-fault-recovery/💥️fault-plan.json")?;
     let parsed: SerdeJson = serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;
     Ok(FaultPlan {
         seed: input_of(parsed.get("seed").ok_or("fault plan has no seed")?),

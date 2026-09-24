@@ -329,15 +329,25 @@ pub async fn os_parameter_types_compatible_shim(parameter: &WorkflowParameter, t
 //#endregion 🔖️OsParameterBridge
 
 //#region 🔖️AppRegistrations
-/// 🚧️ FRAMEWORK GAP — report, not fixed here: `AppDefinition` (`Modes`/`WindowKinds` carry a
-/// hand-rolled `serde(try_from/into = "Vec<T>")` wire shape) still only derives `serde::Deserialize`,
-/// never `dsl::FromValue`, and `dsl::from_dsl_value` no longer has a `DeserializeOwned` path (it is
-/// `<T: FromValue>` only now) — there is no way left to decode a wire-JSON `AppDefinition` from a
-/// crate that no longer depends on `serde_json` in production. Degrades to a no-op per this
-/// function's own pre-existing tolerance ("best-effort host hint push, not a user-facing operation
-/// with error surfacing") until `AppDefinition: FromValue` lands upstream — see
-/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
-pub async fn apply_app_registrations(_json: &str) {}
+/// 📇️ One roster row of the host's `setAppRegistrations` hint-push: the owning plugin and its
+/// wire-decoded `AppDefinition`.
+#[derive(Clone, Debug, PartialEq, value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+struct AppRegistrationRow {
+    plugin_id: String,
+    app: semio_framework::AppDefinition,
+}
+
+/// 📇️ Registers every pushed app into this instance's own OS registry — the wasm-hosted twin of
+/// `PluginHost::load_plugin`'s `register_app_io`, so `workflow_palette()` and the catalogue see the
+/// host's live roster.
+pub async fn apply_app_registrations(json: &str) -> Result<(), semio_framework_plugin::Fault> {
+    let rows: Vec<AppRegistrationRow> = pack::from_json_str(json).map_err(|_| semio_framework_plugin::Fault::from("s.space.app-registrations-malformed"))?;
+    for row in &rows {
+        semio_framework_os::register_app_io(&row.plugin_id, &row.app);
+    }
+    Ok(())
+}
 //#endregion 🔖️AppRegistrations
 
 //#region 🧪️Tests

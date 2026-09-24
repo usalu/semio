@@ -3,7 +3,7 @@ import Ajv2020 from "ajv/dist/2020";
 import jsonPatch from "fast-json-patch";
 import { Matrix4, PerspectiveCamera } from "three";
 import schema from "../../🧊️3d/🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/📐️projection/🔣️.json";
+import fixture from "../../🧫️fixtures/📐️projection/🔣️.json";
 import {
   defaultViewport3dProjectionPreferences,
   deriveActiveProjection,

@@ -42,8 +42,8 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
         schema: S_HOME_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.xlsx".into(), "stdio.zip".into()],
-        import_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.xlsx".into(), "stdio.zip".into()],
+        export_stdio_kinds: vec!["stdio.json".into(), "stdio.zip".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.zip".into()],
     }
 }
 //#endregion 🔖️ArtifactKind
@@ -80,16 +80,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
             ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.zip")?, ArtifactCapabilityKind::composer())
                 .descriptor(b"s.stdio.zip@2.0/*")?
                 .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.zip@2.0/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.csv")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.csv@rfc4180/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.csv@rfc4180/*")?)?,
-        )?
-        .capability(
-            ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.xlsx")?, ArtifactCapabilityKind::composer())
-                .descriptor(b"s.stdio.xlsx@ecma-376/*")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.stdio.xlsx@ecma-376/*")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.space.home.composer.json")?, ArtifactCapabilityKind::composer())
@@ -234,30 +224,6 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
                                             }
                                         }
                                         #[path = "."]
-                                        pub mod csv {
-                                            #[path = "."]
-                                            pub mod v_rfc4180 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod xlsx {
-                                            #[path = "."]
-                                            pub mod v_ecma_376 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📕️xlsx/🔖️ecma-376/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
                                         pub mod json {
                                             #[path = "."]
                                             pub mod v_rfc8259 {
@@ -297,30 +263,6 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
                                                 #[path = "."]
                                                 pub mod any {
                                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod csv {
-                                            #[path = "."]
-                                            pub mod v_rfc4180 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
-                                                    mod component;
-                                                    pub use component::*;
-                                                }
-                                            }
-                                        }
-                                        #[path = "."]
-                                        pub mod xlsx {
-                                            #[path = "."]
-                                            pub mod v_ecma_376 {
-                                                #[path = "."]
-                                                pub mod any {
-                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📕️xlsx/🔖️ecma-376/✳️any/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -413,6 +355,10 @@ pub mod editor {
             pub mod bind_space_file;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️create-studio/🦀️.rs"]
             pub mod create_studio;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☁️promote-to-hub-space/🦀️.rs"]
+            pub mod promote_to_hub_space;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💾️persist-locally/🦀️.rs"]
+            pub mod persist_locally;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️delete-virtual-file-system-node/🦀️.rs"]
             pub mod delete_virtual_file_system_node;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏠️go-home/🦀️.rs"]

@@ -23,7 +23,7 @@ Feature: One projection helper carries every three-dimensional kind onto the pag
   @level-quick
   @mode-differential
   Scenario: The isometric camera projects the three unit axes to equal lengths
-    Given the committed probe document local://3d-projection.tex and the isometric camera
+    Given the committed probe document shared://🧊️3d-projection/3d-projection.tex and the isometric camera
       | azimuth | elevation         | zoom | points                                   |
       | 45      | 35.26438968275465 | 1    | (1,0,0) (0,1,0) (0,0,1) (1,1,1) (-1,2,3) |
     Then the compiled probe and the reference implementation agree on every value
@@ -32,7 +32,7 @@ Feature: One projection helper carries every three-dimensional kind onto the pag
   @level-quick
   @mode-differential
   Scenario: A general axonometric camera and the orthographic preset project as their matrices do
-    Given the committed probe document local://3d-projection.tex and the cameras
+    Given the committed probe document shared://🧊️3d-projection/3d-projection.tex and the cameras
       | projection   | azimuth | elevation | zoom |
       | axonometric  | 30      | 20        | 2    |
       | orthographic | 0       | 0         | 1    |
@@ -42,7 +42,7 @@ Feature: One projection helper carries every three-dimensional kind onto the pag
   @level-quick
   @mode-differential
   Scenario: The perspective divide and the cabinet shear follow their own definitions
-    Given the committed probe document local://3d-projection.tex and the cameras
+    Given the committed probe document shared://🧊️3d-projection/3d-projection.tex and the cameras
       | projection  | azimuth | elevation | distance | obliqueAngle | obliqueScale |
       | perspective | 45      | 30        | 10       | 45           | 0.5          |
       | oblique     | 0       | 0         | 60       | 45           | 0.5          |

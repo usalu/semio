@@ -94,3 +94,73 @@ fn document_projection_refuses_a_sixty_fifth_distinct_owner_but_allows_replaceme
     shell.publish_hub_document_status("hub:a/0", ShellHubRemoteV1::Live { peer_count: 2 });
     assert_eq!(shell.hub_documents.get("hub:a/0"), Some(&ShellHubRemoteV1::Live { peer_count: 2 }));
 }
+
+fn hub_verb(shell: &mut ShellState, verb: &str, args: &[(&str, &str)]) {
+    let args = (!args.is_empty()).then(|| DslValue::Object(args.iter().map(|(key, value)| ((*key).to_string(), DslValue::String((*value).to_string()))).collect()));
+    semio_framework_async::block_on(shell.handle_hub_workspace_action(verb, args));
+}
+
+fn hub_attribute_values(node: &ui_wgpu::wgpu::UiNode, attribute: &str, found: &mut Vec<String>) {
+    match node {
+        ui_wgpu::wgpu::UiNode::Stack(stack) => stack.children.iter().for_each(|child| hub_attribute_values(child, attribute, found)),
+        ui_wgpu::wgpu::UiNode::Text(text) => found.extend(text.data_attributes.as_ref().and_then(|attributes| attributes.get(attribute)).cloned()),
+        _ => {}
+    }
+}
+
+/// 🤝️ The wgpu shell's whole hub journey against a REAL hub, through the shell's own lane and its
+/// own native `DirectoryTransport` — no stub anywhere: `/hub` opens the workspace, a typed origin
+/// becomes the selected connection, a credential sign-in mints a session, a sealed `create-space`
+/// command lands, and the authoritative space list reaches the retained `UiNode` tree the
+/// accessibility mirror projects (`data-semio-hub-space`).
+///
+/// 🔌️ `#[ignore]`d because it needs a live hub with credential sign-in enabled; boot one with the
+/// `os-hub:live-sign-in-check` recipe (`OS_HUB_CREDENTIAL_SIGN_IN=1 bun 🌎️hub/🔐️auth/🧪️tests/🤝️live-sign-in/🟦️.ts --hold`)
+/// and run with `SEMIO_HUB_LIVE_ORIGIN`, `SEMIO_HUB_LIVE_EMAIL`, `SEMIO_HUB_LIVE_PASSWORD` set and
+/// `-- --ignored`.
+#[test]
+#[ignore = "needs a live hub at SEMIO_HUB_LIVE_ORIGIN; see this test's own doc comment"]
+fn a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace() {
+    let origin = std::env::var("SEMIO_HUB_LIVE_ORIGIN").expect("SEMIO_HUB_LIVE_ORIGIN");
+    let email = std::env::var("SEMIO_HUB_LIVE_EMAIL").expect("SEMIO_HUB_LIVE_EMAIL");
+    let password = std::env::var("SEMIO_HUB_LIVE_PASSWORD").expect("SEMIO_HUB_LIVE_PASSWORD");
+    let space_name = format!("wg6 live {}", chrome_now_ms() as u64);
+    let mut shell = shell();
+    semio_framework_async::block_on(shell.apply_os_command("os.openHub", None)).expect("the hub route opens");
+    assert!(shell.hub_workspace_open);
+    assert_eq!(shell.hub_workspace.presence(), crate::hub_connection::HubSessionPresence::SignedOut);
+    assert_eq!(shell.hub_connection_state(), ShellHubConnectionState::SignedOut);
+    hub_verb(&mut shell, crate::hub_connection::action::SET_ADDRESS, &[("value", origin.as_str())]);
+    hub_verb(&mut shell, crate::hub_connection::action::ADD_CONNECTION, &[]);
+    assert_eq!(shell.hub_workspace.origin(), origin.trim_end_matches('/'));
+    hub_verb(&mut shell, crate::hub_connection::action::SET_EMAIL, &[("value", email.as_str())]);
+    hub_verb(&mut shell, crate::hub_connection::action::SET_PASSWORD, &[("value", password.as_str())]);
+    hub_verb(&mut shell, crate::hub_connection::action::SIGN_IN, &[]);
+    println!("wg6-live sign-in phase={} error={:?} user={:?} display={:?}", shell.hub_workspace.session.phase.as_str(), shell.hub_workspace.session.error, shell.hub_workspace.session.user_id, shell.hub_workspace.display_name);
+    assert_eq!(shell.hub_workspace.session.phase, HubSessionPhase::SignedIn, "error {:?}", shell.hub_workspace.session.error);
+    assert!(shell.hub_workspace.password_draft.is_empty(), "the password never outlives its request");
+    assert!(shell.hub_workspace.display_name.is_some());
+    assert_ne!(shell.hub_connection_state(), ShellHubConnectionState::SignedOut);
+    hub_verb(&mut shell, crate::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+    hub_verb(&mut shell, crate::hub_connection::action::CREATE_SPACE, &[]);
+    println!("wg6-live spaces phase={} rows={:?}", shell.hub_workspace.phase.as_str(), shell.hub_workspace.rows.iter().map(|row| (row.name.as_str(), row.id.as_str(), row.access.as_str())).collect::<Vec<_>>());
+    assert_eq!(shell.hub_workspace.phase, crate::space_browser::SpaceBrowserPhase::Ready);
+    let created = shell.hub_workspace.rows.iter().find(|row| row.name == space_name).expect("the created space is listed").id.clone();
+    for locale in [ui_wgpu::wgpu::Locale::En, ui_wgpu::wgpu::Locale::De] {
+        let tree = crate::hub_connection::build_hub_workspace_ui(&shell.hub_workspace, locale);
+        let mut spaces = Vec::new();
+        hub_attribute_values(&tree, "data-semio-hub-space", &mut spaces);
+        let mut phases = Vec::new();
+        hub_attribute_values(&tree, "data-semio-hub-phase", &mut phases);
+        println!("wg6-live tree locale={locale:?} phase={phases:?} spaces={spaces:?}");
+        assert!(spaces.contains(&created), "{locale:?} tree lists the created space");
+        assert_eq!(phases, vec!["signedIn".to_string()]);
+    }
+    hub_verb(&mut shell, crate::hub_connection::action::OPEN_SPACE, &[("spaceId", created.as_str())]);
+    println!("wg6-live open space={:?} members={:?} uri={:?}", shell.hub_workspace.open_space_id, shell.hub_workspace.members.iter().map(|member| (member.display_name.as_str(), member.owner)).collect::<Vec<_>>(), shell.uri_history.get(shell.uri_index));
+    assert_eq!(shell.hub_workspace.open_space_id.as_deref(), Some(created.as_str()));
+    assert!(shell.hub_workspace.members.iter().any(|member| member.owner), "the creator is listed as the owner");
+    hub_verb(&mut shell, crate::hub_connection::action::SIGN_OUT, &[]);
+    assert_eq!(shell.hub_workspace.presence(), crate::hub_connection::HubSessionPresence::SignedOut);
+    assert!(shell.hub_workspace.rows.is_empty());
+}

@@ -524,19 +524,19 @@ impl semio_framework_schema::ArtifactCompositionFields for Puzzle3dPlaySnapshot 
     }
 }
 
+/// 📦️ Packs through the typed authority, so the play kind shares `Puzzle3dSnapshot`'s derived record
+/// layout and pack-schema identity.
 impl store::ArtifactPack for Puzzle3dPlaySnapshot {
-    // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: the former
-    // `dsl::to_dsl_value(self.value())`/`dsl::from_dsl_value(value).map(Self::new)` calls required
-    // `Value` (`serde_json::Value`) to implement `ToValue`/`FromValue`, which it never has anywhere
-    // in this codebase — routes through `dsl::DslValue`'s own `serde_json::Value` `From` bridges
-    // directly instead.
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::DslValue::from(self.value()).encode_pack_with(options)
+        self.typed().encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        Ok(Self::new(Value::from(value)))
+        <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
+    }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        <Puzzle3dSnapshot as store::ArtifactPack>::record_spec()
     }
 }
 

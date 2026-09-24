@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/probe-stdio-semio-v1-base",
+  "targets": {
+    "carrier-reproduce": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts carrier-reproduce",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    }
+  }
+}

@@ -4,7 +4,7 @@ use super::super::PlaygroundMutation;
 use super::ChangeSchema;
 
 /// 🏷️ Stable binary tag for `ChangeSchema`.
-pub const BINARY_TAG: u32 = 0;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "change-schema");
 
 fn write_string(output: &mut Vec<u8>, value: &str) {
     store::pack_rt::write_varint_u64(output, value.len() as u64);

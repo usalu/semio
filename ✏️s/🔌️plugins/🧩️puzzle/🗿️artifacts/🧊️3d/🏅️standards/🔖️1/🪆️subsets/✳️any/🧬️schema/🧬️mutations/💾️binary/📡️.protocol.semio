@@ -3,14 +3,81 @@ protocol 3d.mutations
 version 1
 schema puzzle.puzzle3d.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record create-object tag=0
+field payload bytes
+record delete-object tag=1
+field payload bytes
+record move-object tag=2
+field payload bytes
+record rotate-object tag=3
+field payload bytes
+record scale-object tag=4
+field payload bytes
+record change-object-mesh tag=5
+field payload bytes
+record edit-object-label tag=6
+field payload bytes
+record change-object-kind tag=7
+field payload bytes
+record change-object-anchor tag=8
+field payload bytes
+record change-object-hidden tag=9
+field payload bytes
+record change-object-locked tag=10
+field payload bytes
+record add-object-vortex tag=11
+field payload bytes
+record remove-object-vortex tag=12
+field payload bytes
+record replace-object-vortex tag=13
+field payload bytes
+record connect-vortices tag=14
+field payload bytes
+record disconnect-vortices tag=15
+field payload bytes
+record replace-attraction-geometry tag=16
+field payload bytes
+record create-target-volume tag=17
+field payload bytes
+record delete-target-volume tag=18
+field payload bytes
+record move-target-volume tag=19
+field payload bytes
+record rotate-target-volume tag=20
+field payload bytes
+record scale-target-volume tag=21
+field payload bytes
+record change-target-volume-hidden tag=22
+field payload bytes
+record change-target-volume-locked tag=23
+field payload bytes
+record create-reference tag=24
+field payload bytes
+record delete-reference tag=25
+field payload bytes
+record move-reference tag=26
+field payload bytes
+record resize-reference tag=27
+field payload bytes
+record replace-reference-source tag=28
+field payload bytes
+record change-reference-hidden tag=29
+field payload bytes
+record change-reference-locked tag=30
+field payload bytes
+record change-domain tag=31
+field payload bytes
+record connect-kind-compatibility tag=32
+field payload bytes
+record disconnect-kind-compatibility tag=33
+field payload bytes
+record replace-kind-catalogs tag=34
+field payload bytes

@@ -18,6 +18,8 @@ import { useClient } from "../🕸️NodeGraph/🟦️.tsx";
 import { createEditorSession, type EditorWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { useAppKeybindingsByActionId } from "../🏛️ShellHost/🟦️.tsx";
+import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";
+import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../👕️canvas-presence/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️TextEditorHost
@@ -713,6 +715,25 @@ function WasmEditorSurface({
 export function TextEditorHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.textEditor;
   const isClient = useClient();
+  const presenceWindowId = node.surfaceId || "text";
+  const localPresenceActor = useLocalPresenceActorIdV1("local");
+  const presencePublishAtRef = useRef(0);
+  useEffect(() => () => clearLocalPresenceWindowViewV1(presenceWindowId), [presenceWindowId]);
+  useEffect(() => {
+    if (!scene) return;
+    const now = Date.now();
+    if (now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS) return;
+    presencePublishAtRef.current = now;
+    const caret = scene.buffer.length;
+    publishLocalPresenceWindowViewV1("local", presenceWindowId, {
+      windowId: presenceWindowId,
+      space: "canvas",
+      kind: { kind: "canvas", x: 0, y: 0, zoom: 1 },
+      size: [1, 1],
+      pointer: [caret, 0, 0],
+    });
+    publishLocalActiveToolV1("local", "edit");
+  }, [presenceWindowId, scene?.buffer]);
   const tokens = useMemo((): readonly GrammarToken[] => {
     if (!scene?.tokensJson) return [];
     try {
@@ -769,6 +790,16 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
           ))}
         </div>
       ) : null}
+      <CanvasPresenceOverlayV1
+        runtimeKey="local"
+        windowId={presenceWindowId}
+        space="canvas"
+        myActor={localPresenceActor ?? ""}
+        locale={typeof document !== "undefined" ? document.documentElement.lang : undefined}
+        localCanvas={{ x: 0, y: 0, zoom: 1 }}
+        localSizePx={[1, 1]}
+        scenePath={`text/${presenceWindowId}`}
+      />
     </div>
   );
 }

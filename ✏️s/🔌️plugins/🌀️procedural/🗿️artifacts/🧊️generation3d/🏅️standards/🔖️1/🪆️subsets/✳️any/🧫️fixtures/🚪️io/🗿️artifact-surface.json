@@ -20,10 +20,6 @@
     { "id": "json", "extension": ".json" },
     { "id": "txt", "extension": ".txt" }
   ],
-  "importWithheld": [
-    { "id": "las", "reason": "LAS is export-only in this artifact — its import leaf is an honest Err, so offering it in the picker could only ever fail." },
-    { "id": "png", "reason": "A raster carries no recoverable flow graph, so its import leaf is an honest Err." }
-  ],
   "acceptFilter": ".stl,.obj,.ply,.gltf,.dwg,.json,.txt",
   "editorActions": [
     { "id": "importDocumentRequest", "kind": "Shell", "inPalette": true, "labelEn": "Import Artifact…", "labelDe": "Artefakt importieren…", "chord": "mod+o" },

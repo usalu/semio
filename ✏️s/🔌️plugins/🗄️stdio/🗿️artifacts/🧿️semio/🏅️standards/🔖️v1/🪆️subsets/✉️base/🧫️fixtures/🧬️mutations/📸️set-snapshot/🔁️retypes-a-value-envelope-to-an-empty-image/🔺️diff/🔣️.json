@@ -1,0 +1,15 @@
+{
+  "kind": "replace",
+  "schema": "stdio.semio",
+  "subset": {
+    "subset": "image",
+    "schema": "s.stdio.semio.image",
+    "width": 0,
+    "height": 0,
+    "colorspace": "rgb",
+    "bitDepth": 0,
+    "frames": [],
+    "icc": null,
+    "metadata": []
+  }
+}

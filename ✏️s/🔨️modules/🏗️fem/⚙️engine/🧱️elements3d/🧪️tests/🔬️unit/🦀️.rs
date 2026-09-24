@@ -9,7 +9,7 @@ fn fixture_number(value: &serde_json::Value, field: &str) -> f64 {
 /// against both its cold matrix path and the committed independent NumPy reference matrix.
 #[test]
 fn mounted_3d_element_interfaces_match_numpy_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧱️mounted-stiffness/🔣️.json")).expect("mounted stiffness fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️mounted-stiffness/🔣️.json")).expect("mounted stiffness fixture");
     let tolerance = fixture_number(&fixture, "tolerance");
     for case in fixture["cases"].as_array().expect("mounted stiffness cases") {
         let kind = case["kind"].as_str().expect("element kind");

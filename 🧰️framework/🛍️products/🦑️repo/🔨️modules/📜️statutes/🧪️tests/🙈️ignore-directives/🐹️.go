@@ -30,7 +30,7 @@ type directiveVectorFile struct {
 }
 
 func loadDirectiveVectors(ctx *host.Context) (directiveVectorFile, error) {
-	data, err := ctx.FixtureBytes("local://🔣️vectors.json")
+	data, err := ctx.FixtureBytes("shared://🙈️ignore-directives/🔣️vectors.json")
 	if err != nil {
 		return directiveVectorFile{}, err
 	}

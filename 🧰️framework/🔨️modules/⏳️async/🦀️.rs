@@ -241,7 +241,10 @@ impl CancelState {
 struct CancelNode {
     local: AtomicU8,
     parent: Option<CancelToken>,
+    waiters: Mutex<Vec<(u64, Waker)>>,
 }
+
+static NEXT_CANCEL_WAITER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 /// 🛑️ Cooperative cancellation handle: an `Arc`-shared tri-state ([`CancelState`]) plus an optional
 /// parent link. [`CancelToken::child`] derives a descendant whose effective [`CancelToken::state`]
@@ -259,7 +262,7 @@ impl CancelToken {
 
     /// 🌱️ Creates a live root from synchronous scheduler/bootstrap code.
     pub fn root_now() -> CancelToken {
-        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: None }))
+        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: None, waiters: Mutex::new(Vec::new()) }))
     }
 
     /// 👶️ A descendant token: its effective state is never less severe than `self`'s.
@@ -269,7 +272,7 @@ impl CancelToken {
 
     /// 👶️ Creates a cancellable descendant from a synchronous finite turn.
     pub fn child_now(&self) -> CancelToken {
-        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: Some(self.clone()) }))
+        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: Some(self.clone()), waiters: Mutex::new(Vec::new()) }))
     }
 
     /// ⏸️ Enter the suspend state — a no-op once `Cancelled` (terminal, never downgraded).
@@ -291,6 +294,17 @@ impl CancelToken {
     /// 🛑️ Cancels from a synchronous scheduler turn or `Drop` boundary without needing an executor.
     pub fn cancel_now(&self) {
         self.0.local.store(2, Ordering::SeqCst);
+        let waiters = std::mem::take(&mut *self.0.waiters.lock().unwrap_or_else(PoisonError::into_inner));
+        for (_, waker) in waiters {
+            waker.wake();
+        }
+    }
+
+    /// 🔔️ Resolves once this token or any ancestor is cancelled. The waiter is registered on every
+    /// node of the chain, so an ancestor's [`CancelToken::cancel_now`] wakes it directly — no timer,
+    /// no poll interval. Dropping the future removes its registrations.
+    pub fn cancelled(&self) -> Cancelled {
+        Cancelled { token: self.clone(), id: 0 }
     }
 
     /// 🔍️ Max-severity fold of this token's local state and every ancestor's. Walks the parent
@@ -330,6 +344,54 @@ impl CancelToken {
 
     pub async fn is_live(&self) -> bool {
         self.state().await == CancelState::Live
+    }
+}
+
+/// 🔔️ Future returned by [`CancelToken::cancelled`].
+pub struct Cancelled {
+    token: CancelToken,
+    id: u64,
+}
+
+impl Cancelled {
+    fn for_each_node(&self, mut visit: impl FnMut(&CancelNode)) {
+        let mut node = Some(&self.token);
+        while let Some(current) = node {
+            visit(&current.0);
+            node = current.0.parent.as_ref();
+        }
+    }
+}
+
+impl Future for Cancelled {
+    type Output = ();
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()> {
+        if self.token.is_cancelled_now() {
+            return Poll::Ready(());
+        }
+        if self.id == 0 {
+            self.id = NEXT_CANCEL_WAITER.fetch_add(1, Ordering::Relaxed);
+        }
+        let id = self.id;
+        self.for_each_node(|node| {
+            let mut waiters = node.waiters.lock().unwrap_or_else(PoisonError::into_inner);
+            match waiters.iter_mut().find(|(waiter, _)| *waiter == id) {
+                Some((_, waker)) => waker.clone_from(cx.waker()),
+                None => waiters.push((id, cx.waker().clone())),
+            }
+        });
+        if self.token.is_cancelled_now() { Poll::Ready(()) } else { Poll::Pending }
+    }
+}
+
+impl Drop for Cancelled {
+    fn drop(&mut self) {
+        if self.id == 0 {
+            return;
+        }
+        let id = self.id;
+        self.for_each_node(|node| node.waiters.lock().unwrap_or_else(PoisonError::into_inner).retain(|(waiter, _)| *waiter != id));
     }
 }
 
@@ -773,11 +835,34 @@ struct TimerWheelState {
 /// by whichever driver called it.
 pub struct TimerWheel {
     state: Mutex<TimerWheelState>,
+    earlier_deadline: OnceLock<Box<dyn Fn() + Send + Sync>>,
 }
 
 impl TimerWheel {
     pub fn new() -> TimerWheel {
-        TimerWheel { state: Mutex::new(TimerWheelState { heap: BinaryHeap::new(), entries: HashMap::new(), callbacks: HashMap::new(), next_id: 1, last_now_ms: 0 }) }
+        TimerWheel { state: Mutex::new(TimerWheelState { heap: BinaryHeap::new(), entries: HashMap::new(), callbacks: HashMap::new(), next_id: 1, last_now_ms: 0 }), earlier_deadline: OnceLock::new() }
+    }
+
+    /// 🔔️ Installs the one callback told whenever a registration becomes the wheel's new earliest
+    /// deadline — how a parked driver learns it must wake sooner than it planned. Called outside the
+    /// wheel's lock. A second install is refused, so the driver that owns the wheel stays the only one.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn install_earlier_deadline_hook(&self, hook: Box<dyn Fn() + Send + Sync>) {
+        let _ = self.earlier_deadline.set(hook);
+    }
+
+    fn push_deadline(state: &mut TimerWheelState, deadline_ms: u64, id: u64) -> bool {
+        let earliest = state.heap.peek().is_none_or(|Reverse((head, _))| deadline_ms < *head);
+        state.heap.push(Reverse((deadline_ms, id)));
+        earliest
+    }
+
+    fn announce_earlier_deadline(&self, earliest: bool) {
+        if earliest {
+            if let Some(hook) = self.earlier_deadline.get() {
+                hook();
+            }
+        }
     }
 
     /// ⏰️ A future that resolves once this wheel has been [`TimerWheel::fire_due`]'d with a
@@ -791,7 +876,9 @@ impl TimerWheel {
         let id = state.next_id;
         state.next_id += 1;
         state.entries.insert(id, TimerRegistration { deadline_ms, waker: Some(waker), fired: false });
-        state.heap.push(Reverse((deadline_ms, id)));
+        let earliest = Self::push_deadline(&mut state, deadline_ms, id);
+        drop(state);
+        self.announce_earlier_deadline(earliest);
         id
     }
 
@@ -807,7 +894,9 @@ impl TimerWheel {
         let id = state.next_id;
         state.next_id += 1;
         state.callbacks.insert(id, callback);
-        state.heap.push(Reverse((deadline_ms, id)));
+        let earliest = Self::push_deadline(&mut state, deadline_ms, id);
+        drop(state);
+        self.announce_earlier_deadline(earliest);
     }
 
     fn is_fired(&self, id: u64) -> bool {
@@ -1615,26 +1704,26 @@ impl WorkerPoolConfig {
     }
 }
 
-/// 🧵️ Bound on how long an idle native worker parks before it must wake and re-check timers/
-/// shutdown even with no new work signalled — keeps a single-worker pool making progress (a parked
-/// thread that only wakes on `notify` could otherwise sit past a due timer indefinitely if the
-/// notify race is lost) and keeps every worker's idle-to-active latency low enough that the 8 ms
-/// interactive ceiling is never blown by scheduling latency alone. Native-only: the wasm cooperative
-/// pool has no idle-park loop (the host drives it via [`WorkerPool::pump`] instead).
 #[cfg(not(target_arch = "wasm32"))]
-const MAX_IDLE_PARK_MS: u64 = 4;
+#[path = "🔔️worker-parking/🦀️.rs"]
+mod worker_parking;
 
 //#region 🧵️WorkerPoolNative
 #[cfg(not(target_arch = "wasm32"))]
 mod native_pool {
     use super::*;
     use std::sync::atomic::AtomicUsize;
-    use std::sync::Condvar;
     use std::thread::{self, JoinHandle};
     use std::time::{Duration, Instant};
 
     struct WorkerLocal {
         queues: [Mutex<VecDeque<Job>>; LANE_COUNT],
+    }
+
+    thread_local! {
+        /// ⏰️ Set while this thread fires the pool's timer wheel, so a callback that re-arms a
+        /// deadline does not wake a second worker to keep a wheel this one is about to re-read.
+        static FIRING_TIMERS: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
     }
 
     impl WorkerLocal {
@@ -1651,7 +1740,7 @@ mod native_pool {
         shutdown: std::sync::atomic::AtomicBool,
         next_submit: AtomicUsize,
         io_source: AtomicUsize,
-        idle: (Mutex<()>, Condvar),
+        parking: Arc<worker_parking::WorkerParking>,
         wheel: TimerWheel,
         low_priority_active: AtomicU32,
         interactive_reserve: bool,
@@ -1687,14 +1776,13 @@ mod native_pool {
             self.start.elapsed().as_millis() as u64
         }
 
-        fn idle_timeout(&self) -> Duration {
+        fn timer_due(&self) -> Option<Duration> {
             let now = self.now_ms();
-            let wait_ms = self.wheel.next_deadline_ms().map_or(MAX_IDLE_PARK_MS, |deadline| deadline.saturating_sub(now)).clamp(1, MAX_IDLE_PARK_MS);
-            Duration::from_millis(wait_ms)
+            self.wheel.next_deadline_ms().map(|deadline| Duration::from_millis(deadline.saturating_sub(now)))
         }
 
         fn notify_idle(&self) {
-            self.idle.1.notify_all();
+            self.parking.signal_work();
         }
     }
 
@@ -1796,11 +1884,17 @@ mod native_pool {
         let mut cursor = 0usize;
         let mut deficits = [0i64; LANE_COUNT];
         while !inner.shutdown.load(Ordering::SeqCst) || inner.deferred_wakes.has_pending() {
+            let observed = inner.parking.observe();
+            FIRING_TIMERS.with(|firing| firing.set(true));
             inner.wheel.fire_due_batch(inner.now_ms(), TIMER_ACTIONS_PER_POOL_TURN);
+            FIRING_TIMERS.with(|firing| firing.set(false));
             let picked = select_and_pop(inner, index as usize, &mut cursor, &mut deficits);
             let picked = if inner.shutdown.load(Ordering::SeqCst) { picked } else { picked.or_else(|| steal(inner, index as usize)) };
             match picked {
                 Some((_lane, job, low_priority_permit)) => {
+                    if inner.wheel.next_deadline_ms().is_some() {
+                        inner.parking.hand_off_timers();
+                    }
                     inner.trace_workers.worker_started();
                     let permit = inner.ledger.checkout(1).expect("WorkerPool: internal permit invariant violated — checked out more than worker_count concurrently");
                     let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| job.run(&inner.maintenance)));
@@ -1809,10 +1903,7 @@ mod native_pool {
                     drop(low_priority_permit);
                 }
                 None => {
-                    let (lock, cvar) = &inner.idle;
-                    let guard = lock.lock().unwrap_or_else(PoisonError::into_inner);
-                    let timeout = inner.idle_timeout();
-                    let _ = cvar.wait_timeout(guard, timeout);
+                    let _ = inner.parking.park(observed, inner.timer_due());
                 }
             }
         }
@@ -1878,7 +1969,7 @@ mod native_pool {
                 shutdown: std::sync::atomic::AtomicBool::new(false),
                 next_submit: AtomicUsize::new(0),
                 io_source: AtomicUsize::new(0),
-                idle: (Mutex::new(()), Condvar::new()),
+                parking: Arc::new(worker_parking::WorkerParking::new()),
                 wheel: TimerWheel::new(),
                 low_priority_active: AtomicU32::new(0),
                 interactive_reserve: config.interactive_reserve,
@@ -1887,6 +1978,14 @@ mod native_pool {
                 start: Instant::now(),
                 handles: Mutex::new(Vec::with_capacity(worker_count)),
             });
+            let parking = Arc::clone(&inner.parking);
+            inner.wheel.install_earlier_deadline_hook(Box::new(move || {
+                if FIRING_TIMERS.with(std::cell::Cell::get) {
+                    parking.signal_timer_from_firing_worker();
+                } else {
+                    parking.signal_timer();
+                }
+            }));
             let mut handles = Vec::with_capacity(worker_count);
             for index in 0..worker_count {
                 let worker_inner = Arc::clone(&inner);
@@ -1995,7 +2094,6 @@ mod native_pool {
                     Self::submit_retained_timer_job(&pool, lane, job);
                 }),
             );
-            self.inner.notify_idle();
         }
 
         fn submit_retained_timer_job(pool: &WorkerPool, lane: Lane, job: Job) {
@@ -2016,7 +2114,6 @@ mod native_pool {
         /// can use it to retry a previously rejected exact closure without depending on ingress.
         pub fn callback_at(&self, deadline_ms: u64, callback: impl FnOnce() + Send + 'static) {
             self.inner.wheel.schedule_callback(deadline_ms, Box::new(callback));
-            self.inner.notify_idle();
         }
 
         pub fn is_shutdown(&self) -> bool {
@@ -2091,7 +2188,7 @@ mod native_pool {
             self.inner.deferred_wakes.shutdown();
             self.inner.shutdown.store(true, Ordering::SeqCst);
             self.inner.wheel.fire_due(u64::MAX);
-            self.inner.notify_idle();
+            self.inner.parking.close();
             let mut handles = self.inner.handles.lock().unwrap_or_else(PoisonError::into_inner);
             for handle in handles.drain(..) {
                 let _ = handle.join();

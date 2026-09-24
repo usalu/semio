@@ -669,13 +669,26 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     const node = activePath.length ? rowNodesRef.current.get(contextMenuPathKey(activePath)) : undefined;
     (node ?? menuRef.current)?.focus({ preventScroll: true });
   }, [open, activePath]);
+  // ⌨️ The active path is SEEDED when the menu opens and only re-seeded when a new `items` no longer holds the
+  // row the user is on. A live menu (a suggestion submenu whose candidates stream in) republishes its rows
+  // while open; re-seeding on every one threw the pointer/keyboard position back to the checked row, so an
+  // Escape that collapsed a submenu was undone by the next republish and the menu could never be closed.
+  const seededRef = reactHostPort.useRef(false);
   reactHostPort.useEffect(() => {
     if (!open) {
+      seededRef.current = false;
       setActivePath([]);
       setSubmenuCollapsedAt(null);
       previousHoverItemRef.current = undefined;
       return;
     }
+    const current = activePathRef.current;
+    const currentItem = current.length ? contextMenuItemAtPath(items, current) : undefined;
+    if (seededRef.current && (current.length === 0 || currentItem?.id === previousHoverItemRef.current?.id)) {
+      previousHoverItemRef.current = currentItem;
+      return;
+    }
+    seededRef.current = true;
     const initial = findContextMenuCheckedPath(items) ?? [];
     setActivePath(initial);
     setSubmenuCollapsedAt(null);

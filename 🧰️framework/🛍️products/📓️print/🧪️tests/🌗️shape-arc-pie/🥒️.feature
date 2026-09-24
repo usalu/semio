@@ -18,7 +18,7 @@ Feature: Arc geometry and pie angles are the ones d3-shape computes
   @level-quick
   @mode-differential
   Scenario: Every branch of d3's arc generator produces the same path
-    Given the committed probe document local://shape-arc-pie.tex and the arcs
+    Given the committed probe document shared://🌗️shape-arc-pie/shape-arc-pie.tex and the arcs
       | tag          | innerRadius | outerRadius | startAngle | endAngle | padAngle | padRadius | cornerRadius |
       | plain        | 0           | 100         | 0          | 1.2      | 0        |           | 0            |
       | annular      | 40          | 100         | 0.3        | 2.5      | 0        |           | 0            |
@@ -37,7 +37,7 @@ Feature: Arc geometry and pie angles are the ones d3-shape computes
   @level-quick
   @mode-differential
   Scenario: The arc centroid is the midpoint in both radius and angle
-    Given the committed probe document local://shape-arc-pie.tex and the arcs
+    Given the committed probe document shared://🌗️shape-arc-pie/shape-arc-pie.tex and the arcs
       | tag     | innerRadius | outerRadius | startAngle | endAngle |
       | annular | 40          | 100         | 0.3        | 2.5      |
       | wedge   | 0           | 60          | 1          | 1.9      |
@@ -48,7 +48,7 @@ Feature: Arc geometry and pie angles are the ones d3-shape computes
   @level-quick
   @mode-differential
   Scenario: Pie start and end angles follow d3's ordering, padding and zero handling
-    Given the committed probe document local://shape-arc-pie.tex and the pies
+    Given the committed probe document shared://🌗️shape-arc-pie/shape-arc-pie.tex and the pies
       | tag        | value   | startAngle | endAngle          | padAngle | sort       |
       | descending | 1,2,3,4 | 0          | 6.283185307179586 | 0        | descending |
       | padded     | 1,2,3,4 | 0          | 6.283185307179586 | 0.05     | descending |

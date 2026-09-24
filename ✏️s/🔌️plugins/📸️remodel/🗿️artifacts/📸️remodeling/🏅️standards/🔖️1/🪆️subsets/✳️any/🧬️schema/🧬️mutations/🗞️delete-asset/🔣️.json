@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteAsset",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-asset",
-  "binaryTag": null,
+  "binaryTag": 7,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

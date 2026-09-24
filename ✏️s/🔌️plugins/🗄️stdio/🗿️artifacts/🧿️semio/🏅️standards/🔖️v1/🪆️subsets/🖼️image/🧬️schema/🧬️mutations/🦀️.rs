@@ -288,26 +288,53 @@ impl OpText for SemioImageMutation {
     }
 }
 
-/// 🧾️ Keyword table + variant ordinal, 0-indexed in enum declaration order — the binary frame's
-/// `tag` byte, `📖️grammar/component.grammar.semio`'s `op` alternatives, and this array must all
-/// agree (see `committed_facet_files_parse`/`ops_grammar_conformance_law` in
-/// `🎹️composer/🦀️.rs`).
-const OP_KEYWORDS: [&str; 12] = ["setSnapshot", "setDimensions", "setColorspace", "setBitDepth", "setIcc", "insertFrame", "removeFrame", "moveFrame", "setFrameDelay", "setFramePixels", "setMetadataEntry", "removeMetadataEntry"];
+/// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
+const TEXT_KEYWORDS: [(&str, &str); 12] = [
+    ("set-snapshot", "setSnapshot"),
+    ("set-dimensions", "setDimensions"),
+    ("set-colorspace", "setColorspace"),
+    ("set-bit-depth", "setBitDepth"),
+    ("set-icc", "setIcc"),
+    ("insert-frame", "insertFrame"),
+    ("remove-frame", "removeFrame"),
+    ("move-frame", "moveFrame"),
+    ("set-frame-delay", "setFrameDelay"),
+    ("set-frame-pixels", "setFramePixels"),
+    ("set-metadata-entry", "setMetadataEntry"),
+    ("remove-metadata-entry", "removeMetadataEntry"),
+];
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioImageMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_SET_DIMENSIONS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-dimensions");
+const TAG_SET_COLORSPACE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-colorspace");
+const TAG_SET_BIT_DEPTH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-bit-depth");
+const TAG_SET_ICC: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-icc");
+const TAG_INSERT_FRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-frame");
+const TAG_REMOVE_FRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-frame");
+const TAG_MOVE_FRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-frame");
+const TAG_SET_FRAME_DELAY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-frame-delay");
+const TAG_SET_FRAME_PIXELS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-frame-pixels");
+const TAG_SET_METADATA_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-metadata-entry");
+const TAG_REMOVE_METADATA_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-metadata-entry");
+//#endregion 🏷️WireTags
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioImageMutation) -> u8 {
+fn wire_tag(m: &SemioImageMutation) -> u8 {
     match m {
-        SemioImageMutation::SetSnapshot(_) => 0,
-        SemioImageMutation::SetDimensions(_) => 1,
-        SemioImageMutation::SetColorspace(_) => 2,
-        SemioImageMutation::SetBitDepth(_) => 3,
-        SemioImageMutation::SetIcc(_) => 4,
-        SemioImageMutation::InsertFrame(_) => 5,
-        SemioImageMutation::RemoveFrame(_) => 6,
-        SemioImageMutation::MoveFrame(_) => 7,
-        SemioImageMutation::SetFrameDelay(_) => 8,
-        SemioImageMutation::SetFramePixels(_) => 9,
-        SemioImageMutation::SetMetadataEntry(_) => 10,
-        SemioImageMutation::RemoveMetadataEntry(_) => 11,
+        SemioImageMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioImageMutation::SetDimensions(_) => TAG_SET_DIMENSIONS,
+        SemioImageMutation::SetColorspace(_) => TAG_SET_COLORSPACE,
+        SemioImageMutation::SetBitDepth(_) => TAG_SET_BIT_DEPTH,
+        SemioImageMutation::SetIcc(_) => TAG_SET_ICC,
+        SemioImageMutation::InsertFrame(_) => TAG_INSERT_FRAME,
+        SemioImageMutation::RemoveFrame(_) => TAG_REMOVE_FRAME,
+        SemioImageMutation::MoveFrame(_) => TAG_MOVE_FRAME,
+        SemioImageMutation::SetFrameDelay(_) => TAG_SET_FRAME_DELAY,
+        SemioImageMutation::SetFramePixels(_) => TAG_SET_FRAME_PIXELS,
+        SemioImageMutation::SetMetadataEntry(_) => TAG_SET_METADATA_ENTRY,
+        SemioImageMutation::RemoveMetadataEntry(_) => TAG_REMOVE_METADATA_ENTRY,
     }
 }
 /// ✂️ Just the argument tail of `print_image_mutation` — the binary frame's `tag` byte already
@@ -322,14 +349,13 @@ fn print_image_mutation_args(m: &SemioImageMutation) -> String {
 }
 
 /// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut.
-/// `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see
-/// [`OP_KEYWORDS`]) are two REAL fixed fields; the variant's own argument payload follows as one
+/// `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) are two REAL fixed fields; the variant's own argument payload follows as one
 /// opaque trailing `bytes` chain — reuses the already-real, already-tested `print_image_mutation`/
 /// `parse_image_mutation` text codec rather than re-deriving a second independent encoding.
 impl protocol::OpBinary for SemioImageMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_image_mutation_args(self).as_bytes());
         Ok(out)
     }
@@ -342,7 +368,8 @@ impl protocol::OpBinary for SemioImageMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let kind = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
+        let keyword = TEXT_KEYWORDS.iter().find(|(record, _)| *record == kind).map(|(_, keyword)| *keyword).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("record {kind} has no text keyword") })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword}:{args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })

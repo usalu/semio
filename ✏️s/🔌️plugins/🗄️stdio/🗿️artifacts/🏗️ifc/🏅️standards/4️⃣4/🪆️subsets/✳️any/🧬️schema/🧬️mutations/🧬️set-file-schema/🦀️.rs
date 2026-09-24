@@ -9,7 +9,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetFileSchema {
-    pub(crate) values: Vec<IfcValue>,
+    pub values: Vec<IfcValue>,
 }
 
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetFileSchema {

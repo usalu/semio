@@ -856,7 +856,7 @@ class BenchScript extends BundleScript {
  * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
 class DescribeScript extends BundleScript {
   run(): void {
-    process.exit(describePluginComponent(this.repoRoot, "semio-s-plugin-stdio", join(this.root, "..", ".."), true));
+    process.exit(describePluginComponent(this.repoRoot, "semio-s-plugin-stdio", join(this.root, "..", "..")));
   }
 }
 

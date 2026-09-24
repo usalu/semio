@@ -31,13 +31,17 @@ impl protocol::OpText for LayoutMutation {
 //#endregion 🔖️OpText
 
 //#region 🔖️OpBinary
+//#region 🏷️WireTags
+/// 🏷️ `LayoutMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
+const WIRE_PROTOCOL: &str = include_str!("../💾️binary/📡️.protocol.semio");
+//#endregion 🏷️WireTags
+
 impl protocol::OpBinary for LayoutMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(protocol::json::to_json_string(self).into_bytes())
+        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Key, self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "layout-mutation", offset: e.valid_up_to() as u64, detail: e.to_string() })?;
-        protocol::json::from_json_str(text).map_err(|e| protocol::ProtocolError::Malformed { what: "layout-mutation", offset: 0, detail: e.to_string() })
+        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Key, bytes)
     }
 }
 //#endregion 🔖️OpBinary

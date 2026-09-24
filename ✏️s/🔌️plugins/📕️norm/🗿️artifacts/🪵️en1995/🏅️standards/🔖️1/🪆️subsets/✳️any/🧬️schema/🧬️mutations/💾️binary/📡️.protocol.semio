@@ -3,14 +3,51 @@ protocol en1995.mutations
 version 1
 schema norm.en1995.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record change-annex tag=0
+field payload bytes
+record change-m-ed-knm tag=1
+field payload bytes
+record change-n-ed-kn tag=2
+field payload bytes
+record change-v-ed-kn tag=3
+field payload bytes
+record change-w-mm3 tag=4
+field payload bytes
+record change-a-mm2 tag=5
+field payload bytes
+record change-b-mm tag=6
+field payload bytes
+record change-h-mm tag=7
+field payload bytes
+record change-fmk tag=8
+field payload bytes
+record change-fc0-k tag=9
+field payload bytes
+record change-service-class tag=10
+field payload bytes
+record change-load-duration tag=11
+field payload bytes
+record change-m-crit-knm tag=12
+field payload bytes
+record change-f-ed-kn tag=13
+field payload bytes
+record change-a-ef-mm2 tag=14
+field payload bytes
+record change-fvk tag=15
+field payload bytes
+record change-fire-duration-min tag=16
+field payload bytes
+record change-section-depth-mm tag=17
+field payload bytes
+record change-a-vert-ms2 tag=18
+field payload bytes
+record change-n-cycles-bridge tag=19
+field payload bytes

@@ -9630,6 +9630,12 @@ pub mod board_host {
             let mut out = Vec::new();
             let lod = self.current_draw_lod();
             let zoom = self.camera.zoom;
+            // 🎯️ The handle the pointer's own hit test resolves leads — including the indirect-ring handles
+            // Overview/Compact draw, which the per-LOD loop below never visits — so a right-click names exactly
+            // the handle the hover paints, not the node underneath it.
+            if let Some(id) = self.resolve_hit_world(point).filter(|id| self.handles.contains_key(id.as_str())) {
+                Self::push_pick_target(&mut out, "handle", id.clone(), 2, Some(id));
+            }
             if self.has_ports() && !matches!(lod, BoardDrawLod::Minimap) && matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro) {
                 for h in self.handles.values().rev() {
                     if !self.handle_selectable(h.id.as_str()) {

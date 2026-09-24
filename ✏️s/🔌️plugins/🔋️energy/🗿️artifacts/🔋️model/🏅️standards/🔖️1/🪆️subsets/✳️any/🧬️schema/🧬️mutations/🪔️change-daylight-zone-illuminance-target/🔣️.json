@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeDaylightZoneIlluminanceTarget",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-daylight-zone-illuminance-target",
-  "binaryTag": null,
+  "binaryTag": 154,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

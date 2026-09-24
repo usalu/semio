@@ -1,13 +1,10 @@
-//! playground -> zip
+//! playground → zip — the shared document archive (`encode_document_archive`): this artifact's DSL as the
+//! authoritative member plus its rfc8259 rendition, both lossless (`IoFidelity::Exact`).
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
-use semio_s_artifact_stdio_zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_zip::io::encode_document_archive;
 
-pub fn serialize(snapshot: &PlaygroundSnapshot) -> Result<ZipSnapshot, store::TextError> {
-    let _ = STDIO_ZIP_DOCUMENT_SCHEMA;
-    let value = dsl::ToValue::to_value(snapshot);
-    dsl::FromValue::from_value(value).map_err(|e| store::TextError::new(format!("playground->zip: {e}"), dsl::TextSpan::at(1, 1)))
-}
+pub fn register() {}
 
 pub fn serialize_bytes(snapshot: &PlaygroundSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<ZipSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
+    encode_document_archive(snapshot).map_err(|error| store::TextError::new(format!("playground→zip: {error}"), dsl::TextSpan::at(1, 1)))
 }

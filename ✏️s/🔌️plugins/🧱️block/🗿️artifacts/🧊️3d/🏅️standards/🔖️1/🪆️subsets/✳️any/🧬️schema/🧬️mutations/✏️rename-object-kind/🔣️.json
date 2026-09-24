@@ -7,7 +7,7 @@
   "aggregateVariant": "RenameObjectKind",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-object-kind",
-  "binaryTag": null,
+  "binaryTag": 0,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -16,6 +16,7 @@ include!("🧪️tests/🔬️standalone/🦀️.rs");
 
 
 fn exact_live_pump_binding(source: &str) -> bool {
+    let source = &source.lines().filter(|line| !line.trim_start().starts_with("//")).collect::<Vec<_>>().join("\n");
     let Some(helper_start) = source.find("fn pump_runtime_live_cooperative_turn<") else { return false };
     if source.matches("fn pump_runtime_live_cooperative_turn<").count() != 1 { return false }
     let Some(start) = source.find("pub fn plugin_step_live_cleanup<") else { return false };
@@ -32,6 +33,6 @@ fn exact_live_pump_binding(source: &str) -> bool {
         (depth == 0).then_some(index)
     }) else { return false };
     let branch = &source[start..start + length];
-    branch.matches("pump_runtime_live_cooperative_turn(&cell)").count() == 1 && !["while ", "loop {", "for "].iter().any(|pattern| branch.contains(pattern))
+    branch.matches("pump_runtime_live_cooperative_turn(cell)").count() == 1 && !["while ", "loop {", "for "].iter().any(|pattern| branch.contains(pattern))
 }
 //#endregion 🧪️CooperativeMaintenance

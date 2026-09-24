@@ -1,13 +1,23 @@
 {
   "schema": "semio.hub.gis-map-two-author-composition-fixture/v1",
   "version": 1,
-  "socketRetirement": { "maximumMs": 5000, "hostileDeadlineMs": 15, "cases": ["closed-at-entry", "await-close-event", "timeout-refused", "bun-websocket-close", "ws-websocket-close"] },
+  "socketRetirement": {
+    "maximumMs": 5000,
+    "hostileDeadlineMs": 15,
+    "cases": [
+      "closed-at-entry",
+      "await-close-event",
+      "timeout-refused",
+      "bun-websocket-close",
+      "ws-websocket-close"
+    ]
+  },
   "selection": {
     "closure": [
       "stdio",
       "gis"
     ],
-    "executionProtocol": 15,
+    "executionProtocol": 17,
     "receiptIdentity": [
       "generationId",
       "bundleSha256",
@@ -41,7 +51,12 @@
     "author-a": "en",
     "author-b": "de"
   },
-  "artifactOpen": { "en": "Open", "de": "Öffnen", "exact": true, "scope": "artifact-row" },
+  "artifactOpen": {
+    "en": "Open",
+    "de": "\u00d6ffnen",
+    "exact": true,
+    "scope": "artifact-row"
+  },
   "steps": [
     "materialize-and-validate-current",
     "stage-ticket-owned-space-and-selected-gis-browser-host",
@@ -59,7 +74,9 @@
     "author-a-shell-ordinary-undo",
     "both-peers-rebootstrap-and-observe-region-removed",
     "restart-hub-same-data-root",
-    "reopen-two-authenticated-maps-and-compare-durable-frontier"
+    "reopen-two-authenticated-maps-and-compare-durable-frontier",
+    "author-a-shell-ordinary-redo-after-hub-restart",
+    "both-peers-observe-region-restored-by-durable-redo"
   ],
   "observations": {
     "mapSurface": [
@@ -89,6 +106,12 @@
     "restart": [
       "same-current-receipt",
       "same-durable-post-undo-frontier"
+    ],
+    "redo": [
+      "ordinary-shell-redo-action",
+      "durable-collaborative-redo",
+      "region-restored-on-both-maps",
+      "redo-stack-survived-hub-restart"
     ]
   },
   "hostiles": [
@@ -101,12 +124,12 @@
     "mcp-approval-private-handle-forwarded-to-shell",
     "direct-http-undo-substituted-for-shell-action",
     "restart-without-post-undo-pair-revalidation",
-    "global-browser-host-fallback"
+    "global-browser-host-fallback",
+    "redo-unavailable-after-hub-restart"
   ],
   "nonclaims": [
     "external-model-provider",
     "browser-qualified-current-publication",
-    "durable-collaborative-redo",
     "private-job-restart-recovery"
   ]
 }

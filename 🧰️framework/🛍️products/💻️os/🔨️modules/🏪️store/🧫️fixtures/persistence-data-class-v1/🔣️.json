@@ -1,0 +1,93 @@
+{
+  "schema": "semio.os.persistence-data-class/v1",
+  "cases": [
+    {
+      "id": "folder-local",
+      "binding": {
+        "kind": "folder",
+        "dataClass": "persistedLocalOnly",
+        "path": "/tmp/spaces/demo"
+      },
+      "expectedDataClass": "persistedLocalOnly",
+      "allowsShare": false,
+      "allowsCollaboration": false,
+      "durable": true
+    },
+    {
+      "id": "hub-shared",
+      "binding": {
+        "kind": "hub",
+        "dataClass": "persistedShared",
+        "baseUrl": "http://hub.test",
+        "spaceId": "space-1"
+      },
+      "expectedDataClass": "persistedShared",
+      "allowsShare": true,
+      "allowsCollaboration": true,
+      "durable": true
+    },
+    {
+      "id": "ephemeral-studio",
+      "binding": {
+        "kind": "ephemeral",
+        "dataClass": "ephemeralLocalOnly"
+      },
+      "expectedDataClass": "ephemeralLocalOnly",
+      "allowsShare": false,
+      "allowsCollaboration": false,
+      "durable": false,
+      "promoteCommand": "promote-to-hub-space",
+      "persistCommand": "persist-locally"
+    },
+    {
+      "id": "preview-lane",
+      "binding": {
+        "kind": "ephemeral",
+        "dataClass": "ephemeralShared",
+        "lane": "preview"
+      },
+      "wireLane": {
+        "lane": "preview",
+        "dataClass": "ephemeralShared"
+      },
+      "expectedDataClass": "ephemeralShared",
+      "allowsShare": false,
+      "allowsCollaboration": false,
+      "durable": false
+    },
+    {
+      "id": "presence-lane",
+      "binding": {
+        "kind": "ephemeral",
+        "dataClass": "ephemeralShared",
+        "lane": "presence"
+      },
+      "wireLane": {
+        "lane": "presence",
+        "dataClass": "ephemeralShared"
+      },
+      "expectedDataClass": "ephemeralShared",
+      "allowsShare": false,
+      "allowsCollaboration": false,
+      "durable": false
+    }
+  ],
+  "homeUnion": {
+    "hubSpace": {
+      "origin": "hub",
+      "dataClass": "persistedShared",
+      "membersFromDirectory": true
+    },
+    "localCatalogSpace": {
+      "origin": "local",
+      "dataClass": "persistedLocalOnly",
+      "membersFromDirectory": false
+    },
+    "ephemeralStudio": {
+      "origin": "local",
+      "dataClass": "ephemeralLocalOnly",
+      "membersFromDirectory": false,
+      "backbone": null
+    }
+  }
+}

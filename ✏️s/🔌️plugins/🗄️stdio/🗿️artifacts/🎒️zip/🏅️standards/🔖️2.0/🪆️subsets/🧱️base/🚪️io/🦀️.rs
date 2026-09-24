@@ -696,6 +696,32 @@ fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> Result
     out.extend_from_slice(&eocd);
     Ok(out)
 }
+
+/// 🎒️ The member a document archive carries its authoritative DSL text in.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn document_archive_member<S: store::ArtifactDsl>() -> String {
+    format!("snapshot.{}.semio", S::EXTENSION)
+}
+
+/// 🎒️ A zip 2.0 archive of one artifact document: its canonical DSL text as
+/// [`document_archive_member`] (authoritative, read back by [`decode_document_archive`]) and its
+/// rfc8259 rendition as `snapshot.json` for readers without a semio parser. Both are lossless, so
+/// the hop is `IoFidelity::Exact` — the shared zip carrier every artifact whose own shape is its
+/// archive content uses, instead of each owner restating it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_document_archive<S: store::ArtifactDsl + dsl::ToValue>(document: &S) -> Result<Vec<u8>, ZipError> {
+    let entries = vec![ZipEntry { name: document_archive_member::<S>(), data: document.print_dsl().into_bytes() }, ZipEntry { name: "snapshot.json".into(), data: dsl::os_pack::json::to_json_string(document).into_bytes() }];
+    encode_zip(&ZipSnapshot { entries, ..ZipSnapshot::default() })
+}
+
+/// 🎒️ The document inside an archive written by [`encode_document_archive`]: its DSL member parsed.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_document_archive<S: store::ArtifactDsl>(bytes: &[u8]) -> Result<S, String> {
+    let archive = decode_zip(bytes).map_err(|error| error.to_string())?;
+    let member = document_archive_member::<S>();
+    let entry = archive.entries.iter().find(|entry| entry.name == member).ok_or_else(|| format!("the archive has no {member} member"))?;
+    S::parse_dsl(std::str::from_utf8(&entry.data).map_err(|error| error.to_string())?).map_err(|error| error.to_string())
+}
 //#endregion Encode
 
 //#region Sniff

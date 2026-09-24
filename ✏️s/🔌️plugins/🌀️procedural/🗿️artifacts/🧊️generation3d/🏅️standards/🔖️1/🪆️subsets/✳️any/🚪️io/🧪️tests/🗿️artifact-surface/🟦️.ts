@@ -60,7 +60,6 @@ interface ArtifactSurfaceFixture {
   readonly artifactKind: string;
   readonly exportFormats: readonly FormatRow[];
   readonly importFormats: readonly FormatRow[];
-  readonly importWithheld: readonly { readonly id: string; readonly reason: string }[];
   readonly acceptFilter: string;
   readonly editorActions: readonly ActionRow[];
   readonly viewerActions: readonly ActionRow[];
@@ -196,12 +195,9 @@ export function testGeneration3dDocumentIoSurface(): void {
   }
   assert.equal(new Set(fixture.exportFormats.map((row) => row.id)).size, fixture.exportFormats.length, "no export id is offered twice");
 
-  // 📥️ Offered plus withheld is the whole registry, and the two withheld rows carry a stated reason
-  // rather than being silently absent.
+  // 📥️ Every declared import dialect is offered, each exactly once.
   const offered = fixture.importFormats.map((row) => row.id);
-  const withheld = fixture.importWithheld.map((row) => row.id);
-  assert.equal(new Set([...offered, ...withheld]).size, offered.length + withheld.length, "a format is either offered or withheld, never both");
-  for (const row of fixture.importWithheld) assert.ok(row.reason.length > 20, `${row.id}: the withheld row states why`);
+  assert.equal(new Set(offered).size, offered.length, "no import id is offered twice");
   assert.equal(fixture.acceptFilter, offered.map((id) => fixture.importFormats.find((row) => row.id === id)!.extension).join(","), "the accept filter is every importable extension in roster order");
   for (const row of fixture.importFormats) assert.ok(row.extension.startsWith("."), `${row.id}: an accept entry is an extension`);
 
@@ -260,7 +256,7 @@ export function testGeneration3dDocumentIoSurface(): void {
   for (const row of fixture.dataUrl.cases) assert.equal(decodePayload(row.payload), row.bytes, `${row.id}: decoded payload`);
 
   console.log(
-    `generation3d artifact-io export=${fixture.exportFormats.length} import=${fixture.importFormats.length} withheld=${fixture.importWithheld.length} ` +
+    `generation3d artifact-io export=${fixture.exportFormats.length} import=${fixture.importFormats.length} ` +
       `editorActions=${fixture.editorActions.length} viewerActions=${fixture.viewerActions.length} chunkBytes=${fixture.chunking.chunkBytes} ` +
       `chunkCases=${fixture.chunking.cases.length} stagingCases=${fixture.chunking.staging.length} accept=${fixture.acceptFilter}`,
   );

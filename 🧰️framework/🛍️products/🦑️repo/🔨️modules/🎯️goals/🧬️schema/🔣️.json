@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://json.schemas.assets.semio-tech.com/repo/goals/🔣️.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/goals/schema.json",
   "title": "🎯️ semio repo goals",
   "$comment": "🧬️ The wire contract of the 🎯️goals module: the `🎯️goal.json` document as it is stored, the flat seeds the goal/ticket tree is assembled from, and the fixture files under 🧫️fixtures. GoalDocument states the member names and the `omitempty` rule exactly as the Go struct tags declare them — a member absent from `required` is the `omitempty` half of that tag — so a real document taken out of `.🧬semio/🦑️repo/🎯️goals` validates against it unchanged.",
   "type": "object",

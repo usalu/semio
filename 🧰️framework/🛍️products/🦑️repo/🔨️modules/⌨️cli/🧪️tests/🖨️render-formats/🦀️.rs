@@ -9,7 +9,7 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The committed vectors every scenario reads.
     fn vectors(ctx: &Context) -> Result<Vec<Json>, String> {
-        Ok(ctx.fixture_json("local://📡️event-streams.json")?.array("vectors"))
+        Ok(ctx.fixture_json("shared://🖨️render-formats/📡️event-streams.json")?.array("vectors"))
     }
 
     /// 🔢️ A numeric member, zero when absent.

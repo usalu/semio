@@ -11,7 +11,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "signal-dft-bode";
-const FIXTURE = "local://signal-dft-bode.tex";
+const FIXTURE = "shared://📡️signal-dft-bode/signal-dft-bode.tex";
 const DECIMALS = 5;
 
 /** 🔢️ Rounds an oracle's numbers onto the emission grid the comparison uses. */

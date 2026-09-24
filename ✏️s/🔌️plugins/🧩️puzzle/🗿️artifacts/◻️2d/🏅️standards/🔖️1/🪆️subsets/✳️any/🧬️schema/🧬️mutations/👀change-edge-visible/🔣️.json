@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeEdgeVisible",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-edge-visible",
-  "binaryTag": null,
+  "binaryTag": 20,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

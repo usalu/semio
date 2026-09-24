@@ -179,10 +179,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, json_obj, json_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use crate::standards::v2x3::subsets::base::io::{decode_ifc2x3, encode_ifc2x3};
-    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use crate::standards::v2x3::subsets::cv20::schema::mutations::{apply_ifc2x3_cv20_mutation, Cv20StructuralEntity, Ifc2x3Cv20Mutation};
-    use semio_s_artifact_stdio_step::standards::v_ap214::engine::part21::Part21Value;
+    use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::io::{decode_ifc2x3, encode_ifc2x3};
+    use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cv20::schema::mutations::{apply_ifc2x3_cv20_mutation, Cv20StructuralEntity, Ifc2x3Cv20Mutation};
+    use semio_s_artifact_stdio_ifc::engine::part21::Part21Value;
     use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::cv20::project_ifc_2x3_cv20;
 
     //#region 🔖️SpecReading
@@ -229,6 +229,9 @@ mod subject {
         let empty = Json::Object(Vec::new());
         let params = spec.get("params").unwrap_or(&empty);
         Ok(match kind.as_str() {
+            // 🧭️ The identity baseline: a `SetSnapshot` back onto the identical base is a real no-op
+            // mutation, the same spelling `🧱️mutate-ifc-2x3` uses for its own round trip.
+            "no-mutation" => Ifc2x3Cv20Mutation::SetSnapshot(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cv20::schema::mutations::set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) }),
             "set-snapshot" => {
                 let schemas = str_array(params, "fileSchema");
                 if schemas.is_empty() {
@@ -236,18 +239,18 @@ mod subject {
                 }
                 let mut snapshot = base.clone();
                 snapshot.document.header.file_schema = vec![Part21Value::List(schemas.into_iter().map(Part21Value::Str).collect())];
-                Ifc2x3Cv20Mutation::SetSnapshot(crate::standards::v2x3::subsets::cv20::schema::mutations::set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) })
+                Ifc2x3Cv20Mutation::SetSnapshot(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cv20::schema::mutations::set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) })
             }
-            "set-view-definition" => Ifc2x3Cv20Mutation::SetViewDefinition(crate::standards::v2x3::subsets::cv20::schema::mutations::set_view_definition::SetViewDefinition { view: str_field(params, "view")? }),
+            "set-view-definition" => Ifc2x3Cv20Mutation::SetViewDefinition(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cv20::schema::mutations::set_view_definition::SetViewDefinition { view: str_field(params, "view")? }),
             "set-structural-entity" => {
                 let entity = match params.get("entity") {
                     Some(value @ Json::Object(_)) => Some(Cv20StructuralEntity { type_name: str_field(value, "typeName")?, global_id: str_field(value, "globalId")?, name: str_field(value, "name")? }),
                     _ => None,
                 };
-                Ifc2x3Cv20Mutation::SetStructuralEntity(crate::standards::v2x3::subsets::cv20::schema::mutations::set_structural_entity::SetStructuralEntity { id: u64_field(params, "id")?, entity })
+                Ifc2x3Cv20Mutation::SetStructuralEntity(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cv20::schema::mutations::set_structural_entity::SetStructuralEntity { id: u64_field(params, "id")?, entity })
             }
-            "set-project-units" => Ifc2x3Cv20Mutation::SetProjectUnits(crate::standards::v2x3::subsets::cv20::schema::mutations::set_project_units::SetProjectUnits { project: u64_field(params, "project")?, units: opt_u64_field(params, "units") }),
-            "set-product-placement" => Ifc2x3Cv20Mutation::SetProductPlacement(crate::standards::v2x3::subsets::cv20::schema::mutations::set_product_placement::SetProductPlacement { product: u64_field(params, "product")?, placement: opt_u64_field(params, "placement") }),
+            "set-project-units" => Ifc2x3Cv20Mutation::SetProjectUnits(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cv20::schema::mutations::set_project_units::SetProjectUnits { project: u64_field(params, "project")?, units: opt_u64_field(params, "units") }),
+            "set-product-placement" => Ifc2x3Cv20Mutation::SetProductPlacement(semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cv20::schema::mutations::set_product_placement::SetProductPlacement { product: u64_field(params, "product")?, placement: opt_u64_field(params, "placement") }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }
@@ -307,10 +310,10 @@ mod subject {
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
+        built = built.oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), mutate_oracle).oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), inverse_oracle);
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
+            built = built.subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), subject::mutate).subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), subject::inverse);
         }
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);

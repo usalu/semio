@@ -728,7 +728,7 @@ function dependencyOracleRegistryPackages(repoRoot: string): Map<string, string[
 }
 
 /** 🧩️Every `<owner>/<contributionDir>/<contributionFile>` manifest, found by convention. */
-function dependencyDiscoverContributionManifests(repoRoot: string, dirName: string, fileName: string): string[] {
+export function dependencyDiscoverContributionManifests(repoRoot: string, dirName: string, fileName: string): string[] {
   if (dirName === "" || fileName === "") return [];
   const found: string[] = [];
   const walk = (relDir: string): void => {

@@ -11,7 +11,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "transform-stack";
-const FIXTURE = "local://transform-stack.tex";
+const FIXTURE = "shared://🥞️transform-stack/transform-stack.tex";
 const DECIMALS = 6;
 
 type Row = Record<string, number>;

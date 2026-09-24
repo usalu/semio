@@ -497,14 +497,19 @@ impl semio_framework_schema::ArtifactCompositionFields for Puzzle2dPlaySnapshot 
     }
 }
 
+/// 📦️ Packs through the typed authority, so the play kind shares `Puzzle2dSnapshot`'s derived record
+/// layout and pack-schema identity.
 impl store::ArtifactPack for Puzzle2dPlaySnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::DslValue::from(self.value()).encode_pack_with(options)
+        self.typed().encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        Ok(Self::new(Value::from(value)))
+        <Puzzle2dSnapshot as store::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
+    }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        <Puzzle2dSnapshot as store::ArtifactPack>::record_spec()
     }
 }
 

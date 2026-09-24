@@ -961,9 +961,32 @@ pub fn semantic_fingerprint<T: kernel::ToValue>(projection: &T) -> Result<Vec<u8
     Ok(hash_hex_bytes(&semio_framework_hash::hash_bytes(&encoded)))
 }
 
-/// 📡 Implements the canonical JSON text and binary mutation wire codecs.
+/// 📡 Implements the canonical JSON text mutation codec, and the binary one: tagged by the vocabulary's
+/// `📡️.protocol.semio` records (`kernel::tagged_value_binary`) when a protocol is given, JSON bytes otherwise.
 #[macro_export]
 macro_rules! impl_serde_op_codec {
+    ($mutation:ty, $what:literal, protocol = $protocol:expr) => {
+        impl $crate::kernel::OpText for $mutation {
+            fn print_op(&self) -> String {
+                $crate::pack::json_to_string(&$crate::pack::json_from_dsl_value(&$crate::kernel::ToValue::to_value(self)))
+            }
+
+            fn parse_op(line: &str) -> Result<Self, $crate::kernel::TextError> {
+                let parsed = $crate::pack::parse_json(line).map_err(|error| $crate::kernel::TextError::new(error.to_string(), $crate::kernel::TextSpan::at(1, 1)))?;
+                <Self as $crate::kernel::FromValue>::from_value($crate::pack::json_to_dsl_value(&parsed)).map_err(|error| $crate::kernel::TextError::new(error.to_string(), $crate::kernel::TextSpan::at(1, 1)))
+            }
+        }
+
+        impl $crate::kernel::OpBinary for $mutation {
+            fn encode_op(&self) -> Result<Vec<u8>, $crate::kernel::ProtocolError> {
+                $crate::kernel::tagged_value_binary::encode_op($protocol, $crate::kernel::tagged_value_binary::VariantTag::Field("mutation"), self)
+            }
+
+            fn decode_op(bytes: &[u8]) -> Result<Self, $crate::kernel::ProtocolError> {
+                $crate::kernel::tagged_value_binary::decode_op($protocol, $crate::kernel::tagged_value_binary::VariantTag::Field("mutation"), bytes)
+            }
+        }
+    };
     ($mutation:ty, $what:literal) => {
         impl $crate::kernel::OpText for $mutation {
             fn print_op(&self) -> String {

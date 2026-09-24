@@ -629,7 +629,23 @@ pub struct BrushSuggestionsFound {
 impl BrushSuggestionsFound {
     /// 🟢️ The free candidates in candidate order — what the popup lists, a cycle walks and an accept places.
     pub fn free(&self) -> impl Iterator<Item = &BrushPreviewState> {
-        self.previews.iter().zip(&self.verdicts).filter(|(_, verdict)| **verdict == BrushSuggestionVerdict::Free).filter_map(|(preview, _)| preview.as_ref())
+        self.free_keyed().map(|(_, preview)| preview)
+    }
+
+    /// 🔑️ [`Self::free`] paired with each candidate's trace key — the key the run upserted it under in the
+    /// `toolRunTrace` lane, so a menu row can focus exactly that record in the viewport.
+    pub fn free_keyed(&self) -> impl Iterator<Item = (u64, &BrushPreviewState)> {
+        self.previews.iter().zip(&self.verdicts).enumerate().filter(|(_, (_, verdict))| **verdict == BrushSuggestionVerdict::Free).filter_map(|(key, (preview, _))| preview.as_ref().map(|preview| (key as u64, preview)))
+    }
+
+    /// 🎯️ The vortex full id this search resolved candidates for.
+    pub fn target(&self) -> &str {
+        &self.target
+    }
+
+    /// 🏁️ Whether every candidate has its verdict — a menu with nothing free stops reading as pending.
+    pub fn done(&self) -> bool {
+        self.done
     }
 }
 

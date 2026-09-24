@@ -13,7 +13,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "scale-color";
-const FIXTURE = "local://scale-color.tex";
+const FIXTURE = "shared://🎨️scale-color/scale-color.tex";
 const DECIMALS = 6;
 const IDENTITY = (t: number) => t;
 

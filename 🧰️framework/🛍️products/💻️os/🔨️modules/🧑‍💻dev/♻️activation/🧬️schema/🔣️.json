@@ -50,6 +50,64 @@
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 9007199254740991
+              },
+              "sourceContentSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "description": "SHA-256 of the plugin-owner source tree used when this receipt row was published"
+              }
+            }
+          }
+        }
+      }
+    },
+    "SourceStatIndexV1": {
+      "title": "Staged Plugin Source Stat Index",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "contentSha256",
+        "files"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.dev.source-stat-index/v1"
+        },
+        "contentSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Aggregate SHA-256 of relative paths and file bytes (same digest as componentSourceContentHash)"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "size",
+              "mtimeNs",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Repo-relative POSIX path under the plugin owner root"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "mtimeNs": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "description": "Nanosecond mtime as a decimal string"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
               }
             }
           }

@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteLightingGain",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-lighting-gain",
-  "binaryTag": null,
+  "binaryTag": 86,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

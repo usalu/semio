@@ -182,6 +182,8 @@ export type HubOptions = {
   readonly adminToken: string;
   readonly port?: number;
   readonly readyTimeoutMs?: number;
+  readonly binaryPath?: string;
+  readonly env?: Readonly<Record<string, string>>;
 };
 
 export type HubHandle = {
@@ -199,12 +201,12 @@ export type HubHandle = {
  * escalating to `SIGKILL` after a grace period) even if the caller never reads the rest of the
  * handle. */
 export async function startHub(options: HubOptions): Promise<HubHandle> {
-  const bin = resolveHubBinaryPath(options.repoRoot);
+  const bin = options.binaryPath ?? resolveHubBinaryPath(options.repoRoot);
   if (!existsSync(bin)) {
     throw new Error(`startHub: ${bin} does not exist — build it first: cargo build --manifest-path 🌎️hub/📦️packages/🦀️rust/Cargo.toml`);
   }
   const port = options.port ?? (await findFreePort());
-  const env: NodeJS.ProcessEnv = { ...process.env, OS_HUB_PORT: String(port), OS_HUB_DATA: options.dataDir, OS_HUB_ADMIN_TOKEN: options.adminToken };
+  const env: NodeJS.ProcessEnv = { ...process.env, ...(options.env ?? {}), OS_HUB_PORT: String(port), OS_HUB_DATA: options.dataDir, OS_HUB_ADMIN_TOKEN: options.adminToken };
   const child: ChildProcessByStdio<null, Readable, Readable> = spawn(bin, [], { env, stdio: ["ignore", "pipe", "pipe"] });
   let stdout = "";
   let stderr = "";

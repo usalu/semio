@@ -3,7 +3,7 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/value/snapshot/text.json",
   "title": "SemioValueSnapshotText",
   "description": "🚧 scaffolded by W1b — generic facet mirror.",
-  "type": "value",
+  "type": "object",
   "properties": {
     "schema": {
       "type": "string",
@@ -13,7 +13,7 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "type": "value"
+        "type": "object"
       }
     }
   }

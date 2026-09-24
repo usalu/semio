@@ -182,6 +182,10 @@ impl store::ArtifactPack for BitmapSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         Ok(bitmap_document_from_dsl(<BitmapSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?))
     }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        <BitmapSnapshotDsl as store::ArtifactPack>::record_spec()
+    }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 

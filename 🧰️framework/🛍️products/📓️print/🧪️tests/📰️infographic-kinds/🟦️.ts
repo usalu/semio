@@ -66,7 +66,7 @@ export function infographicProjection(records: readonly ProbeRecord[], families:
  * which the platform discharges *inside* the scenario rather than by an oracle-versus-subject
  * comparison, so the specification has to be asserted here or the case would have no teeth. */
 async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = roundProbeNumbers(await compileVizProbe(ctx.fixture("local://infographic-kinds.tex"), { workDir: ctx.workDir, caseName: CASE }), DECIMALS);
+  const records = roundProbeNumbers(await compileVizProbe(ctx.fixture("shared://📰️infographic-kinds/infographic-kinds.tex"), { workDir: ctx.workDir, caseName: CASE }), DECIMALS);
   const projection = infographicProjection(records, FAMILIES);
   assert.deepEqual(projection, catalogueProjection(FAMILIES));
   return { projection };

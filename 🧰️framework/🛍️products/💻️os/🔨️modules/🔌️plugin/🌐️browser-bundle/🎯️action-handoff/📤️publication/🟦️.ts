@@ -2,9 +2,16 @@
 import { decodeAppFrame, decodeInvocationResultPacks, decodePackValue, encodeAppFrame, encodePackValue } from "../../../../../🟦️.ts";
 import { BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, parseBrowserActorHostEffectBytesV1 } from "../🟦️.ts";
 
-export type BrowserActorIntentPublicationV1 = { readonly kind: "emit" } | { readonly kind: "error"; readonly reason: string };
+/** 🕰️ A pack-encoded `HistoryPatch` the guest published with a result, forwarded verbatim to the Shell's History projection. */
+export type BrowserActorHistoryPatchBytesV1 = readonly number[] | null;
+export type BrowserActorUnsolicitedPublicationV1 =
+  | { readonly kind: "ephemeral" }
+  | { readonly kind: "merge-report" }
+  | { readonly kind: "operation-completed"; readonly historyPatch: BrowserActorHistoryPatchBytesV1 }
+  | { readonly kind: "completion"; readonly projection: BrowserActorCommandMutationProjectionV1; readonly historyPatch: BrowserActorHistoryPatchBytesV1 };
+export type BrowserActorIntentPublicationV1 = { readonly kind: "emit" } | { readonly kind: "error"; readonly reason: string } | BrowserActorUnsolicitedPublicationV1;
 type BrowserActorCommandMutationProjectionV1 = ReturnType<typeof decodeInvocationResultPacks>;
-export type BrowserActorCommandPublicationV1 = { readonly kind: "invocation"; readonly projection: BrowserActorCommandMutationProjectionV1 } | { readonly kind: "error"; readonly reason: string };
+export type BrowserActorCommandPublicationV1 = { readonly kind: "invocation"; readonly projection: BrowserActorCommandMutationProjectionV1; readonly historyPatch: BrowserActorHistoryPatchBytesV1 } | { readonly kind: "error"; readonly reason: string } | BrowserActorUnsolicitedPublicationV1;
 export type BrowserActorCommandBackboneEnvelopeV1 = Readonly<{
   mutation_id: string;
   actor: string;
@@ -86,33 +93,79 @@ function projection(value: unknown): BrowserActorHostEffectV1 {
   return { requestInferenceProposal: { kind: proposal.kind } };
 }
 
-/** 📬️ Accepts only ordinary, unsolicited intent completion frames; operation bytes remain guest-owned. */
+/** 📬️ Accepts only ordinary, unsolicited intent completion frames, the `Ephemeral` snapshot every guest exchange appends
+ * (contract-freeze §C7.6) and a typed operation's unsolicited UI progress; operation bytes remain guest-owned. */
 export function decodeBrowserActorIntentPublicationV1(bytes: Uint8Array): BrowserActorIntentPublicationV1 {
   if (bytes.length === 0 || bytes.length > BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES) throw new Error("browser-actor-publication: invalid frame size");
   const frame = decodeAppFrame(bytes);
   canonical(bytes, encodeAppFrame(frame));
   if ("Emit" in frame && frame.Emit.in_reply_to === 0) return { kind: "emit" };
   if ("Error" in frame && frame.Error.in_reply_to === null) return { kind: "error", reason: "action-guest-refused" };
+  if ("Ephemeral" in frame) return { kind: "ephemeral" };
+  if (("MergeReport" in frame && frame.MergeReport.in_reply_to === null) || ("Conflicts" in frame && frame.Conflicts.in_reply_to === null)) return { kind: "merge-report" };
+  const completion = unsolicitedCompletion(frame);
+  if (completion !== null) return completion;
   throw new Error("browser-actor-publication: foreign frame");
 }
 
-/** 🎛️ Accepts one matching command result while retaining its exact mutation projection. */
+/** ⏩️ An unsolicited `Invocation { in_reply_to: 0 }` — a spawned job's completion (a reserved tool verb's real result) or a
+ * typed operation's UI progress, retaining its exact mutation projection — or the typed operation's terminal
+ * `OperationCompleted`; each with the history patch it carries. */
+function unsolicitedCompletion(frame: ReturnType<typeof decodeAppFrame>): Exclude<BrowserActorUnsolicitedPublicationV1, { readonly kind: "ephemeral" | "merge-report" }> | null {
+  if ("OperationCompleted" in frame) {
+    return { kind: "operation-completed", historyPatch: historyPatchBytes(frame.OperationCompleted.history_patch) };
+  }
+  if (!("Invocation" in frame) || frame.Invocation.in_reply_to !== 0) return null;
+  return { kind: "completion", projection: decodeInvocationResultPacks(frame.Invocation), historyPatch: historyPatchBytes(frame.Invocation.history_patch) };
+}
+
+/** 🕳️ A frame's `history_patch` is a pack-encoded `Option<HistoryPatch>`: empty bytes and a canonical pack `null` are
+ * both "no patch" (the guest's invocation builders emit the latter); a present patch must be a canonical pack object. */
+function historyPatchBytes(bytes: ArrayLike<number>): BrowserActorHistoryPatchBytesV1 {
+  if (bytes.length === 0) return null;
+  const raw = Uint8Array.from(bytes);
+  const value = decodePackValue(raw);
+  canonical(raw, encodePackValue(value));
+  if (value === null) return null;
+  if (typeof value !== "object" || Array.isArray(value)) throw new Error("browser-actor-publication: invalid history patch");
+  return Array.from(raw);
+}
+
+/** 📭️ Accepts only what a guest publishes on a turn no action owns (remote ingest, wake, view refresh): the appended
+ * `Ephemeral` snapshot, the unsolicited `MergeReport`/`Conflicts` of an ingested remote batch, unsolicited completions and
+ * `OperationCompleted`. */
+export function decodeBrowserActorUnsolicitedPublicationV1(bytes: Uint8Array): BrowserActorUnsolicitedPublicationV1 {
+  if (bytes.length === 0 || bytes.length > BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES) throw new Error("browser-actor-publication: invalid frame size");
+  const frame = decodeAppFrame(bytes);
+  canonical(bytes, encodeAppFrame(frame));
+  if ("Ephemeral" in frame) return { kind: "ephemeral" };
+  if (("MergeReport" in frame && frame.MergeReport.in_reply_to === null) || ("Conflicts" in frame && frame.Conflicts.in_reply_to === null)) return { kind: "merge-report" };
+  const completion = unsolicitedCompletion(frame);
+  if (completion !== null) return completion;
+  throw new Error("browser-actor-publication: foreign frame");
+}
+
+/** 🎛️ Accepts one matching command result with its exact mutation projection and history patch, plus unsolicited publications. */
 export function decodeBrowserActorCommandPublicationV1(bytes: Uint8Array, actionSequence: number): BrowserActorCommandPublicationV1 {
   if (bytes.length === 0 || bytes.length > BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES) throw new Error("browser-actor-publication: invalid frame size");
   const frame = decodeAppFrame(bytes);
   canonical(bytes, encodeAppFrame(frame));
   if ("Error" in frame && frame.Error.in_reply_to === actionSequence) return { kind: "error", reason: "action-guest-refused" };
+  if ("Ephemeral" in frame) return { kind: "ephemeral" };
+  if (("MergeReport" in frame && frame.MergeReport.in_reply_to === null) || ("Conflicts" in frame && frame.Conflicts.in_reply_to === null)) return { kind: "merge-report" };
+  const completion = unsolicitedCompletion(frame);
+  if (completion !== null) return completion;
   if (!("Invocation" in frame) || frame.Invocation.in_reply_to !== actionSequence) throw new Error("browser-actor-publication: foreign frame");
-  if (frame.Invocation.history_patch.length !== 0) throw new Error("action-publication-unprojected");
-  return { kind: "invocation", projection: decodeInvocationResultPacks(frame.Invocation) };
+  return { kind: "invocation", projection: decodeInvocationResultPacks(frame.Invocation), historyPatch: historyPatchBytes(frame.Invocation.history_patch) };
 }
 
-/** 🪢️ Proves a redundant Invocation projection names the exact same operations already sent by the bound native backbone. */
-export function requireBrowserActorCommandBackboneProjectionV1(publication: Extract<BrowserActorCommandPublicationV1, { readonly kind: "invocation" }>, envelopes: readonly BrowserActorCommandBackboneEnvelopeV1[]): void {
+/** 🪢️ Proves a redundant Invocation projection names the exact same operations already sent by the bound native backbone.
+ * A zero-mutation invocation still names itself (`{verb}:{instance}`), so only its member lists must be empty. */
+export function requireBrowserActorCommandBackboneProjectionV1(publication: Readonly<{ projection: BrowserActorCommandMutationProjectionV1 }>, envelopes: readonly BrowserActorCommandBackboneEnvelopeV1[]): void {
   const { mutations, inverseGroup } = publication.projection;
   if (mutations.length !== envelopes.length || mutations.length > BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM) throw new Error("action-publication-unprojected");
   if (mutations.length === 0) {
-    if (inverseGroup.invocationId !== "" || inverseGroup.mutations.length !== 0 || inverseGroup.inverseMutations.length !== 0 || (inverseGroup.memberEdits?.length ?? 0) !== 0) throw new Error("action-publication-unprojected");
+    if (inverseGroup.mutations.length !== 0 || inverseGroup.inverseMutations.length !== 0 || (inverseGroup.memberEdits?.length ?? 0) !== 0) throw new Error("action-publication-unprojected");
     return;
   }
   const invocationId = mutations[0]!.invocationId,

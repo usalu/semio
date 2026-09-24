@@ -7,7 +7,7 @@
   "aggregateVariant": "ScaleCamera3d",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "scale-camera3d",
-  "binaryTag": null,
+  "binaryTag": 39,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

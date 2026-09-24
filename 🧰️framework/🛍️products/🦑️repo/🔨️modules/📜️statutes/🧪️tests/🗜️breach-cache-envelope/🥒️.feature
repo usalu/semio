@@ -14,7 +14,7 @@ Feature: A compressed breach cache member is gzip and its digest is SHA-256
   @mode-differential
   @seed-1
   Scenario: Every digest vector hashes to the published value
-    Given the envelope vectors local://🔣️vectors.json
+    Given the envelope vectors shared://🗜️breach-cache-envelope/🔣️vectors.json
     When the host digests every vector and every envelope encoding
     Then every implementation and the reference agree on every digest
 
@@ -23,6 +23,6 @@ Feature: A compressed breach cache member is gzip and its digest is SHA-256
   @mode-round-trip
   @seed-1
   Scenario: A member this implementation writes inflates under the reference
-    Given the envelope vectors local://🔣️vectors.json
+    Given the envelope vectors shared://🗜️breach-cache-envelope/🔣️vectors.json
     When the host compresses every payload and inflates the result again
     Then every implementation and the reference recover the original payload byte for byte

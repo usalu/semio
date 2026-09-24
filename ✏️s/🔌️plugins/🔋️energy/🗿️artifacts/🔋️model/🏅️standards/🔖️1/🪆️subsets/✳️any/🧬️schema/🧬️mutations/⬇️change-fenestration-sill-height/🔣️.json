@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeFenestrationSillHeight",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-sill-height",
-  "binaryTag": null,
+  "binaryTag": 55,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

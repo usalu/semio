@@ -3,8 +3,15 @@ protocol gis.gisterrain.mutations
 version 1
 schema gis.gisterrain
 start record
+framing record
 
-record ChangeExaggeration tag 1
-  field new_exaggeration f64
-
-record ChangeImportedFeatures tag 2
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record change-exaggeration tag=0
+field payload bytes
+record change-imported-features tag=1
+field payload bytes

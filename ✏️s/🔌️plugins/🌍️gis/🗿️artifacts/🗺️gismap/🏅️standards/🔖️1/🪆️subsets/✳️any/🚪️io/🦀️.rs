@@ -1,7 +1,7 @@
 //! 🚪️ IO s.gis.gismap (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.txt"]
+    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.txt"]
 }
 pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.txt"]
@@ -16,9 +16,7 @@ pub mod derived_composition {
     const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
     const DEP_DXF: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_PDF: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
-    const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    const DEP_SVG: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
+    const DEP_GEOJSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("geojson") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
     pub struct GisMapComposerComposition;
@@ -28,7 +26,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_DWG, DEP_DXF, DEP_JSON, DEP_PDF, DEP_PNG, DEP_SVG, DEP_TXT]
+            &[DIALECT, DEP_DWG, DEP_DXF, DEP_GEOJSON, DEP_JSON, DEP_TXT]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -61,39 +59,21 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
+                if source.dialect == DEP_GEOJSON {
+                    let bytes: Vec<u8> = match &source.payload {
+                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
+                        AnalyzeSource::Binary(b) => b.to_vec(),
+                    };
+                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::json::v_rfc8259::geojson::deserialize_bytes(&bytes) {
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                    }
+                }
                 if source.dialect == DEP_JSON {
                     let bytes: Vec<u8> = match &source.payload {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = crate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PDF {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::pdf::v1_4::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PNG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::png::v1_2::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_SVG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::svg::v1_1::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -196,6 +176,14 @@ pub mod io_registry {
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
+    const EXPORT_GEOJSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("geojson") };
+    fn compose_export_geojson(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::io::export::serializers::artifacts::json::v_rfc8259::geojson::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_GEOJSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
     fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
@@ -223,6 +211,7 @@ pub mod io_registry {
                     ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[GISMAP_DIALECT], compose: compose_export_pdf },
                     ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[GISMAP_DIALECT], compose: compose_export_png },
                     ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[GISMAP_DIALECT], compose: compose_export_json },
+                    ComposerEntry { writes: EXPORT_GEOJSON_DIALECT, reads: &[GISMAP_DIALECT], compose: compose_export_geojson },
                     ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[GISMAP_DIALECT], compose: compose_export_dwg },
                     ComposerEntry { writes: EXPORT_DXF_DIALECT, reads: &[GISMAP_DIALECT], compose: compose_export_dxf },
                 ]
@@ -232,96 +221,8 @@ pub mod io_registry {
 }
 //#endregion 🚪️IoRegistry
 
-/// 🗺️ Projects DWG geometry into GIS map positions.
-pub mod dwg_projection {
-    use crate::standards::v1::subsets::any::schema::{default_document, dsl_to_value, value_to_dsl};
-    use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};
-    use dsl::ToValue;
-    use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
-    use serde_json::{json, Value};
-    //#region 🔖️MediaImport
-    /// ✏️ Projects supported DWG geometry into drawing path segments.
-    fn dwg_geometry_to_draw_node(geometry: &DwgGeometry) -> Option<DrawNode> {
-        let vertices: Vec<[f64; 2]> = match geometry {
-            DwgGeometry::Point { at } => vec![[at[0], at[1]]],
-            DwgGeometry::Line { start, end } => vec![[start[0], start[1]], [end[0], end[1]]],
-            DwgGeometry::LwPolyline { vertices, .. } => vertices.clone(),
-            DwgGeometry::Polyline3d { vertices, .. } => vertices.iter().map(|v| [v[0], v[1]]).collect(),
-            _ => return None,
-        };
-        if vertices.is_empty() {
-            return None;
-        }
-        let closed = matches!(geometry, DwgGeometry::LwPolyline { closed: true, .. } | DwgGeometry::Polyline3d { closed: true, .. });
-        let mut segments: Vec<PathSegment> = vertices
-            .iter()
-            .enumerate()
-            .map(|(index, v)| {
-                let to = SemioPoint2 { x: v[0], y: v[1] };
-                if index == 0 {
-                    PathSegment::MoveTo { to }
-                } else {
-                    PathSegment::LineTo { to }
-                }
-            })
-            .collect();
-        if closed {
-            segments.push(PathSegment::Close);
-        }
-        Some(DrawNode::Path { segments, style: None })
-    }
-
-    /// 🌉️ Builds a `SemioDrawingSnapshot` from a `DwgDrawing`'s entities — one `DrawNode::Path`
-    /// per real (non-degenerate) entity, all under one layer.
-    fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
-        let children: Vec<DrawNode> = drawing.entities.iter().filter_map(|entity| dwg_geometry_to_draw_node(&entity.geometry)).collect();
-        SemioDrawingSnapshot { layers: vec![DrawLayer { id: "dwg-import".into(), name: "DWG Import".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }], ..SemioDrawingSnapshot::default() }
-    }
-
-    /// 📍️ Walks a `DrawNode` tree collecting every `MoveTo`/`LineTo` endpoint — the vertex set the
-    /// import path turns into position features (mirrors the old direct `DwgGeometry` vertex walk, now
-    /// over the semio/drawing shape instead).
-    fn collect_draw_node_points(node: &DrawNode, out: &mut Vec<SemioPoint2>) {
-        match node {
-            DrawNode::Path { segments, .. } => {
-                for segment in segments {
-                    match segment {
-                        PathSegment::MoveTo { to } | PathSegment::LineTo { to } => out.push(*to),
-                        _ => {}
-                    }
-                }
-            }
-            DrawNode::Group { children, .. } => children.iter().for_each(|child| collect_draw_node_points(child, out)),
-            _ => {}
-        }
-    }
-
-    /// 🗺️ Imports a DWG drawing into a bare gis map document: DWG entities lower to `DrawNode::Path`
-    /// geometry (`dwg_drawing_to_semio_drawing`), whose vertices become position features. Falls back
-    /// to the default reuse-map document when the DWG carries no point-like geometry.
-    pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
-        let scene = dwg_drawing_to_semio_drawing(drawing);
-        let mut points = Vec::new();
-        for layer in &scene.layers {
-            collect_draw_node_points(&layer.root, &mut points);
-        }
-        if points.is_empty() {
-            return Ok(dsl_to_value(&default_document().to_value()));
-        }
-        let positions: Vec<MapFeature> = points
-            .iter()
-            .enumerate()
-            .map(|(index, point)| {
-                let id = format!("dwg-{index}");
-                MapFeature { id: id.clone(), data: value_to_dsl(&json!({ "id": id, "lon": point.x, "lat": point.y })) }
-            })
-            .collect();
-        let document = gis_map_snapshot_with_derived_children(GisMapSnapshot { positions, routes: Vec::new(), regions: Vec::new(), ..Default::default() });
-        Ok(dsl_to_value(&document.to_value()))
-    }
-    //#endregion 🔖️MediaImport
-    #[cfg(test)]
-    include!("🧪️tests/🔬️dwg-projection-unit/🦀️.rs");
-}
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

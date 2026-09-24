@@ -34,3 +34,18 @@ async fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
     assert!(json.contains(&node_id));
     assert!(json.contains("Name") || json.contains("Kind"));
 }
+
+
+/// 🏗 DSL txt carrier: serialize then deserialize must restore the snapshot exactly.
+#[semio_framework_async_macros::async_test]
+async fn txt_dsl_carrier_round_trips_exactly() {
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+    use semio_framework::io_schema::IoPayload;
+    let snapshot = crate::empty_snapshot();
+    let exported = export::txt::v_utf_8::any::DagIntoTxt::serialize(&snapshot).await.expect("dsl txt export");
+    let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
+    let back = import::txt::v_utf_8::any::TxtIntoDag::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
+    assert_eq!(back.value, snapshot);
+}

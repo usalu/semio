@@ -490,6 +490,9 @@ pub struct HomeSpaceRow {
     pub members: String,
     pub updated: String,
     pub origin: &'static str,
+    /// 📂️ Persistence data class — hub=persistedShared; local catalog=persistedLocalOnly;
+    /// ephemeral draft studios (empty backbone_uri)=ephemeralLocalOnly.
+    pub data_class: &'static str,
     /// 🛂️ The CALLING client's current membership role in this space, as folded from hub-confirmed
     /// directory events — `None` for a space the caller is not a member of (a public row) and for
     /// every local-only catalog row. The Home renderer hides author-only affordances on this and
@@ -554,6 +557,7 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
             members: space.view.member_count.to_string(),
             updated: space.view.updated_at_ms.to_string(),
             origin: "hub",
+            data_class: "persistedShared",
             role: caller_role(space, user_id),
         });
     }
@@ -571,6 +575,7 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
             members: "1".into(),
             updated: entry.updated_at.clone(),
             origin: "local",
+            data_class: if entry.backbone_uri.is_empty() { "ephemeralLocalOnly" } else { "persistedLocalOnly" },
             // 🏠️ The local-only catalog is single-user by construction and carries no directory
             // membership; a local row therefore never offers a directory-owned affordance.
             role: None,

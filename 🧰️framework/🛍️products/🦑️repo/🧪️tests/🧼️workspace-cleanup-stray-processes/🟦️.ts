@@ -13,6 +13,11 @@ test("dev leftover command markers catch cursor-agent workers", () => {
   })).toBe(true);
 });
 
+test("manually opened zsh terminal is never a dev leftover by name alone", () => {
+  expect(isDevLeftoverRow({ name: "zsh", stat: "S", command: "-zsh" })).toBe(false);
+  expect(isDevLeftoverRow({ name: "caffeinate", stat: "S", command: "caffeinate -dimsu" })).toBe(false);
+});
+
 test("stray process executable names match ps command basenames", () => {
   expect(strayProcessExecutableName("/usr/local/bin/bun run dev")).toBe("bun");
   expect(strayProcessExecutableName("<defunct>")).toBe("<defunct>");

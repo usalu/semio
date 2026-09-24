@@ -7,7 +7,7 @@ use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 #[cfg(feature = "sut")]
 fn materialise(ctx: &Context, name: &str, reversed: bool) -> Result<std::path::PathBuf, String> {
-    let vector = ctx.fixture_json("local://🏗️workspace.json")?;
+    let vector = ctx.fixture_json("shared://🌳️command-tree-projection/🏗️workspace.json")?;
     let mut files: Vec<(String, String)> = vector.array("files").iter().map(|entry| (entry.str("path"), entry.str("content"))).collect();
     if reversed {
         files.reverse();

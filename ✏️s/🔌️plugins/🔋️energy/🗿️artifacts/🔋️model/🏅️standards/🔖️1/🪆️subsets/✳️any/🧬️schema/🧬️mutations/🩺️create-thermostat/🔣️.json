@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateThermostat",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-thermostat",
-  "binaryTag": null,
+  "binaryTag": 121,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

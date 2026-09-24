@@ -10,7 +10,7 @@ import { type ProbeProjection, compileVizProbe, probeProjection, roundProbeNumbe
 
 //#region 🔖️Vectors
 const CASE = "interpolate-kinds";
-const FIXTURE = "local://interpolate-kinds.tex";
+const FIXTURE = "shared://🔀️interpolate-kinds/interpolate-kinds.tex";
 const DECIMALS = 6;
 
 /** 🥒️ The vector table of the running scenario, as one record per row. */

@@ -13,7 +13,7 @@ mod subject {
     };
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    const VECTORS: &str = "local://💾️cases.json";
+    const VECTORS: &str = "shared://💾️important-document-transaction/💾️cases.json";
 
     fn strings(values: Vec<String>) -> Json {
         Json::Array(values.into_iter().map(Json::String).collect())

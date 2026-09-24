@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import Ajv2020 from "ajv/dist/2020.js";
 import { applyPatch, type Operation } from "fast-json-patch";
-import fixture from "../🧫️fixtures/🔀️merge-refusal/🔣️.json" with { type: "json" };
-import schema from "../🧬️schema/🔀️merge-refusal/🔣️.json" with { type: "json" };
+import fixture from "../../🧫️fixtures/🔀️merge-refusal/🔣️.json" with { type: "json" };
+import schema from "../../🧫️fixtures/🔀️merge-refusal/📐️schema/🔣️.json" with { type: "json" };
 
 type Triplet = { sequence: number; row: number; column: number; value: number };
 type State = { sourceCursor: number; candidate: Triplet | null; destination: Triplet[] };

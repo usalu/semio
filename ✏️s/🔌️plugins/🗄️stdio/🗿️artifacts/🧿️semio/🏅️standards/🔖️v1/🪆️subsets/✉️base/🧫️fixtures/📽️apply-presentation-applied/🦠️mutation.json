@@ -1,0 +1,78 @@
+{
+  "mutation": "applyPresentation",
+  "payload": {
+    "mutation": {
+      "mutation": "insertSlide",
+      "index": 7,
+      "slide": {
+        "id": "f1-inserted-slide",
+        "layoutId": "slideLayout1",
+        "shapes": [
+          {
+            "shapeKind": "textBox",
+            "frame": {
+              "origin": {
+                "x": 1524000.0,
+                "y": 1122363.0
+              },
+              "width": 9144000.0,
+              "height": 2387600.0
+            },
+            "blocks": [
+              {
+                "kind": "paragraph",
+                "style_id": null,
+                "runs": [
+                  {
+                    "text": "SemIO",
+                    "style": {
+                      "bold": false,
+                      "italic": false,
+                      "underline": false,
+                      "size": null,
+                      "font": null,
+                      "color": null,
+                      "link": null
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "shapeKind": "textBox",
+            "frame": {
+              "origin": {
+                "x": 1524000.0,
+                "y": 3602038.0
+              },
+              "width": 9144000.0,
+              "height": 1655762.0
+            },
+            "blocks": [
+              {
+                "kind": "paragraph",
+                "style_id": null,
+                "runs": [
+                  {
+                    "text": "Eine domänenspezifische Programmiersprache für Architekten",
+                    "style": {
+                      "bold": false,
+                      "italic": false,
+                      "underline": false,
+                      "size": null,
+                      "font": null,
+                      "color": null,
+                      "link": null
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
+    }
+  }
+}

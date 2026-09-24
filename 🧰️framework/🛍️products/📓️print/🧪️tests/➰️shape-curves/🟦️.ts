@@ -11,7 +11,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "shape-curves";
-const FIXTURE = "local://shape-curves.tex";
+const FIXTURE = "shared://➰️shape-curves/shape-curves.tex";
 const SERIES: [number, number][] = [[0, 0], [1, 3], [2, 1], [3, 4], [4, 2], [5, 5]];
 
 const DECIMALS = 6;

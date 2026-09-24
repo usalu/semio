@@ -16,7 +16,7 @@ Feature: Links bump and ribbons close the way d3 draws them
   @level-quick
   @mode-differential
   Scenario: Horizontal, vertical and radial links bump on the right axis
-    Given the committed probe document local://shape-links-ribbons.tex and the links
+    Given the committed probe document shared://🎀️shape-links-ribbons/shape-links-ribbons.tex and the links
       | tag        | kind       | source | target |
       | horizontal | horizontal | 10,20  | 80,60  |
       | vertical   | vertical   | 10,20  | 80,60  |
@@ -28,7 +28,7 @@ Feature: Links bump and ribbons close the way d3 draws them
   @level-quick
   @mode-differential
   Scenario: Chord ribbons pad, straddle two radii and collapse onto themselves as d3-chord does
-    Given the committed probe document local://shape-links-ribbons.tex and the ribbons
+    Given the committed probe document shared://🎀️shape-links-ribbons/shape-links-ribbons.tex and the ribbons
       | tag    | radius | startAngle | endAngle | targetRadius | targetStartAngle | targetEndAngle | padAngle |
       | plain  | 100    | 0.2        | 0.9      | 100          | 2.1              | 2.9            | 0        |
       | padded | 100    | 0.2        | 0.9      | 100          | 2.1              | 2.9            | 0.06     |

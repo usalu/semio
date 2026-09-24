@@ -58,10 +58,7 @@ fn style_to_common(style_name: Option<&str>, styles: &[DrawStyle]) -> CommonAttr
     let mut common = CommonAttrs::default();
     if let Some(name) = style_name {
         if let Some(s) = styles.iter().find(|s| s.name == name) {
-            let mut p = PresentationAttrs::default();
-            if let Some(fill) = &s.fill {
-                p.fill = Some(color_to_css(fill));
-            }
+            let mut p = PresentationAttrs { fill: Some(s.fill.as_ref().map_or_else(|| "none".to_string(), color_to_css)), ..PresentationAttrs::default() };
             if let Some(stroke) = &s.stroke {
                 p.stroke = Some(color_to_css(stroke));
             }

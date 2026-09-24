@@ -7,7 +7,7 @@
   "aggregateVariant": "ConnectGrips",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "connect-grips",
-  "binaryTag": null,
+  "binaryTag": 18,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

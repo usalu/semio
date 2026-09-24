@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertFrame {
-    pub(crate) index: usize,
-    pub(crate) frame: SemioImageFrame,
+    pub index: usize,
+    pub frame: SemioImageFrame,
 }
 
 impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for InsertFrame {

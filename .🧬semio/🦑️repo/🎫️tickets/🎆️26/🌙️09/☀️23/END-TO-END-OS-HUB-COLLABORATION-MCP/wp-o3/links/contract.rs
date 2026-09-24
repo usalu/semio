@@ -1,0 +1,1 @@
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/🖥️server/🔨️modules/🧬️contract/🦀️.rs

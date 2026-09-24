@@ -66,6 +66,15 @@ import { ensureAppleDeveloperDir } from "../../⚙️engine/📤️publication/�
 
 import { spaceE2eAssert } from "../🎬️studio/🟦️.ts";
 
+import { finishLocalHub, startLocalHub, type LocalHubRun } from "../../../../../../../🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts";
+
+import type { LocalProfile } from "../../../../../../../🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts";
+
+import { issueLocalCredential } from "../../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
+
+import { ensureTrustedCatalog } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
+
+
 
 
 //#endregion 🔖️CatalogSmokeVerify
@@ -77,8 +86,7 @@ import { spaceE2eAssert } from "../🎬️studio/🟦️.ts";
  * contexts through the ticket's whole collaboration story: space creation replication, sharing, artifact
  * creation replication, live co-editing, presence, check-in, admin visibility, and hub-restart
  * persistence. Every scenario step is reported individually (`STEP n: PASS/FAIL`) and the run continues
- * past a failing step where it safely can — see the ticket's worker-brief "Reality check" section for
- * why several steps are expected to hit real, still-open upstream gaps this lane does not own. */
+ * past a failing step where it safely can so later independent steps still produce evidence. */
 const COLLAB_E2E_PORT_MIN = 7400;
 
 const COLLAB_E2E_PORT_MAX = 7498;
@@ -122,6 +130,7 @@ const COLLAB_E2E_STEP_NAMES = [
   "undo is per user: user1's undo reverts user1's own edit and leaves user2's edit standing in both shells",
   "a short connection loss does not freeze user2's shell; the edit typed offline lands once the link returns",
   "two simultaneous writers converge: both shells settle on the SAME text, ordered by the hub's own sequence",
+  "writer/draw/puzzle3d surfaces show peer-cursor overlay markers that move when the peer pointer moves",
 ] as const;
 
 type CollabStepOutcome = { readonly step: number; readonly name: string; readonly pass: boolean; readonly detail: string };
@@ -136,6 +145,11 @@ type CollabCommandFrameCounter = { count: number };
 
 /** 📁️ Ticket folder — scratch logs/screenshots for this lane's own probes, per the worker-brief. */
 function collabOutDir(): string {
+  const override = process.env.S_COLLAB_OUT;
+  if (override && override.length > 0) {
+    mkdirSync(override, { recursive: true });
+    return override;
+  }
   const dir = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS");
   mkdirSync(dir, { recursive: true });
   return dir;
@@ -158,23 +172,14 @@ function collabScanPort(envVar: string, taken: Set<number>): number {
   throw new Error(`collab e2e: no free port in ${COLLAB_E2E_PORT_MIN}-${COLLAB_E2E_PORT_MAX} for ${envVar}`);
 }
 
-/** 🗄️ The hub's `OS_HUB_DATA` for this run: a fresh temp directory by default, so the event-sourced
- * directory this scenario asserts against starts empty and STEP 1's "a NEW row appeared" is a real
- * claim. `S_COLLAB_TRUSTED_CATALOG` seeds that fresh directory with an already-published
- * `trusted-catalog/` copied from a warm hub data root: the hub rebuilds the trusted stdio+GIS bundle
- * from source whenever that subtree is missing (`🌎️hub/📦️packages/🦀️rust/📜️script.ts`'s
- * `materializeTrustedStdioGisBundle`, two `wasm-release` component builds into PRIVATE `--target-dir`s
- * that share nothing with the workspace cargo cache), which costs more than the rest of the run put
- * together and measures nothing this scenario is about. Only the catalog is copied — never spaces,
- * documents, sessions or presence. `S_COLLAB_HUB_DATA` overrides the whole directory for a deliberate
- * warm-state run.
+/** 🗄️ The hub's `OS_HUB_DATA` for this run: a fresh directory by default, so the event-sourced directory this scenario
+ * asserts against starts empty and STEP 1's "a NEW row appeared" is a real claim. Only its `trusted-catalog/` is copied,
+ * from the ONE canonical collaboration catalog root the hub's own `os-hub:trusted-catalog-bootstrap` publishes
+ * ({@link ensureTrustedCatalog}; built once, reused by every later run) — never spaces, documents, sessions or presence.
+ * `S_COLLAB_HUB_DATA` overrides the whole directory for a deliberate warm-state run.
  *
- * Both branches return a REALPATH. macOS's default `TMPDIR` lives under `/var/folders/…` and `/var` is a
- * symlink to `private/var`; the hub's trusted-catalog loader opens its configured data root component by
- * component with `O_NOFOLLOW`, so a symlinked ancestor made the hub exit 1 with
- * `ArtifactAuthority(Catalog("Not a directory (os error 20)"))` before it ever bound a port. Worker H1
- * resolved the configured root inside the loader; resolving it here too means this harness does not
- * depend on which `os-hub` binary happens to be staged. */
+ * Both branches return a REALPATH: the hub's trusted-catalog loader opens its root component by component with
+ * `O_NOFOLLOW`, and macOS's `TMPDIR` lives under the `/var` → `private/var` symlink. */
 function collabHubDataDir(): string {
   const explicit = process.env.S_COLLAB_HUB_DATA;
   if (explicit) {
@@ -182,58 +187,107 @@ function collabHubDataDir(): string {
     return realpathSync(explicit);
   }
   const dir = realpathSync(mkdtempSync(join(realpathSync(tmpdir()), "semio-collab-hub-")));
-  const seed = process.env.S_COLLAB_TRUSTED_CATALOG;
-  if (seed && existsSync(join(seed, "trusted-catalog"))) {
-    cpSync(join(seed, "trusted-catalog"), join(dir, "trusted-catalog"), { recursive: true });
-    console.log(`[collab-e2e] seeded the hub's trusted stdio+GIS catalog from ${seed}`);
-  }
+  const canonical = join(repoRoot, ".🧬semio", "🌐hub", "collab-catalog");
+  ensureTrustedCatalog(repoRoot, canonical);
+  cpSync(join(canonical, "trusted-catalog"), join(dir, "trusted-catalog"), { recursive: true });
+  console.log(`[collab-e2e] seeded the hub's trusted catalog from ${canonical}`);
   return dir;
 }
 
-/** 🚀️ Spawns the real hub (`bun 🌎️hub/📦️packages/🦀️rust/📜️script.ts dev`, i.e. `cargo run` against the
- * default (sqlite) feature set — never `--all-features`, contract-freeze Amendment 2) on `port` against
- * a fresh `dataDir`, and waits for a real HTTP response before returning. */
-async function collabStartHub(port: number, dataDir: string, logPath: string): Promise<SpawnDaemonHandle> {
-  const hubScript = join(repoRoot, "./🌎️hub/📦️packages/🦀️rust/📜️script.ts");
-  const logStream = createWriteStream(logPath);
-  const daemon = spawnDaemon("bun", [hubScript, "dev"], {
-    cwd: join(repoRoot, "./🌎️hub/📦️packages/🦀️rust"),
-    // 🔐️ `OS_HUB_CREDENTIAL_SIGN_IN` is what opens `POST /auth/sessions` to a password, which is the
-    // only way two DIFFERENT humans can reach this hub from two browsers (AU3 §4.5).
-    env: { ...process.env, OS_HUB_PORT: String(port), OS_HUB_DATA: dataDir, OS_HUB_ADMIN_TOKEN: COLLAB_E2E_ADMIN_TOKEN, OS_HUB_CREDENTIAL_SIGN_IN: "1" },
-    stdio: "pipe",
-  });
-  daemon.child.stdout?.pipe(logStream);
-  daemon.child.stderr?.pipe(logStream);
+/** 🚀️ Boots `os-hub` through local-bootstrap (FD 3) with password sign-in, an
+ * admin-subject profile, and a live `admin-relay` session for operator surfaces. */
+type CollabHubHandle = SpawnDaemonHandle & {
+  readonly run: LocalHubRun;
+  readonly adminCapability: string;
+};
+
+async function collabStartHub(port: number, dataDir: string, logPath: string): Promise<CollabHubHandle> {
+  process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
+  const hubPkg = join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust");
+  const profile: LocalProfile = {
+    profileId: "collab-boot",
+    subject: "collab-boot",
+    displayName: "Collab Boot",
+    allowedClientClasses: ["native", "mcp", "react-relay", "admin-relay"],
+  };
+  let run: LocalHubRun;
+  try {
+    run = await startLocalHub(repoRoot, hubPkg, [profile], {
+      port,
+      dataDir,
+      binaryPath: collabHubBinaryPath(),
+      adminSubjects: ["semio.local.bootstrap/v1:collab-boot"],
+      capture: false,
+    });
+  } catch (error) {
+    writeFileSync(logPath, error instanceof Error ? `${error.message}\n` : String(error), "utf8");
+    throw error;
+  }
   const baseUrl = `http://127.0.0.1:${port}`;
-  const outcome = await awaitHttpOk(`${baseUrl}/admin/api/overview`, {
+  const readiness = await awaitHttpOk(`${baseUrl}/readyz`, {
     deadlineMs: COLLAB_E2E_HUB_BOOT_BUDGET_MS,
     intervalMs: 500,
-    init: { headers: { authorization: `Bearer ${COLLAB_E2E_ADMIN_TOKEN}` } },
-    isDead: () => daemon.child.exitCode !== null,
+    isDead: () => run.child.exitCode !== null,
   });
-  if (outcome === "ready") return daemon;
-  if (outcome === "dead") throw new Error(`hub exited early (code ${daemon.child.exitCode}) — see ${logPath}`);
-  daemon.kill();
-  logStream.end();
-  throw new Error(`hub did not become ready on port ${port} within ${COLLAB_E2E_HUB_BOOT_BUDGET_MS}ms — see ${logPath}`);
+  if (readiness === "dead") {
+    writeFileSync(logPath, run.output(), "utf8");
+    await finishLocalHub(run);
+    throw new Error(`hub exited early (code ${run.child.exitCode}) — see ${logPath}`);
+  }
+  if (readiness !== "ready") {
+    writeFileSync(logPath, run.output(), "utf8");
+    await finishLocalHub(run);
+    throw new Error(`hub did not become ready on port ${port} within ${COLLAB_E2E_HUB_BOOT_BUDGET_MS}ms — see ${logPath}`);
+  }
+  const envelope = await issueLocalCredential(run, "collab-boot", "admin-relay");
+  const adminCapability = String(envelope.capability ?? "");
+  if (!adminCapability.startsWith("session.v1.")) {
+    await finishLocalHub(run);
+    throw new Error(`collab e2e: admin-relay envelope missing session capability`);
+  }
+  const overview = await awaitHttpOk(`${baseUrl}/admin/api/overview`, {
+    deadlineMs: 30_000,
+    intervalMs: 500,
+    init: { headers: { authorization: `Bearer ${adminCapability}` } },
+    isDead: () => run.child.exitCode !== null,
+  });
+  writeFileSync(logPath, run.output() || `readyz+admin ok capability=${adminCapability.slice(0, 24)}…\n`, "utf8");
+  if (overview !== "ready") {
+    await finishLocalHub(run);
+    throw new Error(`admin overview not ready after issuing admin-relay session — see ${logPath}`);
+  }
+  return {
+    child: run.child,
+    run,
+    adminCapability,
+    kill: () => {
+      try {
+        run.pipe.end();
+      } catch {
+        void 0;
+      }
+      if (run.child.pid) run.child.kill();
+      void finishLocalHub(run);
+    },
+  };
 }
 
-/** 🔑️ Provisions the two humans against `dataDir` through the hub binary's own operator verb, before
- * the hub is started. The verb needs read/write access to the server-owned data root — strictly
- * stronger than anything reachable over the network — reads the password from stdin (never `argv`,
- * never an env var), and is idempotent: an existing account keeps its identity and gets the new
- * credential. Returns each principal's hub-assigned user id, which is what `/admin/api/connections`
- * and the space roster name.
- *
- * It resolves the same binary the hub itself runs: the Nx-staged development build when one exists,
- * otherwise the shared cargo cache's debug build. A missing binary is a hard failure here rather than
- * a mysterious `401` during STEP 1. */
-function collabProvisionCredentials(dataDir: string): Readonly<Record<string, string>> {
-  const staged = join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-  const cached = join(repoRoot, ".🧬semio", "🦑️repo", "⚡️cache", "cargo", "target", "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
+
+/** 🗄️ Resolves the staged or cargo-cache `os-hub` binary used for credential provisioning and live boots. */
+function collabHubBinaryPath(): string {
+  const name = process.platform === "win32" ? "os-hub.exe" : "os-hub";
+  const explicit = process.env.S_COLLAB_HUB_BINARY;
+  if (explicit && existsSync(explicit)) return explicit;
+  const staged = join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "dist", "build-dev", name);
+  const cached = join(repoRoot, ".🧬semio", "🦑️repo", "⚡️cache", "cargo", "target", "debug", name);
   const binaryPath = existsSync(staged) ? staged : cached;
-  if (!existsSync(binaryPath)) throw new Error(`collab e2e: no os-hub binary to provision credentials with (looked at ${staged} and ${cached})`);
+  if (!existsSync(binaryPath)) throw new Error(`collab e2e: no os-hub binary (looked at ${staged} and ${cached})`);
+  return binaryPath;
+}
+
+
+function collabProvisionCredentials(dataDir: string): Readonly<Record<string, string>> {
+  const binaryPath = collabHubBinaryPath();
   const provisioned: Record<string, string> = {};
   for (const account of [
     { email: COLLAB_E2E_USER1_EMAIL, password: COLLAB_E2E_USER1_PASSWORD, display: COLLAB_E2E_USER1_DISPLAY },
@@ -357,7 +411,7 @@ async function collabStartUserDevServer(opts: { readonly port: number; readonly 
   const logStream = createWriteStream(opts.logPath);
   const daemon = spawnDaemon("bun", [devScript, "serve", "s", "react", "dev"], {
     cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
-    env: { ...process.env, SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", SEMIO_VITE_HMR: "0", S_OS_PORT: String(opts.port), S_HUB_URL: opts.hubUrl, S_DATA_DIR: opts.dataDir },
+    env: { ...process.env, SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", SEMIO_VITE_HMR: "0", S_OS_PORT: String(opts.port), S_HUB_URL: opts.hubUrl, S_DATA_DIR: opts.dataDir, S_LOCAL_ONLY: "1" },
     stdio: "pipe",
   });
   daemon.child.stdout?.pipe(logStream);
@@ -471,18 +525,72 @@ async function collabPresenceColors(page: import("playwright").Page): Promise<re
   return await collabPresenceRows(page).evaluateAll((rows) => rows.map((row) => getComputedStyle((row.firstElementChild as HTMLElement | null) ?? (row as HTMLElement)).borderTopColor));
 }
 
+/** Peer-cursor overlay markers painted by CanvasPresenceOverlayV1 (`data-testid="peer-cursor"`). */
+function collabPeerCursors(page: import("playwright").Page): import("playwright").Locator {
+  return page.locator("[data-peer-cursor], [data-testid=\"peer-cursor\"]");
+}
+
+/** Wait until at least one peer cursor marker is painted, returning its CSS left/top. */
+async function collabWaitForPeerCursor(page: import("playwright").Page, deadlineMs: number): Promise<{ left: number; top: number; count: number }> {
+  const deadline = Date.now() + deadlineMs;
+  let last = { left: 0, top: 0, count: 0 };
+  while (Date.now() < deadline) {
+    const cursors = collabPeerCursors(page);
+    const count = await cursors.count();
+    if (count > 0) {
+      const box = await cursors.first().boundingBox();
+      if (box) {
+        last = { left: box.x, top: box.y, count };
+        return last;
+      }
+    }
+    await page.waitForTimeout(200);
+  }
+  return last;
+}
+
+/** Move the local pointer and assert the peer's overlay cursor relocates. */
+async function collabAssertPeerCursorMoves(opts: {
+  readonly mover: import("playwright").Page;
+  readonly observer: import("playwright").Page;
+  readonly host: string;
+  readonly label: string;
+}): Promise<string> {
+  const host = opts.mover.locator(opts.host).first();
+  spaceE2eAssert((await host.count()) > 0, `${opts.label}: no host surface matching ${opts.host}`);
+  const box = await host.boundingBox();
+  spaceE2eAssert(!!box, `${opts.label}: host surface has no bounding box`);
+  await opts.mover.mouse.move(box!.x + box!.width * 0.3, box!.y + box!.height * 0.3);
+  const first = await collabWaitForPeerCursor(opts.observer, 20_000);
+  spaceE2eAssert(first.count > 0, `${opts.label}: observer never painted [data-peer-cursor] after peer pointer move`);
+  await opts.mover.mouse.move(box!.x + box!.width * 0.7, box!.y + box!.height * 0.7);
+  const deadline = Date.now() + 20_000;
+  let moved = first;
+  while (Date.now() < deadline) {
+    moved = await collabWaitForPeerCursor(opts.observer, 500);
+    if (Math.hypot(moved.left - first.left, moved.top - first.top) > 4) break;
+  }
+  spaceE2eAssert(
+    Math.hypot(moved.left - first.left, moved.top - first.top) > 4,
+    `${opts.label}: peer cursor did not move (before=${JSON.stringify(first)}, after=${JSON.stringify(moved)})`,
+  );
+  return `${opts.label}: peer-cursor moved from (${first.left.toFixed(1)},${first.top.toFixed(1)}) to (${moved.left.toFixed(1)},${moved.top.toFixed(1)})`;
+}
+
+
+
 /** 🔢️ The `ServerFrame` tag byte for `Commands`, mirrored from `encode_server_frame`'s own match arm
  * (`🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs`, `out.push(3)`). */
 const COLLAB_SERVER_FRAME_COMMANDS_TAG = 3;
 
 /** 📡️ Attaches a `ServerFrame::Commands` tally to every document socket `page` opens from now on.
- * Only `/spaces/{id}/documents/{id}/socket/v1` counts — the directory socket carries the space/artifact
+ * Only `/scopes/{space}%2F{doc}/document/ws` counts — the directory socket carries the space/artifact
  * listing lane, whose frames would otherwise inflate the round-trip bound STEP 8 asserts. */
 function collabCountCommandFrames(page: import("playwright").Page): CollabCommandFrameCounter {
   const counter: CollabCommandFrameCounter = { count: 0 };
   page.on("websocket", (ws) => {
     const url = ws.url();
-    if (url.includes("/directory/") || !url.includes("/documents/") || !url.includes("/socket/v1")) return;
+    if (url.includes("/directory/") || !url.includes("/scopes/") || !url.includes("/document/ws")) return;
     ws.on("framereceived", (frame) => {
       const payload = frame.payload;
       if (typeof payload === "string" || payload.length < 2) return;
@@ -523,6 +631,7 @@ async function collabRunScenario(
   user2: import("playwright").Page,
   hubBaseUrl: string,
   user2Commands: CollabCommandFrameCounter,
+  adminCapability: string,
 ): Promise<{ readonly results: CollabStepOutcome[]; readonly spaceId: string | undefined; readonly artifactId: string | undefined }> {
   const results: CollabStepOutcome[] = [];
   const record = (step: number, pass: boolean, detail: string): void => {
@@ -733,13 +842,13 @@ async function collabRunScenario(
 
   // STEP 7
   try {
-    const connectionsRes = await fetch(`${hubBaseUrl}/admin/api/connections`, { headers: { authorization: `Bearer ${COLLAB_E2E_ADMIN_TOKEN}` } });
+    const connectionsRes = await fetch(`${hubBaseUrl}/admin/api/connections`, { headers: { authorization: `Bearer ${adminCapability}` } });
     spaceE2eAssert(connectionsRes.ok, `GET /admin/api/connections returned ${connectionsRes.status}`);
     const connections = (await connectionsRes.json()) as readonly Record<string, unknown>[];
     const text = JSON.stringify(connections);
     spaceE2eAssert(text.includes(COLLAB_E2E_USER1_EMAIL) || text.includes("user1"), `/admin/api/connections does not mention user1: ${text.slice(0, 500)}`);
     spaceE2eAssert(text.includes(COLLAB_E2E_USER2_EMAIL) || text.includes("user2"), `/admin/api/connections does not mention user2: ${text.slice(0, 500)}`);
-    const adminRes = await fetch(`${hubBaseUrl}/admin`, { headers: { authorization: `Bearer ${COLLAB_E2E_ADMIN_TOKEN}` } });
+    const adminRes = await fetch(`${hubBaseUrl}/admin`, { headers: { authorization: `Bearer ${adminCapability}` } });
     spaceE2eAssert(adminRes.ok, `GET /admin returned ${adminRes.status}`);
     const contentType = adminRes.headers.get("content-type") ?? "";
     spaceE2eAssert(contentType.includes("html"), `GET /admin content-type is ${contentType}, expected html`);
@@ -797,7 +906,7 @@ async function collabRunScenario(
  * (not inside `collabRunScenario`) since it needs the hub daemon handle, not just a base URL. */
 async function collabRunRestartStep(opts: {
   readonly record: (step: number, pass: boolean, detail: string) => void;
-  readonly hubDaemon: SpawnDaemonHandle;
+  readonly hubDaemon: CollabHubHandle;
   readonly hubPort: number;
   readonly hubDataDir: string;
   readonly user1: import("playwright").Page;
@@ -805,7 +914,7 @@ async function collabRunRestartStep(opts: {
   readonly user2Commands: CollabCommandFrameCounter;
   readonly spaceId: string | undefined;
   readonly artifactId: string | undefined;
-}): Promise<SpawnDaemonHandle> {
+}): Promise<CollabHubHandle> {
   if (!opts.spaceId || !opts.artifactId) {
     opts.record(9, false, "skipped — no space/artifact id from earlier steps");
     opts.record(10, false, "skipped — no space/artifact id from earlier steps");
@@ -1000,6 +1109,70 @@ async function collabRunCollaborationBehaviours(opts: {
     await collabScreenshot(opts.user2, "step13-user2");
     opts.record(13, false, error instanceof Error ? error.message : String(error));
   }
+
+  // STEP 14 — in-canvas peer cursors on writer (open from steps 3-4) plus draw + puzzle3d when kinds exist
+  try {
+    const details: string[] = [];
+    // Writer: prefer an open textarea/contenteditable host from earlier steps.
+    const writerHost = 'textarea, [contenteditable="true"], [data-slot="canvas-presence-overlay"]';
+    try {
+      details.push(await collabAssertPeerCursorMoves({ mover: opts.user1, observer: opts.user2, host: writerHost, label: "writer" }));
+    } catch (error) {
+      // Re-open space artifact editors if step 6+ navigated away.
+      if (opts.spaceId && opts.artifactId) {
+        await opts.user1.goto(`${new URL(opts.user1.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
+        await opts.user2.goto(`${new URL(opts.user2.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
+        await collabWaitForRow(opts.user1, "artifact", opts.artifactId, 30_000);
+        await collabWaitForRow(opts.user2, "artifact", opts.artifactId, 30_000);
+        await opts.user1.locator(`[data-row-id="artifact:${opts.artifactId}"]`).getByTitle(/open/i).click().catch(() => undefined);
+        await opts.user2.locator(`[data-row-id="artifact:${opts.artifactId}"]`).getByTitle(/open/i).click().catch(() => undefined);
+        await opts.user1.waitForTimeout(1_000);
+        details.push(await collabAssertPeerCursorMoves({ mover: opts.user1, observer: opts.user2, host: writerHost, label: "writer" }));
+      } else {
+        throw error;
+      }
+    }
+    // Draw + puzzle3d: create when the kind selector offers them.
+    for (const [label, kindLabel, host] of [
+      ["draw", "Drawing", '[data-slot="canvas-presence-overlay"], canvas'],
+      ["puzzle3d", "Puzzle 3D", '[data-peer-cursor-world], [data-slot="canvas-presence-overlay"]'],
+    ] as const) {
+      try {
+        await opts.user1.goto(`${new URL(opts.user1.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
+        const create = opts.user1.locator('[id="s-create-artifact"], [data-action-id*="createArtifact"], button:has-text("Create")').first();
+        if ((await create.count()) === 0) continue;
+        await create.click();
+        await opts.user1.locator("#name").fill(`Collab ${label}`);
+        try {
+          await collabSelectOption(opts.user1, "kindId", kindLabel);
+        } catch {
+          continue;
+        }
+        await opts.user1.locator('button[type="submit"], [id="s-create-artifact-submit"]').first().click().catch(() => undefined);
+        await opts.user1.waitForTimeout(1_500);
+        // Best-effort open newest artifact row for both users.
+        const rows = opts.user1.locator('[data-row-id^="artifact:"]');
+        const n = await rows.count();
+        if (n === 0) continue;
+        const rowId = await rows.nth(n - 1).getAttribute("data-row-id");
+        if (!rowId) continue;
+        const id = rowId.replace("artifact:", "");
+        await collabWaitForRow(opts.user2, "artifact", id, 20_000).catch(() => undefined);
+        await opts.user1.locator(`[data-row-id="${rowId}"]`).getByTitle(/open/i).click().catch(() => undefined);
+        await opts.user2.locator(`[data-row-id="${rowId}"]`).getByTitle(/open/i).click().catch(() => undefined);
+        await opts.user1.waitForTimeout(1_000);
+        details.push(await collabAssertPeerCursorMoves({ mover: opts.user1, observer: opts.user2, host, label }));
+      } catch (error) {
+        details.push(`${label}: skipped (${error instanceof Error ? error.message : String(error)})`);
+      }
+    }
+    spaceE2eAssert(details.some((line) => line.startsWith("writer:")), `step 14 missing writer cursor proof: ${JSON.stringify(details)}`);
+    opts.record(14, true, details.join("; "));
+  } catch (error) {
+    await collabScreenshot(opts.user1, "step14-user1");
+    await collabScreenshot(opts.user2, "step14-user2");
+    opts.record(14, false, error instanceof Error ? error.message : String(error));
+  }
 }
 
 /** 🎬️ Orchestrates the full harness: port scan, temp data dirs, hub boot, plugin prebuild, two `s`
@@ -1020,7 +1193,7 @@ async function runCollabE2eVerify(): Promise<void> {
 
   const provisioned = collabProvisionCredentials(hubDataDir);
 
-  let hubDaemon: SpawnDaemonHandle | undefined;
+  let hubDaemon: CollabHubHandle | undefined;
   let user1Daemon: SpawnDaemonHandle | undefined;
   let user2Daemon: SpawnDaemonHandle | undefined;
   let browser: import("playwright").Browser | undefined;
@@ -1056,7 +1229,11 @@ async function runCollabE2eVerify(): Promise<void> {
     }
 
     try {
-      await collabPrebuildPlugins();
+      if (process.env.S_COLLAB_SKIP_PREBUILD === "1") {
+        console.log("[collab-e2e] S_COLLAB_SKIP_PREBUILD=1 — skipping plugin prebuild");
+      } else {
+        await collabPrebuildPlugins();
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[collab-e2e] plugin prebuild failed — every scenario step is reported FAIL: ${message}`);
@@ -1066,7 +1243,11 @@ async function runCollabE2eVerify(): Promise<void> {
 
     const hubBaseUrl = `http://127.0.0.1:${hubPort}`;
     try {
-      collabActivateShellRuntime();
+      if (process.env.S_COLLAB_SKIP_ACTIVATE === "1") {
+        console.log("[collab-e2e] S_COLLAB_SKIP_ACTIVATE=1 — skipping activate-s-react-dev");
+      } else {
+        collabActivateShellRuntime();
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[collab-e2e] shell activation failed — every scenario step is reported FAIL: ${message}`);
@@ -1146,7 +1327,7 @@ async function runCollabE2eVerify(): Promise<void> {
     await user1Page.waitForTimeout(2_000);
     await user2Page.waitForTimeout(2_000);
 
-    const scenario = await collabRunScenario(user1Page, user2Page, hubBaseUrl, user2Commands);
+    const scenario = await collabRunScenario(user1Page, user2Page, hubBaseUrl, user2Commands, hubDaemon.adminCapability);
     for (const outcome of scenario.results) results.push(outcome);
 
     hubDaemon = await collabRunRestartStep({ record, hubDaemon: hubDaemon!, hubPort, hubDataDir, user1: user1Page, user2: user2Page, user2Commands, spaceId: scenario.spaceId, artifactId: scenario.artifactId });

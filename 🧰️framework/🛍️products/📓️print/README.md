@@ -14,7 +14,7 @@ driven from the repository's design tokens and both built through `📜️script
 | `🔨️modules/` | TypeScript modules: catalogue loading and generation, the probe harness, font provisioning, tectonic compilation. |
 | `🎮️commands/` | The command objects `📜️script.ts` routes to. |
 | `🧪️tests/` | One directory per test case: `🥒️.feature`, `🟦️.ts`, `🧫️fixtures/`. |
-| `🔮️oracle/🔣️.json` | The owner oracle registry: the third-party packages the tests compare against, and the justified no-oracle decisions. |
+| `🔮️oracles/🔣️.json` | The owner oracle registry: the third-party packages the tests compare against, and the justified no-oracle decisions. |
 
 ## Commands
 

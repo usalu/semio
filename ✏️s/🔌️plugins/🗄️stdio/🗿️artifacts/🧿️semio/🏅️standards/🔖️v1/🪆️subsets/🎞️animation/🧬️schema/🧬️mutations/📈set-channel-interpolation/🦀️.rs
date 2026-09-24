@@ -10,9 +10,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetChannelInterpolation {
-    pub(crate) timeline_index: usize,
-    pub(crate) index: usize,
-    pub(crate) interpolation: AnimInterpolation,
+    pub timeline_index: usize,
+    pub index: usize,
+    pub interpolation: AnimInterpolation,
 }
 
 impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for SetChannelInterpolation {

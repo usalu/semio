@@ -55,6 +55,7 @@ pub use derived_composition::*;
 pub mod io_registry {
     use crate::standards::v_rfc8259::subsets::base::schema::JsonComposer as JsonRawAnyComposer;
     use crate::standards::v_rfc8259::subsets::i_json::schema::JsonIJsonComposer;
+    use crate::standards::v_rfc8259::subsets::geojson::schema::JsonGeoJsonComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -62,7 +63,7 @@ pub mod io_registry {
 
     // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![composer_entry_of::<JsonRawAnyComposer>(), composer_entry_of::<JsonIJsonComposer>()]).as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<JsonRawAnyComposer>(), composer_entry_of::<JsonIJsonComposer>(), composer_entry_of::<JsonGeoJsonComposer>()]).as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

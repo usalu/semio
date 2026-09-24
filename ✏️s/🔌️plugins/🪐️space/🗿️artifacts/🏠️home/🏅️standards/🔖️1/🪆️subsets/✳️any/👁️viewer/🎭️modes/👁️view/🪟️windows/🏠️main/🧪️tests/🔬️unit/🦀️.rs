@@ -28,7 +28,7 @@ fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&sem
 }
 
 async fn one_hub_row() -> crate::HomeSpaceRow {
-    crate::HomeSpaceRow { id: "sp-1".into(), name: "Fabrication".into(), kind: "studio".into(), visibility: "public".into(), members: "2".into(), updated: "1000".into(), origin: "hub", role: None }
+    crate::HomeSpaceRow { id: "sp-1".into(), name: "Fabrication".into(), kind: "studio".into(), visibility: "public".into(), members: "2".into(), updated: "1000".into(), origin: "hub", data_class: "persistedShared", role: None }
 }
 
 #[semio_framework_async_macros::async_test]

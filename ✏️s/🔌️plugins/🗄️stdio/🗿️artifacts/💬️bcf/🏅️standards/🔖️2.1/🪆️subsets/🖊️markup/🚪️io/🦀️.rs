@@ -22,7 +22,6 @@ pub mod derived_composition {
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bcf", standard: StandardId("2.1"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
-    const DEP_XML: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
 
     pub struct BcfComposerComposition;
 
@@ -31,7 +30,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_ZIP, DEP_XML]
+            &[DIALECT, DEP_ZIP]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -41,7 +40,7 @@ pub mod derived_composition {
             // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
-                .filter(|s| s.dialect == DIALECT || s.dialect == DEP_ZIP || s.dialect == DEP_XML)
+                .filter(|s| s.dialect == DIALECT || s.dialect == DEP_ZIP)
                 .map(|s| match &s.payload {
                     AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
                     AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),

@@ -25,6 +25,15 @@ doctest = false
 name = "semio-os-mcp"
 path = "../../🏗️bootstrap/🦀️.rs"
 
+# ⏱️ Its own process: the binding law needs an empty compiled-code map to reach every phase.
+[[test]]
+name = "binding_cancellation_law"
+path = "../../💡️inference/🧪️tests/⏱️binding-cancellation-law/🦀️.rs"
+
+[[test]]
+name = "compile_cancellation_law"
+path = "../../🏠️workspace/🧪️tests/⏱️compile-cancellation-law/🦀️.rs"
+
 [dependencies]
 # 🔀️ O1 (drop dyn dispatch, dedyn-fw-os-misc): `#[dyn_enum]`/`dyn_enum_close!` — closes
 # `GatewayBackend`'s implementor set (`NullBackend`, `HeadlessWorkspace`, `Arc<HeadlessWorkspace>`)

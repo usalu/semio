@@ -197,7 +197,7 @@ fn node_graph_scene_payload_rejects_an_invalid_typed_viewport() {
 
 #[test]
 fn node_graph_scene_viewport_matches_the_shared_neutral_contract() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🖱️ui/🪟️viewport/🧪️tests/🧫️fixtures/🪟️poses/🔣️.json")).expect("shared viewport fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🖱️ui/🪟️viewport/🧫️fixtures/🪟️poses/🔣️.json")).expect("shared viewport fixture");
     let mut cases = 0;
     for row in fixture["cases"].as_array().expect("viewport cases").iter().filter(|row| row["dimension"] == "2d") {
         let value = row["value"].clone();

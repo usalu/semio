@@ -27,7 +27,7 @@ Feature: Circle packing places and sizes circles exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: A pack over sqrt(value) matches d3 pack() on a square and an oblong frame
-    Given the committed probe document local://hierarchy-pack.tex and the pack extents
+    Given the committed probe document shared://🫧️hierarchy-pack/hierarchy-pack.tex and the pack extents
       | key    | width | height |
       | plain  | 100   | 100    |
       | oblong | 120   | 80     |
@@ -37,7 +37,7 @@ Feature: Circle packing places and sizes circles exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: Padding separates the circles as d3 pack().padding() does
-    Given the committed probe document local://hierarchy-pack.tex and the pack extents
+    Given the committed probe document shared://🫧️hierarchy-pack/hierarchy-pack.tex and the pack extents
       | key    | width | height | padding |
       | padded | 100   | 100    | 3       |
     Then the compiled probe and the reference implementation agree on every value
@@ -46,7 +46,7 @@ Feature: Circle packing places and sizes circles exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: An explicit radius takes d3's single-pass branch
-    Given the committed probe document local://hierarchy-pack.tex and the radii
+    Given the committed probe document shared://🫧️hierarchy-pack/hierarchy-pack.tex and the radii
       | key      | width | height | radius |
       | value    | 100   | 100    | value  |
       | constant | 100   | 100    | 4      |
@@ -56,7 +56,7 @@ Feature: Circle packing places and sizes circles exactly as d3-hierarchy does
   @level-quick
   @mode-differential
   Scenario: An unbalanced hierarchy consumes the same random stream as d3
-    Given the committed probe document local://hierarchy-pack.tex and the pack extents
+    Given the committed probe document shared://🫧️hierarchy-pack/hierarchy-pack.tex and the pack extents
       | key    | width | height | padding |
       | plain  | 90    | 90     |         |
       | padded | 90    | 90     | 2       |

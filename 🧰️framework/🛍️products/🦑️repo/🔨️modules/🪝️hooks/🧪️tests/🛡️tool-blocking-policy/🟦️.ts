@@ -150,7 +150,7 @@ type Invocation = { id: string; tool: string; args: string; blocked: boolean };
 type Vectors = { invocations: Invocation[]; segments: string[]; inlineCode: string[] };
 
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(readFileSync(ctx.fixture("local://🛡️invocations.json"), "utf8")) as Vectors;
+  return JSON.parse(readFileSync(ctx.fixture("shared://🛡️tool-blocking-policy/🛡️invocations.json"), "utf8")) as Vectors;
 }
 
 function verdict(reason: string | null): { blocked: boolean; reason: string } {

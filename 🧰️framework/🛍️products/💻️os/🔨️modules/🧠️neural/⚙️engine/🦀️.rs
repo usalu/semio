@@ -2274,6 +2274,13 @@ impl<'a> Evaluator<'a> {
     /// — used to spread a heavy evaluation across many cheap ticks instead of blocking a thread for
     /// the whole graph. [`EvalStepBudget::PROBE`] is a pure probe: nothing is dispatched,
     /// `remaining` reports every neuron that would still need work.
+    ///
+    /// 🧯️ A dispatch that FAILS is the node's answer for that input exactly like a success, so it is
+    /// seeded into `cache` too — the same rule a contributed extension's error answer already follows
+    /// (`seed_node_cache`). Left uncached, a failing node costing more than one tick's deadline was
+    /// re-dispatched first on every resumed tick, the walk never reached the nodes behind it, and the
+    /// run ticked forever: `sphere-cut-with-torus` at the tangent radius 2.5 re-ran its refused
+    /// `brep.bool.cut` for 900 s while `brep.measure.volume` stayed `computing`.
     #[allow(clippy::too_many_arguments, reason = "mirrors evaluate_channels_sequential_cached's params plus a budget; see that method's reason")]
     pub fn evaluate_channels_budgeted(
         &self,
@@ -2355,7 +2362,11 @@ impl<'a> Evaluator<'a> {
                         spent += 1;
                         continue;
                     }
-                    Err(err) => eval_error_dictionary(&err),
+                    Err(err) => {
+                        let fault = eval_error_dictionary(&err);
+                        cache.seed(key, fault.clone());
+                        fault
+                    }
                     Ok(dict) => {
                         cache.seed(key, dict.clone());
                         dict

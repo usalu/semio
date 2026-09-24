@@ -10,10 +10,10 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetSampleFlags {
-    pub(crate) stream_index: usize,
-    pub(crate) index: usize,
-    pub(crate) pts: u64,
-    pub(crate) key: bool,
+    pub stream_index: usize,
+    pub index: usize,
+    pub pts: u64,
+    pub key: bool,
 }
 
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetSampleFlags {

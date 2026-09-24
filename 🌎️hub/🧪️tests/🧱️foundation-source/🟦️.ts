@@ -12,7 +12,7 @@ import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-envi
 import { orderedDirectoryPublicationOracle } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
 import { directChildEnvironment, directChildLaunch, deliverCredentialEnvelopeToChild, sealedDirectChildEnvironment, type CredentialChildOperations } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
 import { mcpCredentialSourceOrderConforms, nativeCredentialSourceOrderConforms, proveMcpCredentialSourceOrder, proveNativeCredentialSourceOrder, sourceDefinitionBodies } from "../../🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts";
-import { assertHubFixtureExpectation } from "../🧬️schema/🛂expectation/🟦️.ts";
+import { assertHubFixtureExpectation } from "../../🧬️schema/🛂️fixture-expectation/🟦️.ts";
 import { authenticatedFrame, hmacProof, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
 import { allocateLocalHubRunRoot, finishLocalHub, localHubReadinessAdmitted, type LocalHubRun, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
@@ -83,7 +83,7 @@ test("Hub foundation contract is schema-first and independently parsed", async (
 
 test("Hub foundation owners are anonymous, exported, and acyclic", () => {
   const ownerPaths = new Set(fixture.owners.map((owner) => owner.path));
-  expect(fixture.owners).toHaveLength(10);
+  expect(fixture.owners).toHaveLength(9);
   for (const owner of fixture.owners) {
     const absolute = join(repoRoot, owner.path);
     expect(absolute.endsWith("/🟦️.ts")).toBe(true);
@@ -104,7 +104,7 @@ test("Hub foundation owners are anonymous, exported, and acyclic", () => {
     visited.add(path);
   };
   for (const path of ownerPaths) visit(path);
-  expect(visited.size).toBe(10);
+  expect(visited.size).toBe(9);
 });
 
 test("Hub foundation owner graph typechecks without a command-module back edge", { timeout: 30_000 }, () => {
@@ -400,14 +400,14 @@ test("source definition boundaries match TypeScript AST and reject stale credent
   expect(mcpCredentialSourceOrderConforms({ ...mcp, entrypoint: mcp.entrypoint.replace("return;\n    }", "return;\n    }\n    return;") })).toBe(false);
   expect(() => proveMcpCredentialSourceOrder(repoRoot)).not.toThrow();
 
-  const rustOracle = readFileSync(join(hubRoot, "🔐️auth/🧪️tests/🧭️credential-source-order/🔮️oracles/🦀️.rs"), "utf8");
+  const rustOracle = readFileSync(join(hubRoot, "🔐️auth/🧪️tests/🧭️credential-source-order/🦀️.rs"), "utf8");
   const cargoManifest = readFileSync(join(hubRoot, "📦️packages/🦀️rust/Cargo.toml"), "utf8");
   const cargoLibrary = readFileSync(join(hubRoot, "📦️packages/🦀️rust/🦀️.rs"), "utf8");
   expect(rustOracle).toContain("syn::parse_file");
   expect(rustOracle).toContain("schema_mirror_json");
   expect(rustOracle).toContain("hub_credential_source_order_syn_parity");
   expect(cargoManifest).toContain('syn = { version = "2", features = ["full", "visit"] }');
-  expect(cargoLibrary).toContain('credential-source-order/🔮️oracles/🦀️.rs"]');
+  expect(cargoLibrary).toContain('credential-source-order/🦀️.rs"]');
 });
 
 test("ordered publication and Cargo staging retain their exact authorities", () => {
@@ -436,7 +436,7 @@ test("package, target, input and launch registrations bind only the moved owners
   });
   for (const name of moved) expect(declared.has(name), name).toBe(false);
   for (const owner of fixture.owners) expect(rootImportsForOwner(routerPath, owner.path), owner.path).toEqual(owner.rootImports);
-  expect(router).toContain('import { HubFoundationSourceScript } from "../../🧪️tests/🧱️foundation-source/🏃️execution/🟦️.ts";');
+  expect(router).toContain("class HubFoundationSourceScript extends BundleScript {");
   expect(router).toContain(`.register("${fixture.route.command}", HubFoundationSourceScript)`);
   const project = JSON.parse(readFileSync(join(hubRoot, "📦️packages/🦀️rust/📋️project.json"), "utf8"));
   expect(project.namedInputs.hubFoundationSources).toEqual(fixture.route.inputs);

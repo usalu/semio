@@ -50,7 +50,7 @@ async function affineSubject(ctx: AdapterContext): Promise<{ projection: ProbePr
 }
 
 async function powerSubject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbe(ctx.fixture("local://power-mapping.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const records = await compileVizProbe(ctx.fixture("shared://🔬️probe-protocol/power-mapping.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS)) };
 }
 // #endregion 🧪️Probes

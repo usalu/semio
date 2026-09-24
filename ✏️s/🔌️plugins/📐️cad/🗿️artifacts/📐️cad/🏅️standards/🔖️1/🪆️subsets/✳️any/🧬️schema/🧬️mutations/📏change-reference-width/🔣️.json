@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeReferenceWidth",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-reference-width",
-  "binaryTag": null,
+  "binaryTag": 15,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

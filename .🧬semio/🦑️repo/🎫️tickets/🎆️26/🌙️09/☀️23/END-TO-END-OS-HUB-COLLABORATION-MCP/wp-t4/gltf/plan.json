@@ -1,0 +1,1616 @@
+{
+ "bind-default-scene": {
+  "subset": "🎬️scene",
+  "params": {
+   "scene": 1
+  },
+  "inverse": [
+   {
+    "kind": "bind-default-scene",
+    "params": {
+     "scene": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🏠️default-scene/🔗️bind/⬅️before.gltf"
+ },
+ "bind-node-camera": {
+  "subset": "🎬️scene",
+  "params": {
+   "node": 6,
+   "camera": 0
+  },
+  "inverse": [
+   {
+    "kind": "unbind-node-camera",
+    "params": {
+     "node": 6
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "📷️node-camera/🔗️bind/⬅️before.gltf"
+ },
+ "bind-node-child": {
+  "subset": "🎬️scene",
+  "params": {
+   "parent": 1,
+   "child": 6,
+   "position": 0
+  },
+  "inverse": [
+   {
+    "kind": "unbind-node-child",
+    "params": {
+     "parent": 1,
+     "child": 6
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌿️node-child/🔗️bind/⬅️before.gltf"
+ },
+ "bind-node-mesh": {
+  "subset": "🎬️scene",
+  "params": {
+   "node": 6,
+   "mesh": 0
+  },
+  "inverse": [
+   {
+    "kind": "unbind-node-mesh",
+    "params": {
+     "node": 6
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🏗️node-mesh/🔗️bind/⬅️before.gltf"
+ },
+ "bind-node-skin": {
+  "subset": "🎬️scene",
+  "params": {
+   "node": 6,
+   "skin": 0
+  },
+  "inverse": [
+   {
+    "kind": "unbind-node-skin",
+    "params": {
+     "node": 6
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🩻️node-skin/🔗️bind/⬅️before.gltf"
+ },
+ "bind-scene-root-node": {
+  "subset": "🎬️scene",
+  "params": {
+   "scene": 1,
+   "node": 6,
+   "position": 0
+  },
+  "inverse": [
+   {
+    "kind": "unbind-scene-root-node",
+    "params": {
+     "scene": 1,
+     "node": 6
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌲️scene-root/🔗️bind/⬅️before.gltf"
+ },
+ "change-node-extension-data": {
+  "subset": "🎬️scene",
+  "params": {
+   "node": 6,
+   "data": {
+    "state": "present",
+    "value": {
+     "ACME_marker": {
+      "on": true
+     }
+    }
+   }
+  },
+  "inverse": [
+   {
+    "kind": "change-node-extension-data",
+    "params": {
+     "node": 6,
+     "data": {
+      "state": "absent"
+     }
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌳️node/🧩️change-extensions/⬅️before.gltf"
+ },
+ "change-node-extra-data": {
+  "subset": "🎬️scene",
+  "params": {
+   "node": 6,
+   "data": {
+    "state": "present",
+    "value": {
+     "nodeKind": "fixture",
+     "state": "mutated"
+    }
+   }
+  },
+  "inverse": [
+   {
+    "kind": "change-node-extra-data",
+    "params": {
+     "node": 6,
+     "data": {
+      "state": "present",
+      "value": {
+       "nodeKind": "fixture"
+      }
+     }
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌳️node/📝️change-extras/⬅️before.gltf"
+ },
+ "change-node-morph-weights": {
+  "subset": "🎬️scene",
+  "params": {
+   "node": 1,
+   "weights": [
+    0.9
+   ]
+  },
+  "inverse": null,
+  "restore": [
+   "nodes"
+  ],
+  "fixture": "🌳️node/⚖️change-weights/⬅️before.gltf"
+ },
+ "change-node-name": {
+  "subset": "🎬️scene",
+  "params": {
+   "node": 6,
+   "value": "renamedEmptyNode"
+  },
+  "inverse": [
+   {
+    "kind": "change-node-name",
+    "params": {
+     "node": 6,
+     "value": "emptyNode"
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌳️node/🏷️rename/⬅️before.gltf"
+ },
+ "change-node-transform": {
+  "subset": "🎬️scene",
+  "params": {
+   "node": 6,
+   "transform": {
+    "kind": "trs",
+    "translation": [
+     2,
+     3,
+     4
+    ]
+   }
+  },
+  "inverse": [
+   {
+    "kind": "change-node-transform",
+    "params": {
+     "node": 6,
+     "transform": {
+      "kind": "trs"
+     }
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌳️node/📐️transform/⬅️before.gltf"
+ },
+ "change-scene-extension-data": {
+  "subset": "🎬️scene",
+  "params": {
+   "scene": 1,
+   "data": {
+    "state": "present",
+    "value": {
+     "ACME_marker": {
+      "on": true
+     }
+    }
+   }
+  },
+  "inverse": [
+   {
+    "kind": "change-scene-extension-data",
+    "params": {
+     "scene": 1,
+     "data": {
+      "state": "absent"
+     }
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🎬️scene/🧩️change-extensions/⬅️before.gltf"
+ },
+ "change-scene-extra-data": {
+  "subset": "🎬️scene",
+  "params": {
+   "scene": 1,
+   "data": {
+    "state": "present",
+    "value": {
+     "sceneKind": "fixture",
+     "state": "mutated"
+    }
+   }
+  },
+  "inverse": [
+   {
+    "kind": "change-scene-extra-data",
+    "params": {
+     "scene": 1,
+     "data": {
+      "state": "present",
+      "value": {
+       "sceneKind": "fixture"
+      }
+     }
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🎬️scene/📝️change-extras/⬅️before.gltf"
+ },
+ "change-scene-name": {
+  "subset": "🎬️scene",
+  "params": {
+   "scene": 1,
+   "value": "renamedSceneB"
+  },
+  "inverse": [
+   {
+    "kind": "change-scene-name",
+    "params": {
+     "scene": 1,
+     "value": "sceneB"
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🎬️scene/🏷️rename/⬅️before.gltf"
+ },
+ "create-node": {
+  "subset": "🎬️scene",
+  "params": {
+   "position": 1
+  },
+  "inverse": [
+   {
+    "kind": "delete-node",
+    "params": {
+     "index": 1
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌳️node/🌱️create/⬅️before.gltf"
+ },
+ "create-scene": {
+  "subset": "🎬️scene",
+  "params": {
+   "position": 1
+  },
+  "inverse": [
+   {
+    "kind": "delete-scene",
+    "params": {
+     "index": 1
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🎬️scene/🌱️create/⬅️before.gltf"
+ },
+ "delete-node": {
+  "subset": "🎬️scene",
+  "params": {
+   "index": 7
+  },
+  "inverse": null,
+  "restore": [
+   "scenes",
+   "nodes",
+   "skins",
+   "animations"
+  ],
+  "fixture": "🌳️node/🗑️delete/⬅️before.gltf"
+ },
+ "delete-scene": {
+  "subset": "🎬️scene",
+  "params": {
+   "index": 1
+  },
+  "inverse": null,
+  "restore": [
+   "scene",
+   "scenes"
+  ],
+  "fixture": "🎬️scene/🗑️delete/⬅️before.gltf"
+ },
+ "move-node": {
+  "subset": "🎬️scene",
+  "params": {
+   "index": 6,
+   "position": 0
+  },
+  "inverse": [
+   {
+    "kind": "move-node",
+    "params": {
+     "index": 0,
+     "position": 6
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌳️node/🚚️move/⬅️before.gltf"
+ },
+ "move-node-child": {
+  "subset": "🎬️scene",
+  "params": {
+   "parent": 0,
+   "child": 6,
+   "position": 0
+  },
+  "inverse": [
+   {
+    "kind": "move-node-child",
+    "params": {
+     "parent": 0,
+     "child": 6,
+     "position": 4
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌿️node-child/🚚️move/⬅️before.gltf"
+ },
+ "move-node-parent": {
+  "subset": "🎬️scene",
+  "params": {
+   "parent": 7,
+   "child": 6,
+   "position": 0
+  },
+  "inverse": [
+   {
+    "kind": "move-node-parent",
+    "params": {
+     "parent": 0,
+     "child": 6,
+     "position": 4
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌳️node/🌿️reparent/⬅️before.gltf"
+ },
+ "move-scene": {
+  "subset": "🎬️scene",
+  "params": {
+   "index": 0,
+   "position": 1
+  },
+  "inverse": [
+   {
+    "kind": "move-scene",
+    "params": {
+     "index": 1,
+     "position": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🎬️scene/🚚️move/⬅️before.gltf"
+ },
+ "move-scene-root-node": {
+  "subset": "🎬️scene",
+  "params": {
+   "scene": 0,
+   "node": 6,
+   "position": 0
+  },
+  "inverse": [
+   {
+    "kind": "move-scene-root-node",
+    "params": {
+     "scene": 0,
+     "node": 6,
+     "position": 1
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌲️scene-root/🚚️move/⬅️before.gltf"
+ },
+ "reorder-node-children": {
+  "subset": "🎬️scene",
+  "params": {
+   "parent": 0,
+   "order": [
+    6,
+    4,
+    3,
+    2,
+    1
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-node-children",
+    "params": {
+     "parent": 0,
+     "order": [
+      1,
+      2,
+      3,
+      4,
+      6
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌿️node-child/🔀️reorder/⬅️before.gltf"
+ },
+ "reorder-nodes": {
+  "subset": "🎬️scene",
+  "params": {
+   "order": [
+    7,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1,
+    0
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-nodes",
+    "params": {
+     "order": [
+      7,
+      6,
+      5,
+      4,
+      3,
+      2,
+      1,
+      0
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌳️node/🔀️reorder/⬅️before.gltf"
+ },
+ "reorder-scene-root-nodes": {
+  "subset": "🎬️scene",
+  "params": {
+   "scene": 0,
+   "order": [
+    6,
+    0
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-scene-root-nodes",
+    "params": {
+     "scene": 0,
+     "order": [
+      0,
+      6
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌲️scene-root/🔀️reorder/⬅️before.gltf"
+ },
+ "reorder-scenes": {
+  "subset": "🎬️scene",
+  "params": {
+   "order": [
+    1,
+    0
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-scenes",
+    "params": {
+     "order": [
+      1,
+      0
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🎬️scene/🔀️reorder/⬅️before.gltf"
+ },
+ "unbind-default-scene": {
+  "subset": "🎬️scene",
+  "params": {},
+  "inverse": [
+   {
+    "kind": "bind-default-scene",
+    "params": {
+     "scene": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🏠️default-scene/✂️unbind/⬅️before.gltf"
+ },
+ "unbind-node-camera": {
+  "subset": "🎬️scene",
+  "params": {
+   "node": 3
+  },
+  "inverse": [
+   {
+    "kind": "bind-node-camera",
+    "params": {
+     "node": 3,
+     "camera": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "📷️node-camera/✂️unbind/⬅️before.gltf"
+ },
+ "unbind-node-child": {
+  "subset": "🎬️scene",
+  "params": {
+   "parent": 0,
+   "child": 6
+  },
+  "inverse": [
+   {
+    "kind": "bind-node-child",
+    "params": {
+     "parent": 0,
+     "child": 6,
+     "position": 4
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌿️node-child/✂️unbind/⬅️before.gltf"
+ },
+ "unbind-node-mesh": {
+  "subset": "🎬️scene",
+  "params": {
+   "node": 1
+  },
+  "inverse": [
+   {
+    "kind": "bind-node-mesh",
+    "params": {
+     "node": 1,
+     "mesh": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🏗️node-mesh/✂️unbind/⬅️before.gltf"
+ },
+ "unbind-node-skin": {
+  "subset": "🎬️scene",
+  "params": {
+   "node": 4
+  },
+  "inverse": [
+   {
+    "kind": "bind-node-skin",
+    "params": {
+     "node": 4,
+     "skin": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🩻️node-skin/✂️unbind/⬅️before.gltf"
+ },
+ "unbind-scene-root-node": {
+  "subset": "🎬️scene",
+  "params": {
+   "scene": 1,
+   "node": 7
+  },
+  "inverse": [
+   {
+    "kind": "bind-scene-root-node",
+    "params": {
+     "scene": 1,
+     "node": 7,
+     "position": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌲️scene-root/✂️unbind/⬅️before.gltf"
+ },
+ "create-buffer": {
+  "subset": "💿️buffer",
+  "params": {
+   "position": 1,
+   "bytes": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "delete-buffer",
+    "params": {
+     "index": 1
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🌱️create-buffer-applied/⬅️before.gltf"
+ },
+ "create-buffer-view": {
+  "subset": "💿️buffer",
+  "params": {
+   "position": 1,
+   "buffer": 0,
+   "byteOffset": 0,
+   "byteLength": 4
+  },
+  "inverse": [
+   {
+    "kind": "delete-buffer-view",
+    "params": {
+     "index": 1
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🪟️create-buffer-view-applied/⬅️before.gltf"
+ },
+ "delete-buffer": {
+  "subset": "💿️buffer",
+  "params": {
+   "index": 1
+  },
+  "inverse": null,
+  "restore": [
+   "bufferViews",
+   "buffers"
+  ],
+  "fixture": "🗑️delete-buffer-applied/⬅️before.gltf"
+ },
+ "delete-buffer-view": {
+  "subset": "💿️buffer",
+  "params": {
+   "index": 18
+  },
+  "inverse": null,
+  "restore": [
+   "accessors",
+   "images",
+   "bufferViews"
+  ],
+  "fixture": "✂️delete-buffer-view-applied/⬅️before.gltf"
+ },
+ "move-buffer": {
+  "subset": "💿️buffer",
+  "params": {
+   "index": 1,
+   "position": 0
+  },
+  "inverse": [
+   {
+    "kind": "move-buffer",
+    "params": {
+     "index": 0,
+     "position": 1
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🚚️move-buffer-applied/⬅️before.gltf"
+ },
+ "move-buffer-view": {
+  "subset": "💿️buffer",
+  "params": {
+   "index": 18,
+   "position": 0
+  },
+  "inverse": [
+   {
+    "kind": "move-buffer-view",
+    "params": {
+     "index": 0,
+     "position": 18
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "➡️move-buffer-view-applied/⬅️before.gltf"
+ },
+ "reorder-buffer-views": {
+  "subset": "💿️buffer",
+  "params": {
+   "order": [
+    18,
+    17,
+    16,
+    15,
+    14,
+    13,
+    12,
+    11,
+    10,
+    9,
+    8,
+    7,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1,
+    0
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-buffer-views",
+    "params": {
+     "order": [
+      18,
+      17,
+      16,
+      15,
+      14,
+      13,
+      12,
+      11,
+      10,
+      9,
+      8,
+      7,
+      6,
+      5,
+      4,
+      3,
+      2,
+      1,
+      0
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔢️reorder-buffer-views-applied/⬅️before.gltf"
+ },
+ "reorder-buffers": {
+  "subset": "💿️buffer",
+  "params": {
+   "order": [
+    1,
+    0
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-buffers",
+    "params": {
+     "order": [
+      1,
+      0
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔀️reorder-buffers-applied/⬅️before.gltf"
+ },
+ "bind-morph-target-attribute": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "target": 0,
+   "semantic": "NORMAL",
+   "accessor": 1
+  },
+  "inverse": [
+   {
+    "kind": "unbind-morph-target-attribute",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "target": 0,
+     "semantic": "NORMAL"
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🎚️morph-attribute/🔗️bind/⬅️before.gltf"
+ },
+ "bind-primitive-attribute": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "semantic": "COLOR_0",
+   "accessor": 3
+  },
+  "inverse": [
+   {
+    "kind": "unbind-primitive-attribute",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "semantic": "COLOR_0"
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔤️primitive-attribute/🔗️bind/⬅️before.gltf"
+ },
+ "bind-primitive-indices": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "accessor": 4
+  },
+  "inverse": [
+   {
+    "kind": "unbind-primitive-indices",
+    "params": {
+     "mesh": 0,
+     "primitive": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔢️primitive-indices/🔗️bind/⬅️before.gltf"
+ },
+ "bind-primitive-material": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "material": 1
+  },
+  "inverse": [
+   {
+    "kind": "bind-primitive-material",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "material": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🧱️primitive-material/🔗️bind/⬅️before.gltf"
+ },
+ "change-mesh-extension-data": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "data": {
+    "state": "present",
+    "value": {
+     "ACME_marker": {
+      "on": true
+     }
+    }
+   }
+  },
+  "inverse": [
+   {
+    "kind": "change-mesh-extension-data",
+    "params": {
+     "mesh": 0,
+     "data": {
+      "state": "absent"
+     }
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🕸️mesh/🧩️change-extensions/⬅️before.gltf"
+ },
+ "change-mesh-extra-data": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "data": {
+    "state": "present",
+    "value": {
+     "meshKind": "fixture",
+     "state": "mutated"
+    }
+   }
+  },
+  "inverse": [
+   {
+    "kind": "change-mesh-extra-data",
+    "params": {
+     "mesh": 0,
+     "data": {
+      "state": "present",
+      "value": {
+       "meshKind": "fixture"
+      }
+     }
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🕸️mesh/📝️change-extras/⬅️before.gltf"
+ },
+ "change-mesh-morph-weights": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "weights": [
+    0.75
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "change-mesh-morph-weights",
+    "params": {
+     "mesh": 0,
+     "weights": [
+      0.5
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🕸️mesh/⚖️change-weights/⬅️before.gltf"
+ },
+ "change-mesh-name": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "value": "renamedMesh0"
+  },
+  "inverse": [
+   {
+    "kind": "change-mesh-name",
+    "params": {
+     "mesh": 0,
+     "value": null
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🕸️mesh/🏷️rename/⬅️before.gltf"
+ },
+ "change-primitive-extension-data": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "data": {
+    "state": "present",
+    "value": {
+     "ACME_marker": {
+      "on": true
+     }
+    }
+   }
+  },
+  "inverse": [
+   {
+    "kind": "change-primitive-extension-data",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "data": {
+      "state": "absent"
+     }
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔺️primitive/🧩️change-extensions/⬅️before.gltf"
+ },
+ "change-primitive-extra-data": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "data": {
+    "state": "present",
+    "value": {
+     "state": "mutated"
+    }
+   }
+  },
+  "inverse": [
+   {
+    "kind": "change-primitive-extra-data",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "data": {
+      "state": "absent"
+     }
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔺️primitive/📝️change-extras/⬅️before.gltf"
+ },
+ "change-primitive-topology-mode": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "mode": 0
+  },
+  "inverse": [
+   {
+    "kind": "change-primitive-topology-mode",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "mode": 4
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔺️primitive/📐️change-topology/⬅️before.gltf"
+ },
+ "create-accessor": {
+  "subset": "🕸️mesh",
+  "params": {
+   "position": 1,
+   "componentType": 5126,
+   "count": 1,
+   "kind": "SCALAR"
+  },
+  "inverse": [
+   {
+    "kind": "delete-accessor",
+    "params": {
+     "index": 1
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "📐️accessor/🌱️create/⬅️before.gltf"
+ },
+ "create-mesh": {
+  "subset": "🕸️mesh",
+  "params": {
+   "position": 1
+  },
+  "inverse": [
+   {
+    "kind": "delete-mesh",
+    "params": {
+     "index": 1
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🕸️mesh/🌱️create/⬅️before.gltf"
+ },
+ "create-morph-target": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "position": 1
+  },
+  "inverse": null,
+  "restore": [
+   "meshes"
+  ],
+  "fixture": "🧬️morph-target/🌱️create/⬅️before.gltf"
+ },
+ "create-primitive": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "position": 1
+  },
+  "inverse": [
+   {
+    "kind": "delete-primitive",
+    "params": {
+     "mesh": 0,
+     "primitive": 1
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔺️primitive/🌱️create/⬅️before.gltf"
+ },
+ "delete-accessor": {
+  "subset": "🕸️mesh",
+  "params": {
+   "index": 18
+  },
+  "inverse": null,
+  "restore": [
+   "meshes",
+   "skins",
+   "animations",
+   "accessors"
+  ],
+  "fixture": "📐️accessor/🗑️delete/⬅️before.gltf"
+ },
+ "delete-mesh": {
+  "subset": "🕸️mesh",
+  "params": {
+   "index": 1
+  },
+  "inverse": null,
+  "restore": [
+   "nodes",
+   "meshes"
+  ],
+  "fixture": "🕸️mesh/🗑️delete/⬅️before.gltf"
+ },
+ "delete-morph-target": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "target": 0
+  },
+  "inverse": null,
+  "restore": [
+   "meshes"
+  ],
+  "fixture": "🧬️morph-target/🗑️delete/⬅️before.gltf"
+ },
+ "delete-primitive": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0
+  },
+  "inverse": null,
+  "restore": [
+   "meshes"
+  ],
+  "fixture": "🔺️primitive/🗑️delete/⬅️before.gltf"
+ },
+ "move-accessor": {
+  "subset": "🕸️mesh",
+  "params": {
+   "index": 18,
+   "position": 0
+  },
+  "inverse": [
+   {
+    "kind": "move-accessor",
+    "params": {
+     "index": 0,
+     "position": 18
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "📐️accessor/🚚️move/⬅️before.gltf"
+ },
+ "move-mesh": {
+  "subset": "🕸️mesh",
+  "params": {
+   "index": 0,
+   "position": 1
+  },
+  "inverse": [
+   {
+    "kind": "move-mesh",
+    "params": {
+     "index": 1,
+     "position": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🕸️mesh/🚚️move/⬅️before.gltf"
+ },
+ "move-morph-target": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "target": 0,
+   "position": 1
+  },
+  "inverse": [
+   {
+    "kind": "move-morph-target",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "target": 1,
+     "position": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🧬️morph-target/🚚️move/⬅️before.gltf"
+ },
+ "move-morph-target-attribute": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "target": 0,
+   "semantic": "POSITION",
+   "position": 1
+  },
+  "inverse": [
+   {
+    "kind": "move-morph-target-attribute",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "target": 0,
+     "semantic": "POSITION",
+     "position": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🎚️morph-attribute/🚚️move/⬅️before.gltf"
+ },
+ "move-primitive": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "position": 1
+  },
+  "inverse": [
+   {
+    "kind": "move-primitive",
+    "params": {
+     "mesh": 0,
+     "primitive": 1,
+     "position": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔺️primitive/🚚️move/⬅️before.gltf"
+ },
+ "move-primitive-attribute": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "semantic": "POSITION",
+   "position": 2
+  },
+  "inverse": [
+   {
+    "kind": "move-primitive-attribute",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "semantic": "POSITION",
+     "position": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔤️primitive-attribute/🚚️move/⬅️before.gltf"
+ },
+ "reorder-accessors": {
+  "subset": "🕸️mesh",
+  "params": {
+   "order": [
+    18,
+    17,
+    16,
+    15,
+    14,
+    13,
+    12,
+    11,
+    10,
+    9,
+    8,
+    7,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1,
+    0
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-accessors",
+    "params": {
+     "order": [
+      18,
+      17,
+      16,
+      15,
+      14,
+      13,
+      12,
+      11,
+      10,
+      9,
+      8,
+      7,
+      6,
+      5,
+      4,
+      3,
+      2,
+      1,
+      0
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "📐️accessor/🔀️reorder/⬅️before.gltf"
+ },
+ "reorder-meshs": {
+  "subset": "🕸️mesh",
+  "params": {
+   "order": [
+    2,
+    1,
+    0
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-meshs",
+    "params": {
+     "order": [
+      2,
+      1,
+      0
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🕸️mesh/🔀️reorder/⬅️before.gltf"
+ },
+ "reorder-morph-target-attributes": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "target": 0,
+   "order": [
+    "NORMAL",
+    "POSITION"
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-morph-target-attributes",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "target": 0,
+     "order": [
+      "POSITION",
+      "NORMAL"
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🎚️morph-attribute/🔀️reorder/⬅️before.gltf"
+ },
+ "reorder-morph-targets": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "order": [
+    1,
+    0
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-morph-targets",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "order": [
+      1,
+      0
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🧬️morph-target/🔀️reorder/⬅️before.gltf"
+ },
+ "reorder-primitive-attributes": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "order": [
+    "TEXCOORD_0",
+    "NORMAL",
+    "POSITION"
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-primitive-attributes",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "order": [
+      "POSITION",
+      "NORMAL",
+      "TEXCOORD_0"
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔤️primitive-attribute/🔀️reorder/⬅️before.gltf"
+ },
+ "reorder-primitives": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "order": [
+    1,
+    0
+   ]
+  },
+  "inverse": [
+   {
+    "kind": "reorder-primitives",
+    "params": {
+     "mesh": 0,
+     "order": [
+      1,
+      0
+     ]
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔺️primitive/🔀️reorder/⬅️before.gltf"
+ },
+ "unbind-morph-target-attribute": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "target": 0,
+   "semantic": "POSITION"
+  },
+  "inverse": [
+   {
+    "kind": "bind-morph-target-attribute",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "target": 0,
+     "semantic": "POSITION",
+     "accessor": 3
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🎚️morph-attribute/✂️unbind/⬅️before.gltf"
+ },
+ "unbind-primitive-attribute": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0,
+   "semantic": "NORMAL"
+  },
+  "inverse": [
+   {
+    "kind": "bind-primitive-attribute",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "semantic": "NORMAL",
+     "accessor": 1
+    }
+   },
+   {
+    "kind": "move-primitive-attribute",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "semantic": "NORMAL",
+     "position": 1
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔤️primitive-attribute/✂️unbind/⬅️before.gltf"
+ },
+ "unbind-primitive-indices": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0
+  },
+  "inverse": [
+   {
+    "kind": "bind-primitive-indices",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "accessor": 4
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🔢️primitive-indices/✂️unbind/⬅️before.gltf"
+ },
+ "unbind-primitive-material": {
+  "subset": "🕸️mesh",
+  "params": {
+   "mesh": 0,
+   "primitive": 0
+  },
+  "inverse": [
+   {
+    "kind": "bind-primitive-material",
+    "params": {
+     "mesh": 0,
+     "primitive": 0,
+     "material": 0
+    }
+   }
+  ],
+  "restore": null,
+  "fixture": "🧱️primitive-material/✂️unbind/⬅️before.gltf"
+ }
+}

@@ -75,7 +75,7 @@ async fn presence_peer_decoder_rejects_hostile_counts_before_allocation() {
 
 #[semio_framework_async_macros::async_test]
 async fn presence_peer_binary_round_trips_with_every_field_absent() {
-    let peer = PresencePeer { actor: "peer-1".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None };
+    let peer = PresencePeer { actor: "peer-1".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None, active_tool: None };
     let bytes = encode_presence_peer(&peer).await;
     assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
 }
@@ -94,15 +94,43 @@ async fn presence_peer_binary_round_trips_with_every_field_present() {
         color: Some(3),
         surface: Some("s.space.home@1/*#editor".into()),
         views: vec![
-            PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.5 }, size: [800.0, 600.0], pointer: Some([10.0, 20.0, 0.0]) },
-            PresenceWindowView { window_id: "w2".into(), space: "world".into(), kind: PresenceViewKind::Orbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], up: [0.0, 1.0, 0.0], fov: 45.0 }, size: [1024.0, 768.0], pointer: None },
+            PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.5 }, size: [800.0, 600.0], pointer: Some([10.0, 20.0, 0.0]), ray_origin: Some([0.0, 1.0, 2.0]) },
+            PresenceWindowView { window_id: "w2".into(), space: "world".into(), kind: PresenceViewKind::Orbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], up: [0.0, 1.0, 0.0], fov: 45.0 }, size: [1024.0, 768.0], pointer: None, ray_origin: None },
         ],
         ui: Some(PresenceUi { hovered_path: Some("row[0]#a".into()), focused_path: None, pressed_path: Some("btn[1]#save".into()) }),
         tool_run: Some(PresenceToolRun { tool_id: "fill".into(), state: PresenceToolRunState::Running, stage: 1, completed: 42, total: Some(100) }),
         principal_kind: None,
+        active_tool: Some("brush".into()),
     };
     let bytes = encode_presence_peer(&peer).await;
     assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn presence_peer_active_tool_round_trips() {
+    let peer = PresencePeer {
+        actor: "peer-tool".into(),
+        connected_at_ms: 42,
+        label: None,
+        presence_pack: None,
+        user_id: None,
+        role: None,
+        drag_ghost_json: None,
+        interaction: None,
+        color: None,
+        surface: None,
+        views: Vec::new(),
+        ui: None,
+        tool_run: None,
+        principal_kind: None,
+        active_tool: Some("select".into()),
+    };
+    let bytes = encode_presence_peer(&peer).await;
+    assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
+    let value = crate::value::ToValue::to_value(&peer);
+    assert_eq!(serde_json::Value::from(value.clone())["activeTool"], serde_json::json!("select"));
+    let round: PresencePeer = crate::value::FromValue::from_value(value).unwrap();
+    assert_eq!(round, peer);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -118,10 +146,10 @@ async fn presence_peer_round_trips_views_ui_color_surface() {
         interaction: None,
         color: Some(11),
         surface: Some("s.space.home@1/*#viewer".into()),
-        views: vec![PresenceWindowView { window_id: "w1".into(), space: "geo".into(), kind: PresenceViewKind::Geo { lng: 8.5, lat: 47.4, zoom: 12.0, bearing: 0.0, pitch: 0.0 }, size: [500.0, 400.0], pointer: Some([8.5, 47.4, 0.0]) }],
+        views: vec![PresenceWindowView { window_id: "w1".into(), space: "geo".into(), kind: PresenceViewKind::Geo { lng: 8.5, lat: 47.4, zoom: 12.0, bearing: 0.0, pitch: 0.0 }, size: [500.0, 400.0], pointer: Some([8.5, 47.4, 0.0]), ray_origin: None }],
         ui: Some(PresenceUi { hovered_path: None, focused_path: Some("panel[0]#tools".into()), pressed_path: None }),
         tool_run: None,
-        principal_kind: None,
+        principal_kind: None, active_tool: None,
     };
     let bytes = encode_presence_peer(&peer).await;
     let decoded = decode_presence_peer(&bytes).await.unwrap();
@@ -133,20 +161,23 @@ async fn presence_peer_round_trips_views_ui_color_surface() {
 
 #[semio_framework_async_macros::async_test]
 async fn presence_peer_rejects_unknown_flag_bits() {
-    // 🔎️ Hand-built rather than mutating an `encode_presence_peer` output: flags is a
-    // varint_u64, so flipping a bit in the encoded byte stream doesn't map 1:1 onto a logical
-    // flag bit. Bit 12 is one past the frozen 0..=11 range — no field on this struct sets it.
-    // (Bit 11 became `principal_kind`; the law below pins that boundary from both sides so the
-    // next field to take bit 12 cannot land without moving this test with it.)
+    // Hand-built rather than mutating an encode output: flags is a varint_u64. Bit 13 is one past
+    // the frozen 0..=12 range (bit 12 = active_tool). The next field to take bit 13 must move this.
     let mut bytes = Vec::new();
     crate::write_str(&mut bytes, "peer-5");
-    crate::wire::write_varint_u64(&mut bytes, 1 << 12);
+    crate::wire::write_varint_u64(&mut bytes, 1 << 13);
     crate::wire::write_varint_u64(&mut bytes, 1000);
     let err = decode_presence_peer(&bytes).await.unwrap_err();
     assert!(matches!(err, crate::ProtocolError::Malformed { what: "presence peer flags", .. }));
 
-    // 🤖️ Bit 11 IS known, so it is refused for a different, specific reason — a missing body, not
-    // an unknown flag — and an out-of-enum principal-kind tag is refused by name.
+    // Bit 12 IS known: missing body is a truncated-text error, not an unknown-flag refusal.
+    let mut bit_twelve = Vec::new();
+    crate::write_str(&mut bit_twelve, "peer-5");
+    crate::wire::write_varint_u64(&mut bit_twelve, 1 << 12);
+    crate::wire::write_varint_u64(&mut bit_twelve, 1000);
+    assert!(decode_presence_peer(&bit_twelve).await.is_err());
+
+    // Bit 11 IS known: missing body / bad principal-kind tag.
     let mut bit_eleven = Vec::new();
     crate::write_str(&mut bit_eleven, "peer-5");
     crate::wire::write_varint_u64(&mut bit_eleven, 1 << 11);
@@ -178,6 +209,7 @@ async fn presence_peer_principal_kind_round_trips_in_both_codecs() {
             ui: None,
             tool_run: None,
             principal_kind: kind,
+            active_tool: None,
         };
         let bytes = encode_presence_peer(&peer).await;
         assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer, "binary codec, {kind:?}");
@@ -203,6 +235,7 @@ async fn presence_peer_principal_kind_round_trips_in_both_codecs() {
         ui: None,
         tool_run: None,
         principal_kind: Some(PresencePrincipalKind::Agent),
+        active_tool: None,
     });
     assert_eq!(serde_json::Value::from(encoded.clone())["principalKind"], serde_json::json!("agent"));
     let crate::value::DslValue::Object(mut fields) = encoded else { panic!("a peer encodes as an object") };
@@ -232,7 +265,7 @@ async fn presence_peer_tool_run_round_trips_every_state_with_wire_spelling() {
         assert_eq!(PresenceToolRunState::from_wire_name(spelling), Some(state));
         assert_eq!(state as u8, tag as u8);
         for total in [None, Some(9)] {
-            let peer = PresencePeer { actor: "peer-6".into(), connected_at_ms: 1, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: Some(PresenceToolRun { tool_id: "fill".into(), state, stage: 2, completed: 3, total }), principal_kind: None };
+            let peer = PresencePeer { actor: "peer-6".into(), connected_at_ms: 1, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: Some(PresenceToolRun { tool_id: "fill".into(), state, stage: 2, completed: 3, total }), principal_kind: None, active_tool: None };
             let bytes = encode_presence_peer(&peer).await;
             assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
             let value = crate::value::ToValue::to_value(&peer);
@@ -250,7 +283,7 @@ async fn presence_tool_run_standalone_body_is_the_peer_suffix_with_the_peer_limi
     let tool_run = PresenceToolRun { tool_id: "fill".into(), state: PresenceToolRunState::Running, stage: 1, completed: 42, total: Some(100) };
     let mut body = Vec::new();
     encode_presence_tool_run(&tool_run, &mut body);
-    let peer = PresencePeer { actor: "peer-7".into(), connected_at_ms: 1, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: Some(tool_run.clone()), principal_kind: None };
+    let peer = PresencePeer { actor: "peer-7".into(), connected_at_ms: 1, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: Some(tool_run.clone()), principal_kind: None, active_tool: None };
     assert!(encode_presence_peer(&peer).await.ends_with(&body), "the frame body is the peer's own tool run section");
     assert_eq!(decode_presence_tool_run(&body).unwrap(), tool_run);
     let mut trailing = body.clone();
@@ -271,7 +304,7 @@ async fn presence_tool_run_standalone_body_is_the_peer_suffix_with_the_peer_limi
 
 //#region 🔖️InteractionBit
 async fn peer_with_interaction(interaction: Option<PresenceInteraction>) -> PresencePeer {
-    PresencePeer { actor: "peer-3".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None }
+    PresencePeer { actor: "peer-3".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None, active_tool: None }
 }
 
 /// 🔎️ Presence byte index: `actor str`'s own varint-length prefix (1 byte for `peer_with_interaction`'s

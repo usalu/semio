@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateShadingSurface",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-shading-surface",
-  "binaryTag": null,
+  "binaryTag": 45,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -2,16 +2,14 @@
 (* ISO-14977-style mirror of the normative 📖️.grammar.semio (same production names,
    kebab-case -> "space case"). *)
 artifact mark = 'semio mathematical.equation.dsl v1' ;
-document = artifact mark, notation line, results line, computed line, equation line, graph line, geometry line ;
-notation line = 'notation', '=', child handle ;
-results line = 'results', '=', child handle ;
-computed line = 'computed', '=', child handle ;
-equation line = 'equation', '=', hex ;
-graph line = 'graph', '=', hex ;
-geometry line = 'geometry', '=', hex ;
-child handle = '[', hex, ',', hex, ']' ;
+document = artifact mark, { field } ;
+field = 'notation', '=', child handle
+      | 'results', '=', child handle
+      | 'computed', '=', child handle
+      | 'equation', '=', value
+      | 'graph', '=', value
+      | 'geometry', '=', value ;
+child handle = 'child_id', '=', text, 'target', '=', text ;
 
-(* Framework dialect-primitive terminals, given one concrete definition each for a
-   self-contained mirror (not defined in the .semio itself). *)
-hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;
-digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+(* Framework dialect-primitive terminals: text = bare word | quoted string; value = a dynamic
+   JSON-equivalent literal as printed by the derived text engine. *)

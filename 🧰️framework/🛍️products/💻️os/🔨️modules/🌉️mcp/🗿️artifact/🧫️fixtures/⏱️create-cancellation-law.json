@@ -1,0 +1,11 @@
+{
+  "$schema": "../🧬️schema/🔣️.json#/$defs/ArtifactCreateCancellationLawV1",
+  "law": "artifact_create of a plugin kind is a job: a cancel landing in any activation phase it reaches is answered CANCELLED within the ceiling and creates nothing, and an uncancelled create persists the guest's genesis document. The phases a warm session skips are not reached; a cold compile's cancellation is the compile law's.",
+  "cancelAnswerCeilingMs": 100,
+  "cases": [
+    { "cancelAt": "resolving-component", "expected": "CANCELLED" },
+    { "cancelAt": "opening-guest", "expected": "CANCELLED" },
+    { "cancelAt": "reading-document", "expected": "CANCELLED" },
+    { "cancelAt": null, "expected": "SUCCEEDED" }
+  ]
+}

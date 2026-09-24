@@ -340,15 +340,12 @@ impl StdioTransport {
         let alive = Arc::new(AtomicBool::new(true));
 
         // 🧵️ P1f: a periodic sleep+write, not a blocking pipe read — driven off the shared
-        // `WorkerPool`'s `Lane::Timer` ([`super::PeriodicPoolTimer`], the same mechanism
-        // `EpochTicker` uses) instead of a dedicated `"semio-shard-heartbeat"` OS thread.
-        // `super::plugin_host_worker_pool()` is already constructed in this process by the time
-        // `StdioTransport::new` runs — `👶️child/🦀️.rs`'s `main` builds a `WasmtimeRuntime` (which
-        // starts its own `EpochTicker` on this same singleton) before it ever opens the transport.
+        // `WorkerPool`'s timer wheel ([`super::PeriodicPoolTimer`]) instead of a dedicated
+        // `"semio-shard-heartbeat"` OS thread, on the process-wide `super::plugin_host_worker_pool()`.
         let heartbeat = {
             let alive = alive.clone();
             let stdout = stdout.clone();
-            super::PeriodicPoolTimer::start(&super::plugin_host_worker_pool(), super::Lane::Timer, heartbeat_interval_ms, move || {
+            super::PeriodicPoolTimer::start(&super::plugin_host_worker_pool(), heartbeat_interval_ms, move || {
                 if !alive.load(Ordering::SeqCst) {
                     return false;
                 }

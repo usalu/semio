@@ -223,7 +223,8 @@ fn the_viewer_offers_export_in_both_languages_and_never_offers_import() {
     use semio_framework_plugin::{ArgSchema, Locale, Terminology};
     let definition = create_generation3d_viewer();
     let window = definition.window_kinds.iter().find(|window| window.id == preview::WINDOW_KIND_ID).expect("the viewer declares its preview window kind");
-    let action = window.actions.iter().find(|action| action.id == "exportDocument").expect("the viewer declares exportDocument");
+    let dispatchable = semio_framework::window_kind_actions(&definition, window);
+    let action = dispatchable.iter().find(|action| action.id == "exportDocument").expect("the viewer declares exportDocument");
     assert!(action.in_palette, "a reader has to be able to find it");
     assert_eq!(action.kind, ActionKind::View, "ShellHost's read-only gate swallows a Mutation-kind action on a viewer session");
     // 🪪️ NO trailing ellipsis in the declared label: the shell appends one itself for every action
@@ -240,7 +241,7 @@ fn the_viewer_offers_export_in_both_languages_and_never_offers_import() {
     }
     assert!(definition.keybindings.iter().any(|binding| binding.keys == "mod+shift+e" && binding.action.action == "exportDocument"), "the export verb is keyboard-reachable, not mouse-only");
     for forbidden in ["importDocument", "importDocumentRequest"] {
-        assert!(!window.actions.iter().any(|action| action.id == forbidden), "a viewer must never declare {forbidden}");
+        assert!(!dispatchable.iter().any(|action| action.id == forbidden), "a viewer must never declare {forbidden}");
         assert!(!Generation3dViewCommand::TOOL_JOB_IDS.contains(&forbidden), "a viewer must never own the {forbidden} tool");
     }
 }
@@ -266,8 +267,8 @@ fn no_viewer_tool_publishes_on_the_artifact_lane() {
 /// 🕹️ Every declared action must be `Migrated`, the only UI-dispatchable classification — an
 /// unclassified viewer action is rejected at dispatch with `interactive-job.not-ui-safe`.
 ///
-/// 🎨️ `setActiveExample` is in this law too: it is an app-scoped verb `build_definition` copies onto
-/// every window kind, so it reaches the SAME `window.actions` table the seven window verbs do — and
+/// 🎨️ `setActiveExample` is in this law too: it is an app-scoped verb, so the preview window
+/// dispatches it through `semio_framework::window_kind_actions` like the seven window verbs — and
 /// its `ActionKind` must be `View`, never `Mutation`, or `ShellHost`'s read-only gate swallows every
 /// pick on this surface (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
@@ -275,7 +276,7 @@ fn every_declared_viewer_action_is_migrated() {
     let def = create_generation3d_viewer();
     let window = def.window_kinds.iter().find(|window| window.id == preview::WINDOW_KIND_ID).expect("the viewer declares its preview window kind");
     for tool_id in GENERATION3D_VIEW_TOOL_IDS.iter().chain(GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.iter()).chain(GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.iter()) {
-        let action = window.actions.iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("tool {tool_id} has no declared action"));
+        let action = semio_framework::window_kind_actions(&def, window).into_iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("tool {tool_id} has no declared action"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "action {tool_id} is not Migrated");
         assert_eq!(action.kind, ActionKind::View, "a viewer action must be a View action");
     }

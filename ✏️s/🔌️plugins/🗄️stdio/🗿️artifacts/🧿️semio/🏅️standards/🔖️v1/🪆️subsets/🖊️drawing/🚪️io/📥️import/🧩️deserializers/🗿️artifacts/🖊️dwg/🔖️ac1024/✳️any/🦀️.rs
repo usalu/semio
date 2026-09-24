@@ -6,9 +6,10 @@
 //! Honest lossy points (documented, never fabricated):
 //! - `z` is dropped (drawing is 2D-only, matching the cad↔dxf/dxf↔drawing bridges' own
 //!   dimensionality note).
-//! - Every `DwgGeometry` kind `dwg_geometry_to_path_segments` doesn't cover (`Line`/`Point`/`Arc`/
-//!   `Ellipse`/`Polyline3d`/`PolyfaceMesh`/`Face3d`) has no `DrawNode` equivalent here and is
-//!   dropped — mesh-shaped content is the `🔺️mesh` bridge's job, not this one's.
+//! - Lines, 3D polylines (projected), circles, arcs and ellipses in the world XY plane (`+Z` or `−Z`
+//!   extrusion) become paths (`dwg_geometry_to_path_segments`); points, 3D faces, polyface meshes,
+//!   splines other than one cubic Bézier span and any entity on a tilted plane have no `DrawNode`
+//!   equivalent here and are dropped — mesh-shaped content is the `🔺️mesh` bridge's job.
 //! - Malformed logical geometry is a hard `Err`, not a fabricated empty drawing.
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};

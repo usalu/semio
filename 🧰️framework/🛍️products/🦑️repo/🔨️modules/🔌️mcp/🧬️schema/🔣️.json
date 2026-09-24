@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio-tech.com/schema/repo/mcp/v1",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/mcp/schema.json",
   "title": "semio repo MCP",
   "description": "🔌️ The wire contract of the repo Model Context Protocol server: JSON-RPC envelope, MCP lifecycle, the tool argument schemas, the per-profile surface and the hash-chained event log. Both the Go and the Rust implementation are bound by this document.",
   "$comment": "🪟️ Extension rule — every `params` object of every method is OPEN: an implementation MUST ignore members it does not know, because clients legitimately send `clientInfo.title`, additional capability objects and `_meta` keys. Exactly two surfaces are CLOSED and MUST reject unknown members: the JSON-RPC envelope itself (`$defs/Request`) and a `tools/call` `arguments` object (`$defs/*Arguments`), where an unrecognised member is a caller mistake that must fail loudly instead of being silently dropped.",

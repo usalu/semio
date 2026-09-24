@@ -3,7 +3,7 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/artifact.json",
   "title": "SemioArtifact",
   "description": "Full artifact state, mirrors SemioSnapshot field for field — see the sibling snapshot.json for the real SemioSubsetSnapshot union shape.",
-  "type": "value",
+  "type": "object",
   "properties": {
     "schema": {
       "type": "string",

@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateGrip",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-grip",
-  "binaryTag": null,
+  "binaryTag": 24,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

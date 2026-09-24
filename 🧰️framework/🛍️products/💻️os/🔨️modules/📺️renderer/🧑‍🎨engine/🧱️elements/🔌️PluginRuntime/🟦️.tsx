@@ -1104,7 +1104,7 @@ const pendingTurnEffects = new Map<number, WireVariant[]>();
 export type PluginOperationCompletion = Readonly<{
   instanceId: number;
   operation: number;
-  revision: number;
+  revision: bigint;
   uiScope: InvocationResponse["uiScope"];
   historyPatch: HistoryPatch | undefined;
   requestedEffects: readonly Effect[];

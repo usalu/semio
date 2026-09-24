@@ -48,6 +48,9 @@ pub use persisted_document_hydration::{
     PersistedDocumentHydrationOutput, PersistedDocumentHydrationProgress, PersistedDocumentHydrationStep, PersistedDocumentHydrationTarget, RetainedPersistedDocumentHydration,
 };
 
+#[path = "🧾️document/📥️mounted-pack/🦀️.rs"]
+mod mounted_pack_session;
+
 #[path = "🎚️config/📥️retained/🦀️.rs"]
 mod retained_config_hydration;
 pub use retained_config_hydration::{ConfigStoreHydrationDiagnostic, ConfigStoreHydrationProgress, ConfigStoreHydrationStep, RetainedConfigStoreHydration};
@@ -2920,11 +2923,11 @@ pub enum ArtifactCommand<Mutation> {
         #[value(default)]
         lane: HistoryLane,
     },
-    /// @emoji 🛤️ Explicit lane-scoped undo: mirrors plain `Undo`'s `ExactBaseOnly` semantics (must
-    /// be local, must be the nearest-to-tail match) but searches `applied_edit_ids` for the nearest
-    /// entry whose `HistoryLane` is exactly `lane`, instead of `HistoryLane::Document`. Lets a
-    /// caller walk a non-`Document` lane on purpose — the completing half of "default `Undo`/`Redo`
-    /// skip non-`Document` lanes" (see `ArtifactStore::dispatch`'s `Undo` arm).
+    /// @emoji 🛤️ Explicit lane-scoped undo: mirrors plain `Undo`'s selective (own-author) semantics
+    /// but searches `applied_edit_ids` for the nearest local entry whose `HistoryLane` is exactly
+    /// `lane`, instead of `HistoryLane::Document`. Lets a caller walk a non-`Document` lane on
+    /// purpose — the completing half of "default `Undo`/`Redo` skip non-`Document` lanes" (see
+    /// `ArtifactStore::dispatch`'s `Undo` arm).
     UndoInLane {
         lane: HistoryLane,
     },
@@ -5681,6 +5684,7 @@ pub mod pack_rt {
 /// their allocation-oriented options are absent from this module's type-level reachability graph.
 pub mod mounted_pack_rt {
     pub use crate::os_dsl::{DslField, DslValue, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
+    pub use super::mounted_pack_session::{RetainedTypedPackCloseStep, RetainedTypedPackOwner, RetainedTypedPackSession};
     pub use crate::os_pack::{PackLimits, RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
         RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCatalogFault,
@@ -10502,8 +10506,8 @@ pub struct ArtifactCodec {
     /// (`store_sync`'s `FolderEndpoint::Pack` write path) that never touch a concrete `P`/`Mutation`.
     // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
     pub print_mirror: for<'a> fn(&'a [u8], &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<ArtifactTextFiles, VcsError>> + Send + 'a>>,
-    /// @emoji 🧩️ One `MutationEnvelope` -> one printed `.ops` edit block (header line + indented
-    /// op line), for `FolderTextStorage::append_ops`'s hot-path logging append — decodes the
+    /// @emoji 🧩️ One `MutationEnvelope` -> one complete {@link print_edit_lines} append unit (edit
+    /// header, indented op line, inverse record, one metadata record), for `FolderTextStorage::append_ops`'s hot-path logging append — decodes the
     /// envelope's opaque `OpBinary` payload back into a concrete `Mutation` just long enough to
     /// print it, for schema-agnostic callers that otherwise never see a concrete op type.
     // 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
@@ -10668,7 +10672,20 @@ impl ArtifactCodec {
             Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + Send + Sync + 'static,
         {
             Box::pin(async move {
-                if ops_vec.is_empty() {
+                // 🎯️ `encode_ops_vec(&[])` is a NON-empty framed header, not a zero-length byte
+                // slice — the empty-batch fast path must key off the DECODED mutation count, or an
+                // empty gesture builds a store, hits `EmptyApply`, and (before TC5) aborted in Drop.
+                let mutations: Vec<Mutation> = if ops_vec.is_empty() {
+                    Vec::new()
+                } else {
+                    let op_blobs = crate::os_spr::decode_ops_vec(ops_vec).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                    let mut decoded = Vec::with_capacity(op_blobs.len());
+                    for bytes in &op_blobs {
+                        decoded.push(Mutation::decode_op(bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?);
+                    }
+                    decoded
+                };
+                if mutations.is_empty() {
                     if pack.is_empty() && spr.is_empty() {
                         return Ok((Vec::new(), Vec::new(), String::new()));
                     }
@@ -10678,11 +10695,6 @@ impl ArtifactCodec {
                     drop(envelope.into_owners());
                     let files = printed?;
                     return Ok((files.pack, files.spr, files.ops));
-                }
-                let op_blobs = crate::os_spr::decode_ops_vec(ops_vec).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                let mut mutations: Vec<Mutation> = Vec::with_capacity(op_blobs.len());
-                for bytes in &op_blobs {
-                    mutations.push(Mutation::decode_op(bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?);
                 }
                 let mut store = if pack.is_empty() && spr.is_empty() {
                     return Err(VcsError::Deserialize("apply_ops_binary: lane has no pack+spr baseline".into()));
@@ -10707,16 +10719,15 @@ impl ArtifactCodec {
                     store.install_document_store_owners_exact(bounded_artifact_store_owners::<P, Mutation>());
                     store
                 };
-                store.dispatch_apply_exact(mutations, None).await?;
-                let printed = print_document_pack(&store.envelope).await;
-                // 🧺️ `ArtifactStore`'s `Drop` asserts an exact terminal-empty shallow shell, and this
-                // thunk is the one place in the tree that builds a store, uses it and lets it fall out
-                // of scope in the same expression. Letting it drop live aborted the process — an
-                // `encode_ops_vec(&[])` batch decodes to zero mutations, so `dispatch_apply_exact`
-                // retires nothing and every owner is still installed at the end of the turn. The close
-                // cursor is the same one the hub's own document lanes run (`close_owned_step` until
-                // `Complete`, then `close_owned_terminal_is_empty`), so an empty batch and a full one
-                // leave by the identical path.
+                // 🗄️ Never `?` while `store` is live: `ArtifactStore`'s Drop asserts a terminal
+                // shallow shell, so an early return here aborts the process instead of reporting the
+                // fault. Capture every fallible step as a value, run the close cursor, forget the
+                // store, THEN propagate — the guest twin does the same (ticket 26/09/18 TC3e/TC5).
+                let applied = store.dispatch_apply_exact(mutations, None).await;
+                let printed = match &applied {
+                    Ok(_) => print_document_pack(&store.envelope).await,
+                    Err(_) => Err(VcsError::ValidationFailed("artifact codec apply skipped print after a failed reduction".into())),
+                };
                 let mut closed = Err(VcsError::ValidationFailed("artifact codec store did not reach terminal emptiness within its bounded close budget".into()));
                 for _ in 0..ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS {
                     match store.close_owned_step(1, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES) {
@@ -10739,8 +10750,31 @@ impl ArtifactCodec {
                         }
                     }
                 }
-                drop(store);
-                closed?;
+                let drop_ready = store.envelope_detached
+                    && store.current_detached
+                    && store.backbone.is_none()
+                    && store.dag.terminal_is_empty()
+                    && store.applied_edit_ids.is_empty()
+                    && store.redo_edit_ids.is_empty()
+                    && store.current_checkpoint_id.is_none()
+                    && store.local_actor_id.is_none()
+                    && store.revision_accumulator.applied.is_empty()
+                    && store.revision_accumulator.redo.is_empty()
+                    && store.tail_undo_cache.is_none()
+                    && store.snapshot_read_leases.terminal_is_empty()
+                    && store.displaced_retirements.terminal_is_empty()
+                    && store.owned_disposer.is_none()
+                    && store.owned_disposer_terminal
+                    && store.pending_report.edit_ids.is_none()
+                    && store.pending_report.messages.is_empty()
+                    && store.pending_report.outbound.is_empty()
+                    && store.pending_report.worst.is_none()
+                    && store.durable_group_root.is_none();
+                std::mem::forget(store);
+                applied?;
+                if closed.is_err() || !drop_ready {
+                    return Err(closed.err().unwrap_or_else(|| VcsError::ValidationFailed("artifact codec store close left a live shallow-shell owner".into())));
+                }
                 let files = printed?;
                 Ok((files.pack, files.spr, files.ops))
             })
@@ -11239,6 +11273,13 @@ pub fn now_iso() -> String {
     format!("{}", now_ms())
 }
 
+/// 🪪️ A Store's replica clock: its `actor` is fresh platform entropy per Store instance, the
+/// identity every edit and operation id this Store mints is namespaced by. Refusing to construct
+/// without entropy is deliberate — a constant replica makes two sessions' first edits collide.
+fn fresh_replica_clock() -> HybridLogicalTimestamp {
+    HybridLogicalTimestamp::new(crate::os_identity::entropy_u64().expect("artifact store replica identity requires platform entropy"), now_ms())
+}
+
 fn now_ms() -> u64 {
     #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
     {
@@ -11280,8 +11321,8 @@ where
 /// raw op bytes), so by the time an `Edit` exists it is never absent — a plain `is_none()` guard
 /// would never fire. `mutation_id()` has exactly one implementor repo-wide (the
 /// `crate::os_spr::Mutation<P>` trait's own `None` default — confirmed zero overrides), so op 0
-/// always carries `mint_mutation_id`'s CONTENT hash of the raw op bytes: an identity that shares
-/// nothing with `edit.id` (`mint_edit_id`'s actor+sequence+full-fingerprint hash) by construction of
+/// always carries `mint_mutation_id`'s hash of the raw op bytes and its replica clock tick: an identity that shares
+/// nothing with `edit.id` (`mint_edit_id`'s replica+sequence+full-fingerprint hash) by construction of
 /// the two different formulas — not merely "sometimes absent". For a single-op edit, op 0 IS the
 /// edit's entire wire identity (`crate::os_spr::mutation_ids_for_edit`'s only entry for it), so
 /// overriding it to the edit's real id means `edit_from_operation_envelope` reconstructs an EXACT
@@ -11557,10 +11598,13 @@ impl OpBinary for OpsHeaderLine {
 
 //#endregion 🔖️OpsHeaderGrammar
 
-/// @emoji 📤️ Prints one edit as an `edit ...` header line followed by one two-space-indented
-/// `print_op` line per forward operation — the hot-path append unit for the op log. Its matching
-/// inverse and authoritative metadata records are emitted by `print_ops_log` immediately after it.
+/// @emoji 📤️ Prints one edit as the complete hot-path append unit: `edit ...` header, one
+/// two-space-indented `print_op` line per forward operation, then the matching inverse record and
+/// one authoritative metadata record per forward — what `append_ops` / `replay_ops` require.
 pub async fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result<String, VcsError> {
+    if edit.mutation_meta.len() != edit.forwards.len() {
+        return Err(VcsError::ValidationFailed(format!("edit {} has {} metadata entries for {} forward operations", edit.id, edit.mutation_meta.len(), edit.forwards.len())));
+    }
     let header = OpsHeaderLine::Edit {
         id: edit.id.clone(),
         sequence: edit.sequence_number,
@@ -11579,6 +11623,21 @@ pub async fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result
         }
         out.push_str("  ");
         out.push_str(&printed);
+        out.push('\n');
+    }
+    let mut inverse: Vec<String> = Vec::with_capacity(edit.inverse.len());
+    for operation in &edit.inverse {
+        let text = operation.print_op();
+        if text.contains('\n') {
+            return Err(VcsError::Serialize("op-text print_op must not contain a newline".into()));
+        }
+        inverse.push(text);
+    }
+    out.push_str(&OpsHeaderLine::Inverse { edit: edit.id.clone(), ops: inverse }.print_op());
+    out.push('\n');
+    for (index, meta) in edit.mutation_meta.iter().enumerate() {
+        let data = crate::os_pack::json::to_json_string(meta);
+        out.push_str(&OpsHeaderLine::Metadata { edit: edit.id.clone(), index: index as u32, data }.print_op());
         out.push('\n');
     }
     Ok(out)
@@ -11690,24 +11749,6 @@ where
     ops.push('\n');
     for edit in &envelope.vcs.edits {
         ops.push_str(&print_edit_lines(edit).await?);
-        if edit.mutation_meta.len() != edit.forwards.len() {
-            return Err(VcsError::ValidationFailed(format!("edit {} has {} metadata entries for {} forward operations", edit.id, edit.mutation_meta.len(), edit.forwards.len())));
-        }
-        let mut inverse: Vec<String> = Vec::with_capacity(edit.inverse.len());
-        for operation in &edit.inverse {
-            let text = operation.print_op();
-            if text.contains('\n') {
-                return Err(VcsError::Serialize("op-text print_op must not contain a newline".into()));
-            }
-            inverse.push(text);
-        }
-        ops.push_str(&OpsHeaderLine::Inverse { edit: edit.id.clone(), ops: inverse }.print_op());
-        ops.push('\n');
-        for (index, meta) in edit.mutation_meta.iter().enumerate() {
-            let data = crate::os_pack::json::to_json_string(meta);
-            ops.push_str(&OpsHeaderLine::Metadata { edit: edit.id.clone(), index: index as u32, data }.print_op());
-            ops.push('\n');
-        }
     }
     for transition in &envelope.transitions {
         ops.push_str(&ops_line_from_transition(transition)?.print_op());
@@ -13725,7 +13766,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
             local_actor_id: std::mem::ManuallyDrop::new(None),
             dag: std::mem::ManuallyDrop::new(Some(crate::os_spr::MutationDag::new())),
             edit_sequence: 0,
-            clock: HybridLogicalTimestamp::new(0, now_ms()),
+            clock: fresh_replica_clock(),
             initial_digest,
             revision: std::mem::ManuallyDrop::new(CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision }),
             close_active: std::mem::ManuallyDrop::new(None),
@@ -15550,10 +15591,10 @@ where
         (dag, rejected)
     }
 
-    fn seed_runtime_state(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<(crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, Vec<String>), VcsError> {
+    fn seed_runtime_state(envelope: &ArtifactEnvelope<P, Mutation>, replica: u64) -> Result<(crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, Vec<String>), VcsError> {
         let mut identities = Vec::new();
         let mut edit_sequence = 0;
-        let mut clock = HybridLogicalTimestamp::new(0, now_ms());
+        let mut clock = HybridLogicalTimestamp::new(replica, now_ms());
         for edit in &envelope.vcs.edits {
             edit_sequence = edit_sequence.max(edit.sequence_number);
             identities.push(MutationId(edit.id.clone()));
@@ -15618,7 +15659,7 @@ where
         assert!(retired_applied.is_empty() && retired_redo.is_empty(), "new revision accumulator unexpectedly displaced an owner during construction");
         let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
         let local_actor_id = applied_edit_ids.last().and_then(|edit_id| envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id)).and_then(|edit| edit.actor.clone());
-        let (dag, edit_sequence, clock, rejected_seed_identities) = Self::seed_runtime_state(envelope)?;
+        let (dag, edit_sequence, clock, rejected_seed_identities) = Self::seed_runtime_state(envelope, fresh_replica_clock().actor)?;
         let mut displaced_retirements = ArtifactStoreDisplacedRetirements::new();
         if !rejected_seed_identities.is_empty() {
             displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(rejected_seed_identities)));
@@ -15857,7 +15898,7 @@ where
             + Self::revision_owner_slots(&self.revision_accumulator)
             + 1;
         let commit_authority = self.prepare_document_root_commit(runtime_slots)?;
-        let (dag, edit_sequence, clock, rejected_seed_identities) = Self::seed_runtime_state(envelope)?;
+        let (dag, edit_sequence, clock, rejected_seed_identities) = Self::seed_runtime_state(envelope, self.clock.actor)?;
         let envelope = candidate.take().expect("an adopted reload takes its validated envelope exactly once");
         self.commit_document_roots_retained(envelope, Arc::new(current), dag, None, commit_authority);
         if !rejected_seed_identities.is_empty() {
@@ -17740,14 +17781,14 @@ where
         P: Sync,
     {
         match command {
-            ArtifactCommand::Undo => self.undo_with_policy(UndoPolicy::ExactBaseOnly, None).await,
+            ArtifactCommand::Undo => self.undo_with_policy(UndoPolicy::TransformAgainstConcurrent, None).await,
             ArtifactCommand::UndoWithPolicy { policy, semantic_command } => self.undo_with_policy(policy, semantic_command).await,
             ArtifactCommand::Redo => {
                 let position = self.redo_position(|lane| lane == HistoryLane::Document).ok_or(VcsError::NothingToRedo)?;
                 self.redo_lane_position(position).await
             }
             ArtifactCommand::UndoInLane { lane } => {
-                let position = self.applied_edit_ids.iter().rposition(|id| self.edit_lane(id) == lane).ok_or(VcsError::NothingToUndo)?;
+                let position = self.applied_edit_ids.iter().rposition(|id| self.edit_is_local(id) && self.edit_lane(id) == lane).ok_or(VcsError::NothingToUndo)?;
                 self.undo_lane_position(position).await
             }
             ArtifactCommand::RedoInLane { lane } => {
@@ -17921,7 +17962,7 @@ where
         let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
         let reservation = self.reserve_edit_history_slot()?;
         let mut edit = Edit {
-            id: mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint).await,
+            id: mint_edit_id(self.clock.actor, self.edit_sequence, &forwards_fingerprint).await,
             actor,
             forwards,
             inverse,
@@ -17990,7 +18031,7 @@ where
             self.replace_local_actor_retained(actor.clone())?;
             self.edit_sequence += 1;
             let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
-            let edit_id = mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint).await;
+            let edit_id = mint_edit_id(self.clock.actor, self.edit_sequence, &forwards_fingerprint).await;
             let reservation = self.reserve_edit_history_slot()?;
             let mut edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
             stamp_primary_operation_identity(&mut edit);
@@ -18092,11 +18133,21 @@ where
             let mut back = mutation.inverse(&snapshot);
             back.reverse();
             inverse.extend(back);
+            let timestamp = match mutation.timestamp() {
+                Some(timestamp) => {
+                    candidate_clock.merge(&timestamp);
+                    timestamp
+                }
+                None => {
+                    candidate_clock.tick(now_ms());
+                    candidate_clock
+                }
+            };
             // 🌀️ `mint_mutation_id` is async; `Option::unwrap_or_else`'s closure is sync
             // (R10 shape 1), so it's written as an explicit match instead.
             let mutation_id = match mutation.mutation_id() {
                 Some(id) => id,
-                None => MutationId(mint_mutation_id(&encoded).await),
+                None => MutationId(mint_mutation_id(&encoded, (candidate_clock.actor, candidate_clock.physical_ms, candidate_clock.logical)).await),
             };
             mutation_meta.push(MutationMeta {
                 mutation_id: Some(mutation_id),
@@ -18105,16 +18156,7 @@ where
                 author_id: Some(mutation.author_id().unwrap_or_else(|| ActorId("local".into()))),
                 // 🎯️ An authored timestamp is durable as authored; the local clock observes it
                 // so its next generated timestamp remains causally later.
-                timestamp: match mutation.timestamp() {
-                    Some(timestamp) => {
-                        candidate_clock.merge(&timestamp);
-                        timestamp
-                    }
-                    None => {
-                        candidate_clock.tick(now_ms());
-                        candidate_clock
-                    }
-                },
+                timestamp,
                 undo_policy: mutation.undo_policy(),
                 // 🎞️ CW3: direct blake3 (same primitive `crate::os_pack::ContentHash` uses) replaces the
                 // old `framework_hash::hash_bytes` String hash — `crate::os_spr::PayloadHash` is
@@ -19734,6 +19776,7 @@ pub struct ChannelBackbone {
     uri: String,
     inbound: Option<Arc<Mutex<VecDeque<BackboneMessage>>>>,
     outbound: Option<Arc<Mutex<VecDeque<BackboneMessage>>>>,
+    outbound_wake: Arc<std::sync::OnceLock<Arc<dyn Fn() + Send + Sync>>>,
 }
 
 /// @emoji 🎛️ The actor-side end paired with a {@link ChannelBackbone}: `push` delivers a message to
@@ -19743,6 +19786,7 @@ pub struct ChannelBackboneRemote {
     uri: String,
     inbound: Arc<Mutex<VecDeque<BackboneMessage>>>,
     outbound: Arc<Mutex<VecDeque<BackboneMessage>>>,
+    outbound_wake: Arc<std::sync::OnceLock<Arc<dyn Fn() + Send + Sync>>>,
 }
 
 impl ChannelBackbone {
@@ -19751,7 +19795,8 @@ impl ChannelBackbone {
     pub async fn pair(uri: &str) -> (ChannelBackbone, ChannelBackboneRemote) {
         let inbound = Arc::new(Mutex::new(VecDeque::new()));
         let outbound = Arc::new(Mutex::new(VecDeque::new()));
-        (ChannelBackbone { uri: uri.to_string(), inbound: Some(inbound.clone()), outbound: Some(outbound.clone()) }, ChannelBackboneRemote { uri: uri.to_string(), inbound, outbound })
+        let outbound_wake = Arc::new(std::sync::OnceLock::new());
+        (ChannelBackbone { uri: uri.to_string(), inbound: Some(inbound.clone()), outbound: Some(outbound.clone()), outbound_wake: outbound_wake.clone() }, ChannelBackboneRemote { uri: uri.to_string(), inbound, outbound, outbound_wake })
     }
 }
 
@@ -19762,6 +19807,9 @@ impl Backbone for ChannelBackbone {
 
     async fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
         self.outbound.as_ref().ok_or_else(|| VcsError::Backbone("channel backbone is closing".into()))?.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?.push_back(message);
+        if let Some(wake) = self.outbound_wake.get() {
+            wake();
+        }
         Ok(())
     }
 
@@ -19780,6 +19828,12 @@ impl ChannelBackboneRemote {
     pub async fn push(&self, message: BackboneMessage) -> Result<(), VcsError> {
         self.inbound.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?.push_back(message);
         Ok(())
+    }
+
+    /// @emoji 🔔️ Installs the actor's wake: every store→actor send resumes the actor that drains it,
+    /// so an idle actor never sleeps on a queued outbound owner. Only the first install is kept.
+    pub fn set_outbound_wake(&self, wake: Arc<dyn Fn() + Send + Sync>) {
+        let _ = self.outbound_wake.set(wake);
     }
 
     /// @emoji 🪄️ Takes at most one store→actor message without a bulk collection or a
@@ -21595,6 +21649,7 @@ pub struct CompositionGraph {
     links: HashMap<String, HashSet<String>>,
     owns_authority: Arc<()>,
     owns_generation: u64,
+    retiring: Vec<Vec<u8>>,
 }
 
 /// 🎟️ Exact read-only ownership admission consumed by an exclusive graph commit.
@@ -21810,46 +21865,49 @@ impl CompositionGraph {
         Ok(())
     }
 
-    /// 🧹 Releases at most one retained graph edge or empty adjacency owner.
+    /// 🧹️ One grant-sized retirement turn. An edge leaves its map whole into `retiring` (one item, no
+    /// bytes), and every retired identifier is then paged down by at most `maximum_bytes` per turn, so a
+    /// grant narrower than an identifier still makes progress instead of refusing the edge for ever.
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> SnapshotRetirementStep {
         if maximum_items == 0 {
             return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if let Some((child, (parent, slot))) = self.owns.iter().next() {
-            let bytes = child.len().saturating_add(parent.len()).saturating_add(slot.len());
-            if bytes > maximum_bytes {
-                return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
+        if let Some(identifier) = self.retiring.last_mut() {
+            let released_bytes = identifier.len().min(maximum_bytes);
+            identifier.truncate(identifier.len() - released_bytes);
+            if identifier.is_empty() {
+                drop(self.retiring.pop());
             }
-            let child = child.clone();
-            drop(self.owns.remove(&child));
+            return SnapshotRetirementStep::Pending { released_items: 0, released_bytes };
+        }
+        if let Some(child) = self.owns.keys().next().cloned() {
+            let Some((child, (parent, slot))) = self.owns.remove_entry(&child) else { return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } };
+            self.retiring.extend([child, parent, slot].into_iter().filter(|identifier| !identifier.is_empty()).map(String::into_bytes));
             self.owns_generation = self.owns_generation.checked_add(1).expect("ownership generation exhausted");
-            return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes };
+            return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 };
         }
         if let Some((source, target)) = self.links.iter().find_map(|(source, targets)| targets.iter().next().map(|target| (source.clone(), target.clone()))) {
-            let bytes = source.len().saturating_add(target.len());
-            if bytes > maximum_bytes {
-                return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
+            if let Some(target) = self.links.get_mut(&source).and_then(|targets| targets.take(&target)) {
+                if !target.is_empty() {
+                    self.retiring.push(target.into_bytes());
+                }
             }
-            if let Some(targets) = self.links.get_mut(&source) {
-                targets.remove(&target);
-            }
-            return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes };
+            return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        if let Some(source) = self.links.keys().next() {
-            let bytes = source.len();
-            if bytes > maximum_bytes {
-                return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
+        if let Some(source) = self.links.keys().next().cloned() {
+            if let Some((source, _)) = self.links.remove_entry(&source) {
+                if !source.is_empty() {
+                    self.retiring.push(source.into_bytes());
+                }
             }
-            let source = source.clone();
-            drop(self.links.remove(&source));
-            return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes };
+            return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 };
         }
         SnapshotRetirementStep::Complete
     }
 
     /// 🧺 Proves that no graph edge or adjacency owner remains.
     pub fn terminal_is_empty(&self) -> bool {
-        self.owns.is_empty() && self.links.is_empty()
+        self.owns.is_empty() && self.links.is_empty() && self.retiring.is_empty()
     }
 }
 
@@ -22568,6 +22626,20 @@ pub mod test_support {
         assert_eq!(&decoded, snapshot, "pack round trip diverged");
     }
 
+    /// @emoji 🧬️ Asserts a document kind has a structural pack-schema identity: `record_spec()` is
+    /// declared, its `schema_hash` is nonzero, and `snapshot` round-trips exactly through the pack.
+    pub fn assert_pack_schema_identity<P>(snapshot: &P) -> [u8; 32]
+    where
+        P: ArtifactPack + PartialEq + std::fmt::Debug,
+    {
+        let spec = P::record_spec().unwrap_or_else(|| panic!("{} declares no pack record spec", std::any::type_name::<P>()));
+        let hash = crate::os_pack::schema_hash(&spec);
+        assert_ne!(hash, [0u8; 32], "pack schema hash must be nonzero");
+        let decoded = P::decode_pack(&snapshot.encode_pack()).unwrap_or_else(|error| panic!("pack decode failed: {error}"));
+        assert_eq!(&decoded, snapshot, "pack round trip diverged from source snapshot");
+        hash
+    }
+
     /// @emoji ⚖️ Asserts dsl and pack are two encodings of the SAME value: `decode_pack(
     /// encode_pack(p)) == parse_dsl(print_dsl(p)) == p` — the compile-time validation ground truth
     /// for the whole pack rollout's central LAW (see `ArtifactPack`'s doc comment).
@@ -23074,6 +23146,10 @@ mod fixture_mutations;
 #[cfg(test)]
 #[path = "🧪️tests/🧬️owned-schema-record/🦀️.rs"]
 mod owned_schema_record_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧩️composed-pack-schema/🦀️.rs"]
+mod composed_pack_schema_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🚫️rejected-page-close/🦀️.rs"]

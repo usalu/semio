@@ -7,7 +7,7 @@
   "aggregateVariant": "RemovePlantLoopEquipment",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-plant-loop-equipment",
-  "binaryTag": null,
+  "binaryTag": 186,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

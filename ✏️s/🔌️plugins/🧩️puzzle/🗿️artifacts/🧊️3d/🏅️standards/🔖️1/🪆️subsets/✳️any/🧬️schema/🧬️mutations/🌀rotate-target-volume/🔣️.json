@@ -7,7 +7,7 @@
   "aggregateVariant": "RotateTargetVolume",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rotate-target-volume",
-  "binaryTag": null,
+  "binaryTag": 20,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

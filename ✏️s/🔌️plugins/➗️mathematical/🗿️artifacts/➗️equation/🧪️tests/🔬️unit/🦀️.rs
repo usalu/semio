@@ -119,3 +119,18 @@ fn the_child_restore_projection_names_every_declared_child_slot() {
     let projection = crate::equation_child_restore_projection(&snapshot).expect("the loaded-parent child projection");
     assert_eq!(projection.len(), <crate::EquationSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());
 }
+
+
+/// 🏗 DSL txt carrier: serialize then deserialize must restore the snapshot exactly.
+#[semio_framework_async_macros::async_test]
+async fn txt_dsl_carrier_round_trips_exactly() {
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+    use semio_framework::io_schema::IoPayload;
+    let snapshot = crate::EquationSnapshot::default();
+    let exported = export::txt::v_utf_8::any::EquationIntoTxt::serialize(&snapshot).await.expect("dsl txt export");
+    let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
+    let back = import::txt::v_utf_8::any::TxtIntoEquation::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
+    assert_eq!(back.value, snapshot);
+}

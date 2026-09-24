@@ -27,6 +27,9 @@ async fn query_bytes(bytes: &[u8]) -> QueryBytes {
 
 #[semio_framework_async_macros::async_test]
 async fn interrupted_query_rows_drop_retains_one_resumable_close_owner() {
+    if !crate::db_storage::process_isolated_law("db_query::tests::interrupted_query_rows_drop_retains_one_resumable_close_owner") {
+        return;
+    }
     while query_rows_maintenance_step().unwrap() {}
     let mut rows = QueryRows::new();
     rows.push(QueryRow::new(RowId(1), Value::Bytes(query_bytes(&vec![0x5a; db_storage::DB_IO_PAGE_BYTES + 1]).await))).unwrap();
@@ -207,7 +210,7 @@ mod projection_bridge {
     async fn value_projection_state_round_trips_every_variant_including_nesting() {
         let value = nested_sample().await;
         let hash = query_value_hash(&value);
-        let source = ProjectionSource::from_value(value).await.unwrap();
+        let source = ProjectionSource::from_value(Value::List(vec![value])).await.unwrap();
         let rows = source.scan(&mut control()).await.unwrap();
         assert_eq!(rows.len(), 1);
         assert_eq!(query_value_hash(rows.get(0).unwrap().value()), hash);
@@ -215,9 +218,15 @@ mod projection_bridge {
 
     #[semio_framework_async_macros::async_test]
     async fn value_projection_state_round_trips_null_and_empty_containers() {
-        for value in [Value::Null, Value::List(Vec::new()), Value::Map(BTreeMap::new())] {
-            let source = ProjectionSource::from_value(value).await.unwrap();
-            assert_eq!(source.len().await, 1);
+        let variants: [(fn() -> Value, usize); 3] = [(|| Value::Null, 1), (|| Value::List(Vec::new()), 0), (|| Value::Map(BTreeMap::new()), 0)];
+        for (make, direct_rows) in variants {
+            let hash = query_value_hash(&make());
+            let source = ProjectionSource::from_value(Value::List(vec![make()])).await.unwrap();
+            let rows = source.scan(&mut control()).await.unwrap();
+            assert_eq!(rows.len(), 1);
+            assert_eq!(query_value_hash(rows.get(0).unwrap().value()), hash);
+            let direct = ProjectionSource::from_value(make()).await.unwrap();
+            assert_eq!(direct.len().await, direct_rows, "top-level containers project one row per element, scalars one row");
         }
     }
 

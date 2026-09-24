@@ -41,11 +41,11 @@
     "meshRoles": {
       "solid": 1
     },
-    "minTriangles": 440,
+    "minTriangles": 428,
     "minEdgeSegments": 25,
     "boundingBoxMin": [
-      -1.1862875,
-      -1.1817694,
+      -1.1817693,
+      -1.1817693,
       -1.2
     ],
     "boundingBoxMax": [

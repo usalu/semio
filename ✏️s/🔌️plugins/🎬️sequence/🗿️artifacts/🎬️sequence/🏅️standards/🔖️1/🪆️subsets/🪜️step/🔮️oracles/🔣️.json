@@ -282,10 +282,8 @@
       "mutation": "create-step",
       "outcome": "applied",
       "units": {
-        "length": "none",
-        "angle": "none",
-        "handedness": "none",
-        "up": "none"
+        "length": "unitless",
+        "angle": "unitless"
       },
       "files": [
         {
@@ -335,10 +333,8 @@
       "mutation": "delete-step",
       "outcome": "applied",
       "units": {
-        "length": "none",
-        "angle": "none",
-        "handedness": "none",
-        "up": "none"
+        "length": "unitless",
+        "angle": "unitless"
       },
       "files": [
         {
@@ -388,10 +384,8 @@
       "mutation": "duplicate-step",
       "outcome": "applied",
       "units": {
-        "length": "none",
-        "angle": "none",
-        "handedness": "none",
-        "up": "none"
+        "length": "unitless",
+        "angle": "unitless"
       },
       "files": [
         {
@@ -441,10 +435,8 @@
       "mutation": "edit-step-params",
       "outcome": "applied",
       "units": {
-        "length": "none",
-        "angle": "none",
-        "handedness": "none",
-        "up": "none"
+        "length": "unitless",
+        "angle": "unitless"
       },
       "files": [
         {
@@ -495,9 +487,7 @@
       "outcome": "applied",
       "units": {
         "length": "unitless",
-        "angle": "radian",
-        "handedness": "none",
-        "up": "none"
+        "angle": "radian"
       },
       "files": [
         {
@@ -548,9 +538,7 @@
       "outcome": "applied",
       "units": {
         "length": "unitless",
-        "angle": "radian",
-        "handedness": "none",
-        "up": "none"
+        "angle": "radian"
       },
       "files": [
         {

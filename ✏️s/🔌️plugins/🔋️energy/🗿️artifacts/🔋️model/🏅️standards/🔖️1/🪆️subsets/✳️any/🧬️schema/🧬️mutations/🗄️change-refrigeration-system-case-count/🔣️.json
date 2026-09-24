@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeRefrigerationSystemCaseCount",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-refrigeration-system-case-count",
-  "binaryTag": null,
+  "binaryTag": 228,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

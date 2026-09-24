@@ -7,7 +7,7 @@
   "aggregateVariant": "ReorderConstructionLayers",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "reorder-construction-layers",
-  "binaryTag": null,
+  "binaryTag": 75,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

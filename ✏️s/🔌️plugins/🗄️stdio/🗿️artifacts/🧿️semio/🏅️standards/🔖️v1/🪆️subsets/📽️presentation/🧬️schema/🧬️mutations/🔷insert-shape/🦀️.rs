@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertShape {
-    pub(crate) slide_index: usize,
-    pub(crate) shape_index: usize,
-    pub(crate) shape: SlideShape,
+    pub slide_index: usize,
+    pub shape_index: usize,
+    pub shape: SlideShape,
 }
 
 impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for InsertShape {

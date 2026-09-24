@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeRefrigerationSystemDesignLoad",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-refrigeration-system-design-load",
-  "binaryTag": null,
+  "binaryTag": 229,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

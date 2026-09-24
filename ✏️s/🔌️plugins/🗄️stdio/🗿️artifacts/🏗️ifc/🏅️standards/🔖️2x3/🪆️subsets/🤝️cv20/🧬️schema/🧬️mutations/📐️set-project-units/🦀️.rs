@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetProjectUnits {
-    pub(crate) project: u64,
-    pub(crate) units: Option<u64>,
+    pub project: u64,
+    pub units: Option<u64>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProjectUnits {

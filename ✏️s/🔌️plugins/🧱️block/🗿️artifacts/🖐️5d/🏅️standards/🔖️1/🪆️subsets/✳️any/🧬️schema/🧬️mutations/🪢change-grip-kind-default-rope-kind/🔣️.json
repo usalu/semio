@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeGripKindDefaultRopeKind",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-grip-kind-default-rope-kind",
-  "binaryTag": null,
+  "binaryTag": 23,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -12,7 +12,7 @@ formatting every editor reads back.
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
-`🧪️test` harness; the third-party references are registered in `🔮️oracle/🔣️.json`.
+`🧪️test` harness; the third-party references are registered in `🔮️oracles/🔣️.json`.
 
 `🔀️native-event-normalisation`, `🛡️tool-blocking-policy`, `🗺️plan-step-extraction`,
 `🖨️hook-result-formatting`, `📓️session-logging`.

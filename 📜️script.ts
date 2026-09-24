@@ -57,7 +57,7 @@ import { dependencyJsLockParitySelfTests } from "./🧰️framework/🛍️produ
 import { dependencyTruthSelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts";
 import { runDependencyVerification } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/⚖️truth/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
-import { requireMcpBinary } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { ensureMcpBinary, requireMcpBinary } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js";
 /**
  * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev`, `📜️script.ts dev mcp`, `📜️script.ts generate neo4j elements`).
@@ -384,6 +384,8 @@ export class SetupScript extends Script {
 
   private runFull(): void {
     console.log("[setup] locked dependency environments are ready through the Nx prerequisite graph");
+    console.log("[setup] staging semio-os-mcp so `.mcp.json` initialize never waits on a cold build");
+    ensureMcpBinary(this.root);
   }
 }
 //#endregion 🔖️SetupScript
@@ -409,6 +411,17 @@ export class StartScript extends Script {
       return;
     }
 
+    if (process.env.S_LOCAL_ONLY !== "1" && process.env.S_LOCAL_ONLY !== "true") {
+      process.env.S_HUB_URL = process.env.S_HUB_URL || "http://127.0.0.1:8787";
+      process.env.OS_HUB_PORT = process.env.OS_HUB_PORT || "8787";
+      process.env.OS_HUB_DATA = process.env.OS_HUB_DATA || join(this.root, ".🧬semio", "🌐hub", "hub-dev");
+      spawnDaemon("bun", ["nx", "run", "os-hub:dev"], {
+        cwd: this.root,
+        env: process.env,
+        stdio: "ignore",
+      });
+      console.log(`[start] local os-hub launching at ${process.env.S_HUB_URL} (data ${process.env.OS_HUB_DATA})`);
+    }
     if (process.platform === "win32" || process.platform === "darwin" || process.platform === "linux") {
       new NativeOsScript(this.root, this.repoRoot).run(["start"]);
     } else {
@@ -609,7 +622,7 @@ export class DevScript extends Script {
     if (transport === "http" && !extra.includes("--port")) {
       args.push("--port", process.env.S_OS_MCP_PORT ?? "6300");
     }
-    runCmd(requireMcpBinary(this.root), args, { cwd: this.root, ...daemonBudgetOpts() });
+    runCmd(ensureMcpBinary(this.root), args, { cwd: this.root, ...daemonBudgetOpts() });
   }
 
   private runMcpStdioRepo(slugs: string[]): void {
@@ -799,7 +812,7 @@ export function rustWarningTargetScope(root: string, target: string | undefined)
   if (target === "wasm32-wasip2") return { packages: pluginCrateNames(root), scopeArgs: ["--lib"], targetArgs: ["--target", target], packageArgs: {} };
   if (target === "wasm32-unknown-unknown") return { packages: ["semio-framework-actor", renderer], scopeArgs: ["--lib"], targetArgs: ["--target", target], packageArgs: {} };
   if (target && target !== "native") throw new Error(`[verify rust-warnings] unknown target ${target} (expected native | wasm32-wasip2 | wasm32-unknown-unknown).`);
-  return { packages: ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", renderer, ...pluginCrateNames(root, true)], scopeArgs: ["--all-targets"], targetArgs: [], packageArgs: { [renderer]: ["--features", "native-bin"] } };
+  return { packages: ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", renderer, ...pluginCrateNames(root, true)], scopeArgs: ["--all-targets"], targetArgs: [], packageArgs: { [renderer]: ["--features", "native-bin"], "semio-framework-os-kernel": ["--features", "native-bin"] } };
 }
 
 
@@ -12618,8 +12631,8 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     "pub fn enter_lane_io_driver_turn",
     "pub fn leave_lane_io_driver_turn",
     "pub fn db_io_maintenance_step()",
-    "fn db_io_backend_close_lane_step",
-    "fn db_io_poll_backend_close_on_lane_io",
+    "fn db_io_backend_close_step",
+    "fn db_io_backend_retirement_turn",
     "fn db_io_request_backend_close",
     "pool.try_submit(Lane::Io",
     "executor: Option<Box<dyn DbIoTaskExecutor>>",
@@ -12647,7 +12660,6 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     "pub fn seal_retained_step",
     "pub async fn close_db_io_backend",
     "pub fn retire_db_io_backend",
-    "fn db_io_backend_maintenance_step",
     "pub fn close_backend_step(&self) -> Result<bool, DbError>",
     "pub fn backend_terminal_is_empty(&self) -> bool",
     "const DB_IO_LOST_OWNER_SLOTS",
@@ -12680,10 +12692,10 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     if (!body.includes("std::task::Poll::Pending") || !body.includes("context.waker().wake_by_ref()")) failures.push(`DB one-opportunity cursor does not persist a governed Pending turn: ${marker}`);
     if (/while\b|\bloop\b/.test(body)) failures.push(`DB one-opportunity cursor retains a whole-owner loop: ${marker}`);
   }
-  const backendLanePoll = rustItem(storage, "fn db_io_poll_backend_close_on_lane_io");
-  if (!backendLanePoll.includes("db_io_backend_close_lane_step(control, context)")) failures.push("DB registered backend close is not polled by its typed Lane::Io job");
-  const backendMaintenance = rustItem(storage, "fn db_io_backend_maintenance_step");
-  if (!backendMaintenance.includes("db_io_request_backend_close(control)") || backendMaintenance.includes("db_io_backend_close_lane_step")) failures.push("DB maintenance caller directly polls a backend close future");
+  const backendRetirementTurn = rustItem(storage, "fn db_io_backend_retirement_turn");
+  if (!backendRetirementTurn.includes("db_io_backend_close_step(control, context)")) failures.push("DB registered backend close is not polled by its pre-admitted maintenance hook");
+  const backendMaintenance = rustItem(storage, "fn db_io_request_backend_close");
+  if (!backendMaintenance.includes("writer::release::request_retirement(control)") || backendMaintenance.includes("db_io_backend_close_step") || backendMaintenance.includes("try_submit")) failures.push("DB backend retirement request is not an unlosable hook request");
   const rejectedLanePoll = rustItem(storage, "fn db_io_poll_rejected_backend_on_lane_io");
   if (!rejectedLanePoll.includes("executor.close_backend_step(context)")) failures.push("DB rejected backend close is not polled by its typed Lane::Io job");
   for (const body of [rustItem(storage, "pub async fn close_db_io_backend"), backendMaintenance, rustItem(storage, "fn db_io_lost_owner_close_step")])
@@ -14194,6 +14206,7 @@ export class TestScript extends Script {
     }
 
     if (rest.length) throw new Error(`Unknown workspace test selection: ${rest.join(" ")}`);
+    if (process.env.NX_TASK_TARGET_PROJECT !== "workspace") throw new Error(`test ${level} runs every project's tests as Nx prerequisites and asserts nothing on its own; run \`bun nx run workspace:${level === "fundamental" ? "test" : `test-${level}`}\``);
     if (level === "exhaustive" && coverageEnabled()) this.enforceCoverageGate();
     console.log(`[test] ${level} prerequisites completed through Nx`);
   }
@@ -15217,7 +15230,7 @@ export class SemioScript extends Script {
       console.error("[semio] usage: bun ./📜️script.ts semio <inspect|verify|open|convert> <path>");
       process.exit(1);
     }
-    runCmd("cargo", ["run", "-p", "semio-framework-os-kernel-semio", "--bin", "semio", "--", ...segments], {
+    runCmd("cargo", ["run", "-p", "semio-framework-os-kernel", "--features", "native-bin", "--bin", "semio", "--", ...segments], {
       cwd: this.root,
       budgetMs: buildBudgetMs(),
     });

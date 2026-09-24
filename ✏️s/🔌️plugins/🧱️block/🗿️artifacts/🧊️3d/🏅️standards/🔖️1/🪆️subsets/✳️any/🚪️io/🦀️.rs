@@ -22,12 +22,9 @@
 //! | `s.stdio.txt@utf-8/*` | both | `Exact` | this subset's own `.semio` DSL snapshot text — the exact bytes `📚️examples/**/🗣️.dsl.semio` carry |
 //! | `s.stdio.json@rfc8259/*` | both | `Exact` | the `dsl::ToValue` record tree as compact rfc8259 |
 //! | `s.stdio.zip@2.0/*` | both | `Exact` | a real zip 2.0 container: `snapshot.block3d.semio` + `snapshot.json` |
-//! | `s.stdio.stl@ascii/*` | both | `Lossy` | typed `Err` — the schema carries no triangle geometry |
-//! | `s.stdio.obj@3.0/*` | both | `Lossy` | typed `Err` — the schema carries no vertex/face geometry |
-//! | `s.stdio.png@1.2/*` | both | `Lossy` | typed `Err` — no raster in the schema, no rasterizer here |
 //!
-//! The three refusing hops stay registered on purpose: an unregistered hop yields a bare "no route",
-//! a registered one hands the caller the actual reason.
+//! No stl, obj or png hop is declared: a node kind definition carries no geometry and no raster, so
+//! those formats are not claimed at all (a declared hop that can only refuse is a stub).
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -96,12 +93,6 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     deserializer_entry::<Block3dSnapshot, import::json::v_rfc8259::any::JsonIntoBlock3d>(BLOCK3D_DIALECT),
                     serializer_entry::<Block3dSnapshot, export::zip::v2_0::any::Block3dIntoZip>(BLOCK3D_DIALECT),
                     deserializer_entry::<Block3dSnapshot, import::zip::v2_0::any::ZipIntoBlock3d>(BLOCK3D_DIALECT),
-                    serializer_entry::<Block3dSnapshot, export::stl::v_ascii::any::Block3dIntoStl>(BLOCK3D_DIALECT),
-                    deserializer_entry::<Block3dSnapshot, import::stl::v_ascii::any::StlIntoBlock3d>(BLOCK3D_DIALECT),
-                    serializer_entry::<Block3dSnapshot, export::obj::v3_0::any::Block3dIntoObj>(BLOCK3D_DIALECT),
-                    deserializer_entry::<Block3dSnapshot, import::obj::v3_0::any::ObjIntoBlock3d>(BLOCK3D_DIALECT),
-                    serializer_entry::<Block3dSnapshot, export::png::v1_2::any::Block3dIntoPng>(BLOCK3D_DIALECT),
-                    deserializer_entry::<Block3dSnapshot, import::png::v1_2::any::PngIntoBlock3d>(BLOCK3D_DIALECT),
                 ]
             })
             .as_slice()

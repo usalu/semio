@@ -874,6 +874,15 @@ fn split_frame_credit(raw_bytes: usize, items: usize, index: usize) -> usize {
     raw_bytes / items + usize::from(index < raw_bytes % items)
 }
 
+/// 📥️ What admitting one frame did: its authorities joined the deferred rings, or it named an actor
+/// this shard does not own and was answered with a `Fault` outcome. An answered rejection is an
+/// outcome on the wire, so it spends the drive's one opportunity exactly like a granted authority.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum FrameAdmission {
+    Deferred,
+    Answered,
+}
+
 enum FrameAdmissionError {
     Full { bytes: Vec<u8> },
     TerminalCapacity { bytes: Vec<u8>, error: PluginHostError },
@@ -1597,8 +1606,13 @@ impl ShardLoop {
             }
         }
         if let Some((epoch, bytes)) = frame {
-            if let Err(rejected) = self.consume_frame(bytes).await {
-                match rejected {
+            match self.consume_frame(bytes).await {
+                Ok(FrameAdmission::Answered) => {
+                    self.last_drive_consumed_epoch = Some(epoch);
+                    return Ok(1);
+                }
+                Ok(FrameAdmission::Deferred) => self.last_drive_consumed_epoch = Some(epoch),
+                Err(rejected) => match rejected {
                     FrameAdmissionError::Full { bytes } => self.rejected_frame = Some((epoch, bytes)),
                     FrameAdmissionError::TerminalCapacity { bytes, error } => {
                         let byte_len = bytes.len();
@@ -1609,9 +1623,7 @@ impl ShardLoop {
                         self.last_drive_consumed_epoch = Some(epoch);
                         return Err(error);
                     }
-                }
-            } else {
-                self.last_drive_consumed_epoch = Some(epoch);
+                },
             }
         }
 
@@ -1906,8 +1918,8 @@ impl ShardLoop {
             }
             // 🛑️ terra-shard-lane piece 2: a background/maintenance turn that ran past its
             // epoch-armed `budget.wall_ms` (`turn_budget_from_grant`'s `deadline_ms`, armed in
-            // `WasmtimeRuntime::execute_turn`/`step_job` via `store.set_epoch_deadline`, ticked by
-            // `EpochTicker` every 1 ms) must be RE-GRANTED next tick, not treated as a failure — an
+            // `WasmtimeRuntime::execute_turn`/`step_job` via `EpochDeadlines::arm`, which advances
+            // the epoch when that deadline arrives) must be RE-GRANTED next tick, not treated as a failure — an
             // epoch interrupt lands at a wasm-bytecode safe point, so the wasmtime `Store` inside
             // `self.instances[&actor_id]` stays perfectly usable and nothing here unregisters it or
             // clears its state. Sending `ShardOutcome::Fault` for this (the OLD behavior, still
@@ -1948,7 +1960,7 @@ impl ShardLoop {
     /// 📨️ Decodes one [`ShardFrame`] and dispatches it — the drain loop's per-frame body, factored
     /// out so both [`Self::pump_primed`]'s "one primed frame, then the non-blocking drain" shape
     /// and `ShardFrame::Grant`'s own per-envelope loop (below) can share it.
-    async fn consume_frame(&mut self, bytes: Vec<u8>) -> Result<(), FrameAdmissionError> {
+    async fn consume_frame(&mut self, bytes: Vec<u8>) -> Result<FrameAdmission, FrameAdmissionError> {
         if bytes.len() > SHARD_FRAME_MAX_BYTES {
             let byte_len = bytes.len();
             return Err(self.retain_terminal_frame(bytes, PluginHostError::Plugin(format!("ShardLoop: raw frame exceeds {SHARD_FRAME_MAX_BYTES} bytes ({byte_len}); exact bytes retained for terminal close"))));
@@ -1968,13 +1980,6 @@ impl ShardLoop {
             ShardFrame::Envelope(envelope) => Some(envelope.to),
             ShardFrame::Register { .. } => None,
         };
-        if let Some(actor) = target.filter(|actor| !self.actor_generation_is_current(*actor)) {
-            self.send_outcome(&ShardOutcome::Fault { actor: actor.0, message: "actor is not registered on this shard".into() }).await.map_err(FrameAdmissionError::Fault)?;
-            return Ok(());
-        }
-        if let Err(error) = self.validate_frame(&frame) {
-            return Err(self.retain_terminal_frame(bytes, error));
-        }
         if let Err(limit) = self.preflight_frame(&frame, bytes.len()) {
             let deferred_empty = self.pending_interactive.is_empty() && self.pending_background.is_empty();
             if deferred_empty {
@@ -1983,13 +1988,17 @@ impl ShardLoop {
             }
             return Err(FrameAdmissionError::Full { bytes });
         }
+        if let Some(actor) = target.filter(|actor| !self.actor_generation_is_current(*actor)) {
+            self.send_outcome(&ShardOutcome::Fault { actor: actor.0, message: "actor is not registered on this shard".into() }).await.map_err(FrameAdmissionError::Fault)?;
+            return Ok(FrameAdmission::Answered);
+        }
+        if let Err(error) = self.validate_frame(&frame) {
+            return Err(self.retain_terminal_frame(bytes, error));
+        }
         match frame {
             ShardFrame::Register { actor } => self.enqueue_authority(semio_framework_actor::Lane::Maintenance, DeferredAuthority::Register { actor }, bytes.len()).map_err(FrameAdmissionError::Fault)?,
             ShardFrame::Unregister { actor } => self.enqueue_authority(semio_framework_actor::Lane::Maintenance, DeferredAuthority::Unregister { actor }, bytes.len()).map_err(FrameAdmissionError::Fault)?,
             ShardFrame::Grant { actor, budget, envelopes } => {
-                if !self.actor_generation_is_current(actor) {
-                    return Ok(());
-                }
                 self.granted_budgets.insert(actor.0, budget);
                 let item_count = envelopes.len();
                 for (index, envelope) in envelopes.into_iter().enumerate() {
@@ -1999,14 +2008,12 @@ impl ShardLoop {
                 }
             }
             ShardFrame::Envelope(envelope) => {
-                if self.actor_generation_is_current(envelope.to) {
-                    if let Err(error) = self.dispatch_envelope(envelope, bytes.len()).await {
-                        return Err(self.retain_terminal_frame(bytes, error));
-                    }
+                if let Err(error) = self.dispatch_envelope(envelope, bytes.len()).await {
+                    return Err(self.retain_terminal_frame(bytes, error));
                 }
             }
         }
-        Ok(())
+        Ok(FrameAdmission::Deferred)
     }
 
     fn retain_terminal_frame(&mut self, bytes: Vec<u8>, error: PluginHostError) -> FrameAdmissionError {

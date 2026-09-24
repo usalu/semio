@@ -15,7 +15,7 @@ Feature: Every d3 symbol type is drawn from its own area, not from a radius
   @level-quick
   @mode-differential
   Scenario: Thirteen symbol types at three areas draw the paths d3-shape draws
-    Given the committed probe document local://shape-symbols.tex and the symbols
+    Given the committed probe document shared://🔷️shape-symbols/shape-symbols.tex and the symbols
       | types                                                                                            | sizes        |
       | circle, cross, diamond, diamond2, plus, square, square2, star, times, triangle, triangle2, wye, asterisk | 64, 17.5, 200 |
     Then the compiled probe and the reference implementation agree on every value

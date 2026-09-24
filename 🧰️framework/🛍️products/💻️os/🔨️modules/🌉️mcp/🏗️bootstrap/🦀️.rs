@@ -235,6 +235,24 @@ fn benign_direct_child_environment_is_preserved() -> bool {
     std::env::var("SEMIO_DIRECT_CHILD_BENIGN").ok().as_deref() == Some("preserved")
 }
 
+/// 🧊️ The isolated compile worker's whole body — see `main`'s `compile-component` branch.
+fn compile_component_worker() -> Result<(), String> {
+    use std::io::Read as _;
+    let mut argv = std::env::args().skip(2);
+    let (mut engine, mut out) = (None, None);
+    while let Some(flag) = argv.next() {
+        match flag.as_str() {
+            "--engine" => engine = Some(argv.next().ok_or("--engine requires a value")?),
+            "--out" => out = Some(std::path::PathBuf::from(argv.next().ok_or("--out requires a value")?)),
+            other => return Err(format!("unknown flag {other}")),
+        }
+    }
+    let (engine, out) = (engine.ok_or("--engine is required")?, out.ok_or("--out is required")?);
+    let mut bytes = Vec::new();
+    std::io::stdin().read_to_end(&mut bytes).map_err(|error| format!("reading the component from stdin: {error}"))?;
+    semio_framework_plugin_host::compile_component_isolated(&engine, &bytes, &out).map_err(|error| error.to_string())
+}
+
 fn main() {
     // 🪞️ `semio-os-mcp schemas` prints the `os.mcp` scope's whole draft-07 schema document on stdout —
     // the generator behind `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`. It reads no
@@ -243,6 +261,19 @@ fn main() {
     if std::env::args().nth(1).as_deref() == Some("schemas") {
         print!("{}", semio_framework_os_mcp::schema_mirror_json());
         return;
+    }
+    // 🧊️ `semio-os-mcp compile-component --engine <cfg> --out <cache.cwasm>` compiles the component
+    // on stdin into the compiled-code cache and exits — the isolated worker a cancellable cold
+    // compile runs in (`🏠️workspace`'s `CompileFlight`), killed when its last requester cancels. It
+    // reads no credential and serves nothing, so it runs before the process-entry seal too.
+    if std::env::args().nth(1).as_deref() == Some("compile-component") {
+        std::process::exit(match compile_component_worker() {
+            Ok(()) => 0,
+            Err(message) => {
+                eprintln!("[semio-os-mcp compile-component] {message}");
+                1
+            }
+        });
     }
     if !protected_credential_environment_is_absent() {
         eprintln!("[semio-os-mcp] protected parent environment was not sealed");

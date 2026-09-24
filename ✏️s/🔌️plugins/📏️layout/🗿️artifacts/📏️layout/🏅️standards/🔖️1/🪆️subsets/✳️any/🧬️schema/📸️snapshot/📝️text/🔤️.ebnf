@@ -1,30 +1,49 @@
 (* ebnf layout.layout.snapshot *)
-(* Below: ISO-14977-style mirror of the normative 📖️.grammar.semio (same production
-   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
-   envelope (`start document`); the two lines above are preserved verbatim from the prior
-   identity fix for traceability but are not referenced below. *)
-document = header, body ;
-header = 'schema', space, 'layout.layout.snapshot', newline ;
-
+(* ISO-14977-style mirror of the normative 📖️.grammar.semio (same production names,
+   kebab-case -> "space case"; `( … )` groups, `*`/`+`/`?` repetition as in the .semio). *)
 artifact mark = 'semio layout.layout.dsl v1' ;
-document = artifact mark, schema line, name line, grid line, paragraph styles line, character styles line, stories line, links line, parent pages line, spreads line, pages line, print target line, data fields json line, background drawing line, referenced model line ;
-schema line = 'schema', '=', hex ;
-name line = 'name', '=', hex ;
-grid line = 'grid', '=', json hex ;
-paragraph styles line = 'paragraphStyles', '=', json hex ;
-character styles line = 'characterStyles', '=', json hex ;
-stories line = 'stories', '=', json hex ;
-links line = 'links', '=', json hex ;
-parent pages line = 'parentPages', '=', json hex ;
-spreads line = 'spreads', '=', json hex ;
-pages line = 'pages', '=', json hex ;
-print target line = 'printTarget', '=', json hex ;
-data fields json line = 'dataFieldsJson', '=', json hex ;
-background drawing line = 'backgroundDrawing', '=', json hex ;
-referenced model line = 'referencedModel', '=', json hex ;
-json hex = hex ;
+document = artifact mark doc field* ;
+doc field = ('schema' '=' text) | ('name' '=' text) | ('grid' '=' grid field+) | ('paragraph-styles' '=' '[' paragraph style* ']') | ('character-styles' '=' '[' character style* ']') | ('stories' '=' '[' story* ']') | ('links' '=' '[' link* ']') | ('parent-pages' '=' '[' parent page* ']') | ('spreads' '=' '[' spread* ']') | ('pages' '=' '[' page* ']') | ('print-target' '=' text) | ('data-fields-json' '=' text) | ('background-drawing' '=' background drawing field+) | ('referenced-model' '=' referenced model field+) ;
+grid field = ('baseline-grid' '=' number) | ('baseline-offset' '=' number) | ('snap-to-baseline' '=' bool) ;
+paragraph style = paragraph style field+ ;
+paragraph style field = ('id' '=' text) | ('name' '=' text) | ('font-family' '=' text) | ('font-size' '=' number) | ('font-weight' '=' uint) | ('leading' '=' number) | ('tracking' '=' number) | ('alignment' '=' text) ;
+character style = character style field+ ;
+character style field = ('id' '=' text) | ('name' '=' text) | ('font-family' '=' text) | ('font-size' '=' number) | ('font-weight' '=' uint) | ('italic' '=' bool) | ('color' '=' rgba) | ('tracking' '=' number) ;
+story = story field+ ;
+story field = ('id' '=' text) | ('content' '=' text) | style runs ;
+style runs = 'style-runs' '[' 'start:UINT' 'end:UINT' 'paragraph-style-id:REF' 'character-style-id:REF' ']' '{' style run* '}' ;
+style run = uint uint text text ;
+link = link field+ ;
+link field = ('id' '=' text) | ('path' '=' text) | ('hash' '=' text) | ('width' '=' uint) | ('height' '=' uint) | ('dpi' '=' uint) | ('color-profile' '=' text) | ('state' '=' text) | ('proxy-data-url' '=' text) | ('artifact-kind' '=' text) | ('artifact-ref' '=' text) ;
+parent page = parent page field+ ;
+parent page field = ('id' '=' text) | ('name' '=' text) | ('width' '=' number) | ('height' '=' number) | ('layer-ids' '=' '[' text* ']') | layers | frames ;
+spread = spread field+ ;
+spread field = ('id' '=' text) | ('name' '=' text) | ('page-ids' '=' '[' text* ']') ;
+page = page field+ ;
+page field = ('id' '=' text) | ('name' '=' text) | ('spread-id' '=' text) | ('parent-page-id' '=' text) | ('width' '=' number) | ('height' '=' number) | ('margins' '{' margin field* '}') | ('columns' '{' column field* '}') | guides | ('layer-ids' '=' '[' text* ']') | layers | frames | overrides ;
+margin field = ('top' '=' number) | ('right' '=' number) | ('bottom' '=' number) | ('left' '=' number) ;
+column field = ('count' '=' uint) | ('gutter' '=' number) ;
+guides = 'guides' '[' 'x:NUM' 'y:NUM' 'width:NUM' 'height:NUM' ']' '{' guide* '}' ;
+guide = number number number number ;
+layers = 'layers' '[' 'id:TEXT' 'name:TEXT' 'visible:BOOL' 'locked:BOOL' 'object-ids:LIST' ']' '{' layer* '}' ;
+layer = text text bool bool '[' text* ']' ;
+overrides = 'overrides' '[' 'object-id:REF' 'bounds:BLOCK' 'visible:BOOL' 'locked:BOOL' ']' '{' override* '}' ;
+override = text ('{' bounds field* '}')? bool? bool? ;
+frames = 'frames' '{' frame* '}' ;
+frame = image frame | rect frame | text frame ;
+image frame = 'image' frame field* ('link-id' '=' text) ;
+rect frame = 'rect' frame field* rect field* ;
+text frame = 'text' frame field* text field* ;
+frame field = ('id' '=' text) | ('layer-id' '=' text) | ('bounds' '{' bounds field* '}') | ('locked' '=' bool) | ('visible' '=' bool) ;
+rect field = ('fill' '=' rgba) | ('stroke' '=' rgba) ;
+text field = ('story-id' '=' text) | ('thread-next' '=' text) | ('columns' '=' uint) | ('inset' '{' inset field* '}') | ('wrap-mode' '=' text) ;
+bounds field = ('x' '=' number) | ('y' '=' number) | ('width' '=' number) | ('height' '=' number) | ('rotation' '=' number) ;
+inset field = ('x' '=' number) | ('y' '=' number) | ('width' '=' number) | ('height' '=' number) ;
+background drawing field = ('handle' '=' child handle) | ('content' '=' value) ;
+referenced model field = ('target' '=' text) | ('pin' '=' pin field+) | ('role' '=' text) ;
+pin field = ('kind' '=' ('head' | 'checkpoint' | 'snapshot')) | ('checkpoint_id' '=' text) | ('blob_hash' '=' text) | ('blob_size' '=' uint) | ('blob_media_type' '=' text) ;
+child handle = ('child_id' '=' text) ('target' '=' text) ;
+rgba = number ',' number ',' number ',' number ;
 
-(* Framework dialect-primitive terminals, given one concrete definition each for a
-   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
-hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;
-digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+(* Framework dialect-primitive terminals: text = bare word | quoted string; value = a dynamic
+   JSON-equivalent literal; number/uint/bool as in the derived text engine. *)

@@ -1,0 +1,12 @@
+{
+  "title": "End to End Os Hub Collaboration and Mcp",
+  "emoji": "🌐️",
+  "status": "open",
+  "description": "Session 9 lane of ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END (reopened there): working s os frontend with all plugins and artifacts, working hub server backend with db and presence, working collaboration between users over the hub, and working ai integration for users over the semio mcp. Reports are merged into the canonical ticket at close.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "parent": "26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END",
+  "sessions": [
+    "⚪5215135a-e3d8-45b0-a14c-8b8c7081177b",
+    "claude-code-session-10-2026-09-23"
+  ]
+}

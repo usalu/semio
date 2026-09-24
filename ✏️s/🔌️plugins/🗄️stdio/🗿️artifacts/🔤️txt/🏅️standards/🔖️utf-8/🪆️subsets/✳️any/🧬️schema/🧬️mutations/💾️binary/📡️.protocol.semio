@@ -3,9 +3,20 @@ protocol txt.mutations
 version 1
 schema stdio.txt
 start record
-
-# Canonical direct-owner identities and tags: set-trailing-newline=1, set-line-ending=2, insert-line=3, remove-line=4, set-line=5.
 framing record
+
+# Real op frame: `tag u8`, then the kind's own payload (its leaf's `💾️binary` codec).
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: every leaf
+# codec derives its tag from its record at compile time (`dsl::protocol_record::tag_u32`).
 header fixed 1
 field tag u8
-chain payload bytes
+record set-trailing-newline tag=1
+field payload bytes
+record set-line-ending tag=2
+field payload bytes
+record insert-line tag=3
+field payload bytes
+record remove-line tag=4
+field payload bytes
+record set-line tag=5
+field payload bytes

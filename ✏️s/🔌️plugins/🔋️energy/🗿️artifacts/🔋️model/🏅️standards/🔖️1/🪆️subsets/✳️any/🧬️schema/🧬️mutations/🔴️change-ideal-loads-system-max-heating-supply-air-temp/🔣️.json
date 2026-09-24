@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-ideal-loads-system-max-heating-supply-air-temp",
-  "binaryTag": null,
+  "binaryTag": 138,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

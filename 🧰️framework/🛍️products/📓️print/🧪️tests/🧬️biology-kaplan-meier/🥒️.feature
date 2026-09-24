@@ -17,7 +17,7 @@ Feature: The Kaplan–Meier estimator is computed from the event records, censor
   @level-long
   @mode-conformance
   Scenario: One censored group produces the product-limit steps at the right millimetres
-    Given the committed probe document local://biology-kaplan-meier.tex and the group
+    Given the committed probe document shared://🧬️biology-kaplan-meier/biology-kaplan-meier.tex and the group
       | label     | records                                       | final |
       | treatment | 2:1 4:1 5:0 7:1 11:1 12:0 15:1 18:0 21:1 24:0 | 3/14  |
     Then the compiled probe and the reference implementation agree on every value
@@ -26,7 +26,7 @@ Feature: The Kaplan–Meier estimator is computed from the event records, censor
   @level-long
   @mode-conformance
   Scenario: Two groups are estimated independently and drawn on the same window
-    Given the committed probe document local://biology-kaplan-meier.tex and the groups
+    Given the committed probe document shared://🧬️biology-kaplan-meier/biology-kaplan-meier.tex and the groups
       | label | records         |
       | a     | 1:1 2:1 3:1 4:1 |
       | b     | 1:0 2:1 3:0 4:1 |
@@ -36,7 +36,7 @@ Feature: The Kaplan–Meier estimator is computed from the event records, censor
   @level-long
   @mode-conformance
   Scenario: The cumulative hazard is the negative logarithm of the same survival estimate
-    Given the committed probe document local://biology-kaplan-meier.tex and the group
+    Given the committed probe document shared://🧬️biology-kaplan-meier/biology-kaplan-meier.tex and the group
       | label     | records                                       |
       | treatment | 2:1 4:1 5:0 7:1 11:1 12:0 15:1 18:0 21:1 24:0 |
     Then the compiled probe and the reference implementation agree on every value

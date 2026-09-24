@@ -69,7 +69,7 @@ impl Puzzle3dImportFault {
 /// 🧱️ What one accepted chunk did to its run.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Puzzle3dImportStep {
-    /// 🧱️ The chunk landed and the run is still open — no document edit, no history row.
+    /// 🧱️ The chunk landed and the run is still open — no document edit. The command logs one unapplied row.
     Staged { next_chunk: usize, chunk_count: usize },
     /// ✅️ The chunk closed the run; the pages are the whole document, each one page of the paged owner.
     Complete(Vec<String>),
@@ -374,9 +374,10 @@ fn notice_import_fault(ctx: &mut Puzzle3dActionCtx<'_>, fault: Puzzle3dImportFau
 
 /// 📥 Replaces the live fixture with the reassembled document as one document edit.
 ///
-/// 🧩️ A chunk that does not close its run stages and ABORTS — no document edit and no history row for a
-/// partial import — and every refusal publishes a named notice. Before ticket 26/09/02 wave B59 a
-/// 145 924-byte import produced none of the three: the retained job's wire ladder spent one host step per
+/// 🧩️ A chunk that does not close its run stages and ABORTS — no document edit for a partial import.
+/// The command still logs one unapplied history row, the same empty-emit row every lane-less
+/// Mutation owes, and every refusal publishes a named notice. Before ticket 26/09/02 wave B59 a
+/// 145 924-byte import produced no edit, no row and no notice: the retained job's wire ladder spent one host step per
 /// BYTE with an O(n) checkpoint on each, so the command never reached its decode and the import was a
 /// silent no-op (`paneObjects=180→180`).
 pub fn import_fixture(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {

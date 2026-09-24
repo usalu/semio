@@ -1867,7 +1867,7 @@ fn renderer_canvas_pointer_sequence(foreign_cancel: bool) {
 #[test]
 fn renderer_canvas_secondary_drag_reaches_the_document_gesture_before_opening_its_context_menu() {
     crate::scenes::cancel_canvas_pointer_gesture(&mut InputState::default());
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let row = fixture["panCases"].as_array().unwrap().iter().find(|row| row["id"] == "right-button-gesture").unwrap();
     let surface = fixture["surface"]["id"].as_str().unwrap();
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
@@ -1953,7 +1953,7 @@ fn renderer_canvas_opposite_wheel_events_preserve_the_react_camera() {
 }
 
 fn renderer_canvas_wheel_burst(case_id: &str) {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let case = if case_id == "authored-camera" {
         serde_json::json!({ "deltas": [fixture["wheel"]["zoomInDeltaY"]], "expectedFactors": [fixture["wheel"]["zoomInFactor"]], "expectedActionCount": 1 })
     } else {
@@ -2149,7 +2149,7 @@ fn escape_closes_the_palette_rather_than_committing_its_query_field() {
 /// 🪟️ Closing a Dock window retires its exact Canvas owner before a pending camera can settle.
 #[test]
 fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let surface = "renderer-canvas-closed-window";
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
     let body = Rect::new(17.0, 31.0, 400.0, 300.0);
@@ -2199,7 +2199,7 @@ fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
 
 #[test]
 fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let surface = "renderer-canvas-reopened-window";
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
     let body = Rect::new(17.0, 31.0, 400.0, 300.0);
@@ -2257,7 +2257,7 @@ fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
 /// 🪟️ Sibling components retain independent cameras while sharing their document action address.
 #[test]
 fn sibling_canvas_components_mount_under_one_document_without_sharing_their_camera() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let law = &fixture["siblingWindowLifetime"];
     let surface = "sibling-canvas-document";
     let controller = "sibling-canvas-controller";
@@ -2331,7 +2331,7 @@ fn sibling_canvas_components_mount_under_one_document_without_sharing_their_came
 /// 🪟️ Closing each distinct window returns its retained capacity before the next window opens.
 #[test]
 fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let law = &fixture["sequentialWindowLifetime"];
     let mount_count = law["mountCount"].as_u64().unwrap() as usize;
     assert!(mount_count > ui_wgpu::wgpu::engine::UI_LAYOUT_SURFACE_SLOTS);
@@ -2373,7 +2373,7 @@ fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
 /// 🪪️ A retained camera survives an authored refresh and remounts with a replacement key.
 #[test]
 fn renderer_canvas_camera_obeys_the_mounted_component_identity() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let surface = "renderer-canvas-mount-lifetime";
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
     let body = Rect::new(17.0, 31.0, 400.0, 300.0);
@@ -2427,7 +2427,7 @@ fn renderer_canvas_same_key_remount_retires_checked_out_camera() {
 }
 
 fn renderer_canvas_retirement_probe(replace: bool, close: bool, remount: bool) {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let lifetime = &fixture["sameKeySceneRemount"];
     let key = if remount { lifetime["key"].as_str().unwrap() } else { "original" };
     let surface_id = format!("renderer-canvas-retirement-{replace}-{close}-{remount}");

@@ -398,7 +398,7 @@ fn a_history_verb_owes_the_previews_the_evaluation_a_gesture_would_have() {
     let command = |seq: u64, applied: bool, edit: Option<&str>| CommandView {
         seq,
         action_id: "apply".into(),
-        label: "update-widget".into(),
+        label: dsl::LocalizedLabel::native("Update Widget", "Widget aktualisieren"),
         kind: ActionKind::Mutation,
         timestamp: String::new(),
         edit_id: edit.map(str::to_string),

@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveSpaceListMember",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-space-list-member",
-  "binaryTag": null,
+  "binaryTag": 246,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

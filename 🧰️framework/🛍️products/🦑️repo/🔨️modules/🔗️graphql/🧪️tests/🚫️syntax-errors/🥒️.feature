@@ -13,6 +13,6 @@ Feature: A malformed request is rejected, never silently half-parsed
   @level-fundamental
   @mode-error
   Scenario: Every malformed input is rejected by every implementation
-    Given the malformed corpus local://🔣️malformed.json
+    Given the malformed corpus shared://🚫️syntax-errors/🔣️malformed.json
     When each implementation parses every input
     Then every input is reported as rejected rather than parsed into a partial document

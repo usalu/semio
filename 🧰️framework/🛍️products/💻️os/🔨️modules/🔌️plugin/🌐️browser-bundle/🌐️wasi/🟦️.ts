@@ -51,7 +51,7 @@ export const browserWasiInterfaces = Object.freeze([
   "wasi:cli/environment@0.2.0", "wasi:cli/exit@0.2.0", "wasi:cli/stdin@0.2.0", "wasi:cli/stdout@0.2.0", "wasi:cli/stderr@0.2.0",
   "wasi:cli/terminal-input@0.2.0", "wasi:cli/terminal-output@0.2.0", "wasi:cli/terminal-stdin@0.2.0", "wasi:cli/terminal-stdout@0.2.0", "wasi:cli/terminal-stderr@0.2.0",
   "wasi:clocks/monotonic-clock@0.2.0", "wasi:clocks/wall-clock@0.2.0", "wasi:io/error@0.2.0", "wasi:io/poll@0.2.0", "wasi:io/streams@0.2.0",
-  "wasi:random/insecure-seed@0.2.9",
+  "wasi:random/insecure-seed@0.2.9", "wasi:random/random@0.2.9",
 ]);
 
 /** 🧭️ Owns a bounded Preview2 profile without ambient process, filesystem or network authority. */
@@ -276,6 +276,15 @@ export function createBrowserWasiActivation(port: BrowserWasiPort, signal?: Abor
     "wasi:io/poll@0.2.0": Object.freeze({ Pollable, poll }),
     "wasi:io/streams@0.2.0": Object.freeze({ InputStream, OutputStream }),
     "wasi:random/insecure-seed@0.2.9": Object.freeze({ insecureSeed() { check(); return seed; } }),
+    "wasi:random/random@0.2.9": Object.freeze({
+      getRandomBytes(length: unknown) {
+        check();
+        const size = u64(length);
+        if (size > 65536n) throw new Error("browser wasi: random byte request exceeds 65536");
+        return crypto.getRandomValues(new Uint8Array(Number(size)));
+      },
+      getRandomU64() { check(); return crypto.getRandomValues(new BigUint64Array(1))[0]; },
+    }),
   });
   signal?.addEventListener("abort", onAbort, { once: true });
   if (signal?.aborted) void close();

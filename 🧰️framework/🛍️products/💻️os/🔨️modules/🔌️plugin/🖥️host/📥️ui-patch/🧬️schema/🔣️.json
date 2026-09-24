@@ -6,11 +6,12 @@
     "NativeUiPatchMarshallingV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "expectedInstance", "maximumWireBytes", "operationKinds", "componentCases", "cases"],
+      "required": ["schema", "expectedInstance", "maximumWireBytes", "maximumPatches", "operationKinds", "componentCases", "cases"],
       "properties": {
         "schema": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*\\.v[0-9]+$" },
         "expectedInstance": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
         "maximumWireBytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+        "maximumPatches": { "type": "integer", "minimum": 1, "maximum": 65535 },
         "operationKinds": {
           "type": "array",
           "minItems": 11,
@@ -55,8 +56,8 @@
             "required": ["id", "emitted", "returned", "receipt", "expected"],
             "properties": {
               "id": { "type": "string", "minLength": 1 },
-              "emitted": { "type": "integer", "minimum": 0, "maximum": 2 },
-              "returned": { "type": "integer", "minimum": 0, "maximum": 2 },
+              "emitted": { "type": "integer", "minimum": 0, "maximum": 65536 },
+              "returned": { "type": "integer", "minimum": 0, "maximum": 65536 },
               "receipt": { "type": "boolean" },
               "expected": { "$ref": "#/$defs/UiPatchVerdict" }
             }

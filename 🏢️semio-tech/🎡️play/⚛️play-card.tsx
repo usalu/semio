@@ -1,4 +1,4 @@
-/** @emoji 🃏️ Compact window-silhouette overview card for one play pane — icon title chip, tagline, description and open chip. */
+/** @emoji 🃏️ Compact window-silhouette overview card for one play pane — icon title chip, tagline and open chip. */
 
 import { cn, Icon, registerUiTranslationBundles, uiDataLabel, useLabel, WindowChrome, windowChromeTitleChipClass } from "@semio-tech/ui-react";
 import type { PlayPaneSpec } from "./🪧️brand.ts";
@@ -65,11 +65,8 @@ export function PlayCard({
         }
         body={
           <div data-slot="play-pane-card-content" className="w-full min-w-0">
-            <p data-slot="play-pane-card-tagline" className="truncate text-xs font-medium leading-normal text-foreground">
+            <p data-slot="play-pane-card-tagline" className="truncate text-xs leading-normal text-muted-foreground">
               {pane.tagline}
-            </p>
-            <p data-slot="play-pane-card-description" className="mt-single line-clamp-3 text-xs leading-normal text-muted-foreground transition-colors group-hover:text-foreground">
-              {pane.description}
             </p>
           </div>
         }

@@ -6,7 +6,7 @@
 //! `dsl::Mutations`' derive asserts `SEMANTICS.kind == to_kebab("SetTextBoxBlocks")`, and
 //! `to_kebab` splits before every uppercase letter that follows a lowercase one, so `TextBox` ->
 //! `text-box` (verified against the already-migrated `svg` baseline's `SetViewBox` ->
-//! `set-view-box`). The op-text/binary keyword (`print_op`/`parse_op`/`OP_KEYWORDS`, this
+//! `set-view-box`). The op-text/binary keyword (`print_op`/`parse_op`/`📡️.protocol.semio` records, this
 //! artifact's grammar files and the committed test fixtures) shares the same canonical
 //! `set-text-box-blocks` spelling.
 use super::*;
@@ -15,9 +15,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetTextBoxBlocks {
-    pub(crate) slide_index: usize,
-    pub(crate) shape_index: usize,
-    pub(crate) blocks: Vec<DocBlock>,
+    pub slide_index: usize,
+    pub shape_index: usize,
+    pub blocks: Vec<DocBlock>,
 }
 
 impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for SetTextBoxBlocks {

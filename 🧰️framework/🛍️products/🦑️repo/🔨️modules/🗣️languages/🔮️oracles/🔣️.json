@@ -1,0 +1,87 @@
+{
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$comment": "🔮 Test-only third-party references of the 🗣️languages owner. Every entry is a devDependency of 📦️packages/🟦️typescript and is imported only from 🧪️tests/**; no runtime code may depend on one. `@oracle-<id>` and `@no-oracle-<id>` tags in the Gherkin features name these ids.",
+  "schemaVersion": 2,
+  "oracles": [
+    {
+      "id": "typescript-compiler",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "typescript",
+      "version": "5.9.3",
+      "engine": {
+        "family": "typescript",
+        "implementation": "typescript",
+        "version": "5.9.3"
+      },
+      "capabilities": [
+        "repo-definition-parsing"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "productionReachable": true,
+      "networkDuringExecution": false,
+      "rationale": "🧾️ The TypeScript compiler's own parser decides where each TypeScript definition starts and ends, independently of this module's Rust and Go definition parsers, which never link it. It is not test-only at the repository level: it is the compiler toolchain every TypeScript package declares, and repository tooling calls its API outside this owner. That reach is recorded below as debt, and none of it touches the parser under test.",
+      "productionDebt": {
+        "reachableFrom": [
+          "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.js",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+        "plan": "These are compiler-toolchain calls: the plugin browser bundle parses the generated component JavaScript with the compiler's parser, the dependency inventory reads import graphs with it, and the hub script type-checks its worker entry points. They are recorded so that any other production import fails loudly. They shrink as those reads move to the repository's own parsers, and no path may join."
+      }
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-region-markers",
+      "capabilities": [
+        "repo-section-parsing",
+        "repo-malformed-regions"
+      ],
+      "rationale": "The `#region <emoji><Name>` marker convention, its per-language comment syntax and the leading-grapheme split that separates the emoji from the name are this repository's own invention. No third-party parser reads them, and a Markdown or JSON library reads only the heading or key structure, never the byte ranges and the unbalanced-marker recovery this owner specifies. The pattern table is the single source of truth both implementations read, and two independently written parsers projecting identically is the substitute.",
+      "substitutes": [
+        "independent-implementations",
+        "specification-vectors"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-scope-grammar",
+      "capabilities": [
+        "repo-scope-ids"
+      ],
+      "rationale": "A scope identifier (`file:<path>`, `section:<path>#<sectionPath>`, `def:<path>#<sectionPath>::<name>`) is an addressing grammar this repository defines for its own artifacts. Nothing third party can produce one, so the substitutes are the pinned specification vectors of the grammar and two independently written builders agreeing on the entries a file yields.",
+      "substitutes": [
+        "specification-vectors",
+        "independent-implementations"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-file-header",
+      "capabilities": [
+        "repo-header-roundtrip"
+      ],
+      "rationale": "The file header region is a repository-specific document shape: an identity line linking the artifact id to its `repo://` URI, then contributor, licence, summary and requirement blocks written behind each language's own comment prefix. No third-party formatter emits or reads it, so the substitutes are the metamorphic law that reformatting a parsed header reproduces the text byte for byte and two independently written formatters agreeing per language.",
+      "substitutes": [
+        "metamorphic-laws",
+        "independent-implementations"
+      ],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": [
+    {
+      "implementation": "typescript",
+      "package": "typescript",
+      "version": "5.9.3"
+    }
+  ]
+}

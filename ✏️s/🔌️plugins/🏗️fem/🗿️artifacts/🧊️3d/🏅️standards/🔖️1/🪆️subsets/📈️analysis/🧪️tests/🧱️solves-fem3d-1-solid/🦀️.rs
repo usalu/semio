@@ -17,7 +17,7 @@
 use semio_repo_test_host::{Adapter, Json};
 
 //#region 🔖️Cases
-/// 🌍️ Standard gravity, in m/s². `crate::fem3d_engine::fem3d_solve_all` fixes gravity at
+/// 🌍️ Standard gravity, in m/s². `semio_s_artifact_fem_3d::fem3d_engine::fem3d_solve_all` fixes gravity at
 /// `[0.0, 0.0, -9.81]`; the same number is written down here so the closed form cannot drift.
 const GRAVITY: f64 = 9.81;
 
@@ -210,7 +210,7 @@ mod decode {
 mod subject {
     use super::{decode, significant, GRAVITY, PRESSURE_TOLERANCE, SELF_WEIGHT_TOLERANCE};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use crate::model::Dof;
+    use semio_s_artifact_fem_3d::model::Dof;
 
     /// 🧫️ The one declared fixture URI of this scenario's steps containing `needle`.
     fn uri_in(ctx: &Context, needle: &str) -> Result<String, String> {
@@ -251,7 +251,7 @@ mod subject {
     /// (`{solidId}_m{index}`) and their ids carry no elevation, so the same resolution is asked for
     /// the positions — which is also what makes the comparison mesh-independent, since scikit-fem
     /// averages over the top face of its own, entirely different mesh.
-    fn top_shortening(answer: &crate::model::StaticResult, top_nodes: &[String]) -> Result<f64, String> {
+    fn top_shortening(answer: &semio_s_artifact_fem_3d::model::StaticResult, top_nodes: &[String]) -> Result<f64, String> {
         let mut total = 0.0;
         let mut count = 0usize;
         for entry in &answer.displacements {
@@ -270,11 +270,11 @@ mod subject {
     pub fn prism(needle: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
             let document = decode::snapshot(&fixture(ctx, needle)?)?;
-            let solved = crate::fem3d_engine::fem3d_solve_all(&document).map_err(|error| error.to_string())?;
+            let solved = semio_s_artifact_fem_3d::fem3d_engine::fem3d_solve_all(&document).map_err(|error| error.to_string())?;
             let solid = document.solids.first().ok_or_else(|| "the solid fixture declares no solid".to_string())?;
             let material = document.materials.iter().find(|material| material.id == solid.material_id).ok_or_else(|| "the solid names a material the document does not carry".to_string())?;
             let top = solid.base_z + solid.height;
-            let (nodes, _elements, _solids, _supports) = crate::fem3d_engine::meshing::resolve_geometry(&document).map_err(|error| error.to_string())?;
+            let (nodes, _elements, _solids, _supports) = semio_s_artifact_fem_3d::fem3d_engine::meshing::resolve_geometry(&document).map_err(|error| error.to_string())?;
             let top_nodes: Vec<String> = nodes.iter().filter(|node| (node.pos[2] - top).abs() < 1e-9).map(|node| node.id.clone()).collect();
             let pressure: f64 = document
                 .load_cases

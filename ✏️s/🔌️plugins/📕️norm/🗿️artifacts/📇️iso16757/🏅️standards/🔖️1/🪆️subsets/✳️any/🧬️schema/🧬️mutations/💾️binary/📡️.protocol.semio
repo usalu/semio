@@ -3,14 +3,53 @@ protocol iso16757.mutations
 version 1
 schema norm.iso16757.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real `Iso16757Mutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records at compile time (`dsl::protocol_record::tag_u8`).
+header fixed 2
+field format u8
+field tag u8
+record change-exchange-process tag=0
+field payload bytes
+record update-script-limits tag=1
+field payload bytes
+record replace-part-number-rule tag=2
+field payload bytes
+record change-part-number-input tag=3
+field payload bytes
+record remove-part-number-input tag=4
+field payload bytes
+record change-selection-class tag=5
+field payload bytes
+record change-selection-series tag=6
+field payload bytes
+record add-selection-constraint tag=7
+field payload bytes
+record remove-selection-constraint tag=8
+field payload bytes
+record rename-catalogue tag=9
+field payload bytes
+record rename-manufacturer tag=10
+field payload bytes
+record create-product-group tag=11
+field payload bytes
+record delete-product-group tag=12
+field payload bytes
+record rename-product-group tag=13
+field payload bytes
+record create-product tag=14
+field payload bytes
+record delete-product tag=15
+field payload bytes
+record rename-product tag=16
+field payload bytes
+record create-property-definition tag=17
+field payload bytes
+record delete-property-definition tag=18
+field payload bytes
+record create-subject tag=19
+field payload bytes
+record delete-subject tag=20
+field payload bytes

@@ -112,15 +112,15 @@ pub fn reset_playbook_document_effect(document: &PlaybookSnapshot) -> semio_fram
 /// against ONE registered factory type. The six structural verbs were `BatchOnlyPendingRewrite`, so
 /// the Builder window's whole palette was hard dead in the shell
 /// (`UI dispatch rejected action:addStep with interactive-job classification BatchOnlyPendingRewrite`).
-/// `updatePlaybook` stays out: it emits `Emit::amend`, a lane no `ArtifactToolPublicationLane` row
-/// can state truthfully, so claiming `Migrated` for it would trip the guest's own contract check.
-const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setContributions", "setActiveExample", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock"];
+/// `updatePlaybook` emits `Emit::amend`: the retained Artifact lane carries its coalesce key onto the
+/// store publication, so the title field stays one undo step per typing burst.
+const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setContributions", "setActiveExample", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock", "updatePlaybook"];
 const PLAYBOOK_RETAINED_PAYLOAD_SCHEMA: &str = "playbook.program.tool-command.v1";
 const PLAYBOOK_RETAINED_RAW_BYTES: usize = 8_192;
 const PLAYBOOK_RETAINED_WORK_ITEMS: usize = 64;
 
 /// 🚦️ Per-tool publication lanes, read straight off the command bodies: `setContributions` writes
-/// the config store, the six structural verbs emit `artifact_mutations` only.
+/// the config store, the six structural verbs and the coalesced title edit emit `artifact_mutations` only.
 const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -130,6 +130,7 @@ const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract
     ArtifactToolPublicationContract { tool_id: "addBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "removeBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "moveBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "updatePlaybook", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
 fn playbook_retained_contract() -> ToolExecutionContract {
@@ -140,7 +141,7 @@ fn playbook_retained_extent(command: &PlaybookCommand, _snapshot: &PlaybookSnaps
     let bytes = match command {
         PlaybookCommand::SetContributions(payload) => payload.json.len(),
         PlaybookCommand::SetActiveExample(payload) => payload.example_id.len(),
-        PlaybookCommand::UpdatePlaybook(_) => return None,
+        PlaybookCommand::UpdatePlaybook(payload) => payload.value.len(),
         _ => 0,
     };
     (bytes <= PLAYBOOK_RETAINED_RAW_BYTES && PLAYBOOK_RETAINED_TOOL_IDS.contains(&command.command_id())).then_some(1)
@@ -536,7 +537,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         factory: "PlaybookRetainedCommandJobFactory",
         factory_type: PlaybookRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
-        tools: ["setContributions", "setActiveExample", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock"]
+        tools: ["setContributions", "setActiveExample", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock", "updatePlaybook"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -700,7 +701,7 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("addBlock", InteractiveJobClassification::Migrated)
         .action_interactive_job("removeBlock", InteractiveJobClassification::Migrated)
         .action_interactive_job("moveBlock", InteractiveJobClassification::Migrated)
-        .action_interactive_job("updatePlaybook", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("updatePlaybook", InteractiveJobClassification::Migrated)
         .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
         // 🧬️ The example picker's verb. The subset registers `crate::examples::demo`, so the shell
         // dispatches this at boot and on every navbar pick; with no declaration at all every one of

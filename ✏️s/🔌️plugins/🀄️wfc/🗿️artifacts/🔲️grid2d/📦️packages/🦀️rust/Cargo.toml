@@ -43,5 +43,6 @@ semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-styling = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }

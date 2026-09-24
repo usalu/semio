@@ -1,0 +1,607 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type AnalyzeMetrics {
+  total: Int!
+  byPriority: PriorityCount
+  autofixable: Int!
+}
+
+type AnalyzeResult {
+  breachs: [Breach!]!
+  metrics: AnalyzeMetrics!
+}
+
+
+type Breach {
+  id: ID!
+  kindId: ID!
+  kind: Statute!
+  scope: String!
+  file: File
+  folder: Folder
+  line: Int
+  column: Int
+  excerpt: String
+  summary: String!
+  priority: BreachPriority!
+  autofixable: Boolean!
+}
+
+enum BreachPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+type Bundle {
+  id: ID!
+  name: String!
+  root: String!
+  sourceRoot: String
+  projectType: String
+  tags: [String!]!
+  packages: [Package!]!
+  kind: String!
+  uri: String!
+  folders: [Folder!]!
+  files: [File!]!
+  breachs: [Breach!]!
+}
+
+type Checkpoint {
+  id: ID!
+  sha: String!
+  title: String!
+  date: DateTime!
+}
+
+type Contributor {
+  id: ID!
+  github: String!
+  emoji: String
+  name: String!
+  names: [String!]!
+  email: String!
+  emails: [String!]!
+  fingerprint: String
+  fingerprints: [String!]!
+  links: [ContributorLink!]!
+  contributions: ContributorContributions
+  icons: ContributorIcons
+  bundles: [Bundle!]!
+  files: [File!]!
+  tickets: [Ticket!]!
+}
+
+input ContributorAddInput {
+  github: String!
+  name: String
+  names: [String!]
+  email: String
+  emails: [String!]
+  fingerprint: String
+  fingerprints: [String!]
+}
+
+type ContributorBundle {
+  name: String!
+  folders: [ContributorFolder!]!
+}
+
+type ContributorContributions {
+  checkpoints: [Checkpoint!]!
+  tickets: [TicketYear!]!
+  bundles: [ContributorBundle!]!
+}
+
+type ContributorDefinition {
+  name: String!
+}
+
+type ContributorFile {
+  name: String!
+  sections: [ContributorSection!]!
+}
+
+type ContributorFolder {
+  name: String!
+  files: [ContributorFile!]!
+}
+
+type ContributorIcons {
+  avatar: String
+  avatarRound: String
+  github: String
+}
+
+type ContributorLink {
+  name: String!
+  url: String!
+}
+
+type ContributorSection {
+  name: String!
+  definitions: [ContributorDefinition!]!
+}
+
+scalar DateTime
+
+type Definition implements SectionItem {
+  id: ID!
+  name: String!
+  kind: DefinitionKind!
+  file: File!
+  section: Section
+  breachs: [Breach!]!
+  range: Range!
+}
+
+enum DefinitionKind {
+  IMPLEMENTATION
+  INTERFACE
+  CONSTANT
+}
+
+type Draft {
+  id: ID!
+}
+
+input DraftCreateInput {
+  title: String!
+  files: [String!]
+}
+
+type File {
+  id: ID!
+  path: String!
+  uri: String!
+  name: String!
+  extension: String!
+  folder: Folder
+  kind: String!
+  ignored: Boolean!
+  generated: Boolean!
+  bundle: Bundle
+  sections: [Section]
+  definitions: [Definition]
+  breachs: [Breach]
+  content: String
+  contributors: [Contributor!]!
+}
+
+enum FileKind {
+  CODE
+  SCRIPT
+  CONFIG
+  LAB
+  DOCS
+  RESOURCE
+  TEMPLATE
+  LICENSE
+}
+
+input FilterInput {
+  filter: String
+  regex: Boolean
+  matchCase: Boolean
+  matchWholeWord: Boolean
+  showIgnored: Boolean
+  showGenerated: Boolean
+  excludeKinds: [FileKind]
+  includeKinds: [FileKind]
+}
+
+type Folder {
+  id: ID!
+  path: String!
+  uri: String!
+  name: String!
+  kind: String!
+  parent: Folder
+  children: [Folder!]!
+  files: [File!]!
+  ignored: Boolean!
+  generated: Boolean!
+  bundle: Bundle
+  breachs: [Breach!]!
+}
+
+type Goal {
+  id: ID!
+  title: String!
+  description: String
+  prompt: String
+  dueDate: String
+  createdAt: String
+  client: String
+  llm: String
+  effort: String
+  status: String!
+  milestone: Int
+  issue: String
+  parent: String
+  interactions: [Interaction!]!
+}
+
+input GoalChangeInput {
+  id: String!
+  title: String
+  description: String
+  dueDate: String
+  llm: String
+  effort: String
+  parent: String
+  noManagement: Boolean
+}
+
+input GoalCloseInput {
+  id: String!
+  summary: String!
+  noManagement: Boolean
+}
+
+input GoalCreateInput {
+  title: String!
+  description: String!
+  prompt: String!
+  dueDate: String!
+  llm: String!
+  effort: String
+  client: String!
+  parent: String
+  noManagement: Boolean
+  milestone: String
+}
+
+input GoalReopenInput {
+  id: String!
+  prompt: String!
+  client: String!
+  llm: String!
+  effort: String
+  title: String
+  description: String
+  dueDate: String
+  parent: String
+  noManagement: Boolean
+}
+
+
+
+type Interaction {
+  kind: String!
+  prompt: String!
+  checkpoint: String
+  llm: String
+  effort: String
+  date: String!
+  system: String!
+  client: String!
+  author: String!
+}
+
+type InteractionResource {
+  kind: String!
+  prompt: String!
+  checkpoint: String
+  author: String!
+  sourceKind: String!
+  sourceId: String!
+  goalId: String
+  ticketId: String
+  llm: String
+  effort: String
+  date: String!
+  system: String!
+  client: String!
+}
+
+type Location {
+  filePath: String
+  line: Int
+  column: Int
+}
+
+type Mutation {
+  syncManagement: Boolean!
+  goalCreate(input: GoalCreateInput!): Goal
+  goalChange(id: ID!, input: GoalChangeInput!): Goal
+  goalClose(input: GoalCloseInput!): Goal
+  goalReopen(input: GoalReopenInput!): Goal
+  draftCreate(input: DraftCreateInput!): Draft
+  draftDelete(id: String!): Boolean!
+  todoCreate(input: TodoCreateInput!): Todo
+  todoChange(input: TodoChangeInput!): Todo
+  todoDelete(id: ID!): Boolean
+  ticketOpen(input: TicketOpenInput!): Ticket
+  ticketClose(input: TicketCloseInput!): Ticket
+  ticketReopen(input: TicketReopenInput!): Ticket
+  ticketChange(input: TicketChangeInput!): Ticket
+  contributorAdd(input: ContributorAddInput!): Contributor
+  contributorRemove(github: String!): Boolean!
+  folderCreate(path: String!): Folder
+  folderMove(src: String!, dst: String!): Folder
+  folderDelete(path: String!): Boolean!
+  fileCreate(path: String!): File
+  fileMove(src: String!, dst: String!): File
+  fileDelete(path: String!): Boolean!
+  sectionCreate(file: String!, name: String!, parent: String): Section
+  sectionMove(file: String!, oldName: String!, newName: String!): Section
+  sectionDelete(file: String!, name: String!): Boolean!
+  integrate(source: String!, targetSection: String!, targetFile: String!, targetParent: String): File
+  extract(sourceFile: String!, sourceSection: String!, targetFile: String!): File
+}
+
+union Node = Repo | Bundle | Folder | File | Section | Definition | Contributor | Ticket | Policy | Statute | Breach | Draft
+
+type Package {
+  name: String!
+  version: String!
+  path: String!
+  kind: String!
+}
+
+type Policy {
+  id: ID!
+  name: String!
+  description: String
+  scopes: [String!]!
+  groups: [Territory!]!
+  statutes: [Statute!]!
+}
+
+type PriorityCount {
+  high: Int!
+  medium: Int!
+  low: Int!
+}
+
+type Query {
+  node(id: ID!): Node!
+  repo: Repo!
+  technologies(filter: FilterInput): [Technology!]!
+  bundles(filter: FilterInput): [Bundle!]!
+  folders: [Folder!]!
+  files: [File!]!
+  sections: [Section!]!
+  definitions: [Definition!]!
+  contributors(filter: FilterInput): [Contributor!]!
+  todos(filter: FilterInput): [Todo!]!
+  tickets(year: Int, month: Int, day: Int, status: TicketStatus, filter: FilterInput): [Ticket!]!
+  interactions: [InteractionResource!]!
+  drafts: [Draft!]!
+  policies(filter: FilterInput): [Policy!]!
+  statutes: [Statute!]!
+  breachs(scope: String): [Breach!]!
+  bundle(name: String!): Bundle
+  folder(path: String!): Folder
+  file(path: String!): File
+  section(path: String!, sectionPath: [String!]!): Section
+  definition(path: String!, name: String!): Definition
+  contributor(id: String!): Contributor
+  ticket(year: Int!, month: Int!, day: Int!, slug: String!): Ticket
+  policy(id: String!): Policy
+  statute(id: String!): Statute
+  analyze(scope: String): AnalyzeResult!
+}
+
+type Range {
+  start: Int!
+  end: Int!
+}
+
+type Repo {
+  id: ID!
+  name: String!
+  path: String!
+  technologies: [Technology!]!
+  checkpoints(limit: Int): [Checkpoint!]!
+  bundles: [Bundle!]!
+  folders: [Folder!]!
+  files: [File!]!
+  sections: [Section!]!
+  definitions: [Definition!]!
+  contributors: [Contributor!]!
+  goals: [Goal!]!
+  tickets(year: Int, month: Int, day: Int, status: TicketStatus): [Ticket!]!
+  policies: [Policy!]!
+  statutes: [Statute!]!
+  breachs(scope: String): [Breach!]!
+}
+
+type Section implements SectionItem {
+  id: ID!
+  name: String!
+  path: String!
+  file: File
+  parent: Section
+  children: [SectionItem]
+  definitions: [Definition]
+  breachs: [Breach]
+  range: Range!
+}
+
+interface SectionItem {
+  id: ID!
+  name: String!
+  range: Range
+}
+
+type Statute {
+  id: ID!
+  policy: Policy!
+  priority: BreachPriority!
+  autofixable: Boolean!
+  reason: String!
+  solution: String!
+  breachs(scope: String): [Breach!]!
+}
+
+
+type Technology {
+  id: ID!
+  name: String!
+  root: String!
+  kind: String!
+  bundles: [Bundle!]!
+  uri: String!
+}
+
+type Territory {
+  name: String!
+  description: String!
+  scopes: [String!]!
+  groups: [Territory!]!
+  kinds: [Statute!]!
+}
+
+type Ticket {
+  id: ID!
+  year: Int!
+  month: Int!
+  day: Int!
+  slug: String!
+  path: String!
+  llm: String
+  effort: String
+  client: TicketClient
+  checkpoint: String
+  uri: String!
+  title: String!
+  emoji: String
+  prompt: String!
+  summary: String
+  status: TicketStatus!
+  interactions: [Interaction!]!
+  author: Contributor
+  dates: TicketDate!
+  goal: String
+  parent: String
+  bundles: [Bundle!]!
+  files: [File!]!
+}
+
+input TicketChangeInput {
+  year: Int!
+  month: Int!
+  day: Int!
+  slug: String!
+  title: String
+  prompt: String
+  llm: String
+  effort: String
+  client: TicketClient
+  goal: String
+  parent: String
+  noManagement: Boolean
+}
+
+enum TicketClient {
+  COPILOT_CHAT
+  WINDSURF
+  WINDSURF_CHAT
+  ANTIGRAVITY
+  ANTIGRAVITY_CHAT
+  CURSOR
+  CURSOR_CHAT
+  VSCODE
+  CLAUDE_CODE
+  CODEX
+  DROID
+  KIRO_CLI
+}
+
+input TicketCloseInput {
+  year: Int
+  month: Int
+  day: Int
+  slug: String
+  summary: String
+  files: [String!]
+  title: String
+  noManagement: Boolean
+  all: Boolean
+}
+
+type TicketDate {
+  started: DateTime!
+  finished: DateTime
+}
+
+type TicketDay {
+  day: Int!
+  tickets: [Ticket!]!
+}
+
+type TicketMonth {
+  month: Int!
+  days: [TicketDay!]!
+}
+
+input TicketOpenInput {
+  emoji: String!
+  title: String!
+  prompt: String!
+  llm: String
+  effort: String
+  client: TicketClient!
+  noIssue: Boolean
+  draft: String
+  goal: String!
+  parent: String
+  noManagement: Boolean
+  issue: String
+  planId: String
+  specId: String
+}
+
+input TicketReopenInput {
+  year: Int!
+  month: Int!
+  day: Int!
+  slug: String!
+  prompt: String!
+  client: TicketClient!
+  llm: String
+  effort: String
+  title: String
+  draft: String
+  goal: String
+  parent: String
+  noManagement: Boolean
+  planId: String
+  specId: String
+}
+
+enum TicketStatus {
+  OPEN
+  CLOSED
+}
+
+type TicketYear {
+  year: Int!
+  months: [TicketMonth!]!
+}
+
+type Todo {
+  id: ID!
+  name: String!
+  description: String
+  parentId: ID!
+  location: Location
+}
+
+input TodoChangeInput {
+  id: String!
+  name: String
+  description: String
+}
+
+input TodoCreateInput {
+  name: String!
+  description: String!
+  parentId: String!
+}

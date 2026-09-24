@@ -117,10 +117,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use crate::schema::diff::navigate_container;
-    use crate::schema::mutations::{apply_md_mutation, MdPathStep};
-    use crate::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, set_snapshot::SetSnapshot};
-    use crate::schema::snapshot::{MdBlock, MdInline};
+    use semio_s_artifact_stdio_md::schema::diff::navigate_container;
+    use semio_s_artifact_stdio_md::schema::mutations::{apply_md_mutation, MdPathStep};
+    use semio_s_artifact_stdio_md::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, set_snapshot::SetSnapshot};
+    use semio_s_artifact_stdio_md::schema::snapshot::{MdBlock, MdInline};
     use crate::{MdMutation, MdSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::project_md;
 

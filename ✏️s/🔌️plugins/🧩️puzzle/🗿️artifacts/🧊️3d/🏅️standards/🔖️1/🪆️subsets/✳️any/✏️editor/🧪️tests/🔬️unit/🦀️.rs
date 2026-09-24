@@ -2976,6 +2976,9 @@ async fn accept_suggestion_appends_an_object_and_closes_the_menu() {
     pump_brush_suggestions(&mut app, "the popup's search settles", brush_suggestions_settled).await;
     let result = dispatch(&mut app, "acceptSuggestion", None, None).await.expect("acceptSuggestion");
     assert_eq!(object_count(&app), object_count_before + 1);
+    let placed = projection_of(&app).pointer("/objects").and_then(Value::as_array).and_then(|objects| objects.iter().filter_map(|object| object.get("id").and_then(Value::as_str)).find(|id| id.starts_with("puzzle3d.suggestion."))).map(str::to_string).expect("the placed object");
+    let selection = app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+    assert_eq!((selection.granularity.as_str(), selection.ids), (PUZZLE3D_GRANULARITY_OBJECT, vec![placed]), "accept selects the object it placed");
     assert!(
         result.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })),
         "accepting a one-shot suggestion must leave the host-owned utility/tool unchanged: {:?}",
@@ -4907,7 +4910,7 @@ async fn select_same_kind_with_no_selection_leaves_the_selection_untouched() {
 }
 
 /// 🎯️ A selection-scoped command dispatched with NOTHING selected must refuse VISIBLY: exactly one
-/// `Effect::Notify`, no document edit, and no history row. This is the browser defect measured
+/// `Effect::Notify` and no document edit. This is the browser defect measured
 /// 2026-09-09 21:05 — "Duplicate Selection" from the context menu completed with no clone, no command
 /// row and no notice of any kind, which is indistinguishable from a dead menu entry. Every arm that
 /// reads the framework-owned selection is covered here, so the refusal cannot be reintroduced one
@@ -5041,7 +5044,11 @@ async fn delete_selection_shrinks_the_world_census_and_drops_the_deleted_id() {
     assert!(!selection.ids.contains(&object_id), "the deleted id must be gone from the selection, else a second Delete is a silent no-op: {:?}", selection.ids);
     let (again, settled_again) = dispatch_reporting(&mut app, "deleteSelection", None, None).await;
     again.expect("second deleteSelection");
-    assert_eq!(history_rows(&settled_again), 0, "a delete with nothing left selected must record no row");
+    // 🧾️ A Mutation that emits nothing still logs one row (`edit_id: None`), on THIS settle — the same
+    // empty-emit row `dispatch_emit` files under "Without Operations". What must not happen is an edit.
+    let again_rows = history_row_labels(&settled_again);
+    assert_eq!(history_rows(&settled_again), 1, "a delete with nothing selected logs the command and no edit: {again_rows:?}");
+    assert!(again_rows.iter().all(|row| row.contains("deleteSelection") && row.contains("applied=false") && row.contains("ops=0")), "{again_rows:?}");
     assert_eq!(object_count(&app), 1, "and must not touch the document");
 }
 //#endregion 🔖️WorldSelection
@@ -6549,7 +6556,9 @@ async fn open_import_fixture_requests_file_open_then_import_applies_payload() {
 }
 
 /// 📥️ Wave W-AB: re-importing the live fixture is a store identity, not a guest payload dedupe.
-/// `import_fixture` always assigns; a no-op history row means the document fold saw equal content.
+/// `import_fixture` always assigns. The store folds equal content into no edit, so the admitting
+/// settle carries one unapplied `importFixture` row (`ops=0`) — the empty-emit command log — and
+/// the object cores do not move.
 #[semio_framework_async_macros::async_test]
 async fn import_fixture_of_the_live_document_records_whether_identical_content_is_an_edit() {
     let mut app = app().await;
@@ -6558,7 +6567,9 @@ async fn import_fixture_of_the_live_document_records_whether_identical_content_i
     imported.expect("reimport");
     let objects_after = object_cores(&projection_of(&app));
     assert_eq!(objects_after, object_cores(&source), "identical payload must not rewrite object cores");
-    assert_eq!(history_rows(&settled), 0, "identical live fixture is a store no-op, not a guest dedupe: ingress still delivers payload+name");
+    let rows = history_row_labels(&settled);
+    assert_eq!(history_rows(&settled), 1, "identical live fixture logs the command and no edit: {rows:?}");
+    assert!(rows.iter().all(|row| row.contains("importFixture") && row.contains("applied=false") && row.contains("ops=0")), "{rows:?}");
 }
 
 /// 📥️ Wave W-AB #44: leftover `importFixture` against a one-object live fixture applies a distinct two-object JSON.
@@ -6675,7 +6686,8 @@ async fn a_browser_serialized_fixture_payload_imports_every_json_number_spelling
 /// 🧩️ The payload rides the chunk lane the host builds (`importPayloadChunks`, `🛠️ShellHelpers/🟦️.tsx`),
 /// mirrored here by `puzzle3d_import_chunks`, so the law exercises the wire the renderer sends rather than
 /// a shape only tests use. The witnesses are the browser's own three: the object census moves, exactly ONE
-/// history row lands — on the SEALING chunk, never on a staged one — and nothing is refused.
+/// applied history row lands — on the sealing chunk; a staged chunk logs the command with no edit — and
+/// nothing is refused.
 #[semio_framework_async_macros::async_test]
 async fn a_one_hundred_forty_five_kilobyte_distinct_fixture_imports_inside_one_settle() {
     use crate::editor::puzzle3d::commands::import_fixture::puzzle3d_import_chunks;
@@ -6701,15 +6713,16 @@ async fn a_one_hundred_forty_five_kilobyte_distinct_fixture_imports_inside_one_s
             Effect::Notify { message } => Some(message.clone()),
             _ => None,
         }));
-        let rows = history_rows(&settled);
+        let rows = history_row_labels(&settled);
         if index + 1 < count {
-            assert_eq!(rows, 0, "a STAGED chunk is not a document edit; chunk {index} recorded {rows} history row(s): {:?}", history_row_labels(&settled));
+            assert_eq!(rows.len(), 1, "a staged chunk logs the command and no edit; chunk {index}: {rows:?}");
+            assert!(rows.iter().all(|row| row.contains("applied=false") && row.contains("ops=0")), "a staged chunk is not a document edit; chunk {index}: {rows:?}");
             assert_eq!(object_count(&app), seeded, "a staged chunk must not move the document; chunk {index}");
         }
-        settled_rows += rows;
+        settled_rows += rows.iter().filter(|row| row.contains("applied=true") && !row.contains("ops=0")).count();
     }
     assert!(notices.is_empty(), "a payload inside the declared import budget must not be refused: {notices:?}");
-    assert_eq!(settled_rows, 1, "the whole chunked import records exactly one history row");
+    assert_eq!(settled_rows, 1, "the whole chunked import records exactly one applied history row");
     assert_eq!(object_count(&app), seeded + 1, "a product-sized distinct payload must replace the document it was imported over");
 }
 
@@ -6736,7 +6749,9 @@ async fn an_unchunked_over_ceiling_import_refuses_with_a_notice() {
         })
         .collect();
     assert_eq!(notices.len(), 1, "an over-ceiling import publishes exactly one notice: {notices:?}");
-    assert_eq!(history_rows(&settled), 0, "a refused import records no history row");
+    let rows = history_row_labels(&settled);
+    assert_eq!(history_rows(&settled), 1, "a refused import logs the command and no edit: {rows:?}");
+    assert!(rows.iter().all(|row| row.contains("importFixture") && row.contains("applied=false") && row.contains("ops=0")), "{rows:?}");
     assert_eq!(object_count(&app), seeded, "a refused import leaves the document alone");
     eprintln!("[DEBUG] B59 unchunked refusal notice={notices:?}");
 }

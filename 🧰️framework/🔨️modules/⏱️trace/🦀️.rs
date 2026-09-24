@@ -511,12 +511,23 @@ pub struct Watchdog {
 
 impl Watchdog {
     pub fn start(site: &'static str, operation: OperationId, generation: Generation, stage: InteractiveStage) -> Watchdog {
-        Watchdog { site, operation, generation, stage, start_us: try_now_us(), finished: false }
+        Self::start_at(site, operation, generation, stage, try_now_us())
     }
 
-    pub fn finish(mut self) -> CallbackVerdict {
+    /// ⏱️ [`Watchdog::start`] from a reading its caller already made at the site's entry, so a
+    /// driver that reads the clock to derive a step budget does not read it a second time.
+    pub fn start_at(site: &'static str, operation: OperationId, generation: Generation, stage: InteractiveStage, start_us: Option<u64>) -> Watchdog {
+        Watchdog { site, operation, generation, stage, start_us, finished: false }
+    }
+
+    pub fn finish(self) -> CallbackVerdict {
+        self.finish_at(try_now_us())
+    }
+
+    /// 🏁️ [`Watchdog::finish`] at a reading its caller made at the site's exit and reuses.
+    pub fn finish_at(mut self, end_us: Option<u64>) -> CallbackVerdict {
         self.finished = true;
-        self.report(try_now_us())
+        self.report(end_us)
     }
 
     pub fn is_admitted(&self) -> bool {
@@ -941,7 +952,13 @@ fn trace_ring() -> &'static Mutex<BoundedRing<TraceEvent, TRACE_RING_CAPACITY>> 
 }
 
 fn push_trace_event(operation: OperationId, generation: Generation, stage: TraceStage) -> Option<TraceEvent> {
-    let Some(at_us) = try_now_us() else {
+    record_trace_event_at(operation, generation, stage, try_now_us())
+}
+
+/// 🛰️ Records one trace event stamped with a reading its caller already holds — a step driver's
+/// entry or exit reading, a job's latest in-step reading — instead of reading the clock for it.
+pub fn record_trace_event_at(operation: OperationId, generation: Generation, stage: TraceStage, at_us: Option<u64>) -> Option<TraceEvent> {
+    let Some(at_us) = at_us else {
         OMITTED_EVENTS.fetch_add(1, Ordering::Relaxed);
         return None;
     };

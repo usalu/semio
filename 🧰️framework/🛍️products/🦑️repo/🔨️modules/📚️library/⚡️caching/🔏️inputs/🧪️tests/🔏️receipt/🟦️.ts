@@ -34,7 +34,7 @@ export async function testGeneratorInputReceipt(workspace: string, generated: st
   const caching = resolve(import.meta.dir, "../../.."), policy = JSON.parse(readFileSync(join(caching, "🔣️policy.json"), "utf8"));
   const contract = policy.generatorInputs[fixture.kind], project = JSON.parse(readFileSync(join(caching, "📋️project.json"), "utf8"));
   assert.equal(contract.target, "repo:generator-inputs");
-  assert.equal(project.targets["generator-inputs"].cache, false);
+  assert.equal(project.targets["generator-inputs"].cache, true);
   assert.deepEqual(project.targets["generator-inputs"].outputs, [`{workspaceRoot}/${contract.output}`]);
   const { isDiscoverySkipDirectory } = await import(resolve(caching, "../🔍️discovery/🟦️.ts"));
   assert.equal(isDiscoverySkipDirectory(contract.output.split("/")[0]), true, "The digest must not become its own catalog input");
@@ -46,5 +46,5 @@ export async function testGeneratorInputReceipt(workspace: string, generated: st
   assert.ok(target.dependsOn.includes(contract.target));
   assert.ok(target.inputs.some((input: any) => input.dependentTasksOutputFiles === contract.output));
   assert.ok(!target.inputs.some((input: any) => input.runtime?.includes("generator-inputs")));
-  console.log("[DEBUG] Digest publication matches stable JSON/Ajv, preserves unchanged bytes and mtime, rejects invalid writes and has an uncached Nx producer PASS");
+  console.log("[DEBUG] Digest publication matches stable JSON/Ajv, preserves unchanged bytes and mtime, rejects invalid writes and has a cacheable Nx producer PASS");
 }

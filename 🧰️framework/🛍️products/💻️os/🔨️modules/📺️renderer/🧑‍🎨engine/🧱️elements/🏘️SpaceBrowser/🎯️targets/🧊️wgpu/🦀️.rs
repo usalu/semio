@@ -334,6 +334,7 @@ pub fn space_browser_rows_usable(phase: SpaceBrowserPhase, row_count: usize) -> 
 pub enum SpaceBrowserLabel {
     Title,
     Search,
+    Refresh,
     Open,
     Create,
     CreateName,
@@ -360,6 +361,8 @@ pub fn space_browser_label(key: SpaceBrowserLabel, locale: Locale) -> &'static s
         (SpaceBrowserLabel::Title, Locale::De) => "Spaces",
         (SpaceBrowserLabel::Search, Locale::En) => "Search spaces",
         (SpaceBrowserLabel::Search, Locale::De) => "Spaces durchsuchen",
+        (SpaceBrowserLabel::Refresh, Locale::En) => "Refresh spaces",
+        (SpaceBrowserLabel::Refresh, Locale::De) => "Spaces aktualisieren",
         (SpaceBrowserLabel::Open, Locale::En) => "Open",
         (SpaceBrowserLabel::Open, Locale::De) => "Öffnen",
         (SpaceBrowserLabel::Create, Locale::En) => "Create a space",

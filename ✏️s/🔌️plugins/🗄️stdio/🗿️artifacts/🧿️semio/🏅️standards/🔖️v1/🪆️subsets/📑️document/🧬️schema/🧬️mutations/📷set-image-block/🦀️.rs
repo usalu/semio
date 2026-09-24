@@ -8,11 +8,11 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetImageBlock {
-    pub(crate) path: DocBlockPath,
-    pub(crate) image_id: String,
-    pub(crate) alt: String,
-    pub(crate) width: Option<f64>,
-    pub(crate) height: Option<f64>,
+    pub path: DocBlockPath,
+    pub image_id: String,
+    pub alt: String,
+    pub width: Option<f64>,
+    pub height: Option<f64>,
 }
 
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for SetImageBlock {

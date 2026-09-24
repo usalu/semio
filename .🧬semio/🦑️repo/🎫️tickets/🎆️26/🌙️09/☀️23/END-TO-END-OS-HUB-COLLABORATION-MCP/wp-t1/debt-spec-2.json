@@ -1,0 +1,14 @@
+[
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🔮️oracles/🔣️.json",
+  "oracle": "manifold-mesh-measure",
+  "debt": {
+   "reachableFrom": [
+    "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f",
+   "plan": "`three-mesh-bvh`, the closest-point helper this oracle links for its symmetric Hausdorff bound, is a runtime dependency of the r3f world renderer and the fem package. The judge itself, manifold-3d, stays test-only, and the semio mesh subject links neither. The debt retires when those renderers stop needing a BVH from the three ecosystem. No path may join."
+  }
+ }
+]

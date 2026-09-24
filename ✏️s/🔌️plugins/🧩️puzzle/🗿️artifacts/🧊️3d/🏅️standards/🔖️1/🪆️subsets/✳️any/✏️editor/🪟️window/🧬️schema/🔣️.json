@@ -67,12 +67,13 @@
     "Puzzle3dSuggestionMenu": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "windowId", "vortexFullId"],
+      "required": ["x", "y", "windowId", "vortexFullId", "submenu"],
       "properties": {
         "x": { "type": "number" },
         "y": { "type": "number" },
         "windowId": { "type": "string" },
-        "vortexFullId": { "type": "string" }
+        "vortexFullId": { "type": "string" },
+        "submenu": { "type": "boolean" }
       }
     },
     "Puzzle3dWindowConfig": {

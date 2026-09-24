@@ -1335,6 +1335,14 @@ fn parse_flow_viewport(args: &dsl::DslValue) -> Result<semio_framework_os_kernel
 }
 
 impl ArtifactEditor for Generation2dPlayApp {
+    /// 🧩️ The loaded-parent child projection every archive load and maintenance swap asks for before a
+    /// decoded document may replace the store. `Generation2dSnapshot` declares no child slot, so the
+    /// projection is honestly empty; without it every replacement faulted with `editor did not declare
+    /// a loaded-parent child projection`.
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("generation2d.child-projection"), error.to_string()))
+    }
+
     /// 🛍️ Publishes the whole registered flow operator catalogue once per app instance on the reserved
     /// `framework.section.catalogue` retained surface — never on the node-graph scene, whose fixed
     /// `UI_FIXED_BYTES` admission it exceeds threefold with the real `brep`/`math` sets installed

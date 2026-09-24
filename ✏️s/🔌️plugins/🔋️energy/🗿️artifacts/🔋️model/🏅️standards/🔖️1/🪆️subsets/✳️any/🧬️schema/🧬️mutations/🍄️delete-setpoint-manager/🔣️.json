@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteSetpointManager",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-setpoint-manager",
-  "binaryTag": null,
+  "binaryTag": 166,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

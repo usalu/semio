@@ -1,4 +1,5 @@
 import { existsSync, rmSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { join, relative, resolve } from "node:path";
 import { coverageDir } from "../../🟦️.ts";
 import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
@@ -92,6 +93,11 @@ export class CleanScript extends Script {
 
   /** ⚡️Bounds the shared cache root through its own owner instead of size-sweeping it — `clean` never walks or deletes under it directly. */
   private runCachePrune(dry: boolean): void {
+    const processes = spawnSync("ps", ["-axo", "command="], { encoding: "utf8", windowsHide: true });
+    if (typeof processes.stdout === "string" && /\bnx(?:\.js)?\s+run\s+['"]?@semio-tech\//.test(processes.stdout)) {
+      console.log(`[clean] cache-prune skipped active Semio Tech build`);
+      return;
+    }
     const cachingScript = join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts");
     const status = runCmdStatus("bun", [cachingScript, "cache-prune", ...(dry ? ["--dry-run"] : [])], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log(`[clean] cache-prune ${status === 0 ? "ok" : `unavailable (exit ${status})`} ${repoCacheDirectory(this.root)}`);

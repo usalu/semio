@@ -67,7 +67,7 @@ impl Puzzle5dImportFault {
 /// 🧱️ What one accepted chunk did to its run.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Puzzle5dImportStep {
-    /// 🧱️ The chunk landed and the run is still open — no document edit, no history row.
+    /// 🧱️ The chunk landed and the run is still open — no document edit. The command logs one unapplied row.
     Staged { next_chunk: usize, chunk_count: usize },
     /// ✅️ The chunk closed the run; the pages are the whole document, each one page of the paged owner.
     Complete(Vec<String>),
@@ -375,8 +375,9 @@ fn puzzle5d_import_value(args: &Value) -> Result<Option<JsonValue>, Puzzle5dImpo
 
 /// 📥 Replaces the live document with the reassembled one as ONE document edit.
 ///
-/// 🧩️ A chunk that does not close its run stages and ABORTS — no document edit and no history row
-/// for a partial import — and every refusal publishes a named, localized notice: silence is the one
+/// 🧩️ A chunk that does not close its run stages and ABORTS — no document edit for a partial import.
+/// The command still logs one unapplied history row, the same empty-emit row every lane-less
+/// Mutation owes, and every refusal publishes a named, localized notice: silence is the one
 /// answer an import must never give.
 pub fn import_fixture(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let outcome = args.ok_or(Puzzle5dImportFault::Payload).and_then(puzzle5d_import_value);

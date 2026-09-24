@@ -48,7 +48,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `change-stroke-color`. The pair is the expectation; quick-xml reads both halves."
@@ -102,7 +102,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `change-stroke-width`. The pair is the expectation; quick-xml reads both halves."
@@ -156,7 +156,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `create-layer`. The pair is the expectation; quick-xml reads both halves."
@@ -210,7 +210,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `create-node`. The pair is the expectation; quick-xml reads both halves."
@@ -264,7 +264,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `delete-layer`. The pair is the expectation; quick-xml reads both halves."
@@ -318,7 +318,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `delete-node`. The pair is the expectation; quick-xml reads both halves."
@@ -372,7 +372,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `drag-nodes`. The pair is the expectation; quick-xml reads both halves."
@@ -426,7 +426,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `flatten-node`. The pair is the expectation; quick-xml reads both halves."
@@ -480,7 +480,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `group-nodes`. The pair is the expectation; quick-xml reads both halves."
@@ -534,7 +534,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `move-node`. The pair is the expectation; quick-xml reads both halves."
@@ -588,7 +588,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `reorder-nodes`. The pair is the expectation; quick-xml reads both halves."
@@ -642,7 +642,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `replace-fill`. The pair is the expectation; quick-xml reads both halves."
@@ -696,7 +696,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `replace-path`. The pair is the expectation; quick-xml reads both halves."
@@ -750,7 +750,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `rotate-node`. The pair is the expectation; quick-xml reads both halves."
@@ -804,7 +804,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `scale-node`. The pair is the expectation; quick-xml reads both halves."
@@ -858,7 +858,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `unflatten-node`. The pair is the expectation; quick-xml reads both halves."
@@ -912,7 +912,7 @@
       "privacy": "no-personal-data"
     },
     "comparisonProfile": "xml-element-tree",
-    "toleranceProfile": "exact",
+    "toleranceProfile": "drawing-exact",
     "reproducible": true,
     "family": "drawing-svg-carrier",
     "notes": "Authored (before, after) SVG pair for `ungroup-node`. The pair is the expectation; quick-xml reads both halves."

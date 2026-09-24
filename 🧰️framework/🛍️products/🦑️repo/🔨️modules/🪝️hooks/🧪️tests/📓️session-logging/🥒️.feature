@@ -21,7 +21,7 @@ Feature: An agent session is recorded exactly as far as the repository configura
   @level-fundamental
   @mode-differential
   Scenario: Every configuration is parsed and obeyed the same way
-    Given the session vectors local://📓️sessions.json
+    Given the session vectors shared://📓️session-logging/📓️sessions.json
     When each configuration document is parsed and each session replayed under it
     Then every implementation projects the same switches and the same number of recorded entries
 
@@ -29,7 +29,7 @@ Feature: An agent session is recorded exactly as far as the repository configura
   @level-fundamental
   @mode-differential
   Scenario: minimal keeps the event, standard adds the response, full adds the native payload
-    Given the session vectors local://📓️sessions.json
+    Given the session vectors shared://📓️session-logging/📓️sessions.json
     When one refused invocation is recorded at each detail level
     Then every implementation projects the same members for every level
 
@@ -37,7 +37,7 @@ Feature: An agent session is recorded exactly as far as the repository configura
   @level-fundamental
   @mode-differential
   Scenario: A session that does not identify itself is still recorded, under a resolvable identity
-    Given the session vectors local://📓️sessions.json
+    Given the session vectors shared://📓️session-logging/📓️sessions.json
     When each session is replayed with session logging on
     Then every implementation records it under the same identity and the same uri
 
@@ -45,7 +45,7 @@ Feature: An agent session is recorded exactly as far as the repository configura
   @level-fundamental
   @mode-conformance
   Scenario: No version hook ever reaches the session log
-    Given the session vectors local://📓️sessions.json
+    Given the session vectors shared://📓️session-logging/📓️sessions.json
     When the version hook session is replayed with session logging on at full detail
     Then every implementation records nothing at all
 
@@ -53,6 +53,6 @@ Feature: An agent session is recorded exactly as far as the repository configura
   @level-fundamental
   @mode-differential
   Scenario: The recorded plan is folded only while the plan switch is on
-    Given the session vectors local://📓️sessions.json
+    Given the session vectors shared://📓️session-logging/📓️sessions.json
     When the planning session is replayed with the plan switch on and then off
     Then every implementation projects the folded plan in the first case and no plan in the second

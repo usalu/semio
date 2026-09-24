@@ -7,6 +7,9 @@
     },
     "base": {
       "name": "RFC 8259 base surface, the scope I-JSON constrains"
+    },
+    "geojson": {
+      "name": "GeoJSON -- RFC 7946 geographic feature documents, a WGS 84 profile of RFC 8259"
     }
   }
 }

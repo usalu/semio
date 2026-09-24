@@ -8,7 +8,7 @@ Feature: A mutation returns its payload, changes the records and leaves an event
   while the other is wrong: the payload the executor projects, and the state the context is left in.
 
   Every implementation builds ONE context from the frozen records shared://🔣️repo-records.json and
-  runs the whole script local://🔣️mutations.json against it in order, so a later mutation sees what
+  runs the whole script shared://✏️mutation-execution/🔣️mutations.json against it in order, so a later mutation sees what
   an earlier one wrote — `goalChange` finds the goal `goalCreate` made, `ticketClose` closes the
   ticket `ticketOpen` opened, `integrate` reads the file `extract` produced.
 
@@ -17,7 +17,7 @@ Feature: A mutation returns its payload, changes the records and leaves an event
   @mode-conformance
   Scenario: The whole write script produces the same payloads, records and events
     Given the frozen repository shared://🔣️repo-records.json
-    And the write script local://🔣️mutations.json
+    And the write script shared://✏️mutation-execution/🔣️mutations.json
     When each implementation runs every mutation of the script in order against one context
     Then every implementation returns the same payloads and leaves the same records and events
 

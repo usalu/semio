@@ -3915,7 +3915,7 @@
     },
     "DocumentBrowserActorInterfaces": {
       "type": "array",
-      "maxItems": 18,
+      "maxItems": 19,
       "uniqueItems": true,
       "items": {
         "enum": [
@@ -3936,7 +3936,8 @@
           "wasi:io/error@0.2.0",
           "wasi:io/poll@0.2.0",
           "wasi:io/streams@0.2.0",
-          "wasi:random/insecure-seed@0.2.9"
+          "wasi:random/insecure-seed@0.2.9",
+          "wasi:random/random@0.2.9"
         ]
       }
     },
@@ -6199,26 +6200,22 @@
         }
       ]
     },
-    "BrowserDocumentOpenTransportSocketGrant": {
+    "DocumentSocketGrantReceiptV1": {
+      "description": "The answer to a document open-plan exchange (POST /spaces/{space}/documents/{document}/socket-grants): the actor the next `semio.session.v1` upgrade of the same credential is admitted as, and until when. It carries no secret: the upgrade presents the session or share credential itself, and the hub admits the oldest pending grant of that credential's binding.",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "schema",
         "protocol",
-        "grant",
         "actorId",
         "expiresAtMs"
       ],
       "properties": {
         "schema": {
-          "const": "semio.hub.socket-grant/v1"
+          "const": "semio.hub.document-socket-grant/v1"
         },
         "protocol": {
-          "const": "semio.socket.v1"
-        },
-        "grant": {
-          "type": "string",
-          "pattern": "^socket\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$"
+          "const": "semio.session.v1"
         },
         "actorId": {
           "type": "string",
@@ -6267,7 +6264,7 @@
           "$ref": "#/$defs/BrowserDocumentOpenTransportPlan"
         },
         "socketGrant": {
-          "$ref": "#/$defs/BrowserDocumentOpenTransportSocketGrant"
+          "$ref": "#/$defs/DocumentSocketGrantReceiptV1"
         },
         "expected": {
           "type": "object",
@@ -6304,7 +6301,7 @@
               "maxLength": 1024
             },
             "protocol": {
-              "const": "semio.socket.v1"
+              "const": "semio.session.v1"
             },
             "helloSchema": {
               "type": "string",

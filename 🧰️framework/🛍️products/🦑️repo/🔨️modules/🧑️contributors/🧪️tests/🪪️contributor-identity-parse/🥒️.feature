@@ -17,6 +17,6 @@ Feature: An author line resolves to the contributor who wrote it
   Scenario: Splitting and resolving every identity line agrees everywhere
     Given the contributor documents shared://🧑️‍💻️contributor-documents.json
     And the real git identity lines shared://🏁️checkpoint-log.json
-    And the contributors schema asset://🧬️schema/🔣️.json
+    And the contributors schema schema://repo.contributors/ContributorDocument
     When each implementation splits every identity line and resolves the name and email it carries against the documents
     Then every implementation projects the same split, the same alias per line and the same contributor list, and the oracle finds every document schema-valid

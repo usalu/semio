@@ -103,9 +103,12 @@ macro_rules! with_admitted_artifact {
         terminal
     }};
 }
+use crate::db_storage::writer::{release, WalWriterGuard, WalWriterTable};
+use crate::db_storage::DbIoWriterReleaseStep;
 use pack::{ByteRange, ContentHash};
 use semio_framework_async::WorkerPool;
-use sqlx::postgres::{PgPool, PgPoolOptions};
+use sqlx::postgres::{PgConnection, PgPool, PgPoolOptions};
+use sqlx::{ConnectOptions, Connection};
 use std::sync::Arc;
 
 use crate::db_storage::DB_IO_MAX_READ_BYTES;
@@ -125,6 +128,7 @@ fn postgres_wal_segment_state(sealed: bool) -> WalSegmentState {
 struct PostgresDbIoExecutor {
     pool: PgPool,
     database_url: DbIoText,
+    writers: std::sync::Mutex<Option<Box<WalWriterTable<PostgresWalWriterGuard>>>>,
     backend_terminal: std::sync::atomic::AtomicBool,
     active_operation: u64,
     close_future: std::sync::Mutex<Option<semio_framework_async::oneshot::Receiver<()>>>,
@@ -136,8 +140,15 @@ impl PostgresDbIoExecutor {
     /// `PostgresStorage`. `async` because connecting a pool and running DDL are themselves I/O — the
     /// caller (ultimately the hub's `#[tokio::main]`) already awaits this on a real runtime.
     fn new(database_url: DbIoText) -> Result<Self, DbError> {
-        let pool = PgPoolOptions::new().max_connections(16).connect_lazy(database_url.as_str()).map_err(map_sqlx_error)?;
-        Ok(Self { pool, database_url, backend_terminal: std::sync::atomic::AtomicBool::new(false), active_operation: 0, close_future: std::sync::Mutex::new(None) })
+        let pool = crate::db_storage_driver_runtime::within(|| PgPoolOptions::new().max_connections(16).connect_lazy(database_url.as_str())).map_err(map_sqlx_error)?;
+        Ok(Self {
+            pool,
+            database_url,
+            writers: std::sync::Mutex::new(Some(Box::new(WalWriterTable::unbound()))),
+            backend_terminal: std::sync::atomic::AtomicBool::new(false),
+            active_operation: 0,
+            close_future: std::sync::Mutex::new(None),
+        })
     }
 
     fn reserve_driver_output(&self, maximum_capacity: u64) -> Result<DbIoDriverReservation, DbError> {
@@ -174,8 +185,8 @@ fn map_sqlx_error(err: sqlx::Error) -> DbError {
     DbError::Io(err.to_string())
 }
 
-/// @emoji 🆕️ Like `map_sqlx_error`, but a unique-violation becomes `DbError::AlreadyExists(what())`
-/// instead of the generic `DbError::Io` — used by every `create_segment`-shaped write.
+/// @emoji 🆕️ Like `map_session_error`, but a unique-violation becomes `DbError::AlreadyExists(what())`
+/// — used by the writer session's `create_segment`.
 // 🚫️async: E1 pure accessor called from sync `.map_err(|err| map_create_error(...))` closures — see R9
 fn map_create_error(err: sqlx::Error, what: impl FnOnce() -> String) -> DbError {
     if let Some(db_err) = err.as_database_error() {
@@ -183,7 +194,7 @@ fn map_create_error(err: sqlx::Error, what: impl FnOnce() -> String) -> DbError 
             return DbError::AlreadyExists(what());
         }
     }
-    map_sqlx_error(err)
+    map_session_error(err)
 }
 //#endregion 🔖️ErrorMapping
 
@@ -220,38 +231,182 @@ fn validate_truncate(sealed: bool, current_len: u64, new_len: u64) -> Result<(),
 }
 //#endregion 🔖️Conversions
 
+//#region 🔖️WriterFence
+/// @emoji 🔒️ Namespace hashed with the document into the session advisory-lock key — contract
+/// `🔐️writer/🧫️fixtures/🌐️remote-guard` (`postgres.lockNamespace`).
+const WAL_WRITER_LOCK_NAMESPACE: &str = "semio/db/wal-writer/v1";
+
+/// @emoji 🏷️ `application_name` of every writer session, so an operator (or the conformance law's
+/// independent `psql`) can name the exact session that holds a document.
+const WAL_WRITER_APPLICATION_NAME: &str = "semio-wal-writer";
+
+/// @emoji 💓 Server-side TCP keepalive of a writer session: a vanished host's lock is released after
+/// `idle + interval × count` seconds instead of the kernel's two-hour default.
+const WAL_WRITER_KEEPALIVE: [(&str, &str); 3] = [("tcp_keepalives_idle", "10"), ("tcp_keepalives_interval", "5"), ("tcp_keepalives_count", "3")];
+
+/// @emoji 🔑 The 64-bit advisory-lock key of one document: the first eight bytes (big-endian) of
+/// `sha256(namespace ‖ 0x00 ‖ document)`.
+fn wal_writer_lock_key(document: &str) -> i64 {
+    let mut hash = semio_framework_hash::Sha256::new();
+    hash.update(WAL_WRITER_LOCK_NAMESPACE.as_bytes());
+    hash.update(&[0]);
+    hash.update(document.as_bytes());
+    let digest = hash.finalize();
+    i64::from_be_bytes(digest[..8].try_into().expect("sha256 digest has eight leading bytes"))
+}
+
+/// @emoji 🧵 A dedicated connection whose session holds the document's advisory lock; every WAL
+/// mutation of the permit runs on this session, so a terminated session can never write.
+struct PostgresWalWriterSession {
+    connection: PgConnection,
+    key: i64,
+}
+
+impl PostgresWalWriterSession {
+    async fn open(pool: &PgPool, document: &DbIoText) -> Result<Self, DbError> {
+        let options = (*pool.connect_options()).clone().application_name(WAL_WRITER_APPLICATION_NAME).options(WAL_WRITER_KEEPALIVE);
+        let mut connection = options.connect().await.map_err(map_sqlx_error)?;
+        let key = wal_writer_lock_key(document.as_str());
+        let locked = sqlx::query_as::<_, (bool,)>("SELECT pg_try_advisory_lock($1)").bind(key).fetch_one(&mut connection).await;
+        match locked {
+            Ok((true,)) => Ok(Self { connection, key }),
+            Ok((false,)) => {
+                let _ = connection.close().await;
+                Err(DbError::Conflict("WAL document already has a PostgreSQL writer session".to_string()))
+            }
+            Err(error) => Err(map_sqlx_error(error)),
+        }
+    }
+}
+
+/// @emoji 🚨️ Classifies an error raised on the writer session: transport loss and the server's
+/// operator-intervention / connection-exception classes (`57P*`, `08*`) end the session, and with it
+/// the advisory lock, so they answer `Fenced` — the caller then drops the session instead of lending it again.
+fn map_session_error(err: sqlx::Error) -> DbError {
+    let ended = match err.as_database_error() {
+        Some(db_err) => db_err.code().is_some_and(|code| code.starts_with("57P") || code.starts_with("08")),
+        None => matches!(err, sqlx::Error::Io(_) | sqlx::Error::Tls(_) | sqlx::Error::Protocol(_) | sqlx::Error::WorkerCrashed | sqlx::Error::PoolClosed | sqlx::Error::PoolTimedOut),
+    };
+    if ended {
+        return DbError::Fenced { expected: 0, actual: 0 };
+    }
+    map_sqlx_error(err)
+}
+
+/// @emoji 🔔 Completion witness of a detached unlock; wakes the release controller and a parked backend close.
+struct PostgresWalWriterUnlock {
+    done: std::sync::atomic::AtomicBool,
+    waker: std::sync::Mutex<Option<std::task::Waker>>,
+}
+
+/// @emoji 🔐️ One document's cross-process writer fence: the lock session, lent to one pinned
+/// operation at a time, then an in-flight unlock, then terminal.
+enum PostgresWalWriterGuard {
+    Held { session: Option<PostgresWalWriterSession>, backend: DbIoBackendControl },
+    Unlocking(Arc<PostgresWalWriterUnlock>),
+    Terminal,
+}
+
+impl PostgresWalWriterGuard {
+    fn lend(&mut self, generation: u64) -> Result<PostgresWalWriterSession, DbError> {
+        match self {
+            Self::Held { session, .. } => session.take().ok_or(DbError::Fenced { expected: 0, actual: generation }),
+            _ => Err(DbError::Closed),
+        }
+    }
+
+    fn restore(&mut self, lent: PostgresWalWriterSession) {
+        if let Self::Held { session, .. } = self {
+            *session = Some(lent);
+        }
+    }
+}
+
+impl WalWriterGuard for PostgresWalWriterGuard {
+    fn close_step(&mut self) -> Result<bool, DbError> {
+        match self {
+            Self::Held { session, backend } => {
+                let backend = *backend;
+                let Some(mut lent) = session.take() else {
+                    *self = Self::Terminal;
+                    return Ok(true);
+                };
+                let unlock = Arc::new(PostgresWalWriterUnlock { done: std::sync::atomic::AtomicBool::new(false), waker: std::sync::Mutex::new(None) });
+                let signal = unlock.clone();
+                drop(crate::db_storage_driver_runtime::detach_unit(Box::pin(async move {
+                    let _ = sqlx::query("SELECT pg_advisory_unlock($1)").bind(lent.key).execute(&mut lent.connection).await;
+                    let _ = lent.connection.close().await;
+                    signal.done.store(true, std::sync::atomic::Ordering::Release);
+                    if let Some(waker) = signal.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                        waker.wake();
+                    }
+                    release::request_controller(backend);
+                })));
+                *self = Self::Unlocking(unlock);
+                Ok(true)
+            }
+            Self::Unlocking(unlock) => {
+                if !unlock.done.load(std::sync::atomic::Ordering::Acquire) {
+                    return Ok(true);
+                }
+                *self = Self::Terminal;
+                Ok(false)
+            }
+            Self::Terminal => Ok(false),
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        matches!(self, Self::Terminal)
+    }
+
+    fn awaiting_wake(&self) -> bool {
+        matches!(self, Self::Unlocking(unlock) if !unlock.done.load(std::sync::atomic::Ordering::Acquire))
+    }
+
+    fn register_wake(&self, waker: &std::task::Waker) {
+        if let Self::Unlocking(unlock) = self {
+            *unlock.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(waker.clone());
+            if unlock.done.load(std::sync::atomic::Ordering::Acquire) {
+                waker.wake_by_ref();
+            }
+        }
+    }
+}
+//#endregion 🔖️WriterFence
+
 //#region 🔖️WalStorage
 impl PostgresDbIoExecutor {
-    async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+    async fn create_segment(connection: &mut PgConnection, document: &str, index: u64) -> Result<(), DbError> {
         let idx = to_i64(index)?;
         sqlx::query("INSERT INTO db_wal_segment (document_id, segment_index) VALUES ($1, $2)")
-            .bind(document.0.as_str())
+            .bind(document)
             .bind(idx)
-            .execute(&self.pool)
+            .execute(&mut *connection)
             .await
             .map_err(|err| map_create_error(err, || format!("wal segment {index} for {document} already exists")))?;
         Ok(())
     }
 
-    async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
+    async fn append(&self, connection: &mut PgConnection, document: &str, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
         let prepared = db_io_prepare_platform(&bytes)?.await?;
         let result = async {
             let idx = to_i64(index)?;
-            let doc = document.0.as_str();
-            let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
-            let row: Option<(bool,)> = sqlx::query_as("SELECT sealed FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2 FOR UPDATE").bind(doc).bind(idx).fetch_optional(&mut *tx).await.map_err(map_sqlx_error)?;
+            let doc = document;
+            let mut tx = connection.begin().await.map_err(map_session_error)?;
+            let row: Option<(bool,)> = sqlx::query_as("SELECT sealed FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2 FOR UPDATE").bind(doc).bind(idx).fetch_optional(&mut *tx).await.map_err(map_session_error)?;
             let sealed = row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?.0;
             if sealed {
                 return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
             }
-            let (new_len,): (i64,) = sqlx::query_as("UPDATE db_wal_segment SET bytes = bytes || $1 WHERE document_id = $2 AND segment_index = $3 RETURNING octet_length(bytes)")
+            let (new_len,): (i64,) = sqlx::query_as("UPDATE db_wal_segment SET bytes = bytes || $1 WHERE document_id = $2 AND segment_index = $3 RETURNING octet_length(bytes)::BIGINT")
                 .bind(prepared.as_slice())
                 .bind(doc)
                 .bind(idx)
                 .fetch_one(&mut *tx)
                 .await
-                .map_err(map_sqlx_error)?;
-            tx.commit().await.map_err(map_sqlx_error)?;
+                .map_err(map_session_error)?;
+            tx.commit().await.map_err(map_session_error)?;
             Ok(new_len as u64)
         }
         .await;
@@ -259,24 +414,18 @@ impl PostgresDbIoExecutor {
         result
     }
 
-    async fn sync(&self, _document: &ArtifactId, _index: u64, class: DurabilityClass) -> Result<(), DbError> {
-        // 🎯️ Every write above already ran as a committed statement/transaction, and Postgres
-        // fsyncs its own WAL at COMMIT under the default `synchronous_commit = on` — so `Fsync` is
-        // already satisfied by the time `append`/`truncate_tail` return, with nothing left for this
-        // method to force. `Quorum` (replica acknowledgement) is a `db_cluster` concern layered on
-        // top of Postgres's own (optionally synchronous) replication, not something a single
-        // connection pool can negotiate — deliberately left as an extension seam rather than a
-        // half-implemented `SET synchronous_commit` toggle here.
-        let _ = class;
-        {
-            Ok(())
-        }
+    /// @emoji 💾️ Every write above already ran as a committed statement/transaction on the writer
+    /// session, and Postgres fsyncs its own WAL at COMMIT under the default `synchronous_commit =
+    /// on`, so `Fsync` is satisfied when `append`/`truncate_tail` return. `Quorum` (replica
+    /// acknowledgement) is `db_cluster`'s concern over Postgres's own replication.
+    fn sync(_class: DurabilityClass) -> Result<(), DbError> {
+        Ok(())
     }
 
-    async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+    async fn seal(connection: &mut PgConnection, document: &str, index: u64) -> Result<(), DbError> {
         let idx = to_i64(index)?;
         let result: Option<(bool,)> =
-            sqlx::query_as("UPDATE db_wal_segment SET sealed = TRUE WHERE document_id = $1 AND segment_index = $2 RETURNING sealed").bind(document.0.as_str()).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+            sqlx::query_as("UPDATE db_wal_segment SET sealed = TRUE WHERE document_id = $1 AND segment_index = $2 RETURNING sealed").bind(document).bind(idx).fetch_optional(&mut *connection).await.map_err(map_session_error)?;
         result.map(|_| ()).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))
     }
 
@@ -284,19 +433,19 @@ impl PostgresDbIoExecutor {
         check_len(range.len, DB_IO_MAX_READ_BYTES, "wal_storage::read")?;
         let idx = to_i64(index)?;
         let doc = document.0.as_str();
-        let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(doc).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+        let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes)::BIGINT FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(doc).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let current_len = len_row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?.0 as u64;
         let (offset, len) = validate_read_range(current_len, range)?;
         let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
         let (bytes,): (Vec<u8>,) =
-            sqlx::query_as("SELECT substring(bytes FROM $1 FOR $2) FROM db_wal_segment WHERE document_id = $3 AND segment_index = $4").bind(offset + 1).bind(len).bind(doc).bind(idx).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
+            sqlx::query_as("SELECT substring(bytes FROM $1::integer FOR $2::integer) FROM db_wal_segment WHERE document_id = $3 AND segment_index = $4").bind(offset + 1).bind(len).bind(doc).bind(idx).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
         let mut output = DbIoPageWriter::try_reserve_for_operation(self.active_operation, bytes.len().div_ceil(DB_IO_PAGE_BYTES)).map_err(DbIoPageWriterRejected::into_error)?;
         db_io_write_observed_bytes(reservation, bytes, &mut output).await
     }
 
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
         let idx = to_i64(index)?;
-        let row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document.0.as_str()).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+        let row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes)::BIGINT FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document.0.as_str()).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         row.map(|(len,)| len as u64).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))
     }
 
@@ -318,28 +467,62 @@ impl PostgresDbIoExecutor {
         Ok(result)
     }
 
-    async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
+    async fn truncate_tail(connection: &mut PgConnection, document: &str, index: u64, new_len: u64) -> Result<(), DbError> {
         let idx = to_i64(index)?;
-        let doc = document.0.as_str();
-        let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
-        let row: Option<(bool, i64)> = sqlx::query_as("SELECT sealed, octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2 FOR UPDATE").bind(doc).bind(idx).fetch_optional(&mut *tx).await.map_err(map_sqlx_error)?;
+        let mut tx = connection.begin().await.map_err(map_session_error)?;
+        let row: Option<(bool, i64)> =
+            sqlx::query_as("SELECT sealed, octet_length(bytes)::BIGINT FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2 FOR UPDATE").bind(document).bind(idx).fetch_optional(&mut *tx).await.map_err(map_session_error)?;
         let (sealed, current_len) = row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         validate_truncate(sealed, current_len as u64, new_len)?;
-        sqlx::query("UPDATE db_wal_segment SET bytes = substring(bytes FROM 1 FOR $1) WHERE document_id = $2 AND segment_index = $3").bind(to_i64(new_len)?).bind(doc).bind(idx).execute(&mut *tx).await.map_err(map_sqlx_error)?;
-        tx.commit().await.map_err(map_sqlx_error)?;
+        sqlx::query("UPDATE db_wal_segment SET bytes = substring(bytes FROM 1 FOR $1::integer) WHERE document_id = $2 AND segment_index = $3").bind(to_i64(new_len)?).bind(document).bind(idx).execute(&mut *tx).await.map_err(map_session_error)?;
+        tx.commit().await.map_err(map_session_error)?;
         Ok(())
     }
 
-    async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+    async fn delete_segment(connection: &mut PgConnection, document: &str, index: u64) -> Result<(), DbError> {
         let idx = to_i64(index)?;
-        sqlx::query("DELETE FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document.0.as_str()).bind(idx).execute(&self.pool).await.map_err(map_sqlx_error)?;
+        sqlx::query("DELETE FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document).bind(idx).execute(&mut *connection).await.map_err(map_session_error)?;
         Ok(())
+    }
+
+    fn writer_table(&mut self) -> Result<&mut WalWriterTable<PostgresWalWriterGuard>, DbError> {
+        self.writers.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut().ok_or(DbError::Closed)
+    }
+
+    /// @emoji 🔐️ Runs one pinned WAL mutation on its permit's lock session. A session the server
+    /// ended is never lent again: the permit is fenced from then on and its release is immediate.
+    async fn fenced_wal_mutation(&mut self, operation: u64, task: &mut DbIoTask) -> Result<DbIoResult, DbError> {
+        let (key, backend, document) = task.writer_stamp().map(|(key, backend, document)| (key, backend, document.clone())).ok_or_else(|| DbError::Internal("PostgreSQL WAL mutation lost its writer stamp".to_string()))?;
+        let mut session = self.writer_table()?.pinned_guard_mut(key, backend, &document, operation)?.lend(key.generation())?;
+        let connection = &mut session.connection;
+        let result = match task {
+            DbIoTask::WalCreate { index, .. } => Self::create_segment(connection, document.as_str(), *index).await.map(|()| DbIoResult::Unit),
+            DbIoTask::WalAppend { index, input, .. } => {
+                let input = input.take_for_async_driver();
+                self.append(connection, document.as_str(), *index, input).await.map(DbIoResult::Length)
+            }
+            DbIoTask::WalSync { class, .. } => Self::sync(*class).map(|()| DbIoResult::Unit),
+            DbIoTask::WalSeal { index, .. } => Self::seal(connection, document.as_str(), *index).await.map(|()| DbIoResult::Unit),
+            DbIoTask::WalTruncate { index, new_len, .. } => Self::truncate_tail(connection, document.as_str(), *index, *new_len).await.map(|()| DbIoResult::Unit),
+            DbIoTask::WalDelete { index, .. } => Self::delete_segment(connection, document.as_str(), *index).await.map(|()| DbIoResult::Unit),
+            _ => Err(DbError::Internal("PostgreSQL fenced WAL mutation taxonomy".to_string())),
+        };
+        if let Err(DbError::Fenced { .. }) = result {
+            drop(session);
+            return Err(DbError::Fenced { expected: 0, actual: key.generation() });
+        }
+        self.writer_table()?.pinned_guard_mut(key, backend, &document, operation)?.restore(session);
+        result
     }
 }
 //#endregion 🔖️WalStorage
 
 //#region 🔖️SnapshotStorage
 impl SnapshotStorage for PostgresDbIoExecutor {
+    fn publication_scope(&self) -> usize {
+        std::ptr::from_ref(self).addr()
+    }
+
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         let gen = to_i64(generation)?;
         let prepared = db_io_prepare_platform(&bytes)?.await?;
@@ -360,7 +543,7 @@ impl SnapshotStorage for PostgresDbIoExecutor {
     async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
         let gen = to_i64(generation)?;
         let doc = document.0.as_str();
-        let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(doc).bind(gen).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+        let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes)::BIGINT FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(doc).bind(gen).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let len = len_row.ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?.0;
         check_len(len as u64, DB_IO_MAX_READ_BYTES, "snapshot_storage::read_generation")?;
         let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
@@ -406,7 +589,7 @@ impl PayloadStorage for PostgresDbIoExecutor {
     }
 
     async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
-        let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+        let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes)::BIGINT FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let len = len_row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?.0;
         check_len(len as u64, DB_IO_MAX_READ_BYTES, "payload_storage::get")?;
         let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
@@ -426,7 +609,7 @@ impl PayloadStorage for PostgresDbIoExecutor {
     }
 
     async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
-        let row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+        let row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes)::BIGINT FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         row.map(|(len,)| len as u64).ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
     }
 }
@@ -492,7 +675,7 @@ impl IndexStorage for PostgresDbIoExecutor {
     async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
         let run = to_i64(run_id)?;
         let doc = document.0.as_str();
-        let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(doc).bind(run).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+        let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes)::BIGINT FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(doc).bind(run).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let len = len_row.ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?.0;
         check_len(len as u64, DB_IO_MAX_READ_BYTES, "index_storage::read_run")?;
         let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
@@ -650,20 +833,20 @@ impl PostgresDbIoExecutor {
     async fn wal_read_into(&self, document: &str, index: u64, range: ByteRange, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
         check_len(range.len, DB_IO_MAX_READ_BYTES, "wal_storage::read")?;
         let index = to_i64(index)?;
-        let current: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document).bind(index).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+        let current: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes)::BIGINT FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document).bind(index).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let current = current.ok_or_else(|| DbError::NotFound("PostgreSQL WAL segment not found".to_string()))?.0 as u64;
         let (offset, len) = validate_read_range(current, range)?;
         let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
         let (bytes,): (Vec<u8>,) =
-            sqlx::query_as("SELECT substring(bytes FROM $1 FOR $2) FROM db_wal_segment WHERE document_id = $3 AND segment_index = $4").bind(offset + 1).bind(len).bind(document).bind(index).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
+            sqlx::query_as("SELECT substring(bytes FROM $1::integer FOR $2::integer) FROM db_wal_segment WHERE document_id = $3 AND segment_index = $4").bind(offset + 1).bind(len).bind(document).bind(index).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
         db_io_write_observed_bytes(reservation, bytes, output).await
     }
 
     async fn named_blob_read_into(&self, table: &'static str, document: &str, ordinal: u64, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
         let ordinal = to_i64(ordinal)?;
         let (length_sql, read_sql) = match table {
-            "snapshot" => ("SELECT octet_length(bytes) FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2", "SELECT bytes FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2"),
-            "index" => ("SELECT octet_length(bytes) FROM db_index_run WHERE document_id = $1 AND run_id = $2", "SELECT bytes FROM db_index_run WHERE document_id = $1 AND run_id = $2"),
+            "snapshot" => ("SELECT octet_length(bytes)::BIGINT FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2", "SELECT bytes FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2"),
+            "index" => ("SELECT octet_length(bytes)::BIGINT FROM db_index_run WHERE document_id = $1 AND run_id = $2", "SELECT bytes FROM db_index_run WHERE document_id = $1 AND run_id = $2"),
             _ => return Err(DbError::Internal("PostgreSQL named blob taxonomy mismatch".to_string())),
         };
         let length: Option<(i64,)> = sqlx::query_as(length_sql).bind(document).bind(ordinal).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
@@ -675,7 +858,7 @@ impl PostgresDbIoExecutor {
     }
 
     async fn payload_read_into(&self, hash: &ContentHash, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
-        let length: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+        let length: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes)::BIGINT FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let length = length.ok_or_else(|| DbError::NotFound("PostgreSQL payload not found".to_string()))?.0 as u64;
         check_len(length, DB_IO_MAX_READ_BYTES, "PostgreSQL payload")?;
         let reservation = self.reserve_driver_output(DB_IO_MAX_READ_BYTES)?;
@@ -699,7 +882,12 @@ impl PostgresDbIoExecutor {
     async fn drive_task(&mut self, operation: u64, task: &mut DbIoTask) -> Result<DbIoResult, DbError> {
         self.active_operation = operation;
         match task {
-            DbIoTask::WalWriterAcquire { .. } => Err(DbError::Unavailable("Postgres has no mounted session-scoped WAL writer fence".to_string())),
+            DbIoTask::WalWriterAcquire { backend, document } => {
+                let session = PostgresWalWriterSession::open(&self.pool, document).await?;
+                let backend = *backend;
+                let permit = self.writer_table()?.acquire_with(document, move || Ok(PostgresWalWriterGuard::Held { session: Some(session), backend }))?;
+                Ok(DbIoResult::WalWriter(permit))
+            }
             DbIoTask::BackendOpen { path, .. } => {
                 if path.as_str() != self.database_url.as_str() {
                     return Err(DbError::InvalidArgument("PostgreSQL URL authority mismatch".to_string()));
@@ -707,9 +895,7 @@ impl PostgresDbIoExecutor {
                 bootstrap_schema(&self.pool).await?;
                 Ok(DbIoResult::Unit)
             }
-            DbIoTask::WalCreate { .. } | DbIoTask::WalAppend { .. } | DbIoTask::WalSync { .. } | DbIoTask::WalSeal { .. } | DbIoTask::WalTruncate { .. } | DbIoTask::WalDelete { .. } => {
-                Err(DbError::Unavailable("remote WAL mutation requires a mounted session-scoped writer fence".to_string()))
-            }
+            DbIoTask::WalCreate { .. } | DbIoTask::WalAppend { .. } | DbIoTask::WalSync { .. } | DbIoTask::WalSeal { .. } | DbIoTask::WalTruncate { .. } | DbIoTask::WalDelete { .. } => self.fenced_wal_mutation(operation, task).await,
             DbIoTask::WalRead { document, index, range, output, .. } => Ok(DbIoResult::Pages(self.wal_read_into(document.as_str(), *index, *range, output).await?)),
             DbIoTask::WalLength { document, index, .. } => Ok(DbIoResult::Length(with_admitted_artifact!(operation, document, artifact, self.segment_len(artifact, *index))?)),
             DbIoTask::WalState { document, index, .. } => Ok(DbIoResult::WalSegmentState(with_admitted_artifact!(operation, document, artifact, self.segment_state(artifact, *index))?)),
@@ -784,6 +970,35 @@ impl PostgresDbIoExecutor {
 }
 
 impl DbIoTaskExecutor for PostgresDbIoExecutor {
+    fn supports_writer_authority(&self) -> bool {
+        true
+    }
+
+    fn bind_writer_control(&mut self, control: DbIoBackendControl) -> Result<(), DbError> {
+        self.writer_table()?.bind(control)
+    }
+
+    fn writer_release_step(&self, _context: &mut std::task::Context<'_>) -> Result<DbIoWriterReleaseStep, DbError> {
+        self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut().map_or(Ok(DbIoWriterReleaseStep::Idle), WalWriterTable::release_requested_step)
+    }
+
+    fn pin_writer_operation(&self, operation: u64, task: &DbIoTask) -> Result<(), DbError> {
+        let Some((key, backend, document)) = task.writer_stamp() else { return Ok(()) };
+        self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut().ok_or(DbError::Closed)?.pin_operation(key, backend, document, operation).map(|_| ())
+    }
+
+    fn finish_writer_operation(&self, operation: u64, task: &DbIoTask) -> Result<(), DbError> {
+        let Some((key, backend, document)) = task.writer_stamp() else { return Ok(()) };
+        if let Some(table) = self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_deref_mut() {
+            table.finish_operation_if_pinned(key, backend, document, operation)?;
+        }
+        Ok(())
+    }
+
+    fn owner_backing_bytes(&self) -> u64 {
+        (size_of::<Self>() + size_of::<WalWriterTable<PostgresWalWriterGuard>>()) as u64
+    }
+
     fn mode(&self) -> DbIoExecutorMode {
         DbIoExecutorMode::AsyncNative
     }
@@ -815,6 +1030,20 @@ impl DbIoTaskExecutor for PostgresDbIoExecutor {
     }
 
     fn close_backend_step(&mut self, context: &mut std::task::Context<'_>) -> Result<bool, DbError> {
+        {
+            let mut owner = self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(table) = owner.as_deref_mut() {
+                table.register_wake(context.waker());
+                if table.close_step()? {
+                    return Ok(false);
+                }
+                if !table.terminal_is_empty() {
+                    return Err(DbError::Internal("PostgreSQL WAL writer table returned a false terminal witness".to_string()));
+                }
+                owner.take();
+                return Ok(false);
+            }
+        }
         if self.pool.is_closed() {
             self.close_future.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             self.backend_terminal.store(true, std::sync::atomic::Ordering::Release);
@@ -837,7 +1066,7 @@ impl DbIoTaskExecutor for PostgresDbIoExecutor {
     }
 
     fn backend_terminal_is_empty(&self) -> bool {
-        self.backend_terminal.load(std::sync::atomic::Ordering::Acquire) && self.pool.is_closed()
+        self.backend_terminal.load(std::sync::atomic::Ordering::Acquire) && self.pool.is_closed() && self.writers.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
     }
 }
 //#endregion 🔖️TypedExecutor
@@ -966,6 +1195,10 @@ impl WalStorage for PostgresStorage {
 }
 
 impl SnapshotStorage for PostgresStorage {
+    fn publication_scope(&self) -> usize {
+        std::ptr::from_ref(self).addr()
+    }
+
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         postgres_unit(self.execute(DbIoTask::SnapshotWrite { backend: self.control, document: postgres_document(document)?, generation, input: bytes }).await?)
     }

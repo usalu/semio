@@ -248,6 +248,9 @@ mod subject {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
         let document = parse_part21(text).map_err(|error| format!("parse_part21 failed: {error}"))?;
         let mut snapshot = StepSnapshot::from_part21_document(&document);
+        if spec.str("kind") == "no-mutation" {
+            return Ok(write_part21(&snapshot.to_part21_document()).into_bytes());
+        }
         let mutation = mutation_from_spec(spec, &snapshot.clone())?;
         apply_step_cc6_mutation_checked(&mut snapshot, &mutation)?;
         Ok(write_part21(&snapshot.to_part21_document()).into_bytes())
@@ -277,8 +280,10 @@ mod subject {
         let mutated = apply_and_encode(&input, &spec)?;
         let mutated_text = std::str::from_utf8(&mutated).map_err(|error| format!("output is not UTF-8: {error}"))?;
         let mut snapshot = StepSnapshot::from_part21_document(&parse_part21(mutated_text).map_err(|error| format!("parse_part21 failed: {error}"))?);
-        for step in inverse_step_cc6_mutation(&base, &mutation_from_spec(&spec, &base)?) {
-            apply_step_cc6_mutation_checked(&mut snapshot, &step)?;
+        if kind != "no-mutation" {
+            for step in inverse_step_cc6_mutation(&base, &mutation_from_spec(&spec, &base)?) {
+                apply_step_cc6_mutation_checked(&mut snapshot, &step)?;
+            }
         }
         let restored = write_part21(&snapshot.to_part21_document()).into_bytes();
         let projection = project_step_ap214_cc6(&restored)?;
@@ -304,10 +309,10 @@ mod subject {
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
+        built = built.oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), mutate_oracle).oracle(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), inverse_oracle);
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
+            built = built.subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "mutate"), subject::mutate).subject(&semio_s_plugin_stdio_test_oracle::law::scenario_id(kind, "inverse"), subject::inverse);
         }
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);

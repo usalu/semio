@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteAnnualSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-annual-schedule",
-  "binaryTag": null,
+  "binaryTag": 264,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

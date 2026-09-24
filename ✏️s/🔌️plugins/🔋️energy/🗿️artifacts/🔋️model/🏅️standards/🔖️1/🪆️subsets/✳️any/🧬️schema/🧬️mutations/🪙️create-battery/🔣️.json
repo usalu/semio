@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateBattery",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-battery",
-  "binaryTag": null,
+  "binaryTag": 207,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

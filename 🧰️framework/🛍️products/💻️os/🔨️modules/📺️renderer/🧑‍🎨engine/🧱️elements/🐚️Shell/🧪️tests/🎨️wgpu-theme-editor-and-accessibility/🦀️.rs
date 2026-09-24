@@ -181,7 +181,7 @@ fn the_embedded_theme_document_carries_every_section_react_enumerates() {
 /// independent value oracle with the same id, label, paint token and metric.
 #[test]
 fn canonical_theme_fixture_matches_the_json_oracle() {
-    let text = include_str!("../🧱️fixtures/🎨️canonical-theme-document/🔣️.json");
+    let text = include_str!("../../🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
     let document = ThemeDocument::parse(text).expect("canonical theme fixture");
     let oracle: Value = serde_json::from_str(text).expect("serde_json oracle");
     assert_eq!(document.id, oracle["id"].as_str().expect("id"));
@@ -195,7 +195,7 @@ fn canonical_theme_fixture_matches_the_json_oracle() {
 
 #[test]
 fn canonical_theme_parser_rejects_shapes_reacts_parser_rejects() {
-    let text = include_str!("../🧱️fixtures/🎨️canonical-theme-document/🔣️.json");
+    let text = include_str!("../../🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
     let mut value: Value = serde_json::from_str(text).expect("canonical fixture");
     value.as_object_mut().expect("theme object").remove("canvasFonts");
     assert_eq!(ThemeDocument::parse(&value.to_string()), None);

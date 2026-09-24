@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePvSystemAzimuth",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-pv-system-azimuth",
-  "binaryTag": null,
+  "binaryTag": 204,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

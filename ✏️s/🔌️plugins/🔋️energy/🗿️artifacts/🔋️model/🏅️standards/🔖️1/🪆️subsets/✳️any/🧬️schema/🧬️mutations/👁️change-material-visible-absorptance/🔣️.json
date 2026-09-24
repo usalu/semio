@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeMaterialVisibleAbsorptance",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-material-visible-absorptance",
-  "binaryTag": null,
+  "binaryTag": 69,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

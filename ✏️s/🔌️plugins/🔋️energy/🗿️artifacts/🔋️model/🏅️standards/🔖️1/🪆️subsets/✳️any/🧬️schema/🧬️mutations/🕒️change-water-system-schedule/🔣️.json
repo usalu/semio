@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeWaterSystemSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-water-system-schedule",
-  "binaryTag": null,
+  "binaryTag": 235,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

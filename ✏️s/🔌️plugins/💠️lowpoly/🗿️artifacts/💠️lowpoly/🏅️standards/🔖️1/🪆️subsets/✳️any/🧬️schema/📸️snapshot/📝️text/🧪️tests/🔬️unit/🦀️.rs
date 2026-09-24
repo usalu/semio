@@ -43,55 +43,39 @@ async fn dsl_parse_rejects_unterminated_string_literal() {
     assert!(result.is_err());
 }
 
-// ⚠️ The four tests below were rewritten for the hand-rolled hex/bracket codec (this ticket,
-// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` — see `📸️snapshot/🦀️.rs`'s module doc
-// comment for why `dsl::DslRecord`'s derive-based quoted-string grammar had to go). The old
-// literal test strings used the RETIRED derive grammar (`schema="…" objects=[ id="…" … ]`,
-// backslash-escaped quotes, `#`-comments) and no longer exercise this parser at all.
+/// 🧬️ Printed text of the default projection, the base every derived-grammar failure case edits.
+fn default_text() -> String {
+    print_dsl(&crate::schema::default_snapshot())
+}
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_parse_rejects_invalid_bool_value() {
-    use crate::schema::snapshot::enc_str;
-    let text = format!("schema={}\nobjects=[[{},{},[0,0,0,0,0,0,1,1,1],notabool,[],[]]]", enc_str("lowpoly.document"), enc_str("o"), enc_str("O"),);
-    let result = parse_dsl(&text);
-    assert!(result.is_err());
+    let text = default_text().replacen("smooth-shading=false", "smooth-shading=notabool", 1);
+    assert!(parse_dsl(&text).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_parse_rejects_object_missing_required_field() {
-    use crate::schema::snapshot::enc_str;
-    let text = format!("schema={}\nobjects=[[{}]]", enc_str("lowpoly.document"), enc_str("o"));
-    let result = parse_dsl(&text);
-    assert!(result.is_err());
+    let text = default_text().replacen(" id=obj-1", "", 1);
+    assert!(parse_dsl(&text).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_parse_rejects_malformed_value_inside_a_nested_block() {
-    use crate::schema::snapshot::enc_str;
-    let text = format!("schema={}\nobjects=[[{},{},[notanumber,0,0,0,0,0,1,1,1],false,[],[]]]", enc_str("lowpoly.document"), enc_str("o"), enc_str("O"),);
-    let result = parse_dsl(&text);
-    assert!(result.is_err());
+    let text = default_text().replacen("scale=1,1,1", "scale=notanumber,1,1", 1);
+    assert!(parse_dsl(&text).is_err());
 }
 
-/// 🧬️ The hand-rolled parser does not skip `#` comment lines (matching `✳️object`/`✳️kit`'s own
-/// hand-rolled codecs, which have no comment support either — the old derive-based grammar's
-/// comment handling did not survive the switch). An unrecognized line is a hard parse error.
 #[semio_framework_async_macros::async_test]
-async fn dsl_parse_rejects_unrecognized_lines() {
-    use crate::schema::snapshot::enc_str;
-    let text = format!("# a leading comment\nschema={}\nobjects=[]\n", enc_str("lowpoly.document"));
-    let result = parse_dsl(&text);
-    assert!(result.is_err(), "comment lines are not a recognized field, unlike the retired derive grammar");
+async fn dsl_parse_rejects_unrecognized_fields() {
+    let text = default_text().replacen("smooth-shading=false", "smooth-shading=false unknown-field=1", 1);
+    assert!(parse_dsl(&text).is_err());
 }
 
-/// 🧬️ Hex-encoding sidesteps escaping ENTIRELY — a stronger guarantee than the old
-/// backslash-escape grammar: ANY string content (quotes, backslashes, newlines) round-trips
-/// with zero special-casing, because it is never interpreted as DSL syntax in the first place.
 #[semio_framework_async_macros::async_test]
-async fn dsl_parse_handles_arbitrary_characters_via_hex_encoding() {
-    use crate::schema::snapshot::enc_str;
+async fn dsl_parse_round_trips_quotes_backslashes_and_newlines() {
     let tricky_name = "Quote \" and \\ and newline\ndone";
-    let text = format!("schema={}\nobjects=[[{},{},[0,0,0,0,0,0,1,1,1],false,[],[]]]", enc_str("lowpoly.document"), enc_str("o1"), enc_str(tricky_name),);
-    let projection = parse_dsl(&text).expect("hex-encoded strings never need escaping");
-    assert_eq!(projection.objects[0].name, tricky_name);
+    let mut projection = crate::schema::default_snapshot();
+    projection.objects[0].name = tricky_name.into();
+    assert_eq!(parse_dsl(&print_dsl(&projection)).expect("escaped strings round-trip").objects[0].name, tricky_name);
 }

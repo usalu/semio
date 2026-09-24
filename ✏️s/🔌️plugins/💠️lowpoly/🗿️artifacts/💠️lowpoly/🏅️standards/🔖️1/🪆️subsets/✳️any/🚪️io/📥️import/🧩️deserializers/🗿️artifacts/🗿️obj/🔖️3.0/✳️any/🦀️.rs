@@ -1,26 +1,18 @@
 //! lowpoly <- obj
 //!
-//! Two paths, both over the real `engine::decode_obj` grammar (never a second bespoke parser):
-//! 1. 🔒️ Lossless: when the export leaf's hex-embedded lowpoly DSL comment
-//!    (`LOWPOLY_DSL_COMMENT_PREFIX`) is present, the full document is read back from it.
-//! 2. 🕸️ Geometry: any other OBJ (Blender, etc.) becomes real lowpoly objects — one per `o`
+//! Geometry over the real `engine::decode_obj` grammar (never a second bespoke parser): any OBJ
+//! (Blender, etc.) becomes real lowpoly objects — one per `o`
 //!    object (falling back to `g` groups, then a single object), names from the file, vertex
 //!    indices remapped per object, n-gons kept as n-gons. More than 64 parts merge into one
 //!    object; a file without faces is rejected loudly.
 use crate::io::mesh_geometry::{compact_part, snapshot_from_parts, text_error, PolygonPart};
-use crate::schema::snapshot::text::parse_dsl;
-use crate::schema::snapshot::{dec_str, LowpolySnapshot};
+use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_obj::engine::decode_obj;
 use semio_s_artifact_stdio_obj::ObjSnapshot;
 
 pub fn register() {}
 
 pub fn deserialize(from: &ObjSnapshot) -> Result<LowpolySnapshot, store::TextError> {
-    let prefix = crate::io::export::serializers::artifacts::obj::v3_0::any::LOWPOLY_DSL_COMMENT_PREFIX;
-    if let Some(hex) = from.unknown_statements.iter().find_map(|u| u.raw.strip_prefix(prefix)) {
-        let text = dec_str(hex).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
-        return parse_dsl(&text);
-    }
     snapshot_from_obj_geometry(from)
 }
 

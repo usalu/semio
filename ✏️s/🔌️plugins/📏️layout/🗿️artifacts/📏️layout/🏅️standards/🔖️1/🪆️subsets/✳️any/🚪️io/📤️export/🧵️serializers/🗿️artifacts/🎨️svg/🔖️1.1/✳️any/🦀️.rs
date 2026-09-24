@@ -1,16 +1,18 @@
-//! Serialize layout to stdio.svg.
+//! 📏️ layout → svg — the pages laid side by side as a drawing (`layout_snapshot_to_semio_drawing`: page
+//! boundaries, frames with their fills and strokes, and any imported background trace) written as
+//! SVG 1.1 by `s.stdio.semio/v1/drawing`'s own export leaf.
+//!
+//! 🔖 `IoFidelity::Lossy`: a picture of the spreads — story text, styles and links are not drawn.
+use crate::io::layout_snapshot_to_semio_drawing;
 use crate::LayoutSnapshot;
-use semio_s_artifact_stdio_svg::schema::snapshot::{parse_svg_xml, SvgSnapshot};
-use semio_s_artifact_stdio_svg::STDIO_SVG_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{encode_drawing, SemioDrawingFormat};
 
 pub fn register() {}
 
-pub fn serialize(from: &LayoutSnapshot) -> Result<SvgSnapshot, store::PackError> {
-    let text = <LayoutSnapshot as store::ArtifactDsl>::print_dsl(from);
-    let doc = parse_svg_xml(&text).map_err(store::PackError::Schema)?;
-    Ok(SvgSnapshot { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc })
+pub fn serialize_bytes(from: &LayoutSnapshot) -> Result<Vec<u8>, store::PackError> {
+    encode_drawing(&layout_snapshot_to_semio_drawing(from), SemioDrawingFormat::Svg).map_err(|error| store::PackError::Schema(format!("layout→svg: {error}")))
 }
 
 pub fn serialize_text(from: &LayoutSnapshot) -> Result<String, store::PackError> {
-    Ok(<LayoutSnapshot as store::ArtifactDsl>::print_dsl(from))
+    String::from_utf8(serialize_bytes(from)?).map_err(|error| store::PackError::Schema(error.to_string()))
 }

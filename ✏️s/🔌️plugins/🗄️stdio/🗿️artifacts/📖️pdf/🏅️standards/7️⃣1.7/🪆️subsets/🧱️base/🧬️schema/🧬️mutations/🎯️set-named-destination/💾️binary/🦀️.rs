@@ -1,6 +1,6 @@
 //! 🎯️ Direct binary identity for `set-named-destination`.
 
-pub const TAG: u8 = 43;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-named-destination");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetNamedDestination;

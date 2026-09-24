@@ -1,0 +1,5 @@
+semio-s-artifact-stdio-pptx
+semio-s-artifact-flow-flow
+semio-s-artifact-raster-raster
+semio-s-artifact-draw-drawing
+semio-s-artifact-fem-2d

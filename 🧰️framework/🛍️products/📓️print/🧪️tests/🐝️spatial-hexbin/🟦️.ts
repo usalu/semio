@@ -48,7 +48,7 @@ export default defineTestAdapter({
       oracle: (ctx: AdapterContext) => ({ projection: { "spatial/hexbin": rows(ctx).flatMap((row) => bins(Number(row.radius))) } }),
       /** 🎯️ `\SemioVizHexbin` over the same points and radii. */
       subject: async (ctx: AdapterContext): Promise<{ projection: ProbeProjection }> => {
-        const records = await compileVizProbe(ctx.fixture("local://hexbin.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+        const records = await compileVizProbe(ctx.fixture("shared://🐝️spatial-hexbin/hexbin.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
         return { projection: probeProjection(roundProbeNumbers(records, DECIMALS)) };
       },
     },

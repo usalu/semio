@@ -33,10 +33,11 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
   that carries the child body — the `scene` array the siblings `🌾️mutate-playbook-1` and
   `🌵️mutate-forms-1` already put in their own doc strings — plus the child-addressing rule, closes it.
   Second, `identity-round-trip`. The committed grammar is the repository-wide PLACEHOLDER: its whole
-  body is `payload = OCTET+` and its header production declares `"schema" SP "stdio.json"`, while the
-  committed artifact's first line is `semio writer.writer.dsl v1` and its body is four HEX-ENCODED
-  scalars plus a `[hex,hex]` child-handle pair. Nothing committed says the values are hex, that the
-  pair is `(childId, target)`, or how the second element's
+  body is `payload = OCTET+` and its header production declares `"schema" SP "writer.writer.snapshot"`, while the
+  committed artifact's first line is `semio writer.writer.dsl v1` and its body is the derived record
+  spelling `schema=… id=… language-id=… uri="…" text="…" document=child_id=… target="…"`: five quoted or
+  bare scalars, the body text inline, and a nested `(child_id, target)` child-handle record. Nothing
+  committed states that spelling, its string escapes, or how the target's
   `<artifactId>!<kind>@<standard>/<subset>` spelling is split. The sibling `mutate-note-1` shows a
   real grammar exists for this family; `📖️playbook`, `📋️forms`, `🌿️vcs` and `🔌️wires` report the
   same gap.

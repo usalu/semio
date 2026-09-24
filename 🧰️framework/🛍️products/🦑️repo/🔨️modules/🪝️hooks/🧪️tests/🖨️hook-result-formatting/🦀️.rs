@@ -10,7 +10,7 @@ mod subject {
     use semio_framework_repo_hooks::{dispatch_hook, micro_commit_argv, render_hook_output, resolve_native_event_name, run_micro_commit, validate_hook_event, HookContext, InertEnvironment, InertTestFileResolver, ProcessRunner, RecordedProcessRunner};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
 
-    const VECTORS: &str = "local://🖨️invocations.json";
+    const VECTORS: &str = "shared://🖨️hook-result-formatting/🖨️invocations.json";
     const BARE_CLIENT: &str = "claude-code";
     const WRAPPING_CLIENT: &str = "copilot-chat";
 

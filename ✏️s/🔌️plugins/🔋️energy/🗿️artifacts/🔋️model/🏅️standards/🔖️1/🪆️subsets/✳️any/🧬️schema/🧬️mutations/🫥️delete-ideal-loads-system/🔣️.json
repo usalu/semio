@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteIdealLoadsSystem",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-ideal-loads-system",
-  "binaryTag": null,
+  "binaryTag": 136,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

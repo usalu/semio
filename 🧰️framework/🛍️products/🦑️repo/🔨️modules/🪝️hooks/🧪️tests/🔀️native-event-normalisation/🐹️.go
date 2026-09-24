@@ -13,7 +13,7 @@ import (
 
 // region 🔖️Vectors
 
-const nativeEventVectors = "local://🔀️native-events.json"
+const nativeEventVectors = "shared://🔀️native-event-normalisation/🔀️native-events.json"
 
 type nativeEventVector struct {
 	ID             string          `json:"id"`

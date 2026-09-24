@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeGlazingMaterialThickness",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-glazing-material-thickness",
-  "binaryTag": null,
+  "binaryTag": 277,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

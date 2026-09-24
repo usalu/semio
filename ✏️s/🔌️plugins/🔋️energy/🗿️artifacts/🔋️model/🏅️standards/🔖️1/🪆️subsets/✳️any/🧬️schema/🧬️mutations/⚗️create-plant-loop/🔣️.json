@@ -7,7 +7,7 @@
   "aggregateVariant": "CreatePlantLoop",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-plant-loop",
-  "binaryTag": null,
+  "binaryTag": 178,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

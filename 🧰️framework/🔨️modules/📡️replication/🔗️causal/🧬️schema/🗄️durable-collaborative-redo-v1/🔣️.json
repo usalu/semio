@@ -1,0 +1,181 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/replication/durable-collaborative-redo-v1.json",
+  "title": "Semio Durable Collaborative Redo Fold Scenario",
+  "definitions": {
+    "Id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "Edit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "actor",
+        "logicalMs",
+        "mutationIds"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "actor": {
+          "$ref": "#/definitions/Id"
+        },
+        "logicalMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mutationIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Id"
+          }
+        }
+      }
+    },
+    "Expect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applied",
+        "redo"
+      ],
+      "properties": {
+        "applied": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          }
+        },
+        "redo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          }
+        }
+      }
+    },
+    "Step": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "actor",
+            "mutationIds",
+            "logicalMs"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "revert",
+                "reinstate"
+              ]
+            },
+            "actor": {
+              "$ref": "#/definitions/Id"
+            },
+            "mutationIds": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/definitions/Id"
+              }
+            },
+            "logicalMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "id": {
+              "$ref": "#/definitions/Id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expect"
+          ],
+          "properties": {
+            "kind": {
+              "const": "expect"
+            },
+            "expect": {
+              "$ref": "#/definitions/Expect"
+            },
+            "label": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "reload",
+                "hub-restart"
+              ]
+            },
+            "label": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "documentId",
+    "edits",
+    "steps",
+    "observations"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.history.durable-collaborative-redo.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "documentId": {
+      "$ref": "#/definitions/Id"
+    },
+    "edits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Edit"
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Step"
+      }
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

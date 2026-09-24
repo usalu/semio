@@ -33,4 +33,5 @@ async fn delete_selection_removes_the_live_selected_node() {
     let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.expect("deleteSelection publication");
     let after = app.snapshot().expect("snapshot");
     assert!(!after.graph.nodes.iter().any(|node| node.id == node_id), "selected node must be deleted");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }

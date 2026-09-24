@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangePart3dMesh",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-part3d-mesh",
-  "binaryTag": null,
+  "binaryTag": 11,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

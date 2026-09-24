@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceTracks",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-tracks",
-  "binaryTag": null,
+  "binaryTag": 30,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

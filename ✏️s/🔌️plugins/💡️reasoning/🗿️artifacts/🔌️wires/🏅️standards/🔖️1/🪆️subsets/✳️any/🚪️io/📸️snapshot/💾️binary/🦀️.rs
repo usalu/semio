@@ -1,11 +1,4 @@
-//! 🎁 Wires artifact — native `.wires` binary pack codec (ticket
-//! `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` design.md §1 CORRECTION: the native codec is
-//! one bidirectional thing and sits directly under `🚪️io/<facet>/<representation>/`, unsplit —
-//! relocated here verbatim from `🧬️schema/📸️snapshot/💾️binary`, taking `impl store::ArtifactPack for
-//! WiresSnapshot` with it from `🧬️schema/📸️snapshot/🦀️.rs`'s former
-//! `🔖️HandcraftedArtifactCodecs` region). Mirrors the sibling `📝️text` codec exactly, field for field,
-//! length-prefixed (`store::pack_rt::write_varint_u64`/`store::ByteReader`, the same varint-length-
-//! prefix primitives `✳️graph`'s own `🔖️BinaryPrimitives` uses).
+//! 🎁 Wires artifact — `.wires` binary pack codec over the derived `WiresPackRecord` spec.
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
@@ -13,79 +6,77 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 use crate::{wires_working_scene, WiresSnapshot};
 use dsl::DslValue;
 
-//#region 🔖️BinaryPrimitives
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    store::pack_rt::write_varint_u64(out, s.len() as u64);
-    out.extend_from_slice(s.as_bytes());
+//#region 🔖️PackRecord
+/// 🎁 Derived pack record of a `WiresSnapshot`: the fixture and meta values plus the composed graph
+/// child's content (`nodes`/`edges`), from which decode re-mints the content-addressed child handle.
+/// Every value travels as first-party JSON text: pack canonicalises map keys into sorted order, while
+/// these free-form `DslValue` objects are order-significant The text facet prints this same record.
+#[derive(dsl::DslRecord)]
+#[dsl(extension = "wires")]
+struct WiresPackRecord {
+    wires_fixture: String,
+    nodes: Vec<String>,
+    edges: Vec<String>,
+    meta: String,
 }
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+
+fn json_of(value: &DslValue) -> String {
+    dsl::os_pack::json::to_json_string(value)
 }
-/// ⚠️ Same order-preserving direct `DslValue` (de)serialization as `📝️text`'s `enc_dsl`/`dec_dsl` —
-/// never via `fixture_json_string`/`dsl_to_json`'s `serde_json::Value` intermediate (key-order-losing).
-fn write_dsl(out: &mut Vec<u8>, value: &DslValue) {
-    write_str_lp(out, &dsl::os_pack::json::to_json_string(value));
+
+fn value_of(text: &str) -> Result<DslValue, String> {
+    dsl::os_pack::json::from_json_str::<DslValue>(text).map_err(|e| e.to_string())
 }
-fn read_dsl(reader: &mut store::ByteReader<'_>) -> Result<DslValue, String> {
-    let text = read_str_lp(reader)?;
-    dsl::os_pack::json::from_json_str::<DslValue>(&text).map_err(|e| e.to_string())
-}
-fn write_dsl_list(out: &mut Vec<u8>, values: &[DslValue]) {
-    store::pack_rt::write_varint_u64(out, values.len() as u64);
-    for value in values {
-        write_dsl(out, value);
+
+impl WiresPackRecord {
+    fn from_snapshot(snapshot: &WiresSnapshot) -> Self {
+        let scene = wires_working_scene(snapshot);
+        Self { wires_fixture: json_of(&snapshot.wires_fixture), nodes: scene.nodes.iter().map(json_of).collect(), edges: scene.edges.iter().map(json_of).collect(), meta: json_of(&snapshot.meta) }
+    }
+
+    fn into_snapshot(self) -> Result<WiresSnapshot, String> {
+        let nodes = self.nodes.iter().map(|text| value_of(text)).collect::<Result<Vec<_>, _>>()?;
+        let edges = self.edges.iter().map(|text| value_of(text)).collect::<Result<Vec<_>, _>>()?;
+        Ok(WiresSnapshot { wires_fixture: value_of(&self.wires_fixture)?, content: crate::wires_content_child_with_owner(nodes, edges), meta: value_of(&self.meta)? })
     }
 }
-fn read_dsl_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<DslValue>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    (0..count).map(|_| read_dsl(reader)).collect()
+
+/// 🖨️ The derived text body: the same `WiresPackRecord` the pack encodes, printed by the spec-driven engine.
+pub(crate) fn print_pack_record_text(snapshot: &WiresSnapshot) -> String {
+    dsl::print(&WiresPackRecord::from_snapshot(snapshot).__dsl_to_record(), &WiresPackRecord::__dsl_spec(), dsl::JoinMode::Document)
 }
 
-fn encode_wires_snapshot_binary(snapshot: &WiresSnapshot) -> Vec<u8> {
-    let scene = wires_working_scene(snapshot);
-    let mut out = Vec::new();
-    write_dsl(&mut out, &snapshot.wires_fixture);
-    write_dsl_list(&mut out, &scene.nodes);
-    write_dsl_list(&mut out, &scene.edges);
-    write_dsl(&mut out, &snapshot.meta);
-    out
+/// 📖️ Parses a derived text body back through `WiresPackRecord`, with the same decode steps as the pack.
+pub(crate) fn parse_pack_record_text(body: &str) -> Result<WiresSnapshot, store::TextError> {
+    let record = dsl::parse(body, &WiresPackRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+    WiresPackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
 }
+//#endregion 🔖️PackRecord
 
-fn decode_wires_snapshot_binary(bytes: &[u8]) -> Result<WiresSnapshot, String> {
-    let mut reader = store::ByteReader::new(bytes);
-    let wires_fixture = read_dsl(&mut reader)?;
-    let nodes = read_dsl_list(&mut reader)?;
-    let edges = read_dsl_list(&mut reader)?;
-    let meta = read_dsl(&mut reader)?;
-    let content = crate::wires_content_child_with_owner(nodes, edges);
-    Ok(WiresSnapshot { wires_fixture, content, meta })
-}
-//#endregion 🔖️BinaryPrimitives
-
-//#region 🔖️HandcraftedArtifactPack
-/// ✉️ P6 handcrafted `ArtifactPack` (derive no longer emits this trait once `content` drops to a
-/// composed `ArtifactChild` — see the sibling `📝️text` file's module doc).
+//#region 🔖️ArtifactPack
 impl store::ArtifactPack for WiresSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_wires_snapshot_binary(self);
+        let inner = store::pack_rt::encode_document(&WiresPackRecord::__dsl_spec(), &WiresPackRecord::from_snapshot(self).__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        decode_wires_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        let (record, _report) = store::pack_rt::decode_document(&inner, &WiresPackRecord::__dsl_spec(), options)?;
+        WiresPackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(store::PackError::Schema)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(WiresPackRecord::__dsl_spec())
     }
 }
-//#endregion 🔖️HandcraftedArtifactPack
+//#endregion 🔖️ArtifactPack
 
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+

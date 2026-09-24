@@ -120,6 +120,22 @@
       "blocker": ""
     },
     {
+      "id": "promoteToHubSpace",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "persistLocally",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
       "id": "foldDirectoryEvents",
       "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],

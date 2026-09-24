@@ -60,7 +60,8 @@ describe("🔗️ target-neutral Hub projection", () => {
     const spaces = readFileSync(join(engineRoot, "🧱️elements", "🏘️SpaceBrowser", "🟦️.tsx"), "utf8");
     const labels = readFileSync(join(engineRoot, "🧱️elements", "🔗️HubConnection", "🟦️.tsx"), "utf8");
     expect(shellSync).toContain("framework.hub.signIn");
-    expect(host).toContain('navigateHistory("/hub")');
+    expect(host).toContain('const SHELL_HUB_ROUTE = "/hub";');
+    expect(host).toContain("navigateHistory(SHELL_HUB_ROUTE)");
     expect(workspace).toContain("HubSignInPane");
     expect(workspace).toContain("SpaceBrowser");
     for (const id of ["os.hub.signIn.addHub", "os.hub.signIn.hubAddress", "os.hub.signIn.email", "os.hub.signIn.password"]) expect(signIn).toContain(id);
@@ -75,7 +76,7 @@ describe("🔗️ target-neutral Hub projection", () => {
     const boot = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🚀️browser-boot", "🟦️.ts"), "utf8");
     expect(shell).toContain("pub hub_documents: BTreeMap<String, ShellHubRemoteV1>");
     expect(shell).toContain("verified_session_authority: Option<DirectorySessionAuthorityV1>");
-    expect(host).toContain("semioWgpuHubProjection?.publishDocumentStatus(runtimeKey, event.remote)");
+    expect(host).toContain("semioWgpuHubProjection?.publishDocumentStatus(runtimeKey, status.remote)");
     expect(host).toContain("semioWgpuHubProjection?.publishDocumentStatus(runtimeKey, null)");
     expect(transport).toContain('kind: "hub-document-status"');
     expect(transport).toContain('kind: "hub-document-close"');

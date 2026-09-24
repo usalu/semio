@@ -34,7 +34,7 @@ func (vector faultVector) input() coordinator.EventInput {
 
 func loadFaultPlan(ctx *host.Context) (faultPlan, error) {
 	var plan faultPlan
-	data, err := ctx.FixtureBytes("local://💥️fault-plan.json")
+	data, err := ctx.FixtureBytes("shared://💥️filesystem-fault-recovery/💥️fault-plan.json")
 	if err != nil {
 		return plan, err
 	}

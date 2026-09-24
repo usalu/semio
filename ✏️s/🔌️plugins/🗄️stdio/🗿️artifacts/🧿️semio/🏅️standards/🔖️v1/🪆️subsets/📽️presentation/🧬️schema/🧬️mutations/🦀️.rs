@@ -96,11 +96,10 @@ pub enum SemioPresentationMutation {
 
 /// 🏷️ This subset's DECLARED mutation vocabulary, kebab-case, in enum declaration order — the one
 /// list the repository test platform's completeness gate measures `📽️mutate-semio-presentation`
-/// against (catalog `semio-v1-presentation` in `../../🔣️oracle.json`). It aliases
-/// [`OP_KEYWORDS`], which the binary op frame's `tag` byte already indexes by [`variant_ordinal`],
-/// so the vocabulary is declared exactly once and `kinds_match_the_enum_and_the_catalog` keeps that
-/// declaration honest against both the enum and the manifest.
-pub const KINDS: &[&str] = &OP_KEYWORDS;
+/// against (catalog `semio-v1-presentation` in `../../🔣️oracle.json`). 
+/// `kinds_match_the_enum_and_the_catalog` keeps it honest against the enum, the manifest and the
+/// `💾️binary/📡️.protocol.semio` records that carry each kind's wire tag.
+pub const KINDS: &[&str] = &["set-snapshot", "insert-slide", "remove-slide", "set-slide-layout", "set-slide-notes", "insert-shape", "remove-shape", "set-shape-frame", "set-text-box-blocks", "insert-master", "remove-master", "insert-layout", "remove-layout", "set-layout-master"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -280,42 +279,42 @@ impl OpText for SemioPresentationMutation {
     }
 }
 
-/// 🏷️ Ordinal table, same declaration order as `SemioPresentationMutation`'s own enum variants
-/// and `parse_presentation_mutation`'s keyword match — the real binary `tag` field's source of
-/// truth.
-const OP_KEYWORDS: [&str; 14] = [
-    "set-snapshot",
-    "insert-slide",
-    "remove-slide",
-    "set-slide-layout",
-    "set-slide-notes",
-    "insert-shape",
-    "remove-shape",
-    "set-shape-frame",
-    "set-text-box-blocks",
-    "insert-master",
-    "remove-master",
-    "insert-layout",
-    "remove-layout",
-    "set-layout-master",
-];
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioPresentationMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_INSERT_SLIDE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-slide");
+const TAG_REMOVE_SLIDE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-slide");
+const TAG_SET_SLIDE_LAYOUT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-slide-layout");
+const TAG_SET_SLIDE_NOTES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-slide-notes");
+const TAG_INSERT_SHAPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-shape");
+const TAG_REMOVE_SHAPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-shape");
+const TAG_SET_SHAPE_FRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-shape-frame");
+const TAG_SET_TEXT_BOX_BLOCKS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-text-box-blocks");
+const TAG_INSERT_MASTER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-master");
+const TAG_REMOVE_MASTER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-master");
+const TAG_INSERT_LAYOUT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-layout");
+const TAG_REMOVE_LAYOUT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-layout");
+const TAG_SET_LAYOUT_MASTER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-layout-master");
+//#endregion 🏷️WireTags
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioPresentationMutation) -> u8 {
+fn wire_tag(m: &SemioPresentationMutation) -> u8 {
     match m {
-        SemioPresentationMutation::SetSnapshot(_) => 0,
-        SemioPresentationMutation::InsertSlide(_) => 1,
-        SemioPresentationMutation::RemoveSlide(_) => 2,
-        SemioPresentationMutation::SetSlideLayout(_) => 3,
-        SemioPresentationMutation::SetSlideNotes(_) => 4,
-        SemioPresentationMutation::InsertShape(_) => 5,
-        SemioPresentationMutation::RemoveShape(_) => 6,
-        SemioPresentationMutation::SetShapeFrame(_) => 7,
-        SemioPresentationMutation::SetTextBoxBlocks(_) => 8,
-        SemioPresentationMutation::InsertMaster(_) => 9,
-        SemioPresentationMutation::RemoveMaster(_) => 10,
-        SemioPresentationMutation::InsertLayout(_) => 11,
-        SemioPresentationMutation::RemoveLayout(_) => 12,
-        SemioPresentationMutation::SetLayoutMaster(_) => 13,
+        SemioPresentationMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioPresentationMutation::InsertSlide(_) => TAG_INSERT_SLIDE,
+        SemioPresentationMutation::RemoveSlide(_) => TAG_REMOVE_SLIDE,
+        SemioPresentationMutation::SetSlideLayout(_) => TAG_SET_SLIDE_LAYOUT,
+        SemioPresentationMutation::SetSlideNotes(_) => TAG_SET_SLIDE_NOTES,
+        SemioPresentationMutation::InsertShape(_) => TAG_INSERT_SHAPE,
+        SemioPresentationMutation::RemoveShape(_) => TAG_REMOVE_SHAPE,
+        SemioPresentationMutation::SetShapeFrame(_) => TAG_SET_SHAPE_FRAME,
+        SemioPresentationMutation::SetTextBoxBlocks(_) => TAG_SET_TEXT_BOX_BLOCKS,
+        SemioPresentationMutation::InsertMaster(_) => TAG_INSERT_MASTER,
+        SemioPresentationMutation::RemoveMaster(_) => TAG_REMOVE_MASTER,
+        SemioPresentationMutation::InsertLayout(_) => TAG_INSERT_LAYOUT,
+        SemioPresentationMutation::RemoveLayout(_) => TAG_REMOVE_LAYOUT,
+        SemioPresentationMutation::SetLayoutMaster(_) => TAG_SET_LAYOUT_MASTER,
     }
 }
 /// ✂️ Just the `key=value ...` argument tail of `print_presentation_mutation` — the binary frame's
@@ -331,7 +330,7 @@ fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
 
 /// ⚡️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave: real binary
 /// op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut. `format u8`
-/// (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see [`OP_KEYWORDS`]) are two
+/// (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) are two
 /// REAL fixed fields; the variant's own `key=value ...` argument payload follows as one opaque
 /// trailing `bytes` chain — reusing the already-real, already-tested
 /// `print_presentation_mutation`/`parse_presentation_mutation` text codec rather than re-deriving a
@@ -341,7 +340,7 @@ fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
 impl OpBinary for SemioPresentationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_presentation_mutation_args(self).as_bytes());
         Ok(out)
     }
@@ -354,7 +353,7 @@ impl OpBinary for SemioPresentationMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })

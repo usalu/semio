@@ -4,5 +4,5 @@
 ; `print_op().into_bytes()` text-as-binary shortcut.
 document = format tag payload
 format   = OCTET     ; OP_BINARY_FORMAT, currently 1
-tag      = OCTET     ; SemioMeshMutation variant ordinal — see OP_KEYWORDS in ../../🦀️.rs
+tag      = OCTET     ; the kind's record tag in 📡️.protocol.semio
 payload  = *OCTET    ; UTF-8 "key=value ..." argument text (never empty — all 17 mesh keywords carry >=1 argument)

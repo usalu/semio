@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/mcp/artifact/component.json",
+  "title": "Semio OS MCP Artifact Verbs",
+  "$defs": {
+    "ArtifactCreateJobStatusV1": {
+      "description": "How an artifact_create job ended. Every artifact_create is a job (jobId, job_get, job_cancel, notifications/cancelled) that reports the plugin session's activation phases while it runs.",
+      "enum": ["SUCCEEDED", "CANCELLED"]
+    },
+    "ArtifactCreateCancellationLawV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "law", "cancelAnswerCeilingMs", "cases"],
+      "properties": {
+        "$schema": { "type": "string", "minLength": 1 },
+        "law": { "type": "string", "minLength": 1 },
+        "cancelAnswerCeilingMs": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["cancelAt", "expected"],
+            "properties": {
+              "cancelAt": { "oneOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/mcp/workspace/component.json#/$defs/SessionActivationPhaseV1" }, { "type": "null" }] },
+              "expected": { "$ref": "#/$defs/ArtifactCreateJobStatusV1" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

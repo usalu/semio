@@ -14,7 +14,7 @@ reports into.
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
 `🧪️test` harness; the real `git` command line is registered as the normative producer of the numstat
-stream in `🔮️oracle/🔣️.json`, the TypeScript library's unified LOC counter is registered as a
+stream in `🔮️oracles/🔣️.json`, the TypeScript library's unified LOC counter is registered as a
 cross-implementation supplement, and the aggregation, bucketing and benchmark shapes rest on recorded
 no-oracle decisions.
 

@@ -13,9 +13,9 @@ pub fn definition() -> ModeDefinition {
     ModeDefinition { id: PUZZLE5D_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-/// 🪟️ The same paired 60/40 split the editor's `edit` mode opens with — world pane leading, board
-/// pane beside it — so a read-only 5d document reads the way the edited one looks.
+/// 🪟️ The same paired 40/60 split the editor's `edit` mode opens with — board pane on the left,
+/// world pane on the right — so a read-only 5d document reads the way the edited one looks.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[world3d::WINDOW_KIND_ID.into(), board2d::WINDOW_KIND_ID.into()], "row", Some(&[60.0, 40.0]), Some(&["Puzzle 3D".into(), "Puzzle 2D".into()]))
+    create_default_layout(&[board2d::WINDOW_KIND_ID.into(), world3d::WINDOW_KIND_ID.into()], "row", Some(&[40.0, 60.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()]))
 }
 //#endregion 🔖️Definition

@@ -8,7 +8,7 @@ Feature: The `test` verb turns operands into an ordered list of runner invocatio
   with `Running: <argv> (in <cwd>)` before it starts, and reports a scope it could not plan as a
   refusal instead of running anything.
 
-  The vectors in local://🧪️test-verb-vectors.json freeze one filesystem snapshot — the bundle
+  The vectors in shared://🧪️test-verb-planning/🧪️test-verb-vectors.json freeze one filesystem snapshot — the bundle
   table plus the manifests planning probes — and state, per operand list, the announcement lines in
   order and the refusals. Nothing is executed here: what the case holds is the verb's decision, not
   the runners' behaviour.
@@ -17,7 +17,7 @@ Feature: The `test` verb turns operands into an ordered list of runner invocatio
   @level-fundamental
   @mode-conformance
   Scenario: Every operand list plans the invocations it states, in order
-    Given the vectors local://🧪️test-verb-vectors.json
+    Given the vectors shared://🧪️test-verb-planning/🧪️test-verb-vectors.json
     When the host plans every vector against the frozen snapshot
     Then each plan announces the stated lines in the stated order
 
@@ -25,7 +25,7 @@ Feature: The `test` verb turns operands into an ordered list of runner invocatio
   @level-fundamental
   @mode-error
   Scenario: A scope with no detectable runner refuses and announces nothing
-    Given the vectors local://🧪️test-verb-vectors.json
+    Given the vectors shared://🧪️test-verb-planning/🧪️test-verb-vectors.json
     When the host plans every vector against the frozen snapshot
     Then each refusing vector carries its stated problem and announces no line for it
 
@@ -33,6 +33,6 @@ Feature: The `test` verb turns operands into an ordered list of runner invocatio
   @level-quick
   @mode-round-trip
   Scenario: Planning the same operands twice announces the same lines
-    Given the vectors local://🧪️test-verb-vectors.json
+    Given the vectors shared://🧪️test-verb-planning/🧪️test-verb-vectors.json
     When the host plans every vector twice
     Then the two announcements are equal for every vector

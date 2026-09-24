@@ -12,11 +12,11 @@ import { compileVizProbe, probeProjection, type ProbeProjection } from "../../�
 
 // #region 🧫️Vectors
 const CASE = "data-csv";
-const FIXTURE = "local://data-csv.tex";
+const FIXTURE = "shared://🗃️data-csv/data-csv.tex";
 
 /** 📄️ The committed file the probe reads, as d3-dsv sees it. */
 function source(ctx: AdapterContext, name: string): string {
-  return readFileSync(ctx.fixture(`local://${name}`), "utf8");
+  return readFileSync(ctx.fixture(`shared://🗃️data-csv/${name}`), "utf8");
 }
 
 /** 🧵️ One parsed column in the transport encoding the probe uses, empty cells dropped. */

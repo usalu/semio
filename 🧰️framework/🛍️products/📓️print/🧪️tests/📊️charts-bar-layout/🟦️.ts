@@ -54,7 +54,7 @@ const grid = (value: number): number => {
 
 /** 🎯️ Compiles one committed fixture of this case and projects its rectangles. */
 async function rectangles(ctx: AdapterContext, fixture: string): Promise<number[]> {
-  const records = await compileVizProbe(ctx.fixture(`local://${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const records = await compileVizProbe(ctx.fixture(`shared://📊️charts-bar-layout/${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   const projection: ProbeProjection = probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id);
   return (projection["geometry/rect"] ?? []).map(Number);
 }

@@ -3,14 +3,77 @@ protocol 2d.mutations
 version 1
 schema puzzle.puzzle2d.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record create-node tag=0
+field payload bytes
+record delete-node tag=1
+field payload bytes
+record move-node tag=2
+field payload bytes
+record replace-node-geometry tag=3
+field payload bytes
+record change-node-kind tag=4
+field payload bytes
+record edit-node-text tag=5
+field payload bytes
+record change-node-icon tag=6
+field payload bytes
+record scale-node tag=7
+field payload bytes
+record change-node-visible tag=8
+field payload bytes
+record change-node-locked tag=9
+field payload bytes
+record change-node-root tag=10
+field payload bytes
+record change-node-anchor tag=11
+field payload bytes
+record add-node-handle tag=12
+field payload bytes
+record remove-node-handle tag=13
+field payload bytes
+record replace-node-handle tag=14
+field payload bytes
+record connect-handles tag=15
+field payload bytes
+record disconnect-handles tag=16
+field payload bytes
+record replace-edge-geometry tag=17
+field payload bytes
+record change-edge-kind tag=18
+field payload bytes
+record change-edge-tips tag=19
+field payload bytes
+record change-edge-visible tag=20
+field payload bytes
+record change-edge-locked tag=21
+field payload bytes
+record change-manifest-id tag=22
+field payload bytes
+record connect-kind-compatibility tag=23
+field payload bytes
+record disconnect-kind-compatibility tag=24
+field payload bytes
+record replace-kind-catalogs tag=25
+field payload bytes
+record create-target-region tag=26
+field payload bytes
+record delete-target-region tag=27
+field payload bytes
+record move-target-region tag=28
+field payload bytes
+record resize-target-region tag=29
+field payload bytes
+record edit-target-region-label tag=30
+field payload bytes
+record change-target-region-hidden tag=31
+field payload bytes
+record change-target-region-locked tag=32
+field payload bytes

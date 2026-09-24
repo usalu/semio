@@ -50,11 +50,11 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-dimensions", "set-c
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
-    use crate::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use crate::standards::v1::subsets::image::schema::mutations::{
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::mutations::{
         apply_semio_image_mutation, insert_frame, inverse_semio_image_mutation, move_frame, remove_frame, remove_metadata_entry, set_bit_depth, set_colorspace, set_dimensions, set_frame_delay, set_frame_pixels, set_icc, set_metadata_entry, set_snapshot, SemioImageMutation,
     };
-    use crate::standards::v1::subsets::image::schema::snapshot::{
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{
         decode_semio_image_pack, encode_semio_image_pack, parse_semio_image_dsl, print_semio_image_dsl, SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot,
     };
     use std::collections::BTreeSet;

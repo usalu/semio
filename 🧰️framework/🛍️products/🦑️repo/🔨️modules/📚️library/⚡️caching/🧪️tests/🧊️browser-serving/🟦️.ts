@@ -5,8 +5,8 @@ import { dirname, join } from "node:path";
 
 /** 🧊️ Serves completed profile artifacts under native Vite and compares native public-file delivery. */
 export async function testWgpuBrowserServing(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8")));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️browser-serving/🔣️.json"), "utf8"));
+  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️browser-serving/📐️schema/🔣️.json"), "utf8")));
   assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   const engine = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu");
   const implementation = join(engine, "🌐️server/🟦️.ts"), template = join(engine, "🌐️server/🌐️.html");

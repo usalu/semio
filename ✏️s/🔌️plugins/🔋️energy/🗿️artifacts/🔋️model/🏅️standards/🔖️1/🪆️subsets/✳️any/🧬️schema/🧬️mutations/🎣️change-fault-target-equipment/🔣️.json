@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeFaultTargetEquipment",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fault-target-equipment",
-  "binaryTag": null,
+  "binaryTag": 238,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

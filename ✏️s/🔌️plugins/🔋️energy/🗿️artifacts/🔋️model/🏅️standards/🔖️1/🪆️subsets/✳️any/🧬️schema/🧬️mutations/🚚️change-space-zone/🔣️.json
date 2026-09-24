@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeSpaceZone",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-space-zone",
-  "binaryTag": null,
+  "binaryTag": 23,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

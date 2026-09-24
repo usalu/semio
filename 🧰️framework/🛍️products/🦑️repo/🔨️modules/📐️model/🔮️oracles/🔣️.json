@@ -1,0 +1,43 @@
+{
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ Test-only references of the 📐️model owner. `ajv` is already a devDependency of 🔨️modules/📚️library/📦️packages/🟦️typescript and is registered in the repository-root 🔒️dependencies.json; no production code of this module can reach it, and this module ships no TypeScript package at all.",
+  "oracles": [
+    {
+      "id": "ajv-model-schema",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "ajv",
+      "version": "8.20.0",
+      "engine": { "family": "none", "implementation": "ajv", "version": "8.20.0" },
+      "capabilities": ["repo.model.json-encoding"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "productionDebt": {"reachableFrom": ["package.json", "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json", "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json", "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json", "🌎️hub/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"], "owner": "🧰️framework/🛍️products/💻️os", "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."},
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://ajv.js.org",
+      "rationale": "Judges every golden document against 🧬️schema/🔣️.json with a real JSON Schema draft 2020-12 implementation, so a schema that has drifted away from the Go and Rust encoders fails instead of agreeing with itself. Its JSON.parse/JSON.stringify pass is additionally a third, independently written serialiser of the same bytes."
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-slug-vocabulary",
+      "capabilities": ["repo.model.slug-vocabulary"],
+      "rationale": "The LLM, effort and client slugs are this repository's own vocabulary and the normalisation is its own camel-case-aware slug rule followed by a longest-containment match against a table that ships beside the schema. No third party implements any part of that, so there is nothing to compare against. Confidence comes from the table being loaded rather than restated in either implementation, and from two independently written implementations agreeing on the canonical form, the resolved member and the rejected input.",
+      "substitutes": ["independent-implementations", "specification-vectors"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-definition-kind",
+      "capabilities": ["repo.model.definition-kind"],
+      "rationale": "Which of implementation, interface, constant or test a raw declaration keyword denotes is this repository's own taxonomy of what a definition IS; no external tool classifies keywords into that four-value vocabulary, so no reference implementation can exist. The derivation is total and case-insensitive, which the vectors exercise directly, and the two implementations are written independently from the same specification.",
+      "substitutes": ["independent-implementations", "metamorphic-laws"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": [
+    { "implementation": "typescript", "package": "ajv", "version": "8.20.0" }
+  ]
+}

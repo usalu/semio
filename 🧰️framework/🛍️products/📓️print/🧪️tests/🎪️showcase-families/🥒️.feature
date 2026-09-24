@@ -28,7 +28,7 @@ Feature: Every showcase capability kind draws geometry of its own
   @level-long
   @mode-conformance
   Scenario: The 109 capability kinds emit geometry and are pairwise distinct inside their family
-    Given the committed probe document local://showcase-capabilities.tex and the showcase families
+    Given the committed probe document shared://🎪️showcase-families/showcase-capabilities.tex and the showcase families
       | family                | kinds |
       | encoding              | 32    |
       | grammar               | 23    |
@@ -44,7 +44,7 @@ Feature: Every showcase capability kind draws geometry of its own
   @level-long
   @mode-conformance
   Scenario: The 54 namespace kinds each render their own namespace's canonical family
-    Given the committed probe document local://showcase-namespaces.tex and the showcase families
+    Given the committed probe document shared://🎪️showcase-families/showcase-namespaces.tex and the showcase families
       | family    | kinds |
       | namespace | 54    |
     Then the compiled probe and the reference implementation agree on every value

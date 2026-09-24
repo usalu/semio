@@ -29,7 +29,7 @@ mod subject {
     }
 
     fn corpus(ctx: &Context) -> Result<Vec<Case>, String> {
-        let bytes = ctx.fixture_bytes("local://🔣️coercions.json")?;
+        let bytes = ctx.fixture_bytes("shared://🔀️variable-coercion/🔣️coercions.json")?;
         let text = String::from_utf8(bytes).map_err(|error| error.to_string())?;
         let parsed: SerdeJson = semio_framework_repo_graphql::serde_json::from_str(&text).map_err(|error| error.to_string())?;
         let cases = parsed.get("cases").and_then(SerdeJson::as_array).ok_or("corpus has no cases array")?;

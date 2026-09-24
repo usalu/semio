@@ -27,13 +27,13 @@ Feature: Isolines and kernel density in semio-viz-spatial agree with d3-contour
   stated specification written in the adapter, not against d3. The isolines of that grid, which is
   what a density map actually draws, are compared against `d3-contour` proper.
 
-  Probe documents: local://contours.tex and local://density.tex are both committed.
+  Probe documents: shared://🏔️spatial-contours-density/contours.tex and shared://🏔️spatial-contours-density/density.tex are both committed.
 
   @id-marching-squares
   @level-quick
   @mode-differential
   Scenario: Isoline rings of a value grid agree with d3-contour
-    Given the committed probe document local://contours.tex and the grid demo-grid
+    Given the committed probe document shared://🏔️spatial-contours-density/contours.tex and the grid demo-grid
       | width | height | thresholds |
       | 6     | 5      | 4, 6       |
     Then the compiled probe and the reference implementation agree on every isoline vertex
@@ -42,7 +42,7 @@ Feature: Isolines and kernel density in semio-viz-spatial agree with d3-contour
   @level-quick
   @mode-differential
   Scenario: A kernel-density grid and its isolines agree with the specification and with d3-contour
-    Given the committed probe document local://density.tex and the density parameters
+    Given the committed probe document shared://🏔️spatial-contours-density/density.tex and the density parameters
       | width | height | originX | originY | cell | bandwidth | threshold |
       | 7     | 5      | 6       | 6       | 9    | 11        | 0.0046    |
     Then the compiled probe and the reference implementation agree on every grid value and every isoline vertex

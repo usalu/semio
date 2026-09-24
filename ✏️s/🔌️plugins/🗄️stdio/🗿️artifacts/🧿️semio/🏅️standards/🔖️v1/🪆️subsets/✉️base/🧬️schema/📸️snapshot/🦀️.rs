@@ -364,7 +364,7 @@ impl store::ArtifactPack for SemioSnapshot {
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Parses the ENVELOPE's own committed `.dsl.semio` text into a real [`SemioSnapshot`] — a thin
 /// wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
-/// crate's private `store` extern-crate item (the `mutate-semio-any` test adapter, whose
+/// crate's private `store` extern-crate item (the `✉️mutate-semio-base` test adapter, whose
 /// `identity-round-trip` scenario reads the REAL committed `📚️examples/🌐️envelope` artifact) can still
 /// drive the same codec production does. Same shape and same rationale as `🌊️flow`'s own bridge.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -390,6 +390,21 @@ pub fn decode_semio_envelope_pack(bytes: &[u8]) -> Result<SemioSnapshot, String>
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_envelope_pack(snapshot: &SemioSnapshot) -> Vec<u8> {
     <SemioSnapshot as store::ArtifactPack>::encode_pack(snapshot)
+}
+
+/// 📤️ The envelope's JSON carrier, derived from the schema types themselves: `SemioSnapshot`'s own
+/// `ToValue` (`camelCase` fields, `SemioSubsetSnapshot` internally tagged on `subset`) printed by the
+/// first-party `pack` JSON codec — the shape `🧬️schema/📸️snapshot/🔣️.json` publishes and the committed
+/// `🧫️fixtures/🧬️mutations/` vectors carry. See <../🔣️.json>.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_snapshot_json(snapshot: &SemioSnapshot) -> String {
+    pack::to_json_string(snapshot)
+}
+
+/// 📥️ The inverse of [`encode_semio_snapshot_json`], through `SemioSnapshot`'s own `FromValue`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_snapshot_json(text: &str) -> Result<SemioSnapshot, String> {
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 

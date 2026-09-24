@@ -3,14 +3,81 @@ protocol en1992.mutations
 version 1
 schema norm.en1992.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real `En1992Mutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records at compile time (`dsl::protocol_record::tag_u8`).
+header fixed 2
+field format u8
+field tag u8
+record change-annex tag=0
+field payload bytes
+record change-m-ed-knm tag=1
+field payload bytes
+record change-v-ed-kn tag=2
+field payload bytes
+record change-f-ck tag=3
+field payload bytes
+record change-b-mm tag=4
+field payload bytes
+record change-d-mm tag=5
+field payload bytes
+record change-as-mm2 tag=6
+field payload bytes
+record change-f-yk tag=7
+field payload bytes
+record change-rho-l tag=8
+field payload bytes
+record change-n-ed-kn tag=9
+field payload bytes
+record change-p-kn tag=10
+field payload bytes
+record change-ac-mm2 tag=11
+field payload bytes
+record change-use-fem tag=12
+field payload bytes
+record change-span-m tag=13
+field payload bytes
+record change-udl-kn-m tag=14
+field payload bytes
+record change-fire-rating tag=15
+field payload bytes
+record change-provided-axis-distance-mm tag=16
+field payload bytes
+record change-bridge-sigma-c-mpa tag=17
+field payload bytes
+record change-bridge-delta-sigma-s-mpa tag=18
+field payload bytes
+record change-tightness-class tag=19
+field payload bytes
+record change-hd-over-h tag=20
+field payload bytes
+record change-liquid-sigma-s-mpa tag=21
+field payload bytes
+record change-liquid-rho-p-eff tag=22
+field payload bytes
+record change-liquid-f-ct-eff-mpa tag=23
+field payload bytes
+record change-liquid-es-mpa tag=24
+field payload bytes
+record change-liquid-sr-max-mm tag=25
+field payload bytes
+record change-anchor-h-ef-mm tag=26
+field payload bytes
+record change-anchor-cracked tag=27
+field payload bytes
+record change-anchor-f-uk-mpa tag=28
+field payload bytes
+record change-anchor-f-yk-mpa tag=29
+field payload bytes
+record change-anchor-as-mm2 tag=30
+field payload bytes
+record change-anchor-d-mm tag=31
+field payload bytes
+record change-anchor-c1-mm tag=32
+field payload bytes
+record change-anchor-n-ed-kn tag=33
+field payload bytes
+record change-anchor-v-ed-kn tag=34
+field payload bytes

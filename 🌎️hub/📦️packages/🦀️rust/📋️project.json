@@ -11,7 +11,7 @@
     ],
     "hubFoundationSources": [
       "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
-      "{workspaceRoot}/🌎️hub/🧪️tests/🧬️schema/🛂expectation/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🧬️schema/🛂️fixture-expectation/{🟦️.ts,🔣️.json}",
       "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",
@@ -19,8 +19,7 @@
       "{workspaceRoot}/🌎️hub/🔐️auth/📤️credential-delivery/🟦️.ts",
       "{workspaceRoot}/🌎️hub/📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts",
-      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🔮️oracles/🦀️.rs",
-      "{workspaceRoot}/🌎️hub/🧪️tests/🧱️foundation-source/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🦀️.rs",
       "{workspaceRoot}/🌎️hub/💡️inference/🧬️schema/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🧬️schema/🧱️foundation-source/🔣️.json",
       "{workspaceRoot}/🌎️hub/🧫️fixtures/🧱️foundation-source/🔣️.json",
@@ -853,7 +852,7 @@
     },
     "trusted-catalog-bootstrap": {
       "executor": "nx:run-commands",
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts trusted-catalog-bootstrap",

@@ -7,7 +7,7 @@
   "aggregateVariant": "RotateFrame",
   "payloadSchema": "\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
   "textOpcode": null,
-  "binaryTag": null,
+  "binaryTag": 21,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

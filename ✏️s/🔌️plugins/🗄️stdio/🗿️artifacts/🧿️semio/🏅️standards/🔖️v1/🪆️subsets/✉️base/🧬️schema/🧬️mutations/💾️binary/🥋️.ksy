@@ -4,7 +4,7 @@ meta:
 doc: |
   `SemioMutation` real binary frame, past the `semio_format` envelope: real `format`/`tag` bytes
   (`🧬️mutations/🦀️.rs`'s `mutation_tag`), then one opaque `payload` tail — the wrapped
-  subset's own real `OpBinary::encode_op()` bytes (or, for tag 1/`setSnapshot`, the wrapped
+  subset's own real `OpBinary::encode_op()` bytes (or, for tag 0/`setSnapshot`, the wrapped
   snapshot's own real `ArtifactPack::encode_pack()` bytes).
 seq:
   - id: format

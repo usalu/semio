@@ -74,7 +74,7 @@ describe("artifact kind activation owners", () => {
 });
 
 describe("host variant Nx fan-out", () => {
-  test("a host crate's preparation targets materialize every registered component", async () => {
+  test("a host crate's web prepare stays boot-scoped while native still fans out every registered component", async () => {
     const { cacheInternals, libraryBootstrap } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
     await libraryBootstrap;
     const base = join(workspace, ".🧬semio/🦑️repo/⚡️cache/🧪️plugin-registry/host-activation");
@@ -93,11 +93,16 @@ describe("host variant Nx fan-out", () => {
       crate("beta", "beta", "");
       const targets = cacheInternals.playgroundPreparationTargets(["hub/Cargo.toml", "alpha/Cargo.toml", "beta/Cargo.toml"], fixture, "owner");
       for (const profile of ["dev", "release"]) {
-        for (const renderer of ["react", "wgpu", "native"]) {
+        for (const renderer of ["react", "wgpu"] as const) {
           const prepare = targets[`prepare-hub-${renderer}-${profile}`];
           expect(prepare, `prepare-hub-${renderer}-${profile}`).toBeDefined();
-          for (const id of ["hub", "alpha", "beta"]) expect(prepare.dependsOn, `prepare-hub-${renderer}-${profile} ${id}`).toContain(`${id}:materialize-${profile}`);
+          expect(prepare.dependsOn, `prepare-hub-${renderer}-${profile} hub`).toContain(`hub:materialize-${profile}`);
+          expect(prepare.dependsOn, `prepare-hub-${renderer}-${profile} alpha`).not.toContain(`alpha:materialize-${profile}`);
+          expect(prepare.dependsOn, `prepare-hub-${renderer}-${profile} beta`).not.toContain(`beta:materialize-${profile}`);
         }
+        const nativePrepare = targets[`prepare-hub-native-${profile}`];
+        expect(nativePrepare, `prepare-hub-native-${profile}`).toBeDefined();
+        for (const id of ["hub", "alpha", "beta"]) expect(nativePrepare.dependsOn, `prepare-hub-native-${profile} ${id}`).toContain(`${id}:materialize-${profile}`);
         // 🚫️ A non-host variant must NOT inherit the fan-out — that is the regression this pins.
         expect(targets[`prepare-alpha-react-${profile}`].dependsOn).not.toContain(`beta:materialize-${profile}`);
         for (const renderer of ["react", "wgpu"]) expect(targets[`activate-hub-${renderer}-${profile}`].dependsOn).toEqual([`prepare-hub-${renderer}-${profile}`]);

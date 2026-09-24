@@ -156,12 +156,12 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use crate::schema::mutations::{
+    use semio_s_artifact_stdio_bcf::schema::mutations::{
         apply_bcf_mutation, insert_comment, insert_topic, insert_viewpoint, remove_comment, remove_topic, remove_viewpoint, set_comment, set_snapshot, set_topic_markup, set_version, set_viewpoint_camera, set_viewpoint_components, set_viewpoint_snapshot,
         BcfMutation,
     };
-    use crate::schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility};
-    use crate::standards::v2_1::subsets::any::io::{decode_bcf, encode_bcf};
+    use semio_s_artifact_stdio_bcf::schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility};
+    use semio_s_artifact_stdio_bcf::standards::v2_1::subsets::any::io::{decode_bcf, encode_bcf};
     use crate::BcfSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::bcf::standards::v2_1::subsets::any::project_bcf_2_1;
 

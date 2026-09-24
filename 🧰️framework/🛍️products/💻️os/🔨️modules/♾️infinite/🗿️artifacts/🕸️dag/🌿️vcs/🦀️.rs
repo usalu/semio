@@ -779,6 +779,10 @@ impl crate::os_store::ArtifactPack for DagSnapshot {
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         Ok(dag_snapshot_from_dsl(<DagSnapshotDsl as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?))
     }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        <DagSnapshotDsl as crate::os_store::ArtifactPack>::record_spec()
+    }
 }
 //#endregion 🔖️DslMirror
 //#endregion 🔖️Dsl

@@ -1129,10 +1129,12 @@ impl Ui {
     /// 🎞️ Seals every visible candidate interaction revision under the Shell's exact presenter
     /// witness. A live presented capture holds publication until its matching terminal event.
     pub fn seal_presented_input_candidate(&mut self, witness: u64, visible_windows: &[String]) -> bool {
-        if self.windows.values_mut().any(|window| window.sealed_input_candidate.is_some()) {
+        if self.windows.values().any(|window| window.sealed_input_candidate.is_some()) {
+            eprintln!("[DEBUG] seal refuse: existing seals visible={visible_windows:?}");
             return false;
         }
         if visible_windows.iter().any(|window_id| self.windows.get(window_id).is_some_and(|window| window.closing.is_none() && window.presented_ready && !window.candidate_ready)) {
+            eprintln!("[DEBUG] seal refuse: presented without candidate visible={visible_windows:?}");
             return false;
         }
         for window_id in visible_windows {
@@ -3265,7 +3267,7 @@ mod tests;
 mod retained_document_hostile_fixtures;
 //#endregion 🧪️RetainedDocumentHostileFixtures
 #[cfg(test)]
-#[path = "../../../🧪️tests/📂️retained-section-collapse/🦀️.rs"]
+#[path = "../../../🧪️tests/🪗️retained-section-collapse/🦀️.rs"]
 mod retained_section_collapse_tests;
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔽️retained-select-origin/🦀️.rs"]

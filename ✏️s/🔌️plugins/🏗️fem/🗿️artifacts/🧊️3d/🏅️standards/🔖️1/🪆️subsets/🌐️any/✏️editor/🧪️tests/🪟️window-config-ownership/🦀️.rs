@@ -25,7 +25,7 @@ fn fem3d_window_config_camera_uses_the_shared_renderer_pose_contract() {
 
 #[test]
 fn fem3d_window_config_document_admission_rejects_window_and_os_fields() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🪟️window-config-contract/🧫️fixtures/🧬️document-admission/🔣️.json")).expect("document admission fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🧬️document-admission/🔣️.json")).expect("document admission fixture");
     let row = fixture["cases"].as_array().expect("document cases").iter().find(|row| row["dimension"] == "3d").expect("dimension");
     let base = row["document"].to_string();
     let _ = dsl::json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem3dArtifact>(&base).expect("neutral FEM artifact admission");

@@ -5,8 +5,8 @@ import path, { delimiter, dirname, join } from "node:path";
 
 /** 🧊️ Executes restored renderer artifacts and compares them with an independent native Trunk build. */
 export async function testWgpuWasmOutputs(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8")));
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️wasm-outputs/🔣️.json"), "utf8"));
+  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️wasm-outputs/📐️schema/🔣️.json"), "utf8")));
   assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   const packagePath = join(fixture.owner, "📦️packages/🦀️rust"), project = JSON.parse(readFileSync(join(workspace, fixture.owner, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   assert.equal(project.metadata.nativeRoot, packagePath, "Renderer compiler inputs must resolve from the Cargo owner");

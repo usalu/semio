@@ -3,14 +3,63 @@ protocol en1999.mutations
 version 1
 schema norm.en1999.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record change-n-ed-kn tag=0
+field payload bytes
+record change-m-ed-knm tag=1
+field payload bytes
+record change-a-mm2 tag=2
+field payload bytes
+record change-w-el-mm3 tag=3
+field payload bytes
+record change-alloy tag=4
+field payload bytes
+record change-chi tag=5
+field payload bytes
+record change-it-mm4 tag=6
+field payload bytes
+record change-l-cr-mm tag=7
+field payload bytes
+record change-theta-c tag=8
+field payload bytes
+record change-delta-sigma-ed tag=9
+field payload bytes
+record change-delta-sigma-c tag=10
+field payload bytes
+record change-fatigue-m tag=11
+field payload bytes
+record change-n-cycles tag=12
+field payload bytes
+record change-v-weld-ed-kn tag=13
+field payload bytes
+record change-weld-throat-mm tag=14
+field payload bytes
+record change-weld-length-mm tag=15
+field payload bytes
+record change-beta-w tag=16
+field payload bytes
+record change-sheet-b-mm tag=17
+field payload bytes
+record change-sheet-t-mm tag=18
+field payload bytes
+record change-sheet-k-sigma tag=19
+field payload bytes
+record change-sheet-w-el-mm3 tag=20
+field payload bytes
+record change-sheet-m-ed-knm tag=21
+field payload bytes
+record change-shell-t-mm tag=22
+field payload bytes
+record change-shell-r-mm tag=23
+field payload bytes
+record change-sigma-ed-shell-mpa tag=24
+field payload bytes
+record change-annex tag=25
+field payload bytes

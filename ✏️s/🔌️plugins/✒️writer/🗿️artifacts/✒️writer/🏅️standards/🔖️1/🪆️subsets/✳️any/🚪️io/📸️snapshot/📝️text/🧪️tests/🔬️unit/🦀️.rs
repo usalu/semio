@@ -24,21 +24,14 @@ async fn writer_dsl_round_trips_empty_and_jack_snapshots() {
     store::os_store::test_support::assert_dsl_round_trip(&jack_snapshot());
 }
 
-/// 📄️ The hand-rolled `document` codec (`📸️snapshot/🦀️.rs`'s
-/// `print_writer_snapshot_body`) prints one hex-encoded `key=value` line per persistent field —
-/// `document` is now a two-string CHILD HANDLE, not the embedded text, so this law only checks
-/// the scalar fields print readably; the actual text content is proven separately by
-/// `writer_dsl_round_trips_empty_and_jack_snapshots` (round trip) and `writer_text` reads.
+/// 📄️ The derived text prints every persistent scalar readably and `document` as its two-string
+/// CHILD HANDLE; the text content itself is proven by `writer_dsl_round_trips_empty_and_jack_snapshots`.
 #[semio_framework_async_macros::async_test]
 async fn writer_dsl_prints_readable_scalar_fields() {
     let printed = print_dsl(&jack_snapshot());
-    assert!(printed.contains(&format!("schema={}", hex_encode_for_test("writer.document"))));
-    assert!(printed.contains(&format!("id={}", hex_encode_for_test("jack"))));
-    assert!(printed.contains(&format!("languageId={}", hex_encode_for_test("jack"))));
-    assert!(printed.contains(&format!("uri={}", hex_encode_for_test("writer://jack"))));
-    assert!(printed.contains("document=["));
-}
-
-fn hex_encode_for_test(s: &str) -> String {
-    s.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
+    assert!(printed.contains("schema=writer.document"));
+    assert!(printed.contains("id=jack"));
+    assert!(printed.contains("language-id=jack"));
+    assert!(printed.contains("uri=\"writer://jack\""));
+    assert!(printed.contains("document=child_id="));
 }

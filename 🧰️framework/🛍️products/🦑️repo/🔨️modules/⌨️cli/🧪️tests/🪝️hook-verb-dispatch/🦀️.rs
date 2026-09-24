@@ -9,7 +9,7 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The committed invocations every scenario reads.
     fn vectors(ctx: &Context) -> Result<Vec<Json>, String> {
-        Ok(ctx.fixture_json("local://🪝️hook-invocations.json")?.array("vectors"))
+        Ok(ctx.fixture_json("shared://🪝️hook-verb-dispatch/🪝️hook-invocations.json")?.array("vectors"))
     }
 
     /// 🪝️ The bytes and exit code one invocation writes.

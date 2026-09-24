@@ -7,7 +7,7 @@
   "aggregateVariant": "SetLineEnding",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-line-ending",
-  "binaryTag": null,
+  "binaryTag": 2,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

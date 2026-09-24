@@ -7,7 +7,7 @@ use protocol::MutationDiff;
 
 /// 🧪️ kinds_match_the_enum_and_the_catalog — the honesty check the test platform cannot make
 /// for itself, because the framework reads a DECLARED list and never parses Rust. Two claims:
-/// every enum variant reaches `KINDS` at its own [`variant_ordinal`] under exactly the keyword
+/// every enum variant reaches `KINDS` at its own [`wire_tag`] under exactly the keyword
 /// its `print_op` grammar emits (`demo_mutation_cases` carries at least one instance of every
 /// variant), and `KINDS` is character-for-character the `semio-v1-presentation` catalog the
 /// platform reads.
@@ -15,7 +15,7 @@ use protocol::MutationDiff;
 fn kinds_match_the_enum_and_the_catalog() {
     let mut covered = vec![false; KINDS.len()];
     for case in demo_mutation_cases() {
-        let ordinal = variant_ordinal(&case) as usize;
+        let ordinal = wire_tag(&case) as usize;
         let keyword = case.print_op().split(' ').next().expect("print_op is never empty").to_string();
         assert_eq!(KINDS[ordinal], keyword, "semio-presentation: KINDS[{ordinal}] must be the keyword print_op emits for {case:?}");
         covered[ordinal] = true;

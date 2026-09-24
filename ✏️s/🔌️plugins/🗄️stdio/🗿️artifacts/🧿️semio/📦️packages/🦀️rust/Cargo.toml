@@ -22,10 +22,10 @@ conversion-audio = ["dep:semio-s-artifact-stdio-mp3", "dep:semio-s-artifact-stdi
 conversion-brep = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-step"]
 conversion-cad = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-step"]
 conversion-document = ["dep:semio-s-artifact-stdio-docx", "dep:semio-s-artifact-stdio-md", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-txt", "dep:semio-s-artifact-stdio-zip"]
-conversion-drawing = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-svg", "dep:semio-s-artifact-stdio-xml"]
+conversion-drawing = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-png", "dep:semio-s-artifact-stdio-svg", "dep:semio-s-artifact-stdio-xml"]
 conversion-flow = ["dep:semio-s-artifact-stdio-json"]
 conversion-image = ["dep:semio-s-artifact-stdio-bmp", "dep:semio-s-artifact-stdio-gif", "dep:semio-s-artifact-stdio-jpg", "dep:semio-s-artifact-stdio-png", "dep:semio-s-artifact-stdio-tiff"]
-conversion-mesh = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-gltf", "dep:semio-s-artifact-stdio-las", "dep:semio-s-artifact-stdio-obj", "dep:semio-s-artifact-stdio-ply", "dep:semio-s-artifact-stdio-stl"]
+conversion-mesh = ["conversion-drawing", "dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-gltf", "dep:semio-s-artifact-stdio-las", "dep:semio-s-artifact-stdio-obj", "dep:semio-s-artifact-stdio-ply", "dep:semio-s-artifact-stdio-stl"]
 conversion-model = ["dep:semio-s-artifact-stdio-bcf", "dep:semio-s-artifact-stdio-ifc", "dep:semio-s-artifact-stdio-step"]
 conversion-presentation = ["dep:semio-s-artifact-stdio-pptx", "dep:semio-s-artifact-stdio-xml", "dep:semio-s-artifact-stdio-zip"]
 conversion-value = ["dep:semio-s-artifact-stdio-csv", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-xml"]
@@ -94,6 +94,11 @@ parry3d = "0.17"
 # expansion code agreeing with itself (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 # `📓️kernel-performance-2026-09-13.md`).
 num-rational = "0.4"
+# 🔮 Test-only RASTER oracle (never a `[dependencies]` entry): resvg renders the svg leaf's output
+# of the same drawing the `🖊️drawing → 📷️png` rasterizer paints, and hayro renders the pdf leaf's
+# output, so neither raster expectation is computed by this repository's own code.
+resvg = "0.45.1"
+hayro = "0.4.0"
 semio-framework-async-macros = { workspace = true }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }

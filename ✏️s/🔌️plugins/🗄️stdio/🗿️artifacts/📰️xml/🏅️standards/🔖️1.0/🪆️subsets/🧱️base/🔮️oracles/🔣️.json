@@ -73,7 +73,7 @@
       "id": "xml-1-0-base",
       "capability": "xml-1-0-mutate",
       "standardDirectoryName": "🔖️1.0",
-      "subsetDirectoryName": "✳️base",
+      "subsetDirectoryName": "🧱️base",
       "vectors": [],
       "kinds": [
         "set-declaration",
@@ -92,7 +92,7 @@
       "standard": "1.0",
       "subset": "base",
       "standardDirectoryName": "🔖️1.0",
-      "subsetDirectoryName": "✳️base",
+      "subsetDirectoryName": "🧱️base",
       "mutations": [
         {
           "id": "insert-element",

@@ -1,6 +1,6 @@
 //! 🏳️ Direct binary identity for `set-output-intents`.
 
-pub const TAG: u8 = 46;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-output-intents");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetOutputIntents;

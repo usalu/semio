@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateMechanicalVentilation",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-mechanical-ventilation",
-  "binaryTag": null,
+  "binaryTag": 109,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

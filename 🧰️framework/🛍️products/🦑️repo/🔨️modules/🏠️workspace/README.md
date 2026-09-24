@@ -12,7 +12,7 @@ with, the `📋️config.toml` reader, and the owned glob and gitignore matchers
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
 `🧪️test` harness; `micromatch` and `ignore` are registered as third-party references in
-`🔮️oracle/🔣️.json`, and the two deliberate divergences from git are recorded there as no-oracle
+`🔮️oracles/🔣️.json`, and the two deliberate divergences from git are recorded there as no-oracle
 decisions.
 
 `🧭️root-discovery`, `🃏️glob-matching`, `🙈️ignore-precedence`, `🚫️posix-negation-class`,

@@ -14,7 +14,7 @@ projects, the three exclusion rules that decide what is considered, and the emoj
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
 `🧪️test` harness; every case of this module rests on a recorded no-oracle decision in
-`🔮️oracle/🔣️.json`, because the layout convention, the artifact-id grammar and the considered-file
+`🔮️oracles/🔣️.json`, because the layout convention, the artifact-id grammar and the considered-file
 policy are this repository's own — the gitignore semantics the ignore case leans on are judged
 against a real engine by `🏠️workspace`.
 

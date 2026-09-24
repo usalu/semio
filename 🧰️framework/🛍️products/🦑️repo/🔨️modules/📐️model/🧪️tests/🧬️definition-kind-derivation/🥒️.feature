@@ -12,7 +12,7 @@ Feature: A raw declaration keyword always derives one of the four definition kin
   @level-fundamental
   @mode-differential
   Scenario: The recognised, the case-shifted and the nonsense keyword all derive the same kind everywhere
-    Given the keyword vectors local://🔣️vectors.json
+    Given the keyword vectors shared://🧬️definition-kind-derivation/🔣️vectors.json
     When each implementation derives the definition kind of every keyword
     Then every implementation projects the same kind for every keyword
 
@@ -20,6 +20,6 @@ Feature: A raw declaration keyword always derives one of the four definition kin
   @level-fundamental
   @mode-conformance
   Scenario: No keyword derives a value outside the four kinds
-    Given the keyword vectors local://🔣️vectors.json
+    Given the keyword vectors shared://🧬️definition-kind-derivation/🔣️vectors.json
     When each implementation derives the definition kind of every keyword
     Then every derived kind is one of the four declared kinds and none is blank

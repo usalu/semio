@@ -25,7 +25,7 @@ fn assert_zero_history<P, M>(parsed: store::ParsedDocumentText<P, M>, document_i
 async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_factory_substitution() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
     let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
-    let document_id = document_ids["cases"].as_array().unwrap().iter().find(|row| row["accepted"] == true).unwrap()["artifactId"].as_str().unwrap();
+    let document_id = document_ids["cases"].as_array().unwrap().iter().find(|row| row["accepted"] == true).unwrap()["documentId"].as_str().unwrap();
     let snapshot = GisMapSnapshot::default();
     let pack = snapshot.encode_pack();
     let (envelope, _) = store::semio_format::unwrap_binary(&pack).unwrap();
@@ -91,7 +91,7 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
             _ => unreachable!(),
         }
         for row in document_ids["cases"].as_array().unwrap().iter().filter(|row| row["accepted"] == false) {
-            let hostile_id = row["artifactId"].as_str().unwrap();
+            let hostile_id = row["documentId"].as_str().unwrap();
             let refused = match identity.schema {
                 "gis.map" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>>(hostile_id).await.is_err(),
                 "gis.terrain" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>(hostile_id).await.is_err(),
@@ -194,7 +194,7 @@ fn gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline
 #[semio_framework_async_macros::async_test]
 async fn gis_guest_genesis_is_byte_for_byte_the_linked_codec_pair_on_one_generation() {
     let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
-    let document_id = document_ids["cases"].as_array().unwrap().iter().find(|row| row["accepted"] == true).unwrap()["artifactId"].as_str().unwrap();
+    let document_id = document_ids["cases"].as_array().unwrap().iter().find(|row| row["accepted"] == true).unwrap()["documentId"].as_str().unwrap();
     for receipt in native_codec_factory_receipts().expect("complete inert GIS closure") {
         let identity = receipt.identity();
         let schema = identity.schema;

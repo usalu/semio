@@ -16,7 +16,7 @@ fn flat(section: &Section) -> Json {
 }
 
 fn parse(ctx: &Context, name: &str) -> Result<Json, String> {
-    let bytes = ctx.fixture_bytes(&format!("local://{name}"))?;
+    let bytes = ctx.fixture_bytes(&format!("shared://💥️malformed-regions/{name}"))?;
     let content = String::from_utf8(bytes).map_err(|e| e.to_string())?;
     let sections = parse_sections(&content, name);
     Ok(Json::Object(vec![

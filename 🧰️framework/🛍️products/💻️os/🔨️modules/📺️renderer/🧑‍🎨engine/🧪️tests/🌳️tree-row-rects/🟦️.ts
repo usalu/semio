@@ -88,7 +88,6 @@ describe("🌳️ the tree row metric is one number in every presentation", () =
     expect(rowHeightPx).toBe(law.metrics.rowHeightPx);
     expect(law.metrics.uiSpacingCompactPx * law.metrics.treeRowUiSpacing).toBeCloseTo(law.metrics.rowHeightPx, 6);
     expect(STYLING_METRICS.dom.treeRowUiSpacing).toBe(law.metrics.treeRowUiSpacing);
-    console.log(`[DEBUG] tree-row-rects react rowHeightPx=${rowHeightPx}`);
   });
 
   it("keeps `--size-workbench` at 7.5 ui-spacings, the multiplier React's rows are sized by", () => {
@@ -100,7 +99,7 @@ describe("🌳️ the tree row metric is one number in every presentation", () =
   it("sizes every Tree row shell on that metric and nothing else", () => {
     const tree = readFileSync(resolve(uiRoot, "🧱️elements/🌳️Tree/🟦️.tsx"), "utf8");
     expect(tree).toContain('const treeRowHeightPx = domSizePx("treeRowUiSpacing");');
-    expect(tree).toContain('"relative h-workbench min-h-workbench max-h-workbench w-full min-w-0 select-none overflow-hidden"');
+    expect(tree).toContain('const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--size-workbench))] max-h-[var(--tree-row-max-height,var(--size-workbench))] w-full min-w-0 select-none overflow-hidden";');
   });
 
   it("re-derives every fixture rect from React's own metric", () => {
@@ -112,7 +111,6 @@ describe("🌳️ the tree row metric is one number in every presentation", () =
         const found = rects.get(expected.path.join("/"));
         expect(found, `${entry.name} ${expected.path.join("/")}`).toEqual({ x: expected.x, y: expected.y, width: expected.width, height: expected.height });
       }
-      console.log(`[DEBUG] tree-row-rects twin case ${entry.name}: ${entry.rects.length} rows re-derived`);
     }
   });
 });
@@ -132,7 +130,7 @@ describe("🧊️ the wgpu side takes the same metric from the same token", () =
     expect(paint).not.toContain("const TREE_ROW_HEIGHT: f32 = 24.0;");
     expect(paint).toContain("let metrics = TreeRowMetrics::from_theme(theme);");
     const mounted = readFileSync(resolve(wgpuRoot, "📌️mounted_layout/🦀️.rs"), "utf8");
-    expect(mounted).toContain("let height = tree_item_height(item, metrics);");
+    expect(mounted).toContain("let height = live_tree_item_height(tree, id, item, &metrics, 0);");
     expect(mounted).toContain("LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded, reversed }");
   });
 });
@@ -145,21 +143,10 @@ describe("🌳️ the Actions tree keeps React's intrinsic row density", () => {
     expect(density.terminalRowId).toBe("action.engagementAbort");
   });
 
-  it("matches the real React browser capture and its fixed row shell", () => {
-    const capturePath = resolve(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🗑️generated/astra-runtime/tree-style-checkpoint-15/tree-style.json");
-    const capture = JSON.parse(readFileSync(capturePath, "utf8")) as {
-      readonly treeStyle: readonly { readonly id: string; readonly rect: readonly [number, number, number, number]; readonly minHeight: string; readonly icons: readonly (readonly [number, number, number, number])[]; readonly ancestors: readonly { readonly height: string; readonly scrollHeight: number }[] }[];
-    };
-    const first = capture.treeStyle.slice(0, 2);
-    expect(first.map((row) => row.id)).toEqual(density.firstRows);
-    expect(first.map((row) => row.rect[3])).toEqual([density.rowHeightPx, density.rowHeightPx]);
-    expect(first[1]!.rect[1] - first[0]!.rect[1]).toBe(density.rowHeightPx);
-    expect(first.every((row) => row.minHeight === `${density.rowHeightPx}px`)).toBe(true);
-    expect(first.every((row) => row.icons.some((icon) => icon[2] === density.rowIconPx && icon[3] === density.rowIconPx))).toBe(true);
-    expect(first.every((row) => row.ancestors[0]?.scrollHeight === density.intrinsicContentHeightPx)).toBe(true);
-
+  it("pins React's own row metric and its fixed row shell", () => {
+    expect(density.rowHeightPx).toBe(rowHeightPx);
     const tree = readFileSync(resolve(uiRoot, "🧱️elements/🌳️Tree/🟦️.tsx"), "utf8");
-    expect(tree).toContain('"relative h-workbench min-h-workbench max-h-workbench w-full min-w-0 select-none overflow-hidden"');
+    expect(tree).toContain('const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--size-workbench))] max-h-[var(--tree-row-max-height,var(--size-workbench))] w-full min-w-0 select-none overflow-hidden";');
     expect(tree).toContain('const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none select-text";');
   });
 

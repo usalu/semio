@@ -208,6 +208,16 @@
         },
         "toolRun": {
           "$ref": "#/definitions/toolRun"
+        },
+        "activeTool": {
+          "type": "string"
+        },
+        "principalKind": {
+          "type": "string",
+          "enum": [
+            "human",
+            "agent"
+          ]
         }
       }
     },
@@ -326,6 +336,9 @@
           "$ref": "#/definitions/pair"
         },
         "pointer": {
+          "$ref": "#/definitions/triple"
+        },
+        "rayOrigin": {
           "$ref": "#/definitions/triple"
         }
       }

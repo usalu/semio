@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeMechanicalVentilationFanTotalEfficiency",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-mechanical-ventilation-fan-total-efficiency",
-  "binaryTag": null,
+  "binaryTag": 114,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -24,7 +24,7 @@ Feature: A hook result reaches every client in the shape that client reads, and 
   @level-fundamental
   @mode-conformance
   Scenario: Copilot Chat receives a wrapped record and the other seven receive the bare record
-    Given the hook invocation vectors local://🖨️invocations.json
+    Given the hook invocation vectors shared://🖨️hook-result-formatting/🖨️invocations.json
     When each invocation is dispatched and rendered for all eight clients in plain mode
     Then every implementation wraps exactly the Copilot Chat record and leaves the other seven bare
 
@@ -32,7 +32,7 @@ Feature: A hook result reaches every client in the shape that client reads, and 
   @level-fundamental
   @mode-conformance
   Scenario: A refusal denies inside the wrapped record and exits 2 outside it
-    Given the hook invocation vectors local://🖨️invocations.json
+    Given the hook invocation vectors shared://🖨️hook-result-formatting/🖨️invocations.json
     When each invocation is rendered for a wrapping client and for a bare client
     Then every implementation reports the pinned verdict, the pinned exit code and a deny decision wherever the record carries one
 
@@ -40,7 +40,7 @@ Feature: A hook result reaches every client in the shape that client reads, and 
   @level-fundamental
   @mode-conformance
   Scenario: JSON mode prints the record to stdout and never exits 2
-    Given the hook invocation vectors local://🖨️invocations.json
+    Given the hook invocation vectors shared://🖨️hook-result-formatting/🖨️invocations.json
     When each invocation is rendered in JSON mode for a bare client
     Then every implementation prints a parseable record to stdout with exit code 0 and an empty stderr
 
@@ -48,7 +48,7 @@ Feature: A hook result reaches every client in the shape that client reads, and 
   @level-fundamental
   @mode-conformance
   Scenario: Each event contributes its own members to the record and no others
-    Given the hook invocation vectors local://🖨️invocations.json
+    Given the hook invocation vectors shared://🖨️hook-result-formatting/🖨️invocations.json
     When each invocation is dispatched
     Then every implementation projects the same member names for every invocation
 
@@ -56,6 +56,6 @@ Feature: A hook result reaches every client in the shape that client reads, and 
   @level-fundamental
   @mode-conformance
   Scenario: Every micro-commit subcommand is delegated through the same argv and reaches the runner
-    Given the hook invocation vectors local://🖨️invocations.json
+    Given the hook invocation vectors shared://🖨️hook-result-formatting/🖨️invocations.json
     When each micro-commit subcommand is delegated through a recorded process runner
     Then every implementation issues `<bun> ./📜️script.ts micro-commit <args…>` in the repository root and reads back what the runner answered

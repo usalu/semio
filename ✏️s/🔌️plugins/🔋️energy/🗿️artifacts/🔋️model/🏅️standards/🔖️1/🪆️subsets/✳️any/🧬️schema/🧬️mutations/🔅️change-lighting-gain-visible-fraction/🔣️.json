@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeLightingGainVisibleFraction",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-lighting-gain-visible-fraction",
-  "binaryTag": null,
+  "binaryTag": 91,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

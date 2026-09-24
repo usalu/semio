@@ -1,34 +1,19 @@
 {
   "schema": "stdio.semio",
   "subset": {
-    "blocks": [
+    "subset": "document",
+    "schema": "s.stdio.semio.document/v1",
+    "styles": [
       {
-        "kind": "paragraph",
-        "runs": [
-          {
-            "style": {
-              "bold": false,
-              "italic": false,
-              "underline": false
-            },
-            "text": "figure one"
-          }
-        ],
-        "styleId": "body"
-      },
-      {
-        "alt": "first figure",
-        "imageId": "img1",
-        "kind": "image"
-      },
-      {
-        "alt": "second figure",
-        "imageId": "img2",
-        "kind": "image"
+        "id": "body",
+        "name": "Body",
+        "basedOn": null
       }
     ],
     "images": [
       {
+        "id": "img1",
+        "mime": "image/png",
         "bytes": [
           137,
           80,
@@ -42,11 +27,11 @@
           2,
           3,
           4
-        ],
-        "id": "img1",
-        "mime": "image/png"
+        ]
       },
       {
+        "id": "img2",
+        "mime": "image/jpeg",
         "bytes": [
           255,
           216,
@@ -56,11 +41,11 @@
           8,
           7,
           6
-        ],
-        "id": "img2",
-        "mime": "image/jpeg"
+        ]
       },
       {
+        "id": "img3",
+        "mime": "image/png",
         "bytes": [
           137,
           80,
@@ -70,19 +55,42 @@
           98,
           97,
           96
-        ],
-        "id": "img3",
-        "mime": "image/png"
+        ]
       }
     ],
-    "schema": "s.stdio.semio.document/v1",
-    "styles": [
+    "blocks": [
       {
-        "basedOn": null,
-        "id": "body",
-        "name": "Body"
+        "kind": "paragraph",
+        "style_id": "body",
+        "runs": [
+          {
+            "text": "figure one",
+            "style": {
+              "bold": false,
+              "italic": false,
+              "underline": false,
+              "size": null,
+              "font": null,
+              "color": null,
+              "link": null
+            }
+          }
+        ]
+      },
+      {
+        "kind": "image",
+        "image_id": "img1",
+        "alt": "first figure",
+        "width": null,
+        "height": null
+      },
+      {
+        "kind": "image",
+        "image_id": "img2",
+        "alt": "second figure",
+        "width": null,
+        "height": null
       }
-    ],
-    "subset": "document"
+    ]
   }
 }

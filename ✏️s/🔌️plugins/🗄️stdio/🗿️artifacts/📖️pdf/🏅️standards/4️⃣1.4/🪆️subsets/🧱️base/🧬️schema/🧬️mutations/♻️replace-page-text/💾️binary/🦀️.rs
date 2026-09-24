@@ -7,7 +7,7 @@ use super::super::{
 use super::ReplacePageText;
 
 //#region 🔖️Codec
-pub const TAG: u8 = 4;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "replace-page-text");
 
 pub fn encode(mutation: &PdfMutation) -> Option<Result<Vec<u8>, String>> {
     let PdfMutation::ReplacePageText(payload) = mutation else {

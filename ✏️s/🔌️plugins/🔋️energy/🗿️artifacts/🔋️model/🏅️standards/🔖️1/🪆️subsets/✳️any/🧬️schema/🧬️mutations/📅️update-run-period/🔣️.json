@@ -7,7 +7,7 @@
   "aggregateVariant": "UpdateRunPeriod",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-run-period",
-  "binaryTag": null,
+  "binaryTag": 4,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

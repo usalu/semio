@@ -5,12 +5,27 @@ schema s.stdio.semio.object
 start body
 framing record
 
-# UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM object wave (W2c). Real binary op frame: `format u8` +
-# `tag u8` (the `SemioObjectMutation` variant ordinal, `../💾️binary/🦀️.rs`'s
-# `OP_KEYWORDS`/`variant_ordinal`, 0-8) as two REAL fixed fields, then the variant's own argument
-# payload as one opaque trailing `bytes` chain.
+# Real `SemioObjectMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
 header fixed 2
 field format u8
 field tag u8
-
-chain payload bytes
+record move-object tag=0
+field payload bytes
+record rotate-object tag=1
+field payload bytes
+record scale-object tag=2
+field payload bytes
+record create-brep tag=3
+field payload bytes
+record delete-brep tag=4
+field payload bytes
+record create-mesh tag=5
+field payload bytes
+record delete-mesh tag=6
+field payload bytes
+record create-properties tag=7
+field payload bytes
+record delete-properties tag=8
+field payload bytes

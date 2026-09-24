@@ -14,7 +14,7 @@ import (
 
 // 📥️ The committed document every scenario reads.
 func document(ctx *host.Context) (map[string]interface{}, error) {
-	raw, err := ctx.FixtureBytes("local://🧪️test-verb-vectors.json")
+	raw, err := ctx.FixtureBytes("shared://🧪️test-verb-planning/🧪️test-verb-vectors.json")
 	if err != nil {
 		return nil, err
 	}

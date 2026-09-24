@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct AddEntity {
-    pub(crate) entity: CadEntityRecord,
+    pub entity: CadEntityRecord,
 }
 
 impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for AddEntity {

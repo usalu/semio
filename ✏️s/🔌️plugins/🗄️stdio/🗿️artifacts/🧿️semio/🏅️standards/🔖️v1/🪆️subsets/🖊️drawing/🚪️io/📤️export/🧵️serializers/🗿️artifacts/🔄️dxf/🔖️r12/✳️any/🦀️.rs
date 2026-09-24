@@ -5,12 +5,13 @@
 //! every other `Path` (lines, general arcs, bezier curves) is FLATTENED into a real, sampled
 //! `POLYLINE` (curves sampled at 32 segments — a genuine, documented curve-flattening
 //! approximation, not a silent drop). `Text`→`TEXT` (height/rotation default, no source field —
-//! see the import leaf's doc). `Image`/nested `Group` transforms have no DXF entity/composition
-//! equivalent and are dropped (documented — same architectural boundary the import leaf
-//! describes for BLOCKS/INSERT).
+//! see the import leaf's doc). `Group` transforms are applied to the geometry they contain (a circle
+//! stays a `CIRCLE` under a similarity, anything else is mapped point by point); `Image` has no
+//! DXF entity equivalent and is dropped.
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment, SemioDrawingSnapshot};
+use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{compose_affine, semio_transform_affine, similarity_scale, transformed_segments};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_dxf::{
     schema::snapshot::{DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue},
@@ -135,34 +136,42 @@ fn arc_center(p0: SemioPoint2, p1: SemioPoint2, r: f64) -> Option<(f64, f64)> {
 
 //#region 🔖️EntityBuild
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dxf_entity_from_node(node: &DrawNode, layer: &str) -> Option<DxfEntity> {
+fn dxf_entity_from_node(node: &DrawNode, matrix: &[f64; 6], layer: &str) -> Option<DxfEntity> {
+    let map = |p: SemioPoint2| [matrix[0] * p.x + matrix[2] * p.y + matrix[4], matrix[1] * p.x + matrix[3] * p.y + matrix[5]];
     match node {
         DrawNode::Path { segments, .. } => {
-            if let Some((cx, cy, r)) = as_circle(segments) {
-                return Some(DxfEntity::Circle { center: [cx, cy, 0.0], radius: r, layer: layer.into(), unknown_group_codes: vec![] });
+            if let Some(scale) = similarity_scale(matrix) {
+                if let Some((cx, cy, r)) = as_circle(segments) {
+                    let [x, y] = map(SemioPoint2 { x: cx, y: cy });
+                    return Some(DxfEntity::Circle { center: [x, y, 0.0], radius: r * scale, layer: layer.into(), unknown_group_codes: vec![] });
+                }
             }
-            let (points, closed) = flatten_to_polyline(segments);
+            let (points, closed) = flatten_to_polyline(&transformed_segments(segments, matrix));
             if points.len() < 2 {
                 return None;
             }
             let vertices = points.iter().map(|p| semio_s_artifact_stdio_dxf::schema::snapshot::DxfVertex { x: p.x, y: p.y, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] }).collect();
             Some(DxfEntity::Polyline { vertices, closed, layer: layer.into(), unknown_group_codes: vec![] })
         }
-        DrawNode::Text { value, at, .. } => Some(DxfEntity::Text { position: [at.x, at.y, 0.0], height: 1.0, value: value.clone(), layer: layer.into(), unknown_group_codes: vec![] }),
+        DrawNode::Text { value, at, .. } => {
+            let [x, y] = map(*at);
+            Some(DxfEntity::Text { position: [x, y, 0.0], height: 1.0, value: value.clone(), layer: layer.into(), unknown_group_codes: vec![] })
+        }
         DrawNode::Group { .. } | DrawNode::Image { .. } => None,
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn collect_entities(node: &DrawNode, layer: &str, out: &mut Vec<DxfEntity>) {
+fn collect_entities(node: &DrawNode, matrix: &[f64; 6], layer: &str, out: &mut Vec<DxfEntity>) {
     match node {
-        DrawNode::Group { children, .. } => {
+        DrawNode::Group { transform, children } => {
+            let inner = compose_affine(matrix, &semio_transform_affine(transform));
             for c in children {
-                collect_entities(c, layer, out);
+                collect_entities(c, &inner, layer, out);
             }
         }
         other => {
-            if let Some(e) = dxf_entity_from_node(other, layer) {
+            if let Some(e) = dxf_entity_from_node(other, matrix, layer) {
                 out.push(e);
             }
         }
@@ -184,7 +193,7 @@ impl ArtifactSerializer for SemioDrawingToDxf {
         let mut layer_defs = Vec::new();
         for layer in &from.layers {
             layer_defs.push(DxfLayer { name: layer.id.clone(), color: 7, linetype: "CONTINUOUS".into(), flags: if layer.visible { 0 } else { 1 }, unknown_group_codes: vec![] });
-            collect_entities(&layer.root, &layer.id, &mut entities);
+            collect_entities(&layer.root, &[1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &layer.id, &mut entities);
         }
         Ok(DxfSnapshot {
             schema: semio_s_artifact_stdio_dxf::STDIO_DXF_DOCUMENT_SCHEMA.into(),

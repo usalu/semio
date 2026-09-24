@@ -197,7 +197,7 @@ impl protocol::MutationDiff<Puzzle3dWindowTransient> for Puzzle3dWindowTransient
     fn absorb(&mut self, other: Self) { *self = other; }
 }
 
-store::artifact_retire_struct!(Puzzle3dSuggestionMenu { x, y, window_id, vortex_full_id });
+store::artifact_retire_struct!(Puzzle3dSuggestionMenu { x, y, window_id, vortex_full_id, submenu });
 store::artifact_retire_struct!(Puzzle3dWindowTransient { suggestion_menu, engagement_input, brush_candidate_index, activation });
 
 impl store::retirement::RetireOwned for Puzzle3dWindowTransientMutation {

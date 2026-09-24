@@ -270,48 +270,48 @@ impl OpText for SemioMeshMutation {
 }
 //#endregion 🔖️OpText
 
-//#region 🔖️OpBinary
-/// 🏷️ Ordinal table, same declaration order as `SemioMeshMutation`'s own enum variants and
-/// `parse_semio_mesh_mutation`'s keyword match — the real binary `tag` field's source of truth.
-const OP_KEYWORDS: [&str; 17] = [
-    "create-mesh",
-    "delete-mesh",
-    "create-primitive",
-    "delete-primitive",
-    "set-primitive-topology",
-    "replace-primitive-geometry",
-    "set-primitive-material",
-    "create-material",
-    "delete-material",
-    "change-material-base-color",
-    "change-material-metallic",
-    "change-material-roughness",
-    "create-texture",
-    "delete-texture",
-    "change-texture-mime",
-    "replace-texture-bytes",
-    "move-vertex",
-];
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioMeshMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_CREATE_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-mesh");
+const TAG_DELETE_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-mesh");
+const TAG_CREATE_PRIMITIVE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-primitive");
+const TAG_DELETE_PRIMITIVE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-primitive");
+const TAG_SET_PRIMITIVE_TOPOLOGY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-primitive-topology");
+const TAG_REPLACE_PRIMITIVE_GEOMETRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-primitive-geometry");
+const TAG_SET_PRIMITIVE_MATERIAL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-primitive-material");
+const TAG_CREATE_MATERIAL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-material");
+const TAG_DELETE_MATERIAL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-material");
+const TAG_CHANGE_MATERIAL_BASE_COLOR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-material-base-color");
+const TAG_CHANGE_MATERIAL_METALLIC: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-material-metallic");
+const TAG_CHANGE_MATERIAL_ROUGHNESS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-material-roughness");
+const TAG_CREATE_TEXTURE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-texture");
+const TAG_DELETE_TEXTURE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-texture");
+const TAG_CHANGE_TEXTURE_MIME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-texture-mime");
+const TAG_REPLACE_TEXTURE_BYTES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-texture-bytes");
+const TAG_MOVE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-vertex");
+//#endregion 🏷️WireTags
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioMeshMutation) -> u8 {
+fn wire_tag(m: &SemioMeshMutation) -> u8 {
     match m {
-        SemioMeshMutation::CreateMesh(_) => 0,
-        SemioMeshMutation::DeleteMesh(_) => 1,
-        SemioMeshMutation::CreatePrimitive(_) => 2,
-        SemioMeshMutation::DeletePrimitive(_) => 3,
-        SemioMeshMutation::SetPrimitiveTopology(_) => 4,
-        SemioMeshMutation::ReplacePrimitiveGeometry(_) => 5,
-        SemioMeshMutation::SetPrimitiveMaterial(_) => 6,
-        SemioMeshMutation::CreateMaterial(_) => 7,
-        SemioMeshMutation::DeleteMaterial(_) => 8,
-        SemioMeshMutation::ChangeMaterialBaseColor(_) => 9,
-        SemioMeshMutation::ChangeMaterialMetallic(_) => 10,
-        SemioMeshMutation::ChangeMaterialRoughness(_) => 11,
-        SemioMeshMutation::CreateTexture(_) => 12,
-        SemioMeshMutation::DeleteTexture(_) => 13,
-        SemioMeshMutation::ChangeTextureMime(_) => 14,
-        SemioMeshMutation::ReplaceTextureBytes(_) => 15,
-        SemioMeshMutation::MoveVertex(_) => 16,
+        SemioMeshMutation::CreateMesh(_) => TAG_CREATE_MESH,
+        SemioMeshMutation::DeleteMesh(_) => TAG_DELETE_MESH,
+        SemioMeshMutation::CreatePrimitive(_) => TAG_CREATE_PRIMITIVE,
+        SemioMeshMutation::DeletePrimitive(_) => TAG_DELETE_PRIMITIVE,
+        SemioMeshMutation::SetPrimitiveTopology(_) => TAG_SET_PRIMITIVE_TOPOLOGY,
+        SemioMeshMutation::ReplacePrimitiveGeometry(_) => TAG_REPLACE_PRIMITIVE_GEOMETRY,
+        SemioMeshMutation::SetPrimitiveMaterial(_) => TAG_SET_PRIMITIVE_MATERIAL,
+        SemioMeshMutation::CreateMaterial(_) => TAG_CREATE_MATERIAL,
+        SemioMeshMutation::DeleteMaterial(_) => TAG_DELETE_MATERIAL,
+        SemioMeshMutation::ChangeMaterialBaseColor(_) => TAG_CHANGE_MATERIAL_BASE_COLOR,
+        SemioMeshMutation::ChangeMaterialMetallic(_) => TAG_CHANGE_MATERIAL_METALLIC,
+        SemioMeshMutation::ChangeMaterialRoughness(_) => TAG_CHANGE_MATERIAL_ROUGHNESS,
+        SemioMeshMutation::CreateTexture(_) => TAG_CREATE_TEXTURE,
+        SemioMeshMutation::DeleteTexture(_) => TAG_DELETE_TEXTURE,
+        SemioMeshMutation::ChangeTextureMime(_) => TAG_CHANGE_TEXTURE_MIME,
+        SemioMeshMutation::ReplaceTextureBytes(_) => TAG_REPLACE_TEXTURE_BYTES,
+        SemioMeshMutation::MoveVertex(_) => TAG_MOVE_VERTEX,
     }
 }
 /// ✂️ Just the `key=value ...` argument tail of `print_semio_mesh_mutation` — the binary frame's
@@ -325,15 +325,15 @@ fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
     }
 }
 
-/// ⚡️ Real binary op frame: `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant
-/// ordinal, see [`OP_KEYWORDS`]) as two REAL fixed fields, then the variant's own `key=value ...`
+/// ⚡️ Real binary op frame: `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in
+/// `💾️binary/📡️.protocol.semio`) as two REAL fixed fields, then the variant's own `key=value ...`
 /// argument payload as one opaque trailing `bytes` chain — reusing the already-real, already-tested
 /// `print_semio_mesh_mutation`/`parse_semio_mesh_mutation` text codec rather than re-deriving a
 /// second independent encoding.
 impl OpBinary for SemioMeshMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_semio_mesh_mutation_args(self).as_bytes());
         Ok(out)
     }
@@ -346,7 +346,7 @@ impl OpBinary for SemioMeshMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })

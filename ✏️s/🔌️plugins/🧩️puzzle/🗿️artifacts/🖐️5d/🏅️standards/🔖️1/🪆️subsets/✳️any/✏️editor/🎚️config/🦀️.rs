@@ -159,6 +159,9 @@ pub struct Puzzle5dRuntime {
     pub fill_count: u32,
     #[value(default)]
     pub brush_candidate_index: usize,
+    /// 🎣️ The grip suggestion menu this window has open (window-transient, never persisted).
+    #[value(default)]
+    pub suggestion_menu: Option<crate::editor::puzzle5d::window::Puzzle5dSuggestionMenu>,
     #[value(default = "default_contact_tolerance")]
     pub contact_tolerance: f64,
     /// 📡️ How near (m) two open grips must come before a drop auto-connects them (`setProximityRadius`).
@@ -225,6 +228,7 @@ impl Default for Puzzle5dRuntime {
             camera3d: Puzzle5dCamera3d { position: [8.0, -8.0, 8.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: None, projection: WorldProjectionConfig::default() },
             fill_count: default_fill_count(),
             brush_candidate_index: 0,
+            suggestion_menu: None,
             contact_tolerance: default_contact_tolerance(),
             proximity_radius: default_proximity_radius(),
             chunk_size: default_chunk_size(),

@@ -38,6 +38,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -302,7 +303,7 @@ async function main(argv: readonly string[]): Promise<number> {
         units: { length: "unitless", angle: "radian" },
         files,
         provenance: { source: "handcrafted", license: "public-domain (synthetic, no third-party content embedded)" },
-        generator: { oracle: "three-obj-3-0-document-reader", packageVersion: "0.182.0", engineFamily: "threejs", engineVersion: "0.182.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document", platform: process.platform },
+        generator: { oracle: "three-obj-3-0-document-reader", packageVersion: "0.182.0", engineFamily: "threejs", engineVersion: "0.182.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document", platform: currentPlatform() },
         comparisonProfile: "semantic-obj-document-v1",
         reproducible: true,
         family: "mechanical",

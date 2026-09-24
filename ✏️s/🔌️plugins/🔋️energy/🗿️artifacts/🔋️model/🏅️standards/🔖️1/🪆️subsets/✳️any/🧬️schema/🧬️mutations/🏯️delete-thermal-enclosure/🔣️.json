@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteThermalEnclosure",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-thermal-enclosure",
-  "binaryTag": null,
+  "binaryTag": 248,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

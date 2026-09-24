@@ -1,6 +1,6 @@
 //! 💾️ Operation-specific binary payload codec for set-element-name/SetElementName.
 use super::SetElementNamePayload;
-pub const BINARY_TAG: u32 = 5;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "set-element-name");
 pub fn encode_payload(value: &SetElementNamePayload) -> Result<Vec<u8>, String> {
     Ok(pack::to_json_string(value).into_bytes())
 }

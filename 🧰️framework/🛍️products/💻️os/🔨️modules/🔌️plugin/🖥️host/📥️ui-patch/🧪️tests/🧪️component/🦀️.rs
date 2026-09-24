@@ -8,8 +8,13 @@ const ACTIVATION_GENERATION: u64 = 41;
 const OPEN_SEQUENCE: u64 = 7;
 const SESSION: u64 = 810_041;
 
+/// ⚖️ The scale fixture's registered component, materialized by
+/// `@semio-tech/framework-os-scale-fixture:build-wasm` (`⚖️scale/📦️packages/🦀️rust/📜️script.ts`).
+const SCALE_COMPONENT: &str = "../../../../../🧫️fixtures/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
+
 fn fixture_bytes() -> Vec<u8> {
-    std::fs::read(std::env::var_os("SEMIO_UI_PATCH_SCALE_WASM").expect("registered scale component path")).expect("read registered scale component")
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(SCALE_COMPONENT);
+    std::fs::read(&path).unwrap_or_else(|error| panic!("registered scale component {} is not materialized (run @semio-tech/framework-os-scale-fixture:build-wasm): {error}", path.display()))
 }
 
 fn budget() -> Budget {
@@ -88,8 +93,8 @@ async fn genuine_component_returned_and_imported_patches_keep_channel_order_and_
 async fn imported_then_returned_channels_refuse_atomically_without_a_transport_token() {
     let (runtime, mut instance, _) = open_live(serde_json::json!({ "profile": "ui", "uiImportSink": true, "uiReturnWithImport": true })).await;
     for _ in 0..2 {
-        let error = runtime.execute_turn(&mut instance, &[Event::Wake], budget()).await.expect_err("two channels exceed one logical patch");
-        assert!(error.to_string().contains("unpaired-authority"));
+        let error = runtime.execute_turn(&mut instance, &[Event::Wake], budget()).await.expect_err("one turn never mixes the imported and returned channels");
+        assert!(error.to_string().contains("mixes the imported and returned channels"), "{error}");
     }
 }
 

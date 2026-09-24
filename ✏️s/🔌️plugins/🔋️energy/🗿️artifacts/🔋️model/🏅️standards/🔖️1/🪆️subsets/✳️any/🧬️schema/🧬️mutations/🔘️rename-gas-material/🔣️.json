@@ -7,7 +7,7 @@
   "aggregateVariant": "RenameGasMaterial",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-gas-material",
-  "binaryTag": null,
+  "binaryTag": 285,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -348,12 +348,14 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
 /// overhead, which is what this law guards: `addPrimitive` re-encoding every untouched mesh (11.6 ms)
 /// was such a bug (2026-09-18). Chunking whole-mesh kernel ops into resumable steps is a kernel job.
 ///
-/// ⏱️ A debug build measures the same box commands at 8.7–10.6 ms (`triangulate`, `paintFill`'s 256²
-/// flood fill + 262 KB diff) on a machine at load average 30, flapping between commands run to run, so
-/// the ceiling a debug build is held to is the runtime's own quarantine bound — four consecutive
-/// ceilings, the most one genuinely slow step may burn before `StepOverrunLedger` stops it. Release
-/// builds (what the wasm guest ships as) keep the exact 8 ms law.
-const INTERACTIVE_TURN_CEILING: std::time::Duration = std::time::Duration::from_micros(if cfg!(debug_assertions) { semio_framework_job::INTERACTIVE_STEP_CEILING_US * semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS as u64 } else { semio_framework_job::INTERACTIVE_STEP_CEILING_US });
+/// ⏱️ The ceiling is the runtime's own `INTERACTIVE_STEP_CEILING_US` in every build. What is measured is
+/// the command's intrinsic turn cost: on a host oversubscribed three to four times (load 26–41 on ten
+/// cores) a 5 ms turn takes 15–40 ms of wall time, so the law keeps the fastest of up to
+/// `INTERACTIVE_TURN_ATTEMPTS` runs. A descheduled attempt is retried; a command whose own cost exceeds
+/// the ceiling fails every attempt. Measured 2026-09-24 in a debug build at load 33: slowest command
+/// `paintFill` 5.3 ms, every other command under 3.1 ms.
+const INTERACTIVE_TURN_CEILING: std::time::Duration = std::time::Duration::from_micros(semio_framework_job::INTERACTIVE_STEP_CEILING_US);
+const INTERACTIVE_TURN_ATTEMPTS: usize = 16;
 #[semio_framework_async_macros::async_test]
 async fn retained_migrated_turns_stay_below_eight_milliseconds() {
     let unit_box = semio_framework_3d::mesh::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("box json");
@@ -367,10 +369,8 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
     for command in every_command().into_iter().filter(|command| LOWPOLY_MIGRATED_TOOL_IDS.contains(&command.command_id())) {
         let tool_id = command.command_id();
         let disposition = lowpoly_command_disposition(tool_id).expect("migrated disposition");
-        // ⏱️ Best of three: an oversubscribed host deschedules a step for whole milliseconds, which the
-        // runtime forgives as an isolated overrun; the law is on the command's own cost.
         let mut best = std::time::Duration::MAX;
-        for _attempt in 0..3 {
+        for _attempt in 0..INTERACTIVE_TURN_ATTEMPTS {
             let mut work = LowpolyRetainedCommandWork::new(tool_id, disposition, operation.operation_id, operation.generation, operation.canonical_base_revision, context.identity_digest());
             let mut slowest = std::time::Duration::ZERO;
             // 🔊️ Nothing is selected here, so a selection-bound mesh edit REFUSES (`no faces selected`) —
@@ -405,6 +405,9 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
             if !refused {
                 work.begin_close();
                 assert_eq!(work.close_step(1, LOWPOLY_ARTIFACT_STORE_MAXIMUM_BYTES), InteractiveJobCloseStep::Complete);
+            }
+            if best < INTERACTIVE_TURN_CEILING {
+                break;
             }
         }
         assert!(best < INTERACTIVE_TURN_CEILING, "{tool_id} turn exceeded {INTERACTIVE_TURN_CEILING:?} on every attempt: best {best:?}");

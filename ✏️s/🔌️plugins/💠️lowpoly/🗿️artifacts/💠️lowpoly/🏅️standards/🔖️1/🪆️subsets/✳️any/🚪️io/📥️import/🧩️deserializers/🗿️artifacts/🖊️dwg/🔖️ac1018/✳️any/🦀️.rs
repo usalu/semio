@@ -1,18 +1,31 @@
 //! lowpoly <- dwg
 //!
-//! 🐛️ See the export leaf's doc comment: honest stub, not a silent pack-envelope lie. Real DWG
-//! import would need to synthesize `LowpolyObject`s (and resolvable mesh child artifacts) from
-//! parsed CAD entities -- an out-of-scope architecture change, not a pure `&DwgSnapshot -> …`
-//! mapping.
+//! Geometry over the real `decode_dwg` / `dwg_drawing_to_mesh` pipeline: polyface-mesh entities
+//! become one lowpoly object of triangles.
+use crate::io::mesh_geometry::{snapshot_from_parts, text_error, PolygonPart};
 use crate::schema::snapshot::LowpolySnapshot;
-use semio_s_artifact_stdio_dwg::DwgSnapshot;
+use semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg;
+use semio_s_artifact_stdio_dwg::{dwg_drawing_to_mesh, DwgSnapshot};
 
 pub fn register() {}
 
-pub fn deserialize(_from: &DwgSnapshot) -> Result<LowpolySnapshot, store::TextError> {
-    Err(store::TextError::new("dwg->lowpoly: importing real DWG geometry into a lowpoly document needs mesh-child-artifact creation, not available at this layer -- not implemented", dsl::TextSpan::at(1, 1)))
+pub fn deserialize(from: &DwgSnapshot) -> Result<LowpolySnapshot, store::TextError> {
+    let drawing = from.drawing.to_native().map_err(|e| text_error(format!("dwg->lowpoly: {e}")))?;
+    let mesh = dwg_drawing_to_mesh(&drawing);
+    if mesh.indices.len() < 3 || mesh.positions.len() < 9 {
+        return Err(text_error("dwg->lowpoly: the drawing contains no polyface mesh faces to import"));
+    }
+    let mut part = PolygonPart { name: "DWG Mesh".into(), ..Default::default() };
+    for chunk in mesh.positions.chunks_exact(3) {
+        part.positions.push([chunk[0], chunk[1], chunk[2]]);
+    }
+    for tri in mesh.indices.chunks_exact(3) {
+        part.faces.push(vec![tri[0], tri[1], tri[2]]);
+    }
+    snapshot_from_parts("dwg", vec![part])
 }
 
-pub fn deserialize_bytes(_bytes: &[u8]) -> Result<LowpolySnapshot, store::TextError> {
-    Err(store::TextError::new("dwg->lowpoly: importing real DWG geometry into a lowpoly document needs mesh-child-artifact creation, not available at this layer -- not implemented", dsl::TextSpan::at(1, 1)))
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, store::TextError> {
+    let snap = decode_dwg(bytes).map_err(|e| text_error(format!("dwg->lowpoly: {e}")))?;
+    deserialize(&snap)
 }

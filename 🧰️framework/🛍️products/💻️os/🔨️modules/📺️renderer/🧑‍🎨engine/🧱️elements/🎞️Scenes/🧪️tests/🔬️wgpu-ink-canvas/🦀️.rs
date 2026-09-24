@@ -138,7 +138,7 @@ fn assert_domain_action(action: ActionDescriptor, expected_action: &str, expecte
 
 #[test]
 fn ink_canvas_domain_hover_uses_scoped_topology_ids() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json")).expect("domain fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json")).expect("domain fixture");
     let scene = domain_scene(&fixture, "selectDirect");
     let hover = run_domain_interaction(&scene, InkInteractionEvent::PointerMove { x: 40.0, y: 40.0 }).expect("hover action");
     assert_domain_action(hover, "interactionHover", &fixture["cases"][0]["args"]);
@@ -148,7 +148,7 @@ fn ink_canvas_domain_hover_uses_scoped_topology_ids() {
 
 #[test]
 fn ink_canvas_domain_picks_use_scoped_topology_ids() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json")).expect("domain fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json")).expect("domain fixture");
     let scene = domain_scene(&fixture, "selectDirect");
     let replace = run_domain_interaction(&scene, InkInteractionEvent::PointerDown { x: 40.0, y: 40.0, button: 0, shift: false }).expect("replace pick");
     assert_domain_action(replace, "interactionSelect", &fixture["cases"][2]["args"]);
@@ -163,7 +163,7 @@ fn ink_canvas_domain_picks_use_scoped_topology_ids() {
 
 #[test]
 fn ink_canvas_domain_marquee_uses_scoped_topology_ids() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json")).expect("domain fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json")).expect("domain fixture");
     let scene = domain_scene(&fixture, "selectMarquee");
     assert!(run_domain_interaction(&scene, InkInteractionEvent::PointerDown { x: 10.0, y: 10.0, button: 0, shift: false }).is_none());
     assert!(run_domain_interaction(&scene, InkInteractionEvent::PointerMove { x: 270.0, y: 90.0 }).is_none());
@@ -174,7 +174,7 @@ fn ink_canvas_domain_marquee_uses_scoped_topology_ids() {
 
 #[test]
 fn shared_clipboard_fixture_copies_order_and_publishes_text_svg_and_recursive_blocks() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🖋️ink-clipboard/🔣️.json")).expect("shared clipboard fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🖋️ink-clipboard/🔣️.json")).expect("shared clipboard fixture");
     let scene = clipboard_scene(&fixture, &fixture["copy"]["selectedIds"]);
     let copied = ink_clipboard_copy_text(&scene).expect("bounded copy").expect("selected copy");
     let copied: Value = serde_json::from_str(&copied).unwrap();
@@ -221,7 +221,7 @@ fn shared_clipboard_fixture_copies_order_and_publishes_text_svg_and_recursive_bl
 
 #[test]
 fn ink_cancel_requires_the_exact_surface_generation_and_pointer_owner() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🖋️ink-clipboard/🔣️.json")).expect("shared clipboard fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🖋️ink-clipboard/🔣️.json")).expect("shared clipboard fixture");
     let scene = clipboard_scene(&fixture, &fixture["copy"]["selectedIds"]);
     let pointer = ui_render::PointerId(7);
     let job = InkInteractionJob::new(3, 11, Some(pointer), &scene, InkInteractionEvent::PointerMove { x: 4.0, y: 5.0 }).expect("bounded Ink interaction").expect("interactive Ink surface");
@@ -316,7 +316,7 @@ fn item_card_background_uses_the_background_token_not_panel() {
 /// control instead of the generic InkCanvas surface below it.
 #[test]
 fn active_ink_editor_registers_a_retained_accessible_input_over_the_surface() {
-    let law: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🖋️ink-canvas-editing/🔣️.json")).expect("shared InkCanvas editing law parses");
+    let law: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🖋️ink-canvas-editing/🔣️.json")).expect("shared InkCanvas editing law parses");
     let surface_id = law["scene"]["surfaceId"].as_str().expect("surface id");
     let scene = UiComponentSceneNode {
         host_id: surface_id.into(),

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeVortexKindDefaultCableKind",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-vortex-kind-default-cable-kind",
-  "binaryTag": null,
+  "binaryTag": 21,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

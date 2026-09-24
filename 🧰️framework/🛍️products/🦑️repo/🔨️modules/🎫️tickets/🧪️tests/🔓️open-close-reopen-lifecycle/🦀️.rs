@@ -13,7 +13,7 @@ mod subject {
     };
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    const VECTORS: &str = "local://🔓️lifecycle.json";
+    const VECTORS: &str = "shared://🔓️open-close-reopen-lifecycle/🔓️lifecycle.json";
 
     struct World {
         store: MemoryTicketStore,

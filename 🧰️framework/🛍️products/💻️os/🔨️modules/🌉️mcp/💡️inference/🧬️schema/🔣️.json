@@ -44,6 +44,31 @@
       "properties": {
         "declared": { "type": "array", "items": { "$ref": "#/$defs/DeclaredInferenceV1" } }
       }
+    },
+    "InferenceBindingCancellationLawV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "law", "cancelAnswerCeilingMs", "phases", "cases"],
+      "properties": {
+        "$schema": { "type": "string", "minLength": 1 },
+        "law": { "type": "string", "minLength": 1 },
+        "cancelAnswerCeilingMs": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "phases": { "$ref": "https://json.schemas.assets.semio-tech.com/os/mcp/workspace/component.json#/$defs/SessionActivationPhasesV1" },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["cancelAt", "expected", "rebindMatchesUncancelled"],
+            "properties": {
+              "cancelAt": { "oneOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/mcp/workspace/component.json#/$defs/SessionActivationPhaseV1" }, { "type": "null" }] },
+              "expected": { "enum": ["CANCELLED", "BOUND"] },
+              "rebindMatchesUncancelled": { "type": "boolean" }
+            }
+          }
+        }
+      }
     }
   }
 }

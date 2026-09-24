@@ -7,7 +7,7 @@
   "aggregateVariant": "AppendContent",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "append-content",
-  "binaryTag": null,
+  "binaryTag": 33,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

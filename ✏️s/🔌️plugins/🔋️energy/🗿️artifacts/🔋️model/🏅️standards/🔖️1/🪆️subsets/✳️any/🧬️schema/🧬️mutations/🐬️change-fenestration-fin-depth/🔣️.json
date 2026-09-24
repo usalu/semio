@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeFenestrationFinDepth",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-fenestration-fin-depth",
-  "binaryTag": null,
+  "binaryTag": 58,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

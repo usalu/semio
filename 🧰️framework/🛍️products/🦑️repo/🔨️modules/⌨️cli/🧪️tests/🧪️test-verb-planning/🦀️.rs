@@ -9,7 +9,7 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The committed document every scenario reads.
     fn document(ctx: &Context) -> Result<Json, String> {
-        ctx.fixture_json("local://🧪️test-verb-vectors.json")
+        ctx.fixture_json("shared://🧪️test-verb-planning/🧪️test-verb-vectors.json")
     }
 
     /// 🌍️ The frozen snapshot, as the JSON text the verb entry point takes.

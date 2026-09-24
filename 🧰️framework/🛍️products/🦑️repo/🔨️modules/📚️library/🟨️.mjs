@@ -1,4 +1,5 @@
-import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
@@ -777,15 +778,26 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
   for (const [target, outputs] of generatorOutputOwners(contracts, root, json.name, declared)) declared[target.slice(json.name.length + 1)] = { ...declared[target.slice(json.name.length + 1)], outputs };
   const normalized = {};
   const genericFallback = genericCommandFallbackInputs(workspaceRoot);
+  const commandSourceGroups = new Map();
+  const internCommandSources = (inputs) => {
+    if (!Array.isArray(inputs) || !inputs.length) return [];
+    const key = JSON.stringify(inputs);
+    let group = commandSourceGroups.get(key);
+    if (!group) {
+      group = { name: `commandSources${commandSourceGroups.size}`, inputs };
+      commandSourceGroups.set(key, group);
+    }
+    return [group.name];
+  };
   for (const [name, target] of Object.entries(withLeveledTestTargets(declared))) {
     const policy = targetPolicy(name, targetWithDefaults({ ...(POLICY.targetDefaults?.[name] ?? {}), ...target }, root, ownsScript));
     const nativeTarget = nativeProject && /^(build|wasm|native|test(?:-(?:quick|long|exhaustive))?$|lint|check$)/.test(name) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts");
     const artifactTarget = artifactTypeScript && /^(?:build|check|test(?:-(?:quick|long|exhaustive))?)$/.test(name);
     if (nativeTarget) {
-      policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...nativeTargetCommandInputs(policy, workspaceRoot, commandInputs, scripts), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : []), ...nativeLockInputs(policy.options?.command)];
+      policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...internCommandSources(nativeTargetCommandInputs(policy, workspaceRoot, commandInputs, scripts)), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : []), ...nativeLockInputs(policy.options?.command)];
     }
     if (artifactTarget) policy.inputs = ["artifactSources", "artifactCommandSources"];
-    if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...genericTargetCommandInputs(policy, workspaceRoot, genericFallback, scripts)];
+    if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...internCommandSources(genericTargetCommandInputs(policy, workspaceRoot, genericFallback, scripts))];
     if (POLICY.nxSerialTargets?.includes(name)) policy.parallelism = false;
     normalized[name] = policy;
   }
@@ -801,7 +813,12 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
     const extra = generatorOutputCouplingInputs(name, target, declared, root, workspaceRoot);
     if (extra.length) normalized[name] = { ...target, inputs: [...target.inputs, ...extra] };
   }
-  return { ...json, name: json.name, root, namedInputs: projectInputs({ ...json, targets: declared }, root, workspaceRoot, facts, scripts), targets: normalized };
+  const namedInputs = projectInputs({ ...json, targets: declared }, root, workspaceRoot, facts, scripts);
+  for (const { name, inputs } of commandSourceGroups.values()) {
+    if (Object.hasOwn(namedInputs, name)) throw new Error(`Duplicate command source group ${name}`);
+    namedInputs[name] = inputs;
+  }
+  return { ...json, name: json.name, root, namedInputs, targets: normalized };
 }
 
 /** 🛠️ Exposes wasm-pack's immutable optimizer preparation to Nx before compiler execution. */
@@ -1001,7 +1018,11 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   if (!wgpuProject?.name || !wgpuProject.targets?.wasm || !wgpuProject.targets?.["wasm-release"]) throw new Error(`WGPU renderer must name both authored wasm profile producers: ${wgpuRoot}`);
   const result = {};
   for (const playground of playgrounds) {
-    const selected = runtimeComponentClosure([...components].map(([pluginId, row]) => ({ ...row, pluginId, dependsOn: [...(row.extends ? [row.extends] : []), ...(row["depends-on"] ?? [])] })), [{ id: playground.pluginId, appScoped: playground.app !== undefined }]);
+    const componentRows = [...components].map(([pluginId, row]) => ({ ...row, pluginId, dependsOn: [...(row.extends ? [row.extends] : []), ...(row["depends-on"] ?? [])] }));
+    // 🏠️ Boot closure: host sessions must serve before the full catalog materializes. `appScoped: true`
+    // keeps the host's own depends-on/consumes without the host-fanout that otherwise selects every crate.
+    const bootSelected = runtimeComponentClosure(componentRows, [{ id: playground.pluginId, appScoped: true }]);
+    const selected = runtimeComponentClosure(componentRows, [{ id: playground.pluginId, appScoped: playground.app !== undefined }]);
     const engines = new Set((playground.engines ?? []).map((path) => {
       const root = nxPath(relative(workspaceRoot, resolve(workspaceRoot, path))), project = projectAt(root);
       if (root.startsWith("../") || !project?.name || !project.targets?.wasm) throw new Error(`Playground engine must name an authored wasm producer: ${path}`);
@@ -1021,7 +1042,11 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
         dependsOn: [`prepare-${playground.variant}-native-${profile}`, `${wgpuProject.name}:native-build${profile === "release" ? "-release" : ""}`],
         options: { command: `${nativeScript} run ${playground.variant} ${profile}${operation === "smoke" ? " --smoke" : ""}`, forwardAllArgs: false },
       };
-      for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-react-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-react-${profile}`], options: { command: `bun ./📜️script.ts serve ${playground.variant} react ${profile}` } };
+      // ⚡ `serve` must not wait on activate: warm `served` boots from already-staged modules (content-hash
+      // freshness inside ServeScript) in seconds. `dev` still depends on boot-only activate so the host is
+      // materialized before Vite, then the activation Vite plugin prefetches the rest on demand.
+      result[`serve-${playground.variant}-react-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`], options: { command: `bun ./📜️script.ts serve ${playground.variant} react ${profile}` } };
+      result[`dev-${playground.variant}-react-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-react-${profile}`], options: { command: `bun ./📜️script.ts serve ${playground.variant} react ${profile}` } };
       result[`activate-${playground.variant}-react-${profile}`] = {
       cache: true,
       parallelism: false,
@@ -1034,7 +1059,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       cache: true,
       outputs: [],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", ...engines, ...[...selected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", ...engines, ...[...bootSelected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} react ${profile}` },
       };
       for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile}` } };
@@ -1049,7 +1074,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       cache: true,
       outputs: [],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", `${wgpuProject.name}:${profile === "release" ? "wasm-release" : "wasm"}`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, ...[...selected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, "semio-framework-os-infinite:fonts", `${wgpuProject.name}:${profile === "release" ? "wasm-release" : "wasm"}`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, ...[...bootSelected].sort().map((id) => `${components.get(id).project}:materialize-${profile}`)],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} wgpu ${profile}` },
       };
     }
@@ -1063,7 +1088,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       // only by which hub they sign in against are DIFFERENT artifacts. Without these env inputs the
       // cache key ignores them and a cached bundle silently answers for the wrong hub.
       inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*", transitive: true }, { env: "S_HUB_URL" }, { env: "S_DATA_DIR" }, { runtime: `bun ${JSON.stringify(nxPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
-      dependsOn: [...result[`prepare-${playground.variant}-react-release`].dependsOn, "@semio-tech/assets:build"],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-release`, "semio-framework-os-infinite:fonts", ...engines, ...[...selected].sort().map((id) => `${components.get(id).project}:materialize-release`), "@semio-tech/assets:build"],
       options: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },
     };
   }
@@ -1167,8 +1192,117 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
   return results;
 }
 
+/** 🗂️ Nx workspace-data directory used for durable import-edge digests. */
+function workspaceDataDirectory(workspaceRoot) {
+  return process.env.NX_WORKSPACE_DATA_DIRECTORY || join(workspaceRoot, ".nx", "workspace-data");
+}
+
+/** ⚡️ On-disk import-edge cache root keyed by Nx file hashes. */
+function importEdgeCacheRoot(workspaceRoot) {
+  return join(workspaceDataDirectory(workspaceRoot), "emoji-import-edges");
+}
+
+/** ♻️ Reads a prior import-target list for one content hash, or `undefined` when absent. */
+function readCachedImportTargets(cacheRoot, hash) {
+  if (!hash) return undefined;
+  const path = join(cacheRoot, `${hash}.json`);
+  if (!existsSync(path)) return undefined;
+  try {
+    const value = JSON.parse(readFileSync(path, "utf8"));
+    return Array.isArray(value) ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** ✍️ Persists import targets for one content hash without partial writes. */
+function writeCachedImportTargets(cacheRoot, hash, targets) {
+  if (!hash) return;
+  mkdirSync(cacheRoot, { recursive: true });
+  writeFileSync(join(cacheRoot, `${hash}.json`), JSON.stringify(targets));
+}
+
+/**
+ * 🔗️ Resolves every Static import/require in one source file to workspace or npm project names.
+ * @param {string} text
+ * @param {string} file
+ * @param {string} workspaceRoot
+ * @param {Record<string, { root: string }>} projects
+ * @param {Map<string, string>} byPackage
+ * @param {{ resolveImport?: Function, externalNodes?: Record<string, unknown> } | undefined} locked
+ */
+function importTargetsFromSource(text, file, workspaceRoot, projects, byPackage, locked) {
+  const targets = new Set();
+  for (const match of text.matchAll(/(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)["']([^"']+)["']/g)) {
+    const specifier = match[1];
+    const packageName = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
+    if (!specifier.startsWith(".")) {
+      const key = locked?.resolveImport?.(file, packageName);
+      const target = byPackage.get(packageName) ?? (key && locked?.externalNodes?.[`npm:${key}`] ? `npm:${key}` : undefined);
+      if (target) targets.add(target);
+      continue;
+    }
+    const path = nxPath(relative(workspaceRoot, resolve(dirname(join(workspaceRoot, file)), specifier)));
+    const target = Object.entries(projects).filter(([candidate, project]) => candidate !== "workspace" && owned(path, project.root)).sort((a, b) => b[1].root.length - a[1].root.length)[0]?.[0];
+    if (target) targets.add(target);
+  }
+  return [...targets].sort();
+}
+
+/**
+ * ⚡️ Scans JS/TS files (full or filesToProcess) with hash-keyed reuse and bounded parallel reads.
+ * @param {string} workspaceRoot
+ * @param {Record<string, { file: string, hash?: string }[]>} projectFiles
+ * @param {Record<string, { root: string }>} projects
+ * @param {Map<string, string>} byPackage
+ * @param {{ resolveImport?: Function, externalNodes?: Record<string, unknown> } | undefined} locked
+ * @param {(source: string, target: string | undefined, sourceFile: string) => void} add
+ */
+async function collectImportEdges(workspaceRoot, projectFiles, projects, byPackage, locked, add) {
+  const cacheRoot = importEdgeCacheRoot(workspaceRoot);
+  const jobs = [];
+  for (const [name, files] of Object.entries(projectFiles)) {
+    if (name === "workspace") continue;
+    for (const file of files) {
+      if (!/\.[cm]?[jt]sx?$/.test(file.file)) continue;
+      jobs.push({ name, file });
+    }
+  }
+  const concurrency = Math.min(32, Math.max(1, jobs.length));
+  let cursor = 0;
+  const workers = Array.from({ length: concurrency }, async () => {
+    for (;;) {
+      const index = cursor++;
+      if (index >= jobs.length) return;
+      const { name, file } = jobs[index];
+      let targets = readCachedImportTargets(cacheRoot, file.hash);
+      if (!targets) {
+        let text;
+        try {
+          text = await readFile(join(workspaceRoot, file.file), "utf8");
+        } catch (error) {
+          if (error.code === "ENOENT") continue;
+          throw error;
+        }
+        targets = importTargetsFromSource(text, file.file, workspaceRoot, projects, byPackage, locked);
+        writeCachedImportTargets(cacheRoot, file.hash ?? createHash("sha256").update(text).digest("hex"), targets);
+      }
+      for (const target of targets) add(name, target, file.file);
+    }
+  });
+  await Promise.all(workers);
+}
+
+/**
+ * 🧭️ Files Nx asks this plugin to re-parse: changed files when the file-map cache hits, else the full map.
+ * @param {{ fileMap?: { projectFileMap?: Record<string, { file: string, hash?: string }[]> }, filesToProcess?: { projectFileMap?: Record<string, { file: string, hash?: string }[]> } }} context
+ */
+function projectFilesToProcess(context) {
+  return context.filesToProcess?.projectFileMap ?? context.fileMap?.projectFileMap ?? {};
+}
+
 /** 🕸️ Native manifests and package imports contribute edges without spawning a build or installer. */
-function createDependenciesImplementation(_options, context) {
+async function createDependenciesImplementation(_options, context) {
   const { workspaceRoot, projects } = context;
   const locked = _options?.analyzeLockfile && existsSync(join(workspaceRoot, "bun.lock")) ? readBunLockGraph(workspaceRoot) : undefined;
   const byRoot = new Map(Object.entries(projects).map(([name, project]) => [resolve(workspaceRoot, project.root), name]));
@@ -1206,49 +1340,39 @@ function createDependenciesImplementation(_options, context) {
       if (manifest.name) byPackage.set(manifest.name, name);
     }
   }
-  for (const [name, project] of Object.entries(projects)) {
+  const projectFiles = projectFilesToProcess(context);
+  for (const [name, files] of Object.entries(projectFiles)) {
+    const project = projects[name];
+    if (!project || name === "workspace") continue;
     const root = resolve(workspaceRoot, project.root);
-    const cargo = join(root, "Cargo.toml");
+    for (const file of files) {
+      if (file.file.endsWith("Cargo.toml")) {
+        const cargo = join(workspaceRoot, file.file);
+        if (!existsSync(cargo)) continue;
+        for (const dependency of nativeDependencies(readToml(cargo), workspace)) {
+          add(name, byRoot.get(resolve(dependency.workspace ? workspaceRoot : root, dependency.path)), file.file);
+        }
+      }
+      if (file.file.endsWith("package.json")) {
+        const manifest = manifests.get(name) ?? (existsSync(join(workspaceRoot, file.file)) ? JSON.parse(readFileSync(join(workspaceRoot, file.file), "utf8")) : undefined);
+        if (!manifest) continue;
+        for (const dependency of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies, ...manifest.peerDependencies, ...manifest.optionalDependencies })) {
+          const key = locked?.resolve(locked.workspacePackages.has(manifest.name) ? manifest.name : "", dependency);
+          add(name, byPackage.get(dependency) ?? (locked?.workspacePackages.has(key) ? byRoot.get(resolve(workspaceRoot, locked.workspacePackages.get(key))) : key && locked.externalNodes[`npm:${key}`] ? `npm:${key}` : undefined), file.file);
+        }
+      }
+    }
     const go = goManifests.get(name);
     if (go) {
-      const provenance = owned(nxPath(relative(workspaceRoot, go.path)), project.root) ? go.path : join(root, SCRIPT_BASENAME);
-      for (const dependency of go.requires) add(name, goModules.get(dependency), nxPath(relative(workspaceRoot, provenance)));
-      for (const replacement of go.replacements) add(name, goModules.get(replacement.module) ?? byRoot.get(resolve(dirname(go.path), replacement.path)), nxPath(relative(workspaceRoot, provenance)));
-    }
-    if (existsSync(cargo)) {
-      for (const dependency of nativeDependencies(readToml(cargo), workspace)) {
-        add(name, byRoot.get(resolve(dependency.workspace ? workspaceRoot : root, dependency.path)), nxPath(relative(workspaceRoot, cargo)));
-      }
-    }
-    const manifest = manifests.get(name);
-    if (manifest) for (const dependency of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies, ...manifest.peerDependencies, ...manifest.optionalDependencies })) {
-      const key = locked?.resolve(locked.workspacePackages.has(manifest.name) ? manifest.name : "", dependency);
-      add(name, byPackage.get(dependency) ?? (locked?.workspacePackages.has(key) ? byRoot.get(resolve(workspaceRoot, locked.workspacePackages.get(key))) : key && locked.externalNodes[`npm:${key}`] ? `npm:${key}` : undefined), nxPath(relative(workspaceRoot, join(root, "package.json"))));
-    }
-    for (const file of name === "workspace" ? [] : context.fileMap?.projectFileMap?.[name] ?? []) {
-      if (!/\.[cm]?[jt]sx?$/.test(file.file) || file.file.endsWith(SCRIPT_BASENAME)) continue;
-      let text;
-      try {
-        text = readFileSync(join(workspaceRoot, file.file), "utf8");
-      } catch (error) {
-        if (error.code === "ENOENT") continue;
-        throw error;
-      }
-      for (const match of text.matchAll(/(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)["']([^"']+)["']/g)) {
-        const specifier = match[1];
-        const packageName = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
-        if (!specifier.startsWith(".")) {
-          const key = locked?.resolveImport(file.file, packageName);
-          add(name, byPackage.get(packageName) ?? (key && locked.externalNodes[`npm:${key}`] ? `npm:${key}` : undefined), file.file);
-        }
-        else {
-          const path = nxPath(relative(workspaceRoot, resolve(dirname(join(workspaceRoot, file.file)), specifier)));
-          const target = Object.entries(projects).filter(([candidate, p]) => candidate !== "workspace" && owned(path, p.root)).sort((a, b) => b[1].root.length - a[1].root.length)[0]?.[0];
-          add(name, target, file.file);
-        }
+      const provenance = nxPath(relative(workspaceRoot, go.path));
+      if (files.some((file) => file.file === provenance || file.file.endsWith("go.mod"))) {
+        const sourceFile = owned(provenance, project.root) ? provenance : nxPath(relative(workspaceRoot, join(root, SCRIPT_BASENAME)));
+        for (const dependency of go.requires) add(name, goModules.get(dependency), sourceFile);
+        for (const replacement of go.replacements) add(name, goModules.get(replacement.module) ?? byRoot.get(resolve(dirname(go.path), replacement.path)), sourceFile);
       }
     }
   }
+  await collectImportEdges(workspaceRoot, projectFiles, projects, byPackage, locked, add);
   return [...edges.values(), ...(locked?.dependencies ?? [])];
 }
 
@@ -1294,4 +1418,4 @@ export default {
 
 export { libraryBootstrap };
 
-export const cacheInternals = { declaredSourceInputs, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets };
+export const cacheInternals = { declaredSourceInputs, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets, createDependenciesImplementation, importTargetsFromSource, collectImportEdges, projectFilesToProcess, importEdgeCacheRoot };

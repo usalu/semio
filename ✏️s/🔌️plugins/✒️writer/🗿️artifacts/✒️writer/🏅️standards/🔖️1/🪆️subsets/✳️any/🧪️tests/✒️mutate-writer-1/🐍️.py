@@ -222,17 +222,18 @@ def refuse_carrier(ctx):
     """🚧️ `identity-round-trip` reads this subset's own `.writer.dsl.semio` text carrier, and this
     implementation refuses it by clause rather than by absence. The committed grammar
     `🚪️io/📸️snapshot/📝️text/📖️.grammar.semio` is the repository-wide PLACEHOLDER — its whole
-    body is `payload = OCTET+` and its `header` production declares `"schema" SP "stdio.json"` — while
-    the committed artifact's first line is `semio writer.writer.dsl v1` and its body is four
-    HEX-ENCODED scalars plus a two-element `[hex,hex]` child-handle pair. Nothing committed says the
-    values are hex, nothing says the pair is `(childId, target)`, and nothing says how the second
-    element's `<artifactId>!<kind>@<standard>/<subset>` spelling is split."""
+    body is `payload = OCTET+` and its `header` production declares `"schema" SP "writer.writer.snapshot"` — while
+    the committed artifact's first line is `semio writer.writer.dsl v1` and its body is the derived
+    record spelling `schema=… id=… language-id=… uri="…" text="…" document=child_id=… target="…"` —
+    the body text inline and a nested `(child_id, target)` child-handle record. Nothing committed states
+    that spelling, its string escapes, or how the target's `<artifactId>!<kind>@<standard>/<subset>`
+    spelling is split."""
     committed = ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio"))
     raise AssertionError(
         "identity-round-trip: this subset's `.dsl.semio` carrier cannot be read by a second implementation. Its committed grammar is the "
-        "repository-wide placeholder `payload = OCTET+` whose header production declares `\"schema\" SP \"stdio.json\"`, contradicted by the artifact's "
-        "own first line `semio writer.writer.dsl v1`; the artifact's body is four HEX-ENCODED scalars and a `[hex,hex]` child-handle pair, and no "
-        "committed document says the values are hex, that the pair is `(childId, target)`, or how the second element's "
+        "repository-wide placeholder `payload = OCTET+` whose header production declares `\"schema\" SP \"writer.writer.snapshot\"`, contradicted by the artifact's "
+        "own first line `semio writer.writer.dsl v1`; the artifact's body is the derived record spelling `schema=… id=… language-id=… uri=\"…\" "
+        "text=\"…\" document=child_id=… target=\"…\"`, and no committed document states that spelling, its string escapes, or how the target's "
         "`<artifactId>!<kind>@<standard>/<subset>` spelling is split. Read %d bytes of the committed artifact and refused to guess their meaning. A "
         "real grammar for this carrier closes it — the sibling `mutate-note-1` shows one exists for this family, and `📖️playbook`, `📋️forms`, "
         "`🌿️vcs` and `🔌️wires` report the same gap." % len(committed)

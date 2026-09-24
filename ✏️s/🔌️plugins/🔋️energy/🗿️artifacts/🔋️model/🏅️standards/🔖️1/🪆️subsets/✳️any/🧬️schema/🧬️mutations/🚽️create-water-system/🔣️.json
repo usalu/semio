@@ -7,7 +7,7 @@
   "aggregateVariant": "CreateWaterSystem",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-water-system",
-  "binaryTag": null,
+  "binaryTag": 231,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

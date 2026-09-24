@@ -1,37 +1,83 @@
-# 🥒️ mutate-wfc-grid3d-1 — the declared vector matrix for `s.wfc.grid3d`. Every row names a committed
-# fixture quintet by `asset://` URI, so a plan can pin it by digest instead of carrying an inline
-# payload the digest cannot cover.
+@capability-wfc-grid3d-1-mutate
+@oracle-wfc-grid3d-python-independent
+@comparison-ordered-json-v1
+@mutations-wfc-grid3d-1-any
+Feature: Apply every typed grid3d mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️.py` in this directory: a second
+  implementation of the `s.wfc.grid3d` document and all fourteen typed mutations, written in Python
+  against the normative JSON Schema rather than ported from the Rust. It re-derives every sparse diff
+  and re-applies every committed one, and replays every committed quintet on its own
+  (`python3 🐍️.py`).
 
-Feature: s.wfc.grid3d mutation vectors
-  As the WFC 3D grid artifact
-  I replay every committed mutation vector
-  So that the Rust, TypeScript and Python implementations agree on one vocabulary
+  Why a second implementation rather than a third-party library. The surveyed WaveFunctionCollapse
+  implementations solve a tiled model; none carries a persisted 3D problem document with per-axis cell
+  sizes, an authored allow-list and a mutation vocabulary, so none can adjudicate an edit to it.
 
-  Background:
-    Given the dialect "s.wfc.grid3d@1/*"
-    And the mutation roster has 14 kinds
-
-  Scenario Outline: the committed vector carries its before-document to its after-document
-    Given the before-document at "<before>"
-    When the mutation at "<mutation>" is applied
-    Then the document equals the after-document at "<after>"
-    And the produced diff equals "<diff>"
-    And the declared outcome at "<outcome>" holds
-    And applying the inverse restores the before-document
-
+  @id-mutate
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: The committed <id> vector declares its own kind and moves the document
+    Given the committed specification vector for the <id> kind
+      """
+      {
+        "kind": "<id>",
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+      }
+      """
+    Then the committed mutation payload declares the <id> kind
+    And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
-      | kind                 | case                                  | before                                                                                                    | after                                                                                                    | mutation                                                                                            | diff                                                                                              | outcome                                                                                               |
-      | change-seed          | 🎲️reseeds-the-solve-from-7-to-99      | asset://wfc/grid3d/🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99/📸️snapshot/⬅️before/🔣️.json               | asset://wfc/grid3d/🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99/📸️snapshot/➡️after/🔣️.json               | asset://wfc/grid3d/🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99/🦠️mutation/🔣️.json               | asset://wfc/grid3d/🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99/🔺️diff/🔣️.json               | asset://wfc/grid3d/🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99/🎯️outcome/🔣️.json               |
-      | resize-grid          | 📐️grows-the-grid-to-3x2x2             | asset://wfc/grid3d/📐️resize-grid/📐️grows-the-grid-to-3x2x2/📸️snapshot/⬅️before/🔣️.json                    | asset://wfc/grid3d/📐️resize-grid/📐️grows-the-grid-to-3x2x2/📸️snapshot/➡️after/🔣️.json                    | asset://wfc/grid3d/📐️resize-grid/📐️grows-the-grid-to-3x2x2/🦠️mutation/🔣️.json                    | asset://wfc/grid3d/📐️resize-grid/📐️grows-the-grid-to-3x2x2/🔺️diff/🔣️.json                    | asset://wfc/grid3d/📐️resize-grid/📐️grows-the-grid-to-3x2x2/🎯️outcome/🔣️.json                    |
-      | change-cell-sizes    | 📏️stretches-the-x-axis-columns        | asset://wfc/grid3d/📏️change-cell-sizes/📏️stretches-the-x-axis-columns/📸️snapshot/⬅️before/🔣️.json          | asset://wfc/grid3d/📏️change-cell-sizes/📏️stretches-the-x-axis-columns/📸️snapshot/➡️after/🔣️.json          | asset://wfc/grid3d/📏️change-cell-sizes/📏️stretches-the-x-axis-columns/🦠️mutation/🔣️.json          | asset://wfc/grid3d/📏️change-cell-sizes/📏️stretches-the-x-axis-columns/🔺️diff/🔣️.json          | asset://wfc/grid3d/📏️change-cell-sizes/📏️stretches-the-x-axis-columns/🎯️outcome/🔣️.json          |
-      | change-periodicity   | 🔁️wraps-the-x-axis                    | asset://wfc/grid3d/🔁️change-periodicity/🔁️wraps-the-x-axis/📸️snapshot/⬅️before/🔣️.json                    | asset://wfc/grid3d/🔁️change-periodicity/🔁️wraps-the-x-axis/📸️snapshot/➡️after/🔣️.json                    | asset://wfc/grid3d/🔁️change-periodicity/🔁️wraps-the-x-axis/🦠️mutation/🔣️.json                    | asset://wfc/grid3d/🔁️change-periodicity/🔁️wraps-the-x-axis/🔺️diff/🔣️.json                    | asset://wfc/grid3d/🔁️change-periodicity/🔁️wraps-the-x-axis/🎯️outcome/🔣️.json                    |
-      | create-tile          | 🧱️adds-the-roof-tile                  | asset://wfc/grid3d/🧱️create-tile/🧱️adds-the-roof-tile/📸️snapshot/⬅️before/🔣️.json                         | asset://wfc/grid3d/🧱️create-tile/🧱️adds-the-roof-tile/📸️snapshot/➡️after/🔣️.json                         | asset://wfc/grid3d/🧱️create-tile/🧱️adds-the-roof-tile/🦠️mutation/🔣️.json                         | asset://wfc/grid3d/🧱️create-tile/🧱️adds-the-roof-tile/🔺️diff/🔣️.json                         | asset://wfc/grid3d/🧱️create-tile/🧱️adds-the-roof-tile/🎯️outcome/🔣️.json                         |
-      | delete-tile          | 🕳️removes-the-air-tile-and-cascades   | asset://wfc/grid3d/🕳️delete-tile/🕳️removes-the-air-tile-and-cascades/📸️snapshot/⬅️before/🔣️.json           | asset://wfc/grid3d/🕳️delete-tile/🕳️removes-the-air-tile-and-cascades/📸️snapshot/➡️after/🔣️.json           | asset://wfc/grid3d/🕳️delete-tile/🕳️removes-the-air-tile-and-cascades/🦠️mutation/🔣️.json           | asset://wfc/grid3d/🕳️delete-tile/🕳️removes-the-air-tile-and-cascades/🔺️diff/🔣️.json           | asset://wfc/grid3d/🕳️delete-tile/🕳️removes-the-air-tile-and-cascades/🎯️outcome/🔣️.json           |
-      | change-tile-weight   | ⚖️raises-the-wall-tile-bias           | asset://wfc/grid3d/⚖️change-tile-weight/⚖️raises-the-wall-tile-bias/📸️snapshot/⬅️before/🔣️.json             | asset://wfc/grid3d/⚖️change-tile-weight/⚖️raises-the-wall-tile-bias/📸️snapshot/➡️after/🔣️.json             | asset://wfc/grid3d/⚖️change-tile-weight/⚖️raises-the-wall-tile-bias/🦠️mutation/🔣️.json             | asset://wfc/grid3d/⚖️change-tile-weight/⚖️raises-the-wall-tile-bias/🔺️diff/🔣️.json             | asset://wfc/grid3d/⚖️change-tile-weight/⚖️raises-the-wall-tile-bias/🎯️outcome/🔣️.json             |
-      | change-tile-media    | 🖼️replaces-the-wall-tile-mesh         | asset://wfc/grid3d/🖼️change-tile-media/🖼️replaces-the-wall-tile-mesh/📸️snapshot/⬅️before/🔣️.json           | asset://wfc/grid3d/🖼️change-tile-media/🖼️replaces-the-wall-tile-mesh/📸️snapshot/➡️after/🔣️.json           | asset://wfc/grid3d/🖼️change-tile-media/🖼️replaces-the-wall-tile-mesh/🦠️mutation/🔣️.json           | asset://wfc/grid3d/🖼️change-tile-media/🖼️replaces-the-wall-tile-mesh/🔺️diff/🔣️.json           | asset://wfc/grid3d/🖼️change-tile-media/🖼️replaces-the-wall-tile-mesh/🎯️outcome/🔣️.json           |
-      | create-rule          | 🚦️allows-air-above-air                | asset://wfc/grid3d/🚦️create-rule/🚦️allows-air-above-air/📸️snapshot/⬅️before/🔣️.json                       | asset://wfc/grid3d/🚦️create-rule/🚦️allows-air-above-air/📸️snapshot/➡️after/🔣️.json                       | asset://wfc/grid3d/🚦️create-rule/🚦️allows-air-above-air/🦠️mutation/🔣️.json                       | asset://wfc/grid3d/🚦️create-rule/🚦️allows-air-above-air/🔺️diff/🔣️.json                       | asset://wfc/grid3d/🚦️create-rule/🚦️allows-air-above-air/🎯️outcome/🔣️.json                       |
-      | delete-rule          | ❌️removes-the-floor-wall-rule          | asset://wfc/grid3d/❌️delete-rule/❌️removes-the-floor-wall-rule/📸️snapshot/⬅️before/🔣️.json                  | asset://wfc/grid3d/❌️delete-rule/❌️removes-the-floor-wall-rule/📸️snapshot/➡️after/🔣️.json                  | asset://wfc/grid3d/❌️delete-rule/❌️removes-the-floor-wall-rule/🦠️mutation/🔣️.json                  | asset://wfc/grid3d/❌️delete-rule/❌️removes-the-floor-wall-rule/🔺️diff/🔣️.json                  | asset://wfc/grid3d/❌️delete-rule/❌️removes-the-floor-wall-rule/🎯️outcome/🔣️.json                  |
-      | pin-cell             | 📌️pins-the-far-cell-to-wall           | asset://wfc/grid3d/📌️pin-cell/📌️pins-the-far-cell-to-wall/📸️snapshot/⬅️before/🔣️.json                     | asset://wfc/grid3d/📌️pin-cell/📌️pins-the-far-cell-to-wall/📸️snapshot/➡️after/🔣️.json                     | asset://wfc/grid3d/📌️pin-cell/📌️pins-the-far-cell-to-wall/🦠️mutation/🔣️.json                     | asset://wfc/grid3d/📌️pin-cell/📌️pins-the-far-cell-to-wall/🔺️diff/🔣️.json                     | asset://wfc/grid3d/📌️pin-cell/📌️pins-the-far-cell-to-wall/🎯️outcome/🔣️.json                     |
-      | unpin-cell           | 📍️releases-the-origin-cell            | asset://wfc/grid3d/📍️unpin-cell/📍️releases-the-origin-cell/📸️snapshot/⬅️before/🔣️.json                    | asset://wfc/grid3d/📍️unpin-cell/📍️releases-the-origin-cell/📸️snapshot/➡️after/🔣️.json                    | asset://wfc/grid3d/📍️unpin-cell/📍️releases-the-origin-cell/🦠️mutation/🔣️.json                    | asset://wfc/grid3d/📍️unpin-cell/📍️releases-the-origin-cell/🔺️diff/🔣️.json                    | asset://wfc/grid3d/📍️unpin-cell/📍️releases-the-origin-cell/🎯️outcome/🔣️.json                    |
-      | mask-cell            | 🚫️carves-out-the-far-edge-cell        | asset://wfc/grid3d/🚫️mask-cell/🚫️carves-out-the-far-edge-cell/📸️snapshot/⬅️before/🔣️.json                  | asset://wfc/grid3d/🚫️mask-cell/🚫️carves-out-the-far-edge-cell/📸️snapshot/➡️after/🔣️.json                  | asset://wfc/grid3d/🚫️mask-cell/🚫️carves-out-the-far-edge-cell/🦠️mutation/🔣️.json                  | asset://wfc/grid3d/🚫️mask-cell/🚫️carves-out-the-far-edge-cell/🔺️diff/🔣️.json                  | asset://wfc/grid3d/🚫️mask-cell/🚫️carves-out-the-far-edge-cell/🎯️outcome/🔣️.json                  |
-      | unmask-cell          | 🔓️restores-the-masked-corner          | asset://wfc/grid3d/🔓️unmask-cell/🔓️restores-the-masked-corner/📸️snapshot/⬅️before/🔣️.json                  | asset://wfc/grid3d/🔓️unmask-cell/🔓️restores-the-masked-corner/📸️snapshot/➡️after/🔣️.json                  | asset://wfc/grid3d/🔓️unmask-cell/🔓️restores-the-masked-corner/🦠️mutation/🔣️.json                  | asset://wfc/grid3d/🔓️unmask-cell/🔓️restores-the-masked-corner/🔺️diff/🔣️.json                  | asset://wfc/grid3d/🔓️unmask-cell/🔓️restores-the-masked-corner/🎯️outcome/🔣️.json                  |
+      | id                 | vector                                             |
+      | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99     |
+      | resize-grid        | 📐️resize-grid/📐️grows-the-grid-to-3x2x2            |
+      | change-cell-sizes  | 📏️change-cell-sizes/📏️stretches-the-x-axis-columns |
+      | change-periodicity | 🔁️change-periodicity/🔁️wraps-the-x-axis            |
+      | create-tile        | 🧱️create-tile/🧱️adds-the-roof-tile                 |
+      | delete-tile        | 🕳️delete-tile/🕳️removes-the-air-tile-and-cascades  |
+      | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-wall-tile-bias   |
+      | change-tile-media  | 🖼️change-tile-media/🖼️replaces-the-wall-tile-mesh  |
+      | create-rule        | 🚦️create-rule/🚦️allows-air-above-air               |
+      | delete-rule        | ❌️delete-rule/❌️removes-the-floor-wall-rule        |
+      | pin-cell           | 📌️pin-cell/📌️pins-the-far-cell-to-wall             |
+      | unpin-cell         | 📍️unpin-cell/📍️releases-the-origin-cell            |
+      | mask-cell          | 🚫️mask-cell/🚫️carves-out-the-far-edge-cell         |
+      | unmask-cell        | 🔓️unmask-cell/🔓️restores-the-masked-corner         |
+
+  @id-inverse
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: The committed <id> vector changes only what its diff declares, and inverts exactly
+    Given the committed specification vector for the <id> kind
+      """
+      {
+        "kind": "<id>",
+        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
+        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
+        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
+        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+      }
+      """
+    Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
+    And every field the committed diff declares actually differs
+    And the reference's own inverse of the committed mutation restores the before-snapshot exactly
+    Examples:
+      | id                 | vector                                             |
+      | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99     |
+      | resize-grid        | 📐️resize-grid/📐️grows-the-grid-to-3x2x2            |
+      | change-cell-sizes  | 📏️change-cell-sizes/📏️stretches-the-x-axis-columns |
+      | change-periodicity | 🔁️change-periodicity/🔁️wraps-the-x-axis            |
+      | create-tile        | 🧱️create-tile/🧱️adds-the-roof-tile                 |
+      | delete-tile        | 🕳️delete-tile/🕳️removes-the-air-tile-and-cascades  |
+      | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-wall-tile-bias   |
+      | change-tile-media  | 🖼️change-tile-media/🖼️replaces-the-wall-tile-mesh  |
+      | create-rule        | 🚦️create-rule/🚦️allows-air-above-air               |
+      | delete-rule        | ❌️delete-rule/❌️removes-the-floor-wall-rule        |
+      | pin-cell           | 📌️pin-cell/📌️pins-the-far-cell-to-wall             |
+      | unpin-cell         | 📍️unpin-cell/📍️releases-the-origin-cell            |
+      | mask-cell          | 🚫️mask-cell/🚫️carves-out-the-far-edge-cell         |
+      | unmask-cell        | 🔓️unmask-cell/🔓️restores-the-masked-corner         |

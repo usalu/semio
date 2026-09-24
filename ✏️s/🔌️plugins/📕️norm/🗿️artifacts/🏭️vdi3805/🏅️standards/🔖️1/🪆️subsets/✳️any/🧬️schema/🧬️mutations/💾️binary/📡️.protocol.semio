@@ -3,14 +3,49 @@ protocol vdi3805.mutations
 version 1
 schema norm.vdi3805.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real `Vdi3805Mutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records at compile time (`dsl::protocol_record::tag_u8`).
+header fixed 2
+field format u8
+field tag u8
+record update-manufacturer-file tag=0
+field payload bytes
+record change-correction-as-of tag=1
+field payload bytes
+record change-strict-mode tag=2
+field payload bytes
+record update-limits tag=3
+field payload bytes
+record change-edition-profile tag=4
+field payload bytes
+record remove-edition-profile tag=5
+field payload bytes
+record create-product tag=6
+field payload bytes
+record delete-product tag=7
+field payload bytes
+record rename-product tag=8
+field payload bytes
+record replace-product-configuration tag=9
+field payload bytes
+record create-geometry tag=10
+field payload bytes
+record delete-geometry tag=11
+field payload bytes
+record resize-geometry tag=12
+field payload bytes
+record add-geometry-connection tag=13
+field payload bytes
+record remove-geometry-connection tag=14
+field payload bytes
+record replace-geometry-parameters tag=15
+field payload bytes
+record create-curve tag=16
+field payload bytes
+record delete-curve tag=17
+field payload bytes
+record replace-curve-points tag=18
+field payload bytes

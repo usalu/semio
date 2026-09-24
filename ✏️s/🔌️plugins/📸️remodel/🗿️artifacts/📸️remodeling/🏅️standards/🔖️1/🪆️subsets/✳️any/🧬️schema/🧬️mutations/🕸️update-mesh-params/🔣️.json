@@ -7,7 +7,7 @@
   "aggregateVariant": "UpdateMeshParams",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-mesh-params",
-  "binaryTag": null,
+  "binaryTag": 23,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

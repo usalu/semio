@@ -1274,7 +1274,10 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .action_with(hidden_operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen")))
             .action_destructive("setDocument")
             .action_with(hidden_operation("curationAdd", LocalizedLabel::native("Curation Add", "Kuratierung hinzufügen")))
-            .action_with(hidden_operation("curationSetCount", LocalizedLabel::native("Curation Set Count", "Kuratierte Anzahl festlegen")))
+            // 🔧️ Palette-reachable Artifact-lane mutation: the curated-table stepper and DnD arms stay
+            // window chrome, but outcome 1 needs one Actions-rail row that journals a store edit
+            // (ticket 26/09/18 S14). `stockFromCatalogue` remains HostOnly and cannot move `#s-checkin`.
+            .action_with(ActionDefinition::bounded_catalog("curationSetCount", LocalizedLabel::native("Curation Set Count", "Kuratierte Anzahl festlegen"), ActionKind::Mutation))
             .action_with(hidden_operation("curationRemove", LocalizedLabel::native("Curation Remove", "Kuratierung entfernen")))
             .action_destructive("curationRemove")
             .action_with(hidden_operation("dropOnPool", LocalizedLabel::native("Drop On Pool", "Auf Pool ablegen")))
@@ -1297,6 +1300,14 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                     crate::standards::v1::subsets::any::examples().iter().map(|example| ActionArgOption::new(example.id(), example.label().clone())).collect(),
                 )
                 .default_value(&DEMO_STOCK_EXAMPLE_ID)],
+            )
+            .action_args(
+                "curationSetCount",
+                vec![
+                    ActionArgDef::text("objectId", LocalizedLabel::native("Object", "Objekt")).required(),
+                    ActionArgDef::text("delta", LocalizedLabel::native("Delta", "Delta")),
+                    ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
+                ],
             )
             // 🎯️ Typed channel surface — this app's typed commands are dispatched via
             // undeclared above, mirroring `flow_ui`: `VcsArtifactApp`'s kind-discipline check only runs

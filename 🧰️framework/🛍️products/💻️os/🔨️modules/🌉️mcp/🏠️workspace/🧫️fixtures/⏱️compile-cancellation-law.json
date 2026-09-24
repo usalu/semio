@@ -1,0 +1,11 @@
+{
+  "$schema": "../🧬️schema/🔣️.json#/$defs/ComponentCompileCancellationLawV1",
+  "law": "A cold component compile runs in one isolated worker shared by every requester of the same content hash. A requester that cancels is answered CANCELLED within the ceiling and detaches; when the last requester cancels, the worker is killed and reaped, and neither compiled code nor scratch output remains, so nothing completes in the background. A compile nobody cancels leaves compiled code that later requests load without a worker.",
+  "cancelAnswerCeilingMs": 100,
+  "cases": [
+    { "requesters": 1, "cancel": [0], "expected": "ABORTED" },
+    { "requesters": 2, "cancel": [0, 1], "expected": "ABORTED" },
+    { "requesters": 2, "cancel": [0], "expected": "DETACHED" },
+    { "requesters": 1, "cancel": [], "expected": "WARM" }
+  ]
+}

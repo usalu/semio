@@ -11,7 +11,7 @@ import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjecti
 
 // #region 🧫️Vectors
 const CASE = "shape-arc-pie";
-const FIXTURE = "local://shape-arc-pie.tex";
+const FIXTURE = "shared://🌗️shape-arc-pie/shape-arc-pie.tex";
 
 const DECIMALS = 6;
 

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import Ajv from "ajv";
-import corpus from "../🧫️fixtures/📦️preparation-owners/🔣️.json" with { type: "json" };
-import schema from "../🧬️schema/📦️preparation-owners/🔣️.json" with { type: "json" };
+import corpus from "../../🧫️fixtures/📦️preparation-owners/🔣️.json" with { type: "json" };
+import schema from "../../🧫️fixtures/📦️preparation-owners/📐️schema/🔣️.json" with { type: "json" };
 
 export function testMeshPreparationOwners(): void {
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);

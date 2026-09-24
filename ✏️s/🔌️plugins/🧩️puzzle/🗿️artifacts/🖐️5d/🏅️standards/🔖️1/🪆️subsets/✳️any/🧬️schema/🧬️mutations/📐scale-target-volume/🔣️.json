@@ -7,7 +7,7 @@
   "aggregateVariant": "ScaleTargetVolume",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "scale-target-volume",
-  "binaryTag": null,
+  "binaryTag": 32,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -7,11 +7,12 @@
   "aggregateVariant": "ApplyMesh",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": null,
+  "binaryTag": 2,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
-    "applied"
+    "applied",
+    "error"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

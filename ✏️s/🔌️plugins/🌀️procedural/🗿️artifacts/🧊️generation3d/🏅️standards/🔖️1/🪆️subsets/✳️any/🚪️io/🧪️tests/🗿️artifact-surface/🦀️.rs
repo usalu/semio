@@ -6,8 +6,8 @@
 //! `👁️viewer` named a single one of them (`📓️audit-user-journey-gaps-2026-09-13.md` §6, P0 #1) —
 //! library-complete IO with no way in or out. These laws hold the SURFACE: the roster the export
 //! picker publishes, the extensions the file picker accepts, the filename and MIME every download
-//! carries, the leaves deliberately withheld from import and the reason each is withheld, and the
-//! chunk envelope one picked file arrives in.
+//! carries, the import roster equal to the declared import dialects, and the chunk envelope one
+//! picked file arrives in.
 //!
 //! **Why they are fixture-driven.** Every row is read from
 //! `🧫️fixtures/🚪️io/🗿️artifact-surface.json`, whose TypeScript twin
@@ -125,7 +125,7 @@ fn every_geometry_export_format_moves_the_committed_cube_past_the_oracle() {
             "obj" => import_leaves::obj::v3_0::any::mesh_from_bytes(&bytes),
             "ply" => import_leaves::ply::v1_0::any::mesh_from_bytes(&bytes),
             "gltf" => import_leaves::gltf::v2_0::any::mesh_from_bytes(&bytes),
-            "las" => import_leaves::las::v1_0::any::mesh_from_bytes(&bytes),
+            "las" => semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::decode_mesh(&bytes, semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::SemioMeshFormat::Las).map_err(|error| semio_framework_os_kernel::TextError::new(error, semio_framework_os_kernel::TextSpan::at(1, 1))),
             "dwg" => import_leaves::dwg::v_ac1018::any::mesh_from_bytes(&bytes),
             other => panic!("{other}: the fixture calls this a geometry row but no import leaf is named"),
         }
@@ -154,30 +154,19 @@ fn the_text_export_is_the_documents_own_text_and_needs_no_evaluator() {
 //#endregion 📤️ExportRoster
 
 //#region 📥️ImportRoster
-/// ⚖️ LAW: the file picker accepts EXACTLY the leaves that really deserialize, and the two it
-/// withholds are withheld because their leaves cannot — asserted against the leaves themselves, not
-/// against a comment. A leaf that later gains a real decoder fails this law instead of staying
-/// silently out of the picker.
+/// ⚖️ LAW: the file picker offers EXACTLY the declared import dialects — a format no document can be
+/// rebuilt from (las, png) is not declared at all, so there is nothing to withhold.
 #[test]
-fn the_import_picker_withholds_exactly_the_leaves_that_cannot_deserialize() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts as import_leaves;
+fn the_import_picker_offers_exactly_the_declared_import_dialects() {
     let fixture = fixture();
     let expected: Vec<String> = rows(&fixture, "importFormats").iter().map(|row| text(row, "id")).collect();
     let declared: Vec<String> = document_io::IMPORT_FORMATS.iter().map(|row| row.id.to_string()).collect();
     assert_eq!(declared, expected, "the import roster drifted from the fixture");
-
-    let withheld: Vec<String> = rows(&fixture, "importWithheld").iter().map(|row| text(row, "id")).collect();
-    assert_eq!(withheld, document_io::IMPORT_ONLY_IN_REGISTRY.iter().map(|(id, _)| id.to_string()).collect::<Vec<_>>(), "the withheld list drifted from the fixture");
-
-    let mut surface: Vec<String> = declared.iter().cloned().chain(withheld.iter().cloned()).collect();
-    surface.sort_unstable();
+    let mut offered = declared;
+    offered.sort_unstable();
     let mut registry: Vec<String> = import_stdio_kinds().iter().map(|kind| kind.trim_start_matches("stdio.").to_string()).collect();
     registry.sort_unstable();
-    assert_eq!(surface, registry, "offered plus withheld must be exactly `import_stdio_kinds`");
-
-    let cube = document_io::export_mesh_bytes(&unit_cube_semio_mesh(), "las").expect("las exports the cube");
-    assert!(import_leaves::las::v1_0::any::deserialize_bytes(&cube).is_err(), "las import is an honest Err — that is why the picker withholds it");
-    assert!(import_leaves::png::v1_2::any::deserialize_bytes(b"\x89PNG\r\n\x1a\n").is_err(), "png import is an honest Err — that is why the picker withholds it");
+    assert_eq!(offered, registry, "offered must be exactly `import_stdio_kinds`");
 }
 
 /// ⚖️ LAW: the `accept` filter the picker is opened with is every importable extension, taken from

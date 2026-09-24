@@ -10,8 +10,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RemoveChannel {
-    pub(crate) timeline_index: usize,
-    pub(crate) index: usize,
+    pub timeline_index: usize,
+    pub index: usize,
 }
 
 impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for RemoveChannel {

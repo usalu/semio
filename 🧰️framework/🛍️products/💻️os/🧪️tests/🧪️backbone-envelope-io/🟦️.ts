@@ -1109,7 +1109,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         {
           OperationCompleted: {
             operation: 9,
-            revision: 4,
+            revision: 4n,
             ui_scope: Array.from(encodePackValue("full")),
             history_patch: Array.from(encodePackValue({ cursor: packUInt(7n), upserts: [{ seq: packUInt(41n), label: "Set Active Example", count: packUInt(1n) }], canUndo: true, canRedo: false, commandFilter: "all" })),
           },
@@ -1122,10 +1122,10 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(frames).toHaveLength(1);
       expect(frames.every((frame) => "Invocation" in frame)).toBe(true);
       expect(completions).toHaveLength(1);
-      const completion = completions[0] as { readonly instanceId: number; readonly operation: number; readonly revision: number; readonly uiScope: unknown; readonly historyPatch: { readonly cursor: number; readonly upserts: readonly { readonly seq: number }[] } };
+      const completion = completions[0] as { readonly instanceId: number; readonly operation: number; readonly revision: bigint; readonly uiScope: unknown; readonly historyPatch: { readonly cursor: number; readonly upserts: readonly { readonly seq: number }[] } };
       expect(completion.instanceId).toBe(1);
       expect(completion.operation).toBe(9);
-      expect(completion.revision).toBe(4);
+      expect(completion.revision).toBe(4n);
       expect(completion.uiScope).toBe("full");
       // 📌️ The `HistoryPatch` carrier bug: `seq`/`cursor` cross as pack integer carriers, and a row id
       // built from an unprojected one renders `framework.history.entry.[object Object]`.
@@ -1164,10 +1164,12 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const vectors = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧫️fixtures", "📡️channel", "🏁️app-frame-operation-completed.json"), "utf8")) as Record<string, string>;
-      const frame: AppFrameValue = { OperationCompleted: { operation: 7, revision: 5, ui_scope: [1], history_patch: [2] } };
-      const hex = Array.from(encodeAppFrame(frame), (byte) => byte.toString(16).padStart(2, "0")).join("");
-      expect(hex).toBe(vectors.OperationCompleted);
-      expect(decodeAppFrame(new Uint8Array(Buffer.from(vectors.OperationCompleted!, "hex")))).toEqual(frame);
+      for (const [key, revision] of [["OperationCompleted", 5n], ["OperationCompletedWideRevision", 0xfedc_ba98_7654_3210n]] as const) {
+        const frame: AppFrameValue = { OperationCompleted: { operation: 7, revision, ui_scope: [1], history_patch: [2] } };
+        const hex = Array.from(encodeAppFrame(frame), (byte) => byte.toString(16).padStart(2, "0")).join("");
+        expect(hex).toBe(vectors[key]);
+        expect(decodeAppFrame(new Uint8Array(Buffer.from(vectors[key]!, "hex")))).toEqual(frame);
+      }
     });
 
     it("command() allocates an incrementing seq and returns every frame the batch produced", async () => {
@@ -1818,7 +1820,6 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
   const testSocketGrantIssuer: SocketGrantIssuerV1 = {
     issueDirectory: async () => testSocketGrantReceipt,
     issueDirectoryScoped: async () => testSocketGrantReceipt,
-    issueDocument: async () => testSocketGrantReceipt,
   };
   const testDirectoryClient = (): InstanceType<typeof DirectoryClient> => new DirectoryClient("http://hub.test", { socketGrantIssuer: testSocketGrantIssuer });
 
@@ -1913,10 +1914,36 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(emptyInvocation.kind).toBe("invocation");
       if (emptyInvocation.kind !== "invocation") throw new Error("expected invocation");
       expect(() => requireBrowserActorCommandBackboneProjectionV1(emptyInvocation, [])).not.toThrow();
+      const namedEmpty = decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: Array.from(encodePackValue([])), inverse_group: Array.from(encodePackValue({ invocationId: "clearSelection:0", mutations: [], inverseMutations: [], memberEdits: [] })) } }), fixture.commandRequest.actionSequence);
+      if (namedEmpty.kind !== "invocation") throw new Error("expected invocation");
+      expect(namedEmpty.projection.inverseGroup.invocationId).toBe("clearSelection:0");
+      expect(() => requireBrowserActorCommandBackboneProjectionV1(namedEmpty, [])).not.toThrow();
       expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Error: { in_reply_to: fixture.commandRequest.actionSequence, fault: [], report: [] } }), fixture.commandRequest.actionSequence)).toEqual({ kind: "error", reason: "action-guest-refused" });
       expect(() => decodeBrowserActorCommandPublicationV1(invocation, fixture.commandRequest.actionSequence + 1)).toThrow();
       expect(() => decodeBrowserActorCommandPublicationV1(new Uint8Array([...invocation, 0]), fixture.commandRequest.actionSequence)).toThrow();
-      expect(() => decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: [1], messages: [], mutations: [], inverse_group: [] } }), fixture.commandRequest.actionSequence)).toThrow("action-publication-unprojected");
+      expect(() => decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: [1], messages: [], mutations: [], inverse_group: [] } }), fixture.commandRequest.actionSequence)).toThrow();
+      expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: Array.from(encodePackValue(null)), messages: [], mutations: [], inverse_group: [] } }), fixture.commandRequest.actionSequence).kind).toBe("invocation");
+      const ephemeral = encodeAppFrame({ Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [] } });
+      expect(decodeBrowserActorCommandPublicationV1(ephemeral, fixture.commandRequest.actionSequence)).toEqual({ kind: "ephemeral" });
+      expect(decodeBrowserActorIntentPublicationV1(ephemeral)).toEqual({ kind: "ephemeral" });
+      const progress = encodeAppFrame({ Invocation: { in_reply_to: 0, output: [1, 2], diagnostics: [], ui_scope: [3], history_patch: [], messages: [], mutations: [], inverse_group: [] } });
+      expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ OperationCompleted: { operation: 3, revision: 0xfedc_ba98_7654_3210n, ui_scope: [1], history_patch: [] } }), fixture.commandRequest.actionSequence)).toEqual({ kind: "operation-completed", historyPatch: null });
+      const historyBytes = Array.from(encodePackValue({ cursor: 1, upserts: [] }));
+      expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ OperationCompleted: { operation: 3, revision: 1n, ui_scope: [], history_patch: historyBytes } }), fixture.commandRequest.actionSequence)).toEqual({ kind: "operation-completed", historyPatch: historyBytes });
+      expect(() => decodeBrowserActorCommandPublicationV1(encodeAppFrame({ OperationCompleted: { operation: 3, revision: 1n, ui_scope: [], history_patch: Array.from(encodePackValue([1])) } }), fixture.commandRequest.actionSequence)).toThrow("invalid history patch");
+      const progressPublication = decodeBrowserActorCommandPublicationV1(progress, fixture.commandRequest.actionSequence);
+      expect(progressPublication.kind).toBe("completion");
+      if (progressPublication.kind !== "completion") throw new Error("expected completion");
+      expect(() => requireBrowserActorCommandBackboneProjectionV1(progressPublication, [])).not.toThrow();
+      expect(decodeBrowserActorIntentPublicationV1(progress).kind).toBe("completion");
+      const reservedCompletion = decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: 0, output: [], diagnostics: Array.from(encodePackValue([])), ui_scope: [], history_patch: Array.from(encodePackValue(null)), messages: [], mutations: Array.from(encodePackValue([])), inverse_group: Array.from(encodePackValue({ invocationId: "clearSelection:0", mutations: [], inverseMutations: [], memberEdits: [] })) } }), fixture.commandRequest.actionSequence);
+      if (reservedCompletion.kind !== "completion") throw new Error("expected completion");
+      expect(() => requireBrowserActorCommandBackboneProjectionV1(reservedCompletion, [])).not.toThrow();
+      expect(() => decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: [], history_patch: Array.from(encodePackValue("rows")), messages: [], mutations: [], inverse_group: [] } }), fixture.commandRequest.actionSequence)).toThrow("invalid history patch");
+      expect(() => decodeBrowserActorCommandPublicationV1(new Uint8Array([...ephemeral, 0]), fixture.commandRequest.actionSequence)).toThrow();
+      const replyHistory = Array.from(encodePackValue({ cursor: 2, upserts: [] })),
+        replyWithHistory = decodeBrowserActorCommandPublicationV1(encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: replyHistory, messages: [], mutations: [], inverse_group: [] } }), fixture.commandRequest.actionSequence);
+      expect(replyWithHistory.kind === "invocation" ? replyWithHistory.historyPatch : undefined).toEqual(replyHistory);
       const mutationId = "command-mutation-1",
         invocationId = "command:0:1",
         forward = [1, 2],
@@ -2344,7 +2371,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("document opening attempt stays outer-wire-owned without widening the browser patch contract", async () => {
       const clientInstanceId = "33333333-3333-4333-8333-333333333333";
       const requests: readonly BackboneWorkerRequest[] = [
-        { kind: "open", documentId: "same-document", clientInstanceId, schema: "gis.map", actor: "caller", bindings: [{ kind: "hub", baseUrl: "https://hub.test", spaceId: "space-a" }] },
+        { kind: "open", documentId: "same-document", clientInstanceId, schema: "gis.map", actor: "caller", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "https://hub.test", spaceId: "space-a" }] },
         { kind: "send", documentId: "same-document", spaceId: "space-a", clientInstanceId, message: { kind: "externalChanged" } },
         { kind: "close", documentId: "same-document", spaceId: "space-a", clientInstanceId },
       ];

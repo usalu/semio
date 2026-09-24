@@ -3,7 +3,7 @@ use super::*;
 use crate::test_instance::BearerTokenResolver;
 
 fn template(name: &str, grants: &[(PolicyPoint, &str, &str)]) -> PolicyTemplate {
-    PolicyTemplate { name: name.to_string(), grants: grants.iter().map(|(point, resource, action)| PolicyGrant { point: *point, resource: (*resource).to_string(), action: (*action).to_string() }).collect() }
+    PolicyTemplate { name: name.to_string(), auto_apply: false, grants: grants.iter().map(|(point, resource, action)| PolicyGrant { point: *point, resource: (*resource).to_string(), action: (*action).to_string() }).collect() }
 }
 
 fn alice() -> Principal {
@@ -25,6 +25,16 @@ fn empty_engine_denies_every_request() {
     let decision = engine.evaluate(&request(PolicyPoint::QueryAccess, alice(), Some("space-1"), "doc-1", "read"));
     assert!(!decision.is_allowed());
     assert!(matches!(&decision, PolicyDecision::Deny { reason } if reason.contains("closed by default") && reason.contains("user:alice")));
+}
+
+#[test]
+fn authenticated_template_auto_grants_subscribe_on_document_lane() {
+    let mut engine = PolicyEngine::new();
+    engine.register_template(template("authenticated", &[(PolicyPoint::Subscription, "*", "subscribe")]));
+    engine.set_authenticated_template("authenticated".to_string());
+    let decision = engine.evaluate(&request(PolicyPoint::Subscription, alice(), Some("space/doc"), "document:space/doc", "subscribe"));
+    assert!(decision.is_allowed(), "{decision:?}");
+    assert!(!engine.evaluate(&request(PolicyPoint::Subscription, Principal::Anonymous, Some("space/doc"), "document:space/doc", "subscribe")).is_allowed());
 }
 
 #[test]
@@ -282,3 +292,50 @@ fn an_unconfigured_gate_admits_only_loopback() {
     assert!(!gate.allows(&Credential { bearer: Some("anything".to_string()), loopback: false, ..Default::default() }));
 }
 //#endregion 🔖️Admin
+
+
+#[test]
+fn authenticated_template_allows_document_subscribe() {
+    let mut engine = PolicyEngine::new();
+    engine.register_template(template("authenticated", &[(PolicyPoint::Subscription, "*", "subscribe")]));
+    engine.set_authenticated_template("authenticated".into());
+    let decision = engine.evaluate(&PolicyRequest {
+        point: PolicyPoint::Subscription,
+        principal: Principal::User { id: "01a0ca76-9033-710d-b653-312a80e97836".into() },
+        scope: Some(Scope("01a0ca99-66f4-7d95-961c-ac72d6a8e098/artifact-c3a3ac50f12865f707f4b2add56ec42c".into())),
+        resource: "document:01a0ca99-66f4-7d95-961c-ac72d6a8e098/artifact-c3a3ac50f12865f707f4b2add56ec42c".into(),
+        action: "subscribe".into(),
+    });
+    assert_eq!(decision, PolicyDecision::Allow, "{decision:?}");
+}
+
+
+#[test]
+fn registered_authenticated_name_alone_does_not_auto_grant() {
+    let mut engine = PolicyEngine::new();
+    engine.register_template(template("authenticated", &[(PolicyPoint::Subscription, "*", "subscribe")]));
+    let decision = engine.evaluate(&PolicyRequest {
+        point: PolicyPoint::Subscription,
+        principal: Principal::User { id: "bob".into() },
+        scope: Some(Scope("space/doc".into())),
+        resource: "document:space/doc".into(),
+        action: "subscribe".into(),
+    });
+    assert!(!decision.is_allowed(), "{decision:?}");
+}
+
+#[test]
+fn compose_auto_apply_flag_wires_authenticated_template() {
+    let mut engine = PolicyEngine::new();
+    let declared = PolicyTemplate {
+        name: "session-member".into(),
+        auto_apply: true,
+        grants: vec![PolicyGrant { point: PolicyPoint::Subscription, resource: "*".into(), action: "subscribe".into() }],
+    };
+    if declared.auto_apply {
+        engine.set_authenticated_template(declared.name.clone());
+    }
+    engine.register_template(declared);
+    assert!(engine.evaluate(&request(PolicyPoint::Subscription, alice(), Some("space/doc"), "document:space/doc", "subscribe")).is_allowed());
+    assert!(!engine.evaluate(&request(PolicyPoint::Subscription, Principal::Anonymous, Some("space/doc"), "document:space/doc", "subscribe")).is_allowed());
+}

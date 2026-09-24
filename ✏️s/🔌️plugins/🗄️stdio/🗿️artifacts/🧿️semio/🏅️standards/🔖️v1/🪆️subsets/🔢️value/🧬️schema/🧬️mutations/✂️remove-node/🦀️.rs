@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveNode {
-    pub(crate) id: ValueId,
+    pub id: ValueId,
 }
 
 impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for RemoveNode {

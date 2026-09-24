@@ -1,14 +1,9 @@
-//! ser sHome to txt
-//! 🐛️ Pre-migration content here referenced `semio_s_artifact_stdio_json`/`semio_s_artifact_stdio_txt`,
-//! types that don't exist in this crate (dead code, never mounted by the old glue, never
-//! compiled) -- likely a copy-paste of stdio's own internal json<-txt bridge into the wrong
-//! plugin's txt target folder. Left as an honest stub producing this artifact's own real
-//! snapshot type, pending a real txt import/export implementation.
+//! home → txt — `s.stdio.txt` is a carrier: its body is this artifact's own canonical DSL text,
+//! verbatim, so the hop is `IoFidelity::Exact`.
 use crate::SHomeSnapshot;
+
 pub fn register() {}
-pub fn serialize(_from: &SHomeSnapshot) -> Result<semio_s_artifact_stdio_txt::TxtSnapshot, String> {
-    Err("txt export not yet implemented".into())
-}
-pub fn deserialize_bytes(_bytes: &[u8]) -> Result<SHomeSnapshot, String> {
-    Err("txt import not yet implemented".into())
+
+pub fn serialize_bytes(from: &SHomeSnapshot) -> Result<Vec<u8>, store::TextError> {
+    Ok(<SHomeSnapshot as store::ArtifactDsl>::print_dsl(from).into_bytes())
 }

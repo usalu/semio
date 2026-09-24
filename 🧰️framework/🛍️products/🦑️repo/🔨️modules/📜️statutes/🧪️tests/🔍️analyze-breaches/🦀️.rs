@@ -50,7 +50,7 @@ fn the_golden_tree_breaches(ctx: &Context) -> Result<Outcome, String> {
     let files = tree(ctx, &uris.iter().map(String::as_str).collect::<Vec<_>>())?;
     let sources = statutes::SourceSet::new(files);
     let rendered: Vec<Json> = statutes::analyze(&sources).iter().map(|breach| Json::String(render(breach))).collect();
-    let golden = ctx.fixture_json("local://🔣️breaches.json")?;
+    let golden = ctx.fixture_json("shared://🔍️analyze-breaches/🔣️breaches.json")?;
     let expected = golden.array("breachs");
     if expected != rendered {
         return Err(format!("analysis drifted from the reviewed golden: {} breaches produced, {} expected", rendered.len(), expected.len()));

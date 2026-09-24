@@ -183,8 +183,9 @@ async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
         assert_eq!(definition.io.artifact_schema, app.artifact_schema);
         assert_eq!(definition.dialect.artifact_kind, format!("s.norm.{}", app.variant));
         for window in definition.window_kinds.iter() {
+            let presented = semio_framework_plugin::window_kind_actions(definition, window);
             for route in &fixture.routes {
-                let action = window.actions.iter().find(|action| action.id == route.id).unwrap_or_else(|| panic!("{} window {} does not declare {}", app.controller, window.id, route.id));
+                let action = presented.iter().find(|action| action.id == route.id).unwrap_or_else(|| panic!("{} window {} does not present {}", app.controller, window.id, route.id));
                 assert_eq!(action.semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{} {} must dispatch from the UI", app.controller, route.id);
             }
         }

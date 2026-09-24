@@ -2,7 +2,7 @@ module Stdio_semio_document_mutations;
 
 # Real binary `SemioDocumentMutation` op frame: `format` (1 byte) + `tag` (1 byte, the variant
 # ordinal), then one opaque `payload` tail — see the sibling `📡️.protocol.semio`'s
-# comment / `🧬️mutations/🦀️.rs`'s `OP_KEYWORDS`.
+# comment / `📡️.protocol.semio`'s records.
 type Document = unit {
     format: uint8;
     tag: uint8;

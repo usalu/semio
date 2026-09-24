@@ -1,15 +1,22 @@
 import { BundleScript, TEST_LEVELS, resolveTestLevel } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import { writePrintGalleryEvidence } from "../../🔨️modules/📊️visualization-gallery/🔬️probes/🟦️.ts";
 import { verifyPrintMacroStagingNative, verifyPrintPipelineLong, verifyPrintPipelineQuick, verifyPrintVisualizationBuild } from "./🧪️tests/🖨️pipeline/🟦️.ts";
 
 //#region 🧪️PrintPipelineVerification
 /** 🧪️ Verifies pure print transformations and, from `long` upward, every template PDF; `viz` adds the
- * authored gallery coverage contract and, at `full`, every visualization PDF. */
+ * authored gallery coverage contract and, at `full`, every visualization PDF; `viz fixtures [section…]` regenerates the
+ * `🖼️gallery-render` evidence. */
 export class PrintPipelineVerificationCommand extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "macro") {
       if (segments.length !== 1) throw new Error("print macro staging test accepts no additional segments");
       await verifyPrintMacroStagingNative();
+      return;
+    }
+    if (segments[0] === "viz" && segments[1] === "fixtures") {
+      const evidence = await writePrintGalleryEvidence(segments.slice(2));
+      console.log(`[gallery] evidence holds ${Object.keys(evidence.variants).length} variants`);
       return;
     }
     if (segments[0] === "viz") {

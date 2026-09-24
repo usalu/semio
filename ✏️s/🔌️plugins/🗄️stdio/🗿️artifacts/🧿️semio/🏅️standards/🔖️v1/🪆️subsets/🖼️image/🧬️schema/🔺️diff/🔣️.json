@@ -24,11 +24,19 @@
       "type": "integer"
     },
     "icc": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "contentEncoding": "hex"
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "frames": {
       "type": "object",
@@ -54,7 +62,12 @@
                     "type": "integer"
                   },
                   "rgba8": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
                   }
                 }
               }

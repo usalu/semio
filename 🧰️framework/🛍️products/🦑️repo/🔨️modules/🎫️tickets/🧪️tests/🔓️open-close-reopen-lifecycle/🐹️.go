@@ -42,7 +42,7 @@ type world struct {
 }
 
 func loadLifecycleVectors(ctx *host.Context) (lifecycleVectors, error) {
-	data, err := ctx.FixtureBytes("local://🔓️lifecycle.json")
+	data, err := ctx.FixtureBytes("shared://🔓️open-close-reopen-lifecycle/🔓️lifecycle.json")
 	if err != nil {
 		return lifecycleVectors{}, err
 	}

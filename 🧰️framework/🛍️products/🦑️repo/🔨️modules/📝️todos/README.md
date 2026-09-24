@@ -11,6 +11,6 @@ and the promotion of a todo into a ticket.
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
-`🧪️test` harness; the third-party references are registered in `🔮️oracle/🔣️.json`.
+`🧪️test` harness; the third-party references are registered in `🔮️oracles/🔣️.json`.
 
 `📝️todo-markdown-roundtrip`, `🔍️todo-scanning`, `✏️draft-lifecycle`, `🎫️todo-to-ticket`.

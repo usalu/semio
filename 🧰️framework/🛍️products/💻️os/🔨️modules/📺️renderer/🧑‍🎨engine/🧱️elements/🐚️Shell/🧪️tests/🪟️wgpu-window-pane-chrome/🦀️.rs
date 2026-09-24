@@ -10,6 +10,7 @@
 use super::*;
 use semio_framework::UtilityDefinition;
 use ui_wgpu::wgpu::{WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use ui_wgpu::wgpu::InputState;
 
 fn pane_fixture() -> Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/🪟️window-pane-chrome/🔣️.json")).expect("window pane chrome fixture")
@@ -241,7 +242,7 @@ fn each_pane_chip_dispatches_its_own_window_state() {
     let mut shell = split_pane_shell();
     let press = |shell: &mut ShellState, control_id: String| {
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id), kind: HitKind::Toggle, drag_axis: None, drag_data: None };
-        assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit)).expect("a pane chip press never errors"), "🎯️ the shell claims its own pane chip");
+        assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a pane chip press never errors"), "🎯️ the shell claims its own pane chip");
     };
     assert!(shell.window_actions_folded("pane-top") && shell.window_search_folded("pane-top") && shell.utility_bar_folded("pane-top") && shell.measures_rail_folded("pane-top"), "🪟️ every pane rail starts folded, as React's `useState(true)` does");
     press(&mut shell, WindowPaneChip::Actions.control_id("pane-top", true));
@@ -497,7 +498,7 @@ fn one_pane_chip_press_flips_one_fold_and_moves_no_surface() {
             },
         );
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id), kind: HitKind::Toggle, drag_axis: None, drag_data: None };
-        assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit)).expect("a pane chip press never errors"), "🎯️ the shell claims {chip:?}");
+        assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a pane chip press never errors"), "🎯️ the shell claims {chip:?}");
     };
     for chip in WindowPaneChip::ALL {
         let mut shell = split_pane_shell();

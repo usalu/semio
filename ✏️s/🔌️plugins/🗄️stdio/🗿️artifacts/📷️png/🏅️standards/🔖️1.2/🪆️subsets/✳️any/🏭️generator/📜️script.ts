@@ -35,6 +35,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -221,7 +222,7 @@ print(kind + ': written')
           units: { length: "unitless", angle: "degree" },
           files,
           provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
-          generator: { oracle: "pillow-png-1-2-chunk-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks", platform: process.platform },
+          generator: { oracle: "pillow-png-1-2-chunk-reader", packageVersion: "11.3.0", engineFamily: "pillow", engineVersion: "11.3.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks", platform: currentPlatform() },
           comparisonProfile: "semantic-png-chunk-v1",
           reproducible: true,
           family: "mechanical",

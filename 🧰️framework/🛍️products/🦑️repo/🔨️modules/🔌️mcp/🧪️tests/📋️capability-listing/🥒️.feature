@@ -10,7 +10,7 @@ Feature: Every profile advertises exactly one surface
   @level-fundamental
   @mode-differential
   Scenario: The generic profile lists the whole surface in sorted order
-    Given the authored surface table shared://📋️surface.json and the authored descriptions asset://🧬️schema/🔣️descriptions.json
+    Given the authored surface table shared://📋️surface.json and the authored descriptions asset://🔣️descriptions.json
     And a server started with no client profile
     When the client lists tools, resources and prompts
     Then every implementation projects the same names in the same order with the same descriptions
@@ -19,7 +19,7 @@ Feature: Every profile advertises exactly one surface
   @level-quick
   @mode-differential
   Scenario: An IDE profile adds only its own plan or spec argument
-    Given the authored surface table shared://📋️surface.json and the authored descriptions asset://🧬️schema/🔣️descriptions.json
+    Given the authored surface table shared://📋️surface.json and the authored descriptions asset://🔣️descriptions.json
     And a server started for each of the cursor, kiro, copilot, claude and codex profiles
     When the client lists tools
     Then only the kiro profile carries `spec_id`, only the plan profiles carry `plan_id`, and the generic profile carries neither

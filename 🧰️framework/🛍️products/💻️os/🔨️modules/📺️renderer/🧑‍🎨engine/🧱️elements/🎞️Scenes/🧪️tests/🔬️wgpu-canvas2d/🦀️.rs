@@ -95,7 +95,7 @@ fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
 }
 
 fn canvas_camera_gesture_fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).expect("shared Canvas2d camera gesture fixture")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).expect("shared Canvas2d camera gesture fixture")
 }
 
 fn fixture_camera(value: &Value) -> Viewport {
@@ -124,7 +124,7 @@ fn catalogue_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) ->
 
 #[test]
 fn catalogue_drop_publishes_one_terminal_leave_drop_slice_and_preserves_raw_payload() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🛒️canvas-catalogue-terminal/🔣️.json")).expect("shared catalogue terminal fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛒️canvas-catalogue-terminal/🔣️.json")).expect("shared catalogue terminal fixture");
     let mut scene = canvas_scene(fixture["surface"]["id"].as_str().unwrap(), "[]".into());
     scene.controller_id = fixture["surface"]["controllerId"].as_str().unwrap().into();
     let inner = Rect::new(0.0, 0.0, fixture["surface"]["width"].as_f64().unwrap() as f32, fixture["surface"]["height"].as_f64().unwrap() as f32);

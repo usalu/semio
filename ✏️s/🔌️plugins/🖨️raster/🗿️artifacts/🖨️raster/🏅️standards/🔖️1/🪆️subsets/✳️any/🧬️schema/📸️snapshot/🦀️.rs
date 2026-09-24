@@ -1,21 +1,10 @@
 //! 🧬️ Raster snapshot schema — artifact-lane fields only.
 //!
-//! P6 handcrafted `ArtifactDsl`/`ArtifactPack` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`):
-//! `RasterSnapshot.assets` carries real `store::ArtifactChild<SemioImageSnapshot>` handles (composed
-//! `s.stdio.semio.image` children, one per asset id — see `🗿️artifacts/🖨️raster/🦀️.rs`'s
-//! `🧩️Composition` region), which `dsl::DslRecord`'s derive cannot represent (no `DslField` impl for
-//! `ArtifactChild<S>`) — the same reason `✳️object`/`✳️kit` (stdio) and `💠️lowpoly`/`🗺️gismap` (this
-//! ticket's own exemplars) hand-roll their own codecs rather than deriving. This file follows their
-//! exact hex/bracket convention, never a hand-written slot list — `#[derive(ArtifactSchema)]` still
-//! emits `field_states()` for the top-level facets. `child_slots()` is honestly EMPTY for `assets`:
-//! the derive's `#[child(kind=...)]` mechanism (`🧬️schema/✨️derive/🦀️.rs`) only recognizes a
-//! bare `ArtifactChild<T>`/`Vec<ArtifactChild<T>>` field directly on the struct, not an owned-map
-//! value — kept as a `RasterOwnedMap<ArtifactChild<S>>` anyway (rather than reshaping to a `Vec`) to
-//! preserve the SAME id-keyed addressing `image_key: Option<String>` already used pre-migration and
-//! every existing `add-layer-asset`/`remove-layer-asset` mutation already assumes. This is the exact
-//! same already-accepted shape of gap `💠️lowpoly`'s own `LowpolyObject.mesh` doc comment documents (a
-//! nested/non-bare child slot the derive can't see): the type/mutation/persistence layer is fully
-//! real, only the derive-generated SCHEMA INTROSPECTION table is incomplete for this one field.
+//! `ArtifactDsl` and `ArtifactPack` are the derived text and pack of `RasterPackRecord`. `RasterSnapshot.assets` carries `store::ArtifactChild<SemioImageSnapshot>`
+//! handles (composed `s.stdio.semio.image` children, one per asset id — see `🗿️artifacts/🖨️raster/🦀️.rs`'s
+//! `🧩️Composition` region) in a `RasterOwnedMap`, keeping the id-keyed addressing every
+//! `add-layer-asset`/`remove-layer-asset` mutation assumes. `child_slots()` is EMPTY for `assets`: the
+//! `#[child(kind=...)]` derive only recognizes a bare `ArtifactChild<T>`/`Vec<ArtifactChild<T>>` field.
 
 use crate::{RasterAssetChild, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
@@ -62,514 +51,97 @@ pub fn retire_raster_artifact(artifact: crate::standards::v1::subsets::any::sche
 //#endregion 🔖️Snapshot
 
 //#region 🔖️CodecPrimitives
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-pub(crate) fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
 
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 
-pub(crate) fn enc_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
-    match opt {
-        None => "[0]".to_string(),
-        Some(v) => format!("[1,{}]", enc(v)),
-    }
-}
-pub(crate) fn dec_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
-        ["0"] => Ok(None),
-        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
-        other => Err(format!("option: bad shape {other:?}")),
-    }
-}
-pub(crate) fn enc_opt_str(s: &Option<String>) -> String {
-    enc_option(s, |v| enc_str(v))
-}
-pub(crate) fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
-    dec_option(s, dec_str)
-}
-pub(crate) fn dec_opt_u32(s: &str) -> Result<Option<u32>, String> {
-    dec_option(s, |n| n.parse::<u32>().map_err(|e: std::num::ParseIntError| e.to_string()))
-}
-
-pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
-}
-
-/// 🪪️ `[<hex child_id>,<hex target-uri>]` — the two-string handle, real and complete, never content.
-pub(crate) fn dec_child(s: &str) -> Result<RasterAssetChild, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
-}
-
-pub(crate) fn enc_opt_u32(value: &Option<u32>) -> String {
-    enc_option(value, |number| number.to_string())
-}
-
-/// 🪪️ `[<hex child_id>,<hex target-uri>]` — the exact inverse of [`dec_child`].
-pub(crate) fn enc_child(child: &RasterAssetChild) -> String {
-    format!("[{},{}]", enc_str(&child.child_id), enc_str(&child.target.to_uri()))
-}
-
-pub(crate) fn enc_asset_map(map: &RasterOwnedMap<RasterAssetChild>) -> String {
-    format!("[{}]", map.iter().map(|(key, child)| format!("[{},{}]", enc_str(key), enc_child(child))).collect::<Vec<_>>().join(","))
-}
-pub(crate) fn dec_asset_map(s: &str) -> Result<RasterOwnedMap<RasterAssetChild>, String> {
-    let mut out = RasterOwnedMap::new();
-    for entry in split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()) {
-        let parts = split_top_level(strip_brackets(entry)?, ',');
-        let [key, child] = parts.as_slice() else { return Err(format!("asset map entry: expected 2 fields, got {}", parts.len())) };
-        out.insert(dec_str(key)?, dec_child(child)?).map_err(|rejected| rejected.reason.to_string())?;
-    }
-    Ok(out)
-}
-
-pub(crate) fn enc_transform(value: &RasterTransform) -> String {
-    format!("[{},{},{},{},{}]", value.x, value.y, value.scale_x, value.scale_y, value.rotation)
-}
-
-pub(crate) fn dec_transform(s: &str) -> Result<RasterTransform, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [x, y, sx, sy, rot] = parts.as_slice() else { return Err(format!("transform: expected 5 fields, got {}", parts.len())) };
-    let f = |s: &str| s.trim().parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string());
-    Ok(RasterTransform { x: f(x)?, y: f(y)?, scale_x: f(sx)?, scale_y: f(sy)?, rotation: f(rot)? })
-}
-
-pub(crate) fn enc_mask(value: &RasterLayerMask) -> String {
-    format!("[{},{},{},{},{}]", value.enabled, value.linked, value.invert, enc_opt_u32(&value.width), enc_opt_u32(&value.height))
-}
-pub(crate) fn enc_mask_opt(value: &Option<RasterLayerMask>) -> String {
-    enc_option(value, enc_mask)
-}
-
-pub(crate) fn dec_mask(s: &str) -> Result<RasterLayerMask, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [enabled, linked, invert, width, height] = parts.as_slice() else { return Err(format!("mask: expected 5 fields, got {}", parts.len())) };
-    let b = |s: &str| s.trim().parse::<bool>().map_err(|e: std::str::ParseBoolError| e.to_string());
-    Ok(RasterLayerMask { enabled: b(enabled)?, linked: b(linked)?, invert: b(invert)?, width: dec_opt_u32(width)?, height: dec_opt_u32(height)? })
-}
-pub(crate) fn dec_mask_opt(s: &str) -> Result<Option<RasterLayerMask>, String> {
-    dec_option(s, dec_mask)
-}
-
-/// 🧬️ `[[<hex key>,<hex json bytes>],…]` — an adjustment's parameter map, each value carried as the
-/// exact JSON bytes [`dec_params`] reads back.
-pub(crate) fn enc_params(map: &RasterOwnedMap<dsl::DslValue>) -> String {
-    let entry = |key: &String, value: &dsl::DslValue| format!("[{},{}]", enc_str(key), hex_encode(dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(value)).as_bytes()));
-    format!("[{}]", map.iter().map(|(key, value)| entry(key, value)).collect::<Vec<_>>().join(","))
-}
-
-/// 🧬️ Parameter-map decoder — the exact inverse of [`enc_params`].
-pub(crate) fn dec_params(s: &str) -> Result<RasterOwnedMap<dsl::DslValue>, String> {
-    let mut out = RasterOwnedMap::new();
-    for entry in split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()) {
-        let parts = split_top_level(strip_brackets(entry)?, ',');
-        let [key, value] = parts.as_slice() else { return Err(format!("params entry: expected 2 fields, got {}", parts.len())) };
-        let bytes = hex_decode(value)?;
-        let dsl_value: dsl::DslValue = dsl::os_pack::json::parse_bytes(&bytes).map(|value| dsl::os_pack::json::to_dsl_value(&value)).map_err(|e| e.to_string())?;
-        out.insert(dec_str(key)?, dsl_value).map_err(|rejected| rejected.reason.to_string())?;
-    }
-    Ok(out)
-}
-
-/// 🌳️ Recursive layer-tree codec — one tag char (`p`/`g`/`a`) prefixed directly onto the bracketed
-/// field list (`split_top_level`'s depth tracking only keys off `[`/`]`, so the leading tag never
-/// confuses top-level list splitting).
-pub(crate) fn dec_layer(s: &str) -> Result<RasterLayerNode, String> {
-    if s.is_empty() {
-        return Err("layer: empty".into());
-    }
-    let (tag, rest) = s.split_at(1);
-    let parts = split_top_level(strip_brackets(rest)?, ',');
-    match tag {
-        "p" => {
-            let [id, name, visible, opacity, blend_mode, transform, mask, width, height, image_key] = parts.as_slice() else {
-                return Err(format!("pixel layer: expected 10 fields, got {}", parts.len()));
-            };
-            Ok(RasterLayerNode::Pixel {
-                id: dec_str(id)?,
-                name: dec_str(name)?,
-                visible: visible.trim().parse().map_err(|e: std::str::ParseBoolError| e.to_string())?,
-                opacity: opacity.trim().parse().map_err(|e: std::num::ParseFloatError| e.to_string())?,
-                blend_mode: dec_str(blend_mode)?,
-                transform: dec_transform(transform)?,
-                mask: dec_mask_opt(mask)?,
-                width: dec_opt_u32(width)?,
-                height: dec_opt_u32(height)?,
-                image_key: dec_opt_str(image_key)?,
-            })
-        }
-        "g" => {
-            let [id, name, visible, opacity, blend_mode, transform, mask, children] = parts.as_slice() else {
-                return Err(format!("group layer: expected 8 fields, got {}", parts.len()));
-            };
-            Ok(RasterLayerNode::Group {
-                id: dec_str(id)?,
-                name: dec_str(name)?,
-                visible: visible.trim().parse().map_err(|e: std::str::ParseBoolError| e.to_string())?,
-                opacity: opacity.trim().parse().map_err(|e: std::num::ParseFloatError| e.to_string())?,
-                blend_mode: dec_str(blend_mode)?,
-                transform: dec_transform(transform)?,
-                mask: dec_mask_opt(mask)?,
-                children: dec_layer_list(children)?,
-            })
-        }
-        "a" => {
-            let [id, name, visible, opacity, blend_mode, transform, adjustment_kind, params] = parts.as_slice() else {
-                return Err(format!("adjustment layer: expected 8 fields, got {}", parts.len()));
-            };
-            Ok(RasterLayerNode::Adjustment {
-                id: dec_str(id)?,
-                name: dec_str(name)?,
-                visible: visible.trim().parse().map_err(|e: std::str::ParseBoolError| e.to_string())?,
-                opacity: opacity.trim().parse().map_err(|e: std::num::ParseFloatError| e.to_string())?,
-                blend_mode: dec_str(blend_mode)?,
-                transform: dec_transform(transform)?,
-                adjustment_kind: dec_str(adjustment_kind)?,
-                params: dec_params(params)?,
-            })
-        }
-        other => Err(format!("layer: unknown tag {other:?}")),
-    }
-}
-/// 🌳️ One layer, as the exact inverse of [`dec_layer`]: the tag char then the bracketed field list.
-pub(crate) fn enc_layer(layer: &RasterLayerNode) -> String {
-    match layer {
-        RasterLayerNode::Pixel { id, name, visible, opacity, blend_mode, transform, mask, width, height, image_key } => format!(
-            "p[{},{},{visible},{opacity},{},{},{},{},{},{}]",
-            enc_str(id),
-            enc_str(name),
-            enc_str(blend_mode),
-            enc_transform(transform),
-            enc_mask_opt(mask),
-            enc_opt_u32(width),
-            enc_opt_u32(height),
-            enc_opt_str(image_key)
-        ),
-        RasterLayerNode::Group { id, name, visible, opacity, blend_mode, transform, mask, children } => {
-            format!("g[{},{},{visible},{opacity},{},{},{},{}]", enc_str(id), enc_str(name), enc_str(blend_mode), enc_transform(transform), enc_mask_opt(mask), enc_layer_list(children))
-        }
-        RasterLayerNode::Adjustment { id, name, visible, opacity, blend_mode, transform, adjustment_kind, params } => {
-            format!("a[{},{},{visible},{opacity},{},{},{},{}]", enc_str(id), enc_str(name), enc_str(blend_mode), enc_transform(transform), enc_str(adjustment_kind), enc_params(params))
-        }
-    }
-}
-
-pub(crate) fn enc_layer_list(list: &[RasterLayerNode]) -> String {
-    format!("[{}]", list.iter().map(enc_layer).collect::<Vec<_>>().join(","))
-}
-pub(crate) fn dec_layer_list(s: &str) -> Result<Vec<RasterLayerNode>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_layer).collect()
-}
 //#endregion 🔖️CodecPrimitives
 
-//#region 🔖️TextPrimitives
-fn print_raster_snapshot_body(s: &RasterSnapshot) -> String {
-    format!("schema={}\nid={}\ntitle={}\nlayers={}\nassets={}", enc_str(&s.schema), enc_str(&s.id), enc_opt_str(&s.title), enc_layer_list(&s.layers), enc_asset_map(&s.assets),)
+//#region 🔖️PackRecord
+/// 🔁️ One asset entry of the pack: its map key, the composed child handle, and the child's own
+/// canonical `ArtifactPack` bytes — `store::ArtifactChild`'s `local_owner` is serialization-skipped by
+/// design, and a raster document packed and reopened without them came back with pixel-less handles
+/// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). Text and pack both encode this record, so
+/// both carry the child; `content` is empty when the handle carries no materialization (a
+/// wire-decoded child the host has not resolved, or a committed example whose media is planted by
+/// `🎮️commands/🎬️set-active-example`).
+#[derive(dsl::DslRecord)]
+struct RasterAssetPackRow {
+    key: String,
+    child: RasterAssetChild,
+    #[dsl(base64)]
+    content: Vec<u8>,
 }
-fn parse_raster_snapshot_body(body: &str) -> Result<RasterSnapshot, String> {
-    let mut schema = None;
-    let mut id = None;
-    let mut title = None;
-    let mut layers = Vec::new();
-    let mut assets = RasterOwnedMap::new();
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
+
+/// 📦️ Derived pack record of a `RasterSnapshot`. Each layer travels as its first-party JSON text:
+/// adjustment parameters are free-form `DslValue`s whose key order is significant, while pack
+/// canonicalises map keys into sorted order.
+#[derive(dsl::DslRecord)]
+#[dsl(extension = "raster")]
+struct RasterPackRecord {
+    schema: String,
+    id: String,
+    title: Option<String>,
+    layers: Vec<String>,
+    assets: Vec<RasterAssetPackRow>,
+}
+
+impl RasterPackRecord {
+    fn from_snapshot(snapshot: &RasterSnapshot) -> Self {
+        let assets = snapshot
+            .assets
+            .iter()
+            .map(|(key, child)| RasterAssetPackRow {
+                key: key.clone(),
+                child: store::ArtifactChild::new(child.child_id.clone(), child.target.clone()),
+                content: child.local_owner::<SemioImageSnapshot>().map(|image| <SemioImageSnapshot as store::ArtifactPack>::encode_pack(image.as_ref())).unwrap_or_default(),
+            })
+            .collect();
+        Self { schema: snapshot.schema.clone(), id: snapshot.id.clone(), title: snapshot.title.clone(), layers: snapshot.layers.iter().map(dsl::os_pack::json::to_json_string).collect(), assets }
+    }
+
+    fn into_snapshot(self) -> Result<RasterSnapshot, String> {
+        let mut children = Vec::with_capacity(self.assets.len());
+        for row in self.assets {
+            let child = if row.content.is_empty() { row.child } else { row.child.with_local_owner(std::sync::Arc::new(<SemioImageSnapshot as store::ArtifactPack>::decode_pack(&row.content).map_err(|error| error.to_string())?)) };
+            children.push((row.key, child));
         }
-        if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("id=") {
-            id = Some(dec_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("title=") {
-            title = dec_opt_str(rest)?;
-        } else if let Some(rest) = line.strip_prefix("layers=") {
-            layers = dec_layer_list(rest)?;
-        } else if let Some(rest) = line.strip_prefix("assets=") {
-            assets = dec_asset_map(rest)?;
-        } else {
-            return Err(format!("raster snapshot: unknown line {line:?}"));
+        let mut layers = Vec::with_capacity(self.layers.len());
+        for text in &self.layers {
+            match dsl::os_pack::json::from_json_str::<RasterLayerNode>(text) {
+                Ok(layer) => layers.push(layer),
+                Err(error) => {
+                    crate::retire_raster_layers(layers);
+                    return Err(error.to_string());
+                }
+            }
         }
-    }
-    Ok(RasterSnapshot { schema: schema.ok_or_else(|| "raster snapshot: missing schema line".to_string())?, id: id.ok_or_else(|| "raster snapshot: missing id line".to_string())?, title, layers, assets })
-}
-//#endregion 🔖️TextPrimitives
-
-//#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
-
-fn write_opt<T>(out: &mut Vec<u8>, v: &Option<T>, write: impl Fn(&mut Vec<u8>, &T)) {
-    match v {
-        Some(x) => {
-            out.push(1);
-            write(out, x);
+        let mut assets = RasterOwnedMap::new();
+        for (key, child) in children {
+            if let Err(rejected) = assets.insert(key, child) {
+                assets.retire();
+                crate::retire_raster_layers(layers);
+                return Err(rejected.reason.to_string());
+            }
         }
-        None => out.push(0),
-    }
-}
-fn read_opt<T>(reader: &mut store::ByteReader<'_>, read: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(None),
-        1 => Ok(Some(read(reader)?)),
-        other => Err(format!("option: bad presence tag {other}")),
-    }
-}
-fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
-    write_opt(out, v, |out, s| write_str_lp(out, s));
-}
-fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
-    read_opt(reader, read_str_lp)
-}
-fn read_opt_u32(reader: &mut store::ByteReader<'_>) -> Result<Option<u32>, String> {
-    read_opt(reader, |r| Ok(u32::from_le_bytes(r.read_bytes(4).map_err(|e| e.to_string())?.try_into().map_err(|_| "u32: short read".to_string())?)))
-}
-
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
-}
-/// 🔁️ `[child_id, target-uri, content]` — the handle PLUS the composed child's own canonical
-/// content, because `store::ArtifactChild`'s `local_owner` is serialization-skipped by design and a
-/// raster document that was packed and reopened came back with pixel-less handles: `raster_asset`
-/// answered `None`, `assets_json` rendered `{}` and every composite surface was blank (measured
-/// through `print_document_pack` → `load_document_pack`, ticket
-/// 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). The PACK is this artifact's document archive, so
-/// it is the codec that has to carry the child — `📓️knowledge-children.md` §1's own second
-/// option. The DSL carrier deliberately stays handle-only: it names committed example media by id
-/// and `🎮️commands/🎬️set-active-example`'s `example_media_operations` plants the bytes on load.
-/// `content` is the child's own `ArtifactPack` bytes, empty when the handle carries no
-/// materialization (a wire-decoded child the host has not resolved).
-fn read_child(reader: &mut store::ByteReader<'_>) -> Result<RasterAssetChild, String> {
-    let child_id = read_str_lp(reader)?;
-    let target = read_ref(reader)?;
-    let content = read_bytes_lp(reader)?;
-    let child = store::ArtifactChild::new(child_id, target);
-    if content.is_empty() {
-        return Ok(child);
-    }
-    let image = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&content).map_err(|error| error.to_string())?;
-    Ok(child.with_local_owner(std::sync::Arc::new(image)))
-}
-
-fn write_ref(out: &mut Vec<u8>, value: &store::os_io::ArtifactRef) {
-    write_str_lp(out, &value.to_uri());
-}
-/// 🔁️ The exact inverse of [`read_child`].
-fn write_child(out: &mut Vec<u8>, child: &RasterAssetChild) {
-    write_str_lp(out, &child.child_id);
-    write_ref(out, &child.target);
-    match child.local_owner::<SemioImageSnapshot>() {
-        Some(image) => write_bytes_lp(out, &<SemioImageSnapshot as store::ArtifactPack>::encode_pack(image.as_ref())),
-        None => write_bytes_lp(out, &[]),
+        Ok(RasterSnapshot { schema: self.schema, id: self.id, title: self.title, layers, assets })
     }
 }
 
-fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>) {
-    store::pack_rt::write_varint_u64(out, map.len() as u64);
-    for (key, child) in map.iter() {
-        write_str_lp(out, key);
-        write_child(out, child);
-    }
-}
-fn read_asset_map(reader: &mut store::ByteReader<'_>) -> Result<RasterOwnedMap<RasterAssetChild>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut out = RasterOwnedMap::new();
-    for _ in 0..count {
-        let k = read_str_lp(reader)?;
-        let v = read_child(reader)?;
-        out.insert(k, v).map_err(|rejected| rejected.reason.to_string())?;
-    }
-    Ok(out)
+/// 🖨️ The derived text body: the same `RasterPackRecord` the pack encodes, printed by the spec-driven engine.
+pub(crate) fn print_pack_record_text(snapshot: &RasterSnapshot) -> String {
+    dsl::print(&RasterPackRecord::from_snapshot(snapshot).__dsl_to_record(), &RasterPackRecord::__dsl_spec(), dsl::JoinMode::Document)
 }
 
-fn write_opt_u32(out: &mut Vec<u8>, value: &Option<u32>) {
-    write_opt(out, value, |out, number| out.extend_from_slice(&number.to_le_bytes()));
+/// 📖️ Parses a derived text body back through `RasterPackRecord`, with the same decode steps as the pack.
+pub(crate) fn parse_pack_record_text(body: &str) -> Result<RasterSnapshot, store::TextError> {
+    let record = dsl::parse(body, &RasterPackRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+    RasterPackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
 }
-
-fn write_transform(out: &mut Vec<u8>, value: &RasterTransform) {
-    for field in [value.x, value.y, value.scale_x, value.scale_y, value.rotation] {
-        out.extend_from_slice(&field.to_le_bytes());
-    }
-}
-
-fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<RasterTransform, String> {
-    let mut next = || -> Result<f64, String> { Ok(f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "transform: short read".to_string())?)) };
-    Ok(RasterTransform { x: next()?, y: next()?, scale_x: next()?, scale_y: next()?, rotation: next()? })
-}
-
-fn write_mask(out: &mut Vec<u8>, value: &RasterLayerMask) {
-    out.push(u8::from(value.enabled));
-    out.push(u8::from(value.linked));
-    out.push(u8::from(value.invert));
-    write_opt_u32(out, &value.width);
-    write_opt_u32(out, &value.height);
-}
-fn write_mask_opt(out: &mut Vec<u8>, value: &Option<RasterLayerMask>) {
-    write_opt(out, value, write_mask);
-}
-
-fn read_mask(reader: &mut store::ByteReader<'_>) -> Result<RasterLayerMask, String> {
-    let enabled = reader.read_u8().map_err(|e| e.to_string())? != 0;
-    let linked = reader.read_u8().map_err(|e| e.to_string())? != 0;
-    let invert = reader.read_u8().map_err(|e| e.to_string())? != 0;
-    let width = read_opt_u32(reader)?;
-    let height = read_opt_u32(reader)?;
-    Ok(RasterLayerMask { enabled, linked, invert, width, height })
-}
-fn read_mask_opt(reader: &mut store::ByteReader<'_>) -> Result<Option<RasterLayerMask>, String> {
-    read_opt(reader, read_mask)
-}
-
-fn write_params(out: &mut Vec<u8>, map: &RasterOwnedMap<dsl::DslValue>) {
-    store::pack_rt::write_varint_u64(out, map.len() as u64);
-    for (key, value) in map.iter() {
-        write_str_lp(out, key);
-        write_bytes_lp(out, dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(value)).as_bytes());
-    }
-}
-
-fn read_params(reader: &mut store::ByteReader<'_>) -> Result<RasterOwnedMap<dsl::DslValue>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut out = RasterOwnedMap::new();
-    for _ in 0..count {
-        let k = read_str_lp(reader)?;
-        let bytes = read_bytes_lp(reader)?;
-        let v: dsl::DslValue = dsl::os_pack::json::parse_bytes(&bytes).map(|value| dsl::os_pack::json::to_dsl_value(&value)).map_err(|e| e.to_string())?;
-        out.insert(k, v).map_err(|rejected| rejected.reason.to_string())?;
-    }
-    Ok(out)
-}
-
-fn read_layer(reader: &mut store::ByteReader<'_>) -> Result<RasterLayerNode, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
-    let id = read_str_lp(reader)?;
-    let name = read_str_lp(reader)?;
-    let visible = reader.read_u8().map_err(|e| e.to_string())? != 0;
-    let opacity = f32::from_le_bytes(reader.read_bytes(4).map_err(|e| e.to_string())?.try_into().map_err(|_| "opacity: short read".to_string())?);
-    let blend_mode = read_str_lp(reader)?;
-    let transform = read_transform(reader)?;
-    match tag {
-        0 => {
-            let mask = read_mask_opt(reader)?;
-            let width = read_opt_u32(reader)?;
-            let height = read_opt_u32(reader)?;
-            let image_key = read_opt_str(reader)?;
-            Ok(RasterLayerNode::Pixel { id, name, visible, opacity, blend_mode, transform, mask, width, height, image_key })
-        }
-        1 => {
-            let mask = read_mask_opt(reader)?;
-            let children = read_layer_list(reader)?;
-            Ok(RasterLayerNode::Group { id, name, visible, opacity, blend_mode, transform, mask, children })
-        }
-        2 => {
-            let adjustment_kind = read_str_lp(reader)?;
-            let params = read_params(reader)?;
-            Ok(RasterLayerNode::Adjustment { id, name, visible, opacity, blend_mode, transform, adjustment_kind, params })
-        }
-        other => Err(format!("layer: unknown tag {other}")),
-    }
-}
-/// 🌳️ One layer, as the exact inverse of [`read_layer`]: tag, shared head, then the per-kind tail.
-fn write_layer(out: &mut Vec<u8>, layer: &RasterLayerNode) {
-    let (tag, id, name, visible, opacity, blend_mode, transform) = match layer {
-        RasterLayerNode::Pixel { id, name, visible, opacity, blend_mode, transform, .. } => (0_u8, id, name, *visible, *opacity, blend_mode, transform),
-        RasterLayerNode::Group { id, name, visible, opacity, blend_mode, transform, .. } => (1, id, name, *visible, *opacity, blend_mode, transform),
-        RasterLayerNode::Adjustment { id, name, visible, opacity, blend_mode, transform, .. } => (2, id, name, *visible, *opacity, blend_mode, transform),
-    };
-    out.push(tag);
-    write_str_lp(out, id);
-    write_str_lp(out, name);
-    out.push(u8::from(visible));
-    out.extend_from_slice(&opacity.to_le_bytes());
-    write_str_lp(out, blend_mode);
-    write_transform(out, transform);
-    match layer {
-        RasterLayerNode::Pixel { mask, width, height, image_key, .. } => {
-            write_mask_opt(out, mask);
-            write_opt_u32(out, width);
-            write_opt_u32(out, height);
-            write_opt_str(out, image_key);
-        }
-        RasterLayerNode::Group { mask, children, .. } => {
-            write_mask_opt(out, mask);
-            write_layer_list(out, children);
-        }
-        RasterLayerNode::Adjustment { adjustment_kind, params, .. } => {
-            write_str_lp(out, adjustment_kind);
-            write_params(out, params);
-        }
-    }
-}
-
-fn write_layer_list(out: &mut Vec<u8>, list: &[RasterLayerNode]) {
-    store::pack_rt::write_varint_u64(out, list.len() as u64);
-    for layer in list {
-        write_layer(out, layer);
-    }
-}
-fn read_layer_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<RasterLayerNode>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    (0..count).map(|_| read_layer(reader)).collect()
-}
-
-fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8> {
-    // 🔁️ 2: every asset entry carries its composed child's own content (see `read_child`).
-    const PACK_BINARY_FORMAT: u8 = 2;
-    let mut out = vec![PACK_BINARY_FORMAT];
-    write_str_lp(&mut out, &s.schema);
-    write_str_lp(&mut out, &s.id);
-    write_opt_str(&mut out, &s.title);
-    write_layer_list(&mut out, &s.layers);
-    write_asset_map(&mut out, &s.assets);
-    out
-}
-fn decode_raster_snapshot_binary(bytes: &[u8]) -> Result<RasterSnapshot, String> {
-    // 🔁️ 2: every asset entry carries its composed child's own content (see `read_child`).
-    const PACK_BINARY_FORMAT: u8 = 2;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
-        return Err(format!("unsupported pack format {format}"));
-    }
-    let schema = read_str_lp(&mut reader)?;
-    let id = read_str_lp(&mut reader)?;
-    let title = read_opt_str(&mut reader)?;
-    let layers = read_layer_list(&mut reader)?;
-    let assets = read_asset_map(&mut reader)?;
-    Ok(RasterSnapshot { schema, id, title, layers, assets })
-}
-//#endregion 🔖️BinaryPrimitives
+//#endregion 🔖️PackRecord
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// ✉️ Complete handcrafted `ArtifactDsl`/`ArtifactPack` bridge over the fixed-capacity layer forest
-/// and asset map — every populated document prints, packs, parses and decodes.
+/// ✉️ `ArtifactDsl` and `ArtifactPack` are the derived text and pack of `RasterPackRecord`.
 impl store::ArtifactDsl for RasterSnapshot {
     const EXTENSION: &'static str = "raster";
     fn envelope_id() -> &'static str {
@@ -580,10 +152,10 @@ impl store::ArtifactDsl for RasterSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_raster_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_pack_record_text(body)
     }
     fn print_dsl(&self) -> String {
-        let body = print_raster_snapshot_body(self);
+        let body = print_pack_record_text(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -591,18 +163,20 @@ impl store::ArtifactDsl for RasterSnapshot {
 
 impl store::ArtifactPack for RasterSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_raster_snapshot_binary(self);
+        let inner = store::pack_rt::encode_document(&RasterPackRecord::__dsl_spec(), &RasterPackRecord::from_snapshot(self).__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        decode_raster_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        let (record, _report) = store::pack_rt::decode_document(&inner, &RasterPackRecord::__dsl_spec(), options)?;
+        RasterPackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(store::PackError::Schema)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(RasterPackRecord::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -614,3 +188,4 @@ impl Default for RasterSnapshot {
     }
 }
 //#endregion 🔖️Defaults
+

@@ -11,7 +11,7 @@
 
 use crate::SHomeSnapshot;
 use crate::editor::home::commands::apply_directory_event_page;
-use crate::editor::home::commands::{bind_space_file, create_studio, import_space, open_space};
+use crate::editor::home::commands::{bind_space_file, create_studio, import_space, open_space, persist_locally, promote_to_hub_space};
 use crate::editor::home::commands::{copy_invite_link, create_space, delete_space, fold_directory_events, manage_space, presence_heartbeat, rename_space, share_space};
 use crate::editor::home::commands::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
@@ -38,6 +38,8 @@ app_commands! {
     pub enum HomeCommand for SHomeSnapshot, crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation, HomeConfig, HomeConfigMutation {
         "applyDirectoryEventPage" as "apply-directory-event-page" => apply_directory_event_page::ApplyDirectoryEventPage,
         "createStudio" as "create-studio" => create_studio::CreateStudio,
+        "promoteToHubSpace" as "promote-to-hub-space" => promote_to_hub_space::PromoteToHubSpace,
+        "persistLocally" as "persist-locally" => persist_locally::PersistLocally,
         "bindSpaceFile" as "bind-space-file" => bind_space_file::BindSpaceFile,
         "importSpace" as "import-space" => import_space::ImportSpace,
         "openSpace" as "open-space" => open_space::OpenSpace,
@@ -60,7 +62,7 @@ app_commands! {
 
 //#region 🧵️RetainedCommands
 const HOME_RETAINED_TOOL_IDS: &[&str] = &[
-    "applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat",
+    "applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat",
 ];
 const HOME_RETAINED_PAYLOAD_SCHEMA: &str = "space.home.tool-command.v1";
 const HOME_RETAINED_RAW_BYTES: usize = 128 * 1024;
@@ -89,6 +91,8 @@ const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = 
     ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "createSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "promoteToHubSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "persistLocally", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "deleteSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "shareSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "manageSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -115,6 +119,8 @@ fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _inter
         HomeCommand::ShareSpace(payload) => (payload.space_id.len().saturating_add(payload.email.len()).saturating_add(payload.role.len()), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::ManageSpace(payload) => (payload.space_id.len(), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::CopyInviteLink(payload) => (payload.space_id.len().saturating_add(payload.role.len()), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::PromoteToHubSpace(payload) => (payload.space_id.len().saturating_add(payload.name.len()), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::PersistLocally(payload) => (payload.space_id.len().saturating_add(payload.folder_path.as_ref().map_or(0, String::len)), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::CreateStudio(payload) => (payload.name.len().saturating_add(payload.kind.len()).saturating_add(payload.folder_path.as_ref().map_or(0, String::len)), HOME_RETAINED_SCALAR_BYTES),
         HomeCommand::ApplyDirectoryEventPage(payload) => (payload.page_json.len(), HOME_RETAINED_RAW_BYTES),
         HomeCommand::BindSpaceFile(_)
@@ -418,7 +424,7 @@ impl ArtifactEditor for HomeApp {
         factory: "HomeRetainedCommandJobFactory",
         factory_type: HomeRetainedCommandJobFactory,
         contract: home_retained_contract(),
-        tools: ["applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat"]
+        tools: ["applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat"]
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -564,6 +570,14 @@ impl ArtifactEditor for HomeApp {
                 role: str_field("role").unwrap_or_default(),
                 ttl_secs: args.and_then(|value| value.get("ttlSecs")).and_then(DslValue::as_f64).map_or(0, |n| n as u64),
             })),
+            "promoteToHubSpace" => Ok(HomeCommand::PromoteToHubSpace(promote_to_hub_space::PromoteToHubSpace {
+                space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
+                name: str_field("name").unwrap_or_default(),
+            })),
+            "persistLocally" => Ok(HomeCommand::PersistLocally(persist_locally::PersistLocally {
+                space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
+                folder_path: str_field("folderPath").or_else(|| str_field("folder_path")),
+            })),
             "foldDirectoryEvents" => {
                 Ok(HomeCommand::FoldDirectoryEvents(fold_directory_events::FoldDirectoryEvents { events_json: args.and_then(|value| value.get("eventsJson")).and_then(DslValue::as_str).map_or_else(|| "[]".into(), str::to_string) }))
             }
@@ -685,6 +699,23 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         )
         .shell_action("manageSpace", LocalizedLabel::native("Manage Space", "Space verwalten"))
         .shell_action("copyInviteLink", LocalizedLabel::native("Copy Invite Link", "Einladungslink kopieren"))
+        .shell_action("promoteToHubSpace", LocalizedLabel::native("Promote to hub", "Zum Hub hochstufen"))
+        .shell_action("persistLocally", LocalizedLabel::native("Persist locally", "Lokal speichern"))
+        .dialog(
+            DialogDefinition::new("persistLocally", LocalizedLabel::native("Persist locally", "Lokal speichern"), ActionRef::new("persistLocally"))
+                .body(LocalizedLabel::native("Choose a folder to keep this ephemeral studio on disk.", "Wählen Sie einen Ordner, um dieses flüchtige Studio dauerhaft lokal zu speichern."))
+                .args(vec![ActionArgDef::text("folderPath", LocalizedLabel::native("Folder path", "Ordnerpfad")).required()])
+                .submit_label(LocalizedLabel::native("Persist", "Speichern")),
+        )
+        .dialog(
+            DialogDefinition::new("ephemeralShareBlocked", LocalizedLabel::native("Sharing unavailable", "Teilen nicht verfügbar"), ActionRef::new("promoteToHubSpace"))
+                .body(LocalizedLabel::native(
+                    "This studio is ephemeral and local-only. Share and collaboration require promoting it to a hub space or persisting it locally first.",
+                    "Dieses Studio ist flüchtig und nur lokal. Teilen und Zusammenarbeit erfordern zuerst die Hochstufung zum Hub oder lokales Speichern.",
+                ))
+                .submit_label(LocalizedLabel::native("Promote to hub", "Zum Hub hochstufen")),
+        )
+
         .view_action("applyDirectoryEventPage", LocalizedLabel::native("Apply Directory Event Page", "Verzeichnis-Ereignisseite anwenden"))
         .view_action("foldDirectoryEvents", LocalizedLabel::native("Fold Directory Events", "Verzeichnisereignisse einspielen"))
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Präsenz-Heartbeat"))
@@ -701,6 +732,8 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("shareSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("manageSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("copyInviteLink", InteractiveJobClassification::Migrated)
+        .action_interactive_job("promoteToHubSpace", InteractiveJobClassification::Migrated)
+        .action_interactive_job("persistLocally", InteractiveJobClassification::Migrated)
         .action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::Migrated)
         .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
@@ -718,6 +751,8 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
             "shareSpace".into(),
             "manageSpace".into(),
             "copyInviteLink".into(),
+            "promoteToHubSpace".into(),
+            "persistLocally".into(),
         ])
         .keybinding("mod+n", "createStudio")
         .keybinding("mod+o", "importSpace")

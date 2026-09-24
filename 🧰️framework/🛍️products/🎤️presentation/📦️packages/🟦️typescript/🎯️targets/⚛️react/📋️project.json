@@ -5,7 +5,9 @@
     "default": [
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🔌️pdf-canvas-port/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/📝️owned-markdown-compiler/🟦️.ts"
     ]
   },
   "targets": {

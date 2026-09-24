@@ -3,23 +3,29 @@
   "schemaVersion": 2,
   "oracles": [
     {
-      "id": "s.wfc.grid3d.python-reference",
-      "kind": "verified-native-second-implementation",
+      "id": "wfc-grid3d-python-independent",
       "ecosystem": "python",
       "package": "",
+      "version": "",
       "capabilities": [
-        "mutation-diff",
-        "diff-apply",
-        "inverse",
-        "canonical-json"
+        "wfc-grid3d-1-mutate"
       ],
       "comparisonProfiles": [
-        "exact-json"
+        "ordered-json-v1"
       ],
-      "license": "in-repo",
+      "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second, independent implementation of this artifact's mutation semantics, written in Python against the NORMATIVE JSON Schema rather than ported from the Rust, living at `🧪️tests/🧩️mutate-wfc-grid3d-1/🐍️.py`. It re-derives every sparse diff and re-applies every committed one, so a Rust change that is wrong in both the builder and the fixture still fails here. Stdlib only: no `jsonschema`, no `pytest`, no network.",
+      "rationale": "A second, independent implementation of this artifact's mutation semantics, written in Python against the NORMATIVE JSON Schema rather than ported from the Rust, living at `../../../../../🧪️tests/🧩️mutate-wfc-grid3d-1/🐍️.py`. It re-derives every sparse diff and re-applies every committed one, so a Rust change that is wrong in both the builder and the fixture still fails here. Stdlib only: no `jsonschema`, no `pytest`, no network.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
       "nativeSecondImplementation": {
+        "format": "s.wfc.grid3d",
         "noThirdPartySurvey": {
           "ecosystemsSearched": [
             "crates.io",
@@ -29,36 +35,63 @@
             "NuGet"
           ],
           "candidatesConsidered": [
-            "mxgmn/WaveFunctionCollapse",
-            "marian42/wavefunctioncollapse",
-            "fast-wfc",
-            "wfc (crates.io)",
-            "wfc_image (crates.io)"
+            {
+              "package": "mxgmn/WaveFunctionCollapse",
+              "reason": "surveyed; it solves a tiled model and carries no problem document or mutation vocabulary, so it can neither read this carrier nor adjudicate an edit to it."
+            },
+            {
+              "package": "marian42/wavefunctioncollapse",
+              "reason": "surveyed; it solves a tiled model and carries no problem document or mutation vocabulary, so it can neither read this carrier nor adjudicate an edit to it."
+            },
+            {
+              "package": "fast-wfc",
+              "reason": "surveyed; it solves a tiled model and carries no problem document or mutation vocabulary, so it can neither read this carrier nor adjudicate an edit to it."
+            },
+            {
+              "package": "wfc (crates.io)",
+              "reason": "surveyed; it solves a tiled model and carries no problem document or mutation vocabulary, so it can neither read this carrier nor adjudicate an edit to it."
+            },
+            {
+              "package": "wfc_image (crates.io)",
+              "reason": "surveyed; it solves a tiled model and carries no problem document or mutation vocabulary, so it can neither read this carrier nor adjudicate an edit to it."
+            }
           ]
         },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/🔣️.json; ../🧬️schema/🧬️mutations/<kind>/🧬️schema/🔣️.json; ../../../../../🧫️fixtures/🧬️mutations",
         "fixtureCoverage": {
-          "vectors": 14
+          "vectors": 14,
+          "capabilitiesCovered": [
+            "wfc-grid3d-1-mutate"
+          ]
         }
       }
     }
   ],
-  "noOracleDecisions": [
-    {
-      "id": "s.wfc.grid3d.no-third-party-oracle",
-      "capability": "mutation-algebra",
-      "rationale": "There is no third-party oracle for THIS artifact's semantics. Surveyed, and declined with a reason each: mxgmn/WaveFunctionCollapse (C#, the reference implementation — solves an overlapping/simple-tiled 2D model, has no 3D six-neighbour tiled model, no per-axis non-uniform cell sizes and no notion of a persisted problem document, so it can oracle neither the mutation algebra nor the grid geometry); marian42/wavefunctioncollapse (Unity, 3D and closest in domain — but it is a Unity component whose adjacency is derived from imported mesh sockets, not from an authored allow-list, and it is unlicensed for reuse); fast-wfc (C++, 2D only); wfc rust crates (`wfc`/`wfc_image`, 2D grid only). Every one of them oracles a SOLVER, and the solver is already differentially tested inside `semio-s-plugin-wfc-engine` against its own brute-force enumerator. What this artifact adds on top — the document model, the fourteen point-invertible mutations, the sparse diff algebra and the non-uniform cell geometry — has no external counterpart at all, so the honest substitutes are a verified native second implementation plus the metamorphic laws the fixture suite asserts (apply∘inverse = identity, diff∘apply = after, canonical JSON is a fixed point).",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
-    }
-  ],
+  "noOracleDecisions": [],
   "mutationCatalogs": [
     {
       "id": "wfc-grid3d-1-any",
-      "capability": "mutation-algebra",
+      "capability": "wfc-grid3d-1-mutate",
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "change-seed",
+        "resize-grid",
+        "change-cell-sizes",
+        "change-periodicity",
+        "create-tile",
+        "delete-tile",
+        "change-tile-weight",
+        "change-tile-media",
+        "create-rule",
+        "delete-rule",
+        "pin-cell",
+        "unpin-cell",
+        "mask-cell",
+        "unmask-cell"
+      ],
       "vectors": [
         {
           "mutationId": "change-seed",
@@ -211,6 +244,298 @@
             {
               "id": "restores-the-masked-corner",
               "directoryName": "🔓️restores-the-masked-corner"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.wfc.grid3d",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-seed",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-seed",
+            "bridgeVersion": 1,
+            "variant": "ChangeSeed"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "resize-grid",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "resize-grid",
+            "bridgeVersion": 1,
+            "variant": "ResizeGrid"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-cell-sizes",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-cell-sizes",
+            "bridgeVersion": 1,
+            "variant": "ChangeCellSizes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-periodicity",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-periodicity",
+            "bridgeVersion": 1,
+            "variant": "ChangePeriodicity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-tile",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-tile",
+            "bridgeVersion": 1,
+            "variant": "CreateTile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-tile",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-tile",
+            "bridgeVersion": 1,
+            "variant": "DeleteTile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-tile-weight",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-tile-weight",
+            "bridgeVersion": 1,
+            "variant": "ChangeTileWeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-tile-media",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-tile-media",
+            "bridgeVersion": 1,
+            "variant": "ChangeTileMedia"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-rule",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-rule",
+            "bridgeVersion": 1,
+            "variant": "CreateRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-rule",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-rule",
+            "bridgeVersion": 1,
+            "variant": "DeleteRule"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "pin-cell",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "pin-cell",
+            "bridgeVersion": 1,
+            "variant": "PinCell"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "unpin-cell",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "unpin-cell",
+            "bridgeVersion": 1,
+            "variant": "UnpinCell"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "mask-cell",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "mask-cell",
+            "bridgeVersion": 1,
+            "variant": "MaskCell"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "unmask-cell",
+          "capability": "wfc-grid3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "unmask-cell",
+            "bridgeVersion": 1,
+            "variant": "UnmaskCell"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wfc-grid3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
             }
           ]
         }

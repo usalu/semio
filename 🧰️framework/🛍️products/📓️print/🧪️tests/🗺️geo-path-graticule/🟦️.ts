@@ -77,7 +77,7 @@ export default defineTestAdapter({
         projection: { "geo/path": rows(ctx).flatMap((row) => projectedVertices(KINDS[row.kind!]!().precision(Number(row.precision)))) },
       }),
       /** 🎯️ `\semio_viz_geo_path:nn` with `precision = 0` on the same three projections. */
-      subject: async (ctx: AdapterContext) => (await subject(ctx, "local://path-none.tex")),
+      subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🗺️geo-path-graticule/path-none.tex")),
     },
     "path-with-resampling": {
       /** 🔮️ d3-geo's own stream at its default precision, i.e. the adaptive resampler. */
@@ -85,7 +85,7 @@ export default defineTestAdapter({
         projection: { "geo/path": rows(ctx).flatMap((row) => projectedVertices(KINDS[row.kind!]!())) },
       }),
       /** 🎯️ `\semio_viz_geo_path:nn` at the same default precision. */
-      subject: async (ctx: AdapterContext) => (await subject(ctx, "local://path-resampled.tex")),
+      subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🗺️geo-path-graticule/path-resampled.tex")),
     },
     "graticule-lines": {
       /** 🔮️ `d3.geoGraticule().lines()` at the same minor step, before any projection. */
@@ -102,7 +102,7 @@ export default defineTestAdapter({
         },
       }),
       /** 🎯️ `\semio_viz_geo_graticule_lines:n` at the same minor step. */
-      subject: async (ctx: AdapterContext) => (await subject(ctx, "local://graticule.tex")),
+      subject: async (ctx: AdapterContext) => (await subject(ctx, "shared://🗺️geo-path-graticule/graticule.tex")),
     },
   },
 });

@@ -517,6 +517,8 @@ async fn app_frame_operation_completed_matches_shared_cross_language_json_vector
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📡️channel/🏁️app-frame-operation-completed.json")).expect("operation completion fixture parses");
     let frame = AppFrame::OperationCompleted { operation: 7, revision: 5, ui_scope: vec![1], history_patch: vec![2] };
     assert_eq!(hex_encode(&encode_app_frame(&frame).await).await, fixture["OperationCompleted"].as_str().expect("frame fixture hex"));
+    let wide = AppFrame::OperationCompleted { operation: 7, revision: 0xfedc_ba98_7654_3210, ui_scope: vec![1], history_patch: vec![2] };
+    assert_eq!(hex_encode(&encode_app_frame(&wide).await).await, fixture["OperationCompletedWideRevision"].as_str().expect("wide frame fixture hex"));
 }
 //#endregion 🔖️UiPatch
 //#endregion 🔖️AppFrame

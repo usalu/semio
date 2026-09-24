@@ -276,12 +276,13 @@ impl EngineSurfaceRegistry {
         if slot.retirement.is_some() {
             return true;
         }
+        let host_id = slot.id;
         let surface = match slot.value.take() {
             Some(surface) => surface,
-            None if slot.id.is_some() => empty_engine_surface(1, 1),
+            None if host_id.is_some() => empty_engine_surface(1, 1),
             None => return false,
         };
-        slot.retirement = Some(EngineSurfaceRetirement::new(surface));
+        slot.retirement = Some(EngineSurfaceRetirement::new(surface, host_id));
         true
     }
 
@@ -362,6 +363,7 @@ impl NodeGraphEngineRetirement {
 }
 
 struct EngineSurfaceRetirement {
+    surface_id: Option<EngineSurfaceId>,
     node_graph_source: Option<NodeGraphEngine>,
     sync_cache: NodeGraphSyncCache,
     map_source: Option<MapHost>,
@@ -388,7 +390,7 @@ struct EngineSurfaceRetirement {
 }
 
 impl EngineSurfaceRetirement {
-    fn new(surface: EngineSurface) -> Self {
+    fn new(surface: EngineSurface, host_id: Option<EngineSurfaceId>) -> Self {
         let EngineSurface {
             surface_id: _,
             node_graph: node_graph_source,
@@ -423,6 +425,7 @@ impl EngineSurfaceRetirement {
             published_graph_geometry: _,
         } = surface;
         Self {
+            surface_id: host_id,
             node_graph_source,
             sync_cache,
             map_source,
@@ -503,7 +506,14 @@ impl EngineSurfaceRetirement {
         true
     }
 
-    fn close_map_sync(cache: &mut MapSyncCache) -> bool {
+    fn close_map_sync(cache: &mut MapSyncCache, host_id: Option<&EngineSurfaceId>) -> bool {
+        if let Some(host_id) = host_id {
+            crate::cancel_renderer_map_tile_assets(host_id.as_str());
+            cache.tile_pending.clear();
+            cache.tile_misses.clear();
+            cache.raster_tiles_revision = None;
+            cache.vector_tiles_revision = None;
+        }
         if Self::close_string(&mut cache.map_fixture_json)
             || Self::close_string(&mut cache.camera_json)
             || Self::close_string(&mut cache.render_mode)
@@ -636,7 +646,7 @@ impl EngineSurfaceRetirement {
                 }
             }
             EngineSurfaceClosePhase::MapSync => {
-                if Self::close_map_sync(&mut self.map_sync_cache) {
+                if Self::close_map_sync(&mut self.map_sync_cache, self.surface_id.as_ref()) {
                     self.phase = EngineSurfaceClosePhase::Editor;
                 }
             }

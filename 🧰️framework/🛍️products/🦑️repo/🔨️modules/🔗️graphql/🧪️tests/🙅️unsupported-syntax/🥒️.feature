@@ -14,6 +14,6 @@ Feature: The boundary of the accepted subset is the same in every implementation
   @level-fundamental
   @mode-differential
   Scenario: Accepted, rejected and the exact rejection message agree across implementations
-    Given the boundary corpus local://🔣️divergences.json
+    Given the boundary corpus shared://🙅️unsupported-syntax/🔣️divergences.json
     When each implementation parses every input
     Then acceptance and the verbatim diagnostic agree for every input

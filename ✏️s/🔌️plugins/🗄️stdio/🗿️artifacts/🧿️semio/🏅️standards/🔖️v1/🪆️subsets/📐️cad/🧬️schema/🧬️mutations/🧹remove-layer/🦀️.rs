@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveLayer {
-    pub(crate) name: String,
+    pub name: String,
 }
 
 impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for RemoveLayer {

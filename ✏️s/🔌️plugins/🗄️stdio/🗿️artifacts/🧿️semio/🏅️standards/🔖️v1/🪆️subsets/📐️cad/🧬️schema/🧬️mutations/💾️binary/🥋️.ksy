@@ -5,7 +5,7 @@ doc: |
   Real binary `OpBinary::encode_op`/`decode_op` frame for `SemioCadMutation` — no `semio_format`
   envelope (this facet implements only `protocol::OpText`/`OpBinary`, not `ArtifactDsl`/
   `ArtifactPack`). A real fixed `format` byte + a real `tag` byte (the `SemioCadMutation` variant
-  ordinal, `🧬️mutations/🦀️.rs`'s `OP_KEYWORDS`/`variant_ordinal`), then one opaque
+  record tag in `📡️.protocol.semio`), then one opaque
   `payload` tail holding the variant's own `key=value ...` argument text (the SAME text
   `OpText::print_op` emits, minus the leading keyword) — see the sibling
   `📡️.protocol.semio`'s own comment on the `protocol-array-of-records`/

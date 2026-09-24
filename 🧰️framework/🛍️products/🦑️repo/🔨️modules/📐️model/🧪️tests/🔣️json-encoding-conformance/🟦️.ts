@@ -27,8 +27,8 @@ export default defineTestAdapter({
   scenarios: {
     "golden-documents-round-trip": {
       oracle: (ctx) => {
-        const schema = JSON.parse(readFileSync(ctx.fixture("asset://🧬️schema/🔣️.json"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
-        const goldens = JSON.parse(readFileSync(ctx.fixture("local://🔣️goldens.json"), "utf8")) as { goldens: { type: string; json: string }[] };
+        const schema = JSON.parse(readFileSync(ctx.fixture("schema://repo.model/Repo"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
+        const goldens = JSON.parse(readFileSync(ctx.fixture("shared://🔣️json-encoding-conformance/🔣️goldens.json"), "utf8")) as { goldens: { type: string; json: string }[] };
         const ajv = new Ajv2020({ strict: false, allErrors: true });
         const encoded = goldens.goldens.map((golden) => {
           const definition = (schema.$defs as Record<string, unknown>)[golden.type];

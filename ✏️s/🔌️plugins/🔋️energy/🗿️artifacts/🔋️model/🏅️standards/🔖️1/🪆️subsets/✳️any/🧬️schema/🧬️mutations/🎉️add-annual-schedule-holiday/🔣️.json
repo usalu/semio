@@ -7,7 +7,7 @@
   "aggregateVariant": "AddAnnualScheduleHoliday",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-annual-schedule-holiday",
-  "binaryTag": null,
+  "binaryTag": 270,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

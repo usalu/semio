@@ -7,7 +7,7 @@
   "aggregateVariant": "MoveNode",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "move-node",
-  "binaryTag": null,
+  "binaryTag": 2,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

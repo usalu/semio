@@ -1,6 +1,6 @@
 //! 🔖️ Direct binary identity for `remove-properties`.
 
-pub const TAG: u8 = 39;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "remove-properties");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::RemoveProperties;

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeInfiltrationDesignFlowAch",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-infiltration-design-flow-ach",
-  "binaryTag": null,
+  "binaryTag": 117,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

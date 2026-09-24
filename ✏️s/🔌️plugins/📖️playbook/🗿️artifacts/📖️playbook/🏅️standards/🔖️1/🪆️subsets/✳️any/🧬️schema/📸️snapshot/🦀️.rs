@@ -2,10 +2,10 @@
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`playbook→C:document,flow`): `steps:
 //! Vec<PlaybookStep>` is replaced by the composed `document`/`flow` child slots (see the artifact
-//! root's `🔖️ContentBridge` region). This struct no longer maps 1:1 onto the kernel `PlaybookSpec`,
-//! so `store::ArtifactDsl`/`ArtifactPack` are hand-rolled directly (the codec wall every composed
-//! subset in this ticket hits — `ArtifactChild<S>` has no `DslField` impl) rather than delegating to
-//! `PlaybookSpec::__dsl_to_record`/`__dsl_spec` as before.
+//! root's `🔖️ContentBridge` region). This struct no longer maps 1:1 onto the kernel `PlaybookSpec`:
+//! `store::ArtifactDsl` and `ArtifactPack` are the derived text and pack of `PlaybookPackRecord`.
+//! Both carry the steps the `flow` handle's local owner holds, because the
+//! parent is the state every composed child is derived from (`genesis_playbook_child_pack`).
 
 use crate::PlaybookStep;
 use framework_schema::ArtifactSchema;
@@ -100,168 +100,44 @@ impl ::semio_framework_os_kernel::FromValue for PlaybookSnapshot {
 }
 //#endregion 🔖️ValueCodec
 
-//#region 🔖️ChildCodecPrimitives
-/// 🧪️ Real hex/bracket child-handle codec (mirrors writer's/raster's own `enc_child`/`dec_child`) —
-/// a handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened via
-/// `to_uri()`), never the child's own content. Generic over the phantom `S` so one pair of helpers
-/// backs both the `document` and `flow` slots.
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-fn enc_opt_str(v: &Option<String>) -> String {
-    match v {
-        None => "[0]".to_string(),
-        Some(s) => format!("[1,{}]", enc_str(s)),
-    }
-}
-fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
-    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
-    match inner.splitn(2, ',').collect::<Vec<_>>().as_slice() {
-        ["0"] => Ok(None),
-        [tag, value] if *tag == "1" => Ok(Some(dec_str(value)?)),
-        other => Err(format!("option: bad shape {other:?}")),
-    }
-}
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
-}
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
-}
-fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
-fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
-    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
-    let parts: Vec<&str> = inner.splitn(2, ',').collect();
-    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
-}
-//#endregion 🔖️ChildCodecPrimitives
-
-//#region 🔖️TextPrimitives
-fn print_playbook_snapshot_body(s: &PlaybookSnapshot) -> String {
-    format!("schema={}\nid={}\nversion={}\ntitle={}\ndocument={}\nflow={}", enc_str(&s.schema), enc_str(&s.id), enc_str(&s.version), enc_opt_str(&s.title), enc_child(&s.document), enc_child(&s.flow))
-}
-fn parse_playbook_snapshot_body(body: &str) -> Result<PlaybookSnapshot, String> {
-    let mut snapshot = PlaybookSnapshot::default();
-    let mut saw_schema = false;
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("schema=") {
-            snapshot.schema = dec_str(rest)?;
-            saw_schema = true;
-        } else if let Some(rest) = line.strip_prefix("id=") {
-            snapshot.id = dec_str(rest)?;
-        } else if let Some(rest) = line.strip_prefix("version=") {
-            snapshot.version = dec_str(rest)?;
-        } else if let Some(rest) = line.strip_prefix("title=") {
-            snapshot.title = dec_opt_str(rest)?;
-        } else if let Some(rest) = line.strip_prefix("document=") {
-            snapshot.document = dec_child(rest)?;
-        } else if let Some(rest) = line.strip_prefix("flow=") {
-            snapshot.flow = dec_child(rest)?;
-        } else {
-            return Err(format!("playbook snapshot: unknown line {line:?}"));
-        }
-    }
-    if !saw_schema {
-        return Err("playbook snapshot: missing schema line".to_string());
-    }
-    Ok(snapshot)
-}
-//#endregion 🔖️TextPrimitives
-
-//#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
-fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
-    match v {
-        None => out.push(0),
-        Some(s) => {
-            out.push(1);
-            write_str_lp(out, s);
-        }
-    }
-}
-fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(None),
-        1 => Ok(Some(read_str_lp(reader)?)),
-        other => Err(format!("opt str: bad tag {other}")),
-    }
-}
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
-    write_str_lp(out, &r.to_uri());
-}
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
-}
-fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
-    write_str_lp(out, &c.child_id);
-    write_ref(out, &c.target);
-}
-fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
-    let child_id = read_str_lp(reader)?;
-    let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
+//#region 🔖️PackRecord
+/// 📦️ Derived pack record of a `PlaybookSnapshot`: both composed-child handles plus the steps the
+/// `flow` handle's local owner holds, which a bare-handle pack would lose. The steps travel as their
+/// first-party JSON text because block `default`/`params` are free-form `DslValue`s whose key order is
+/// significant, while pack canonicalises map keys into sorted order.
+#[derive(dsl::DslRecord)]
+#[dsl(extension = "playbook")]
+struct PlaybookPackRecord {
+    schema: String,
+    id: String,
+    version: String,
+    title: Option<String>,
+    document: crate::PlaybookDocumentChild,
+    flow: crate::PlaybookFlowChild,
+    steps: String,
 }
 
-fn encode_playbook_snapshot_binary(s: &PlaybookSnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut out = vec![PACK_BINARY_FORMAT];
-    write_str_lp(&mut out, &s.schema);
-    write_str_lp(&mut out, &s.id);
-    write_str_lp(&mut out, &s.version);
-    write_opt_str(&mut out, &s.title);
-    write_child(&mut out, &s.document);
-    write_child(&mut out, &s.flow);
-    out
-}
-fn decode_playbook_snapshot_binary(bytes: &[u8]) -> Result<PlaybookSnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
-        return Err(format!("unsupported pack format {format}"));
+impl PlaybookPackRecord {
+    fn from_snapshot(snapshot: &PlaybookSnapshot) -> Self {
+        Self {
+            schema: snapshot.schema.clone(),
+            id: snapshot.id.clone(),
+            version: snapshot.version.clone(),
+            title: snapshot.title.clone(),
+            document: snapshot.document.clone(),
+            flow: snapshot.flow.clone(),
+            steps: protocol::json::to_json_string(&crate::playbook_steps(snapshot)),
+        }
     }
-    Ok(PlaybookSnapshot {
-        schema: read_str_lp(&mut reader)?,
-        id: read_str_lp(&mut reader)?,
-        version: read_str_lp(&mut reader)?,
-        title: read_opt_str(&mut reader)?,
-        document: read_child(&mut reader)?,
-        flow: read_child(&mut reader)?,
-    })
+
+    fn into_snapshot(self) -> Result<PlaybookSnapshot, String> {
+        let mut flow = self.flow;
+        let steps: Vec<PlaybookStep> = protocol::json::from_json_str(&self.steps).map_err(|error| error.to_string())?;
+        crate::attach_playbook_steps(&mut flow, steps);
+        Ok(PlaybookSnapshot { schema: self.schema, id: self.id, version: self.version, title: self.title, document: self.document, flow })
+    }
 }
-//#endregion 🔖️BinaryPrimitives
+//#endregion 🔖️PackRecord
 
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for PlaybookSnapshot {
@@ -274,10 +150,11 @@ impl store::ArtifactDsl for PlaybookSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_playbook_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(body, &PlaybookPackRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        PlaybookPackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body = print_playbook_snapshot_body(self);
+        let body = dsl::print(&PlaybookPackRecord::from_snapshot(self).__dsl_to_record(), &PlaybookPackRecord::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -285,18 +162,20 @@ impl store::ArtifactDsl for PlaybookSnapshot {
 
 impl store::ArtifactPack for PlaybookSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_playbook_snapshot_binary(self);
+        let inner = store::pack_rt::encode_document(&PlaybookPackRecord::__dsl_spec(), &PlaybookPackRecord::from_snapshot(self).__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        decode_playbook_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        let (record, _report) = store::pack_rt::decode_document(&inner, &PlaybookPackRecord::__dsl_spec(), options)?;
+        PlaybookPackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(store::PackError::Schema)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(PlaybookPackRecord::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

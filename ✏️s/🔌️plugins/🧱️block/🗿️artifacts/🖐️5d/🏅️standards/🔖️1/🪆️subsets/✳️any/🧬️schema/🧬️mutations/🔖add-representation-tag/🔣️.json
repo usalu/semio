@@ -7,7 +7,7 @@
   "aggregateVariant": "AddRepresentationTag",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-representation-tag",
-  "binaryTag": null,
+  "binaryTag": 14,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

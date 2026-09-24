@@ -33,13 +33,13 @@ Feature: The streamline integrator of semio-viz-geo-routes reproduces classical 
   identically — and the seeds below are chosen so that three of the five trajectories actually reach
   the boundary, which makes the clamp itself part of what is measured.
 
-  Probe document: local://streamlines.tex is committed.
+  Probe document: shared://🌊️field-streamlines/streamlines.tex is committed.
 
   @id-rk-integration
   @level-quick
   @mode-conformance
   Scenario: Sixteen RK4 samples of five analytic fields agree with the published fourth-order scheme
-    Given the committed probe document local://streamlines.tex and the seeds
+    Given the committed probe document shared://🌊️field-streamlines/streamlines.tex and the seeds
       | field  | x    | y     | dt   |
       | shear  | -1.5 | 0.75  | 0.25 |
       | vortex | 1.25 | -0.5  | 0.2  |

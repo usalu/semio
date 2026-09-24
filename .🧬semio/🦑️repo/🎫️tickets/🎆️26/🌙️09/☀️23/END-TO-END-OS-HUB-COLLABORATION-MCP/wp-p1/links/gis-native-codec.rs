@@ -1,0 +1,1 @@
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧪️tests/📇️native-codecs/🦀️.rs

@@ -1,6 +1,6 @@
 //! 📄️ Direct binary identity for `set-form`.
 
-pub const TAG: u8 = 28;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-form");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetForm;

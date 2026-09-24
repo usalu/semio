@@ -7,7 +7,7 @@
   "aggregateVariant": "ScaleObject",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "scale-object",
-  "binaryTag": null,
+  "binaryTag": 4,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

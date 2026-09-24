@@ -16,7 +16,7 @@ import (
 
 // 📥️ The frozen repository every vector executes against.
 func records(ctx *host.Context) (string, error) {
-	raw, err := ctx.FixtureBytes("local://🗄️repo-records.json")
+	raw, err := ctx.FixtureBytes("shared://🔁️graphql-verb-roundtrip/🗄️repo-records.json")
 	if err != nil {
 		return "", err
 	}
@@ -25,7 +25,7 @@ func records(ctx *host.Context) (string, error) {
 
 // 📥️ The committed vectors every scenario reads.
 func vectors(ctx *host.Context) ([]map[string]interface{}, error) {
-	raw, err := ctx.FixtureBytes("local://🔁️verb-queries.json")
+	raw, err := ctx.FixtureBytes("shared://🔁️graphql-verb-roundtrip/🔁️verb-queries.json")
 	if err != nil {
 		return nil, err
 	}

@@ -812,6 +812,10 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     }
 
     impl SnapshotStorage for SqliteStorage {
+        fn publication_scope(&self) -> usize {
+            std::ptr::from_ref(self).addr()
+        }
+
         async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "sqlite snapshot write")?;
             unit(execute(DbIoTask::SnapshotWrite { backend: self.control, document: document_text(document)?, generation, input: bytes }).await?)

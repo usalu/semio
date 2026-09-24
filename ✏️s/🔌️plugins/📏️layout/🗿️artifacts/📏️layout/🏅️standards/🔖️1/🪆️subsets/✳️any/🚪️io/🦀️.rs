@@ -1,10 +1,10 @@
 //! 🚪️ IO s.layout (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from the artifact root's `declaration()`), not per-leaf register().
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"]
+    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.svg"]
 }
 pub fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"]
+    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.png", "stdio.svg"]
 }
 pub fn layout_to_wire(from: &LayoutSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(from)
@@ -189,6 +189,22 @@ pub fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<PathSe
 /// 📐️ Recovers a rect's `(x, y, width, height)` from a `MoveTo`/`LineTo`×3/`Close` path — the exact
 /// inverse of `rect_path_segments`, used to read `dwg_drawing_to_semio_drawing`'s output back into
 /// `Page` boundaries.
+/// ▭️ The bounds of a path that is a closed axis-aligned rectangle — the page frames of a trace.
+fn rectangle_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
+    let corners: Vec<_> = segments.iter().filter_map(|segment| match segment {
+        PathSegment::MoveTo { to } | PathSegment::LineTo { to } => Some(*to),
+        _ => None,
+    }).collect();
+    let only_lines = segments.iter().all(|segment| matches!(segment, PathSegment::MoveTo { .. } | PathSegment::LineTo { .. } | PathSegment::Close));
+    let closed = matches!(segments.last(), Some(PathSegment::Close)) || (corners.len() == 5 && (corners[0].x - corners[4].x).abs() < 1e-6 && (corners[0].y - corners[4].y).abs() < 1e-6);
+    if !only_lines || !closed || !(4..=5).contains(&corners.len()) {
+        return None;
+    }
+    let (x, y, width, height) = path_bounds(segments)?;
+    let on_edge = corners.iter().all(|c| ((c.x - x).abs() < 1e-6 || (c.x - x - width).abs() < 1e-6) && ((c.y - y).abs() < 1e-6 || (c.y - y - height).abs() < 1e-6));
+    (on_edge && width > 0.0 && height > 0.0).then_some((x, y, width, height))
+}
+
 fn path_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
     let mut min_x = f64::INFINITY;
     let mut min_y = f64::INFINITY;
@@ -350,19 +366,29 @@ fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
 /// geometry entirely. It now also mints a real content-addressed `background_drawing` composed child
 /// whose snapshot-owned record retains the full drawing — nothing imported is thrown away anymore.
 pub fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
-    let drawing_snapshot = dwg_drawing_to_semio_drawing(drawing);
-    let background_child = crate::background_drawing_child_handle("dwg", &drawing_snapshot);
-    let root_children: &[DrawNode] = match drawing_snapshot.layers.first().map(|layer| &layer.root) {
-        Some(DrawNode::Group { children, .. }) => children,
-        _ => &[],
-    };
-    let rects: Vec<(f64, f64, f64, f64)> = root_children
+    layout_document_json_from_drawing(&dwg_drawing_to_semio_drawing(drawing), "dwg", "Imported DWG")
+}
+
+/// 📥️ Frames one page per closed axis-aligned rectangle of an imported drawing (a dwg, dxf or svg
+/// trace) and keeps the whole drawing as the document's background, so an author lays pages out on
+/// top of the real plan.
+pub fn layout_document_json_from_drawing(drawing_snapshot: &SemioDrawingSnapshot, source: &str, name: &str) -> Result<Value, String> {
+    let background_child = crate::background_drawing_child_handle(source, drawing_snapshot);
+    let mut rects: Vec<(f64, f64, f64, f64)> = drawing_snapshot
+        .layers
         .iter()
+        .flat_map(|layer| match &layer.root {
+            DrawNode::Group { children, .. } => children.iter().collect::<Vec<_>>(),
+            other => vec![other],
+        })
         .filter_map(|child| match child {
-            DrawNode::Path { segments, .. } => path_bounds(segments),
+            DrawNode::Path { segments, .. } => rectangle_bounds(segments),
             _ => None,
         })
         .collect();
+    if rects.is_empty() && drawing_snapshot.canvas.width > 0.0 && drawing_snapshot.canvas.height > 0.0 {
+        rects.push((0.0, 0.0, drawing_snapshot.canvas.width, drawing_snapshot.canvas.height));
+    }
     let pages: Vec<Page> = rects
         .into_iter()
         .enumerate()
@@ -389,7 +415,7 @@ pub fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Stri
     let page_ids = pages.iter().map(|page| page.id.clone()).collect();
     let document = LayoutSnapshot {
         schema: LAYOUT_DOCUMENT_SCHEMA.into(),
-        name: "Imported DWG".into(),
+        name: name.into(),
         grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
         paragraph_styles: Vec::new(),
         character_styles: Vec::new(),
@@ -482,6 +508,30 @@ pub mod io_registry {
             Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
+    const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
+    fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
+    const EXPORT_DXF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
+    fn compose_export_dxf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::io::export::serializers::artifacts::dxf::v_r12::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_DXF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
+    const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
+    fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
@@ -499,6 +549,9 @@ pub mod io_registry {
                     composer_entry_of::<LayoutAnyComposer>(),
                     ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_svg },
                     ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_json },
+                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_png },
+                    ComposerEntry { writes: EXPORT_DXF_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_dxf },
+                    ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_dwg },
                 ]
             })
             .as_slice()
@@ -506,6 +559,3 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️pdf-contract-vectors/🦀️.rs"]
-mod pdf_contract_vectors;

@@ -51,7 +51,7 @@ async fn load_document_snapshot(emit: &Emit<WorkflowMutation, SpaceConfigMutatio
         .expect("load document");
     let parsed: store::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::parse_document_pack(pack, spr).await.expect("parse document pack");
     let id = parsed.envelope.id.clone();
-    (parsed.snapshot, id)
+    (parsed.into_snapshot(), id)
 }
 
 #[semio_framework_async_macros::async_test]

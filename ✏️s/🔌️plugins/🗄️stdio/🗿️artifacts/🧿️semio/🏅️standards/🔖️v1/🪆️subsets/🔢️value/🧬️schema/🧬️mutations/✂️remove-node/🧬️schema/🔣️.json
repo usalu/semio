@@ -18,16 +18,7 @@
   },
   "$defs": {
     "ValueId": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "value"
-      ],
-      "properties": {
-        "value": {
-          "type": "string"
-        }
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/value/snapshot.json#/$defs/ValueId"
     }
   }
 }

@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteHandleKind",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-handle-kind",
-  "binaryTag": null,
+  "binaryTag": 8,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

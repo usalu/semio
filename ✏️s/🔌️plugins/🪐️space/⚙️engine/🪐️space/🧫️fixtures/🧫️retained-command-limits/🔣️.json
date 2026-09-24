@@ -80,6 +80,13 @@
       ]
     },
     {
+      "toolId": "deleteSelection",
+      "lanes": [
+        "Artifact",
+        "Config"
+      ]
+    },
+    {
       "toolId": "openSpace",
       "lanes": [
         "Config"
@@ -155,9 +162,9 @@
     },
     {
       "id": "deleteSelection",
-      "execution": "batch",
-      "status": "BatchOnlyPendingRewrite",
-      "feature": "walk selected graph identities with a persistent cursor"
+      "execution": "bounded",
+      "status": "Migrated",
+      "feature": "publish the live graph selection's node removals through the installed artifact preparation factory and clear its focus"
     },
     {
       "id": "copyAppInstance",

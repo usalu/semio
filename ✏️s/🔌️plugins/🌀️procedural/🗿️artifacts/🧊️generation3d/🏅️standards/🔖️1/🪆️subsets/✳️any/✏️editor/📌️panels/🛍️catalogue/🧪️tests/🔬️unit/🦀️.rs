@@ -60,6 +60,12 @@ fn catalogue_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
     ViewModel { tree_windows: requests, ..Default::default() }
 }
 
+/// 🧭️ A group's window path: the enclosing section key, `TREE_WINDOW_PATH_SEPARATOR`, then the group
+/// key (`TreeWindows::path_of`). A bare nested key never seats a host request.
+fn group_window_path(key: &str) -> String {
+    format!("{GENERATION_3D_PLAY_CATALOGUE_SECTION}{}{key}", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+}
+
 fn first_group_key() -> String {
     let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
     let section = sections.first().expect("the flow palette registers at least one catalogue section");
@@ -106,7 +112,7 @@ async fn a_closed_catalogue_group_stamps_its_total_with_no_children() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let key = first_group_key();
     let mut app = app().await;
-    let view = catalogue_view(vec![TreeWindowRequest { body_key: GENERATION_3D_PLAY_BODY_CATALOGUE.into(), node_key: key.clone(), open: Some(false), offset: 0, rows: 0 }]);
+    let view = catalogue_view(vec![TreeWindowRequest { body_key: GENERATION_3D_PLAY_BODY_CATALOGUE.into(), node_key: group_window_path(&key), open: Some(false), offset: 0, rows: 0 }]);
     let json = render_with_view(&mut app, GENERATION_3D_PLAY_BODY_CATALOGUE, &view).await;
     let group = group_windows(&json).into_iter().find(|group| group.key == key).unwrap_or_else(|| panic!("the closed group is still a row: {json}"));
     assert!(group.total > 0, "a closed group still states its extent: {group:?}");
@@ -125,7 +131,7 @@ async fn a_catalogue_window_request_materialises_exactly_its_slice() {
     let rows = 3u32.min(items.len().saturating_sub(offset as usize) as u32);
     assert!(rows > 0, "the first catalogue group carries at least one operator");
     let mut app = app().await;
-    let view = catalogue_view(vec![TreeWindowRequest { body_key: GENERATION_3D_PLAY_BODY_CATALOGUE.into(), node_key: key.clone(), open: Some(true), offset, rows }]);
+    let view = catalogue_view(vec![TreeWindowRequest { body_key: GENERATION_3D_PLAY_BODY_CATALOGUE.into(), node_key: group_window_path(&key), open: Some(true), offset, rows }]);
     let json = render_with_view(&mut app, GENERATION_3D_PLAY_BODY_CATALOGUE, &view).await;
     let projection: serde_json::Value = serde_json::from_str(&json).expect("catalogue projection json");
     let mut found: Option<Vec<String>> = None;

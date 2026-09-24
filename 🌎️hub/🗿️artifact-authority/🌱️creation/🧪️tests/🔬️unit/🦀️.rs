@@ -229,7 +229,7 @@ async fn creation_genesis_is_bounded_by_stalling_and_not_by_the_calendar() {
             identity: identity.clone(),
             pair: ArtifactPair { pack: serde_json::from_value(fixture["initialPair"]["pack"].clone()).unwrap(), spr: serde_json::from_value(fixture["initialPair"]["spr"].clone()).unwrap() },
             clock: clock.clone(),
-            steps: 4 * ARTIFACT_CREATION_DEADLINE_MS / (ARTIFACT_CREATION_STALL_BOUND_MS / 2),
+            steps: (4 * ARTIFACT_CREATION_DEADLINE_MS).div_ceil(ARTIFACT_CREATION_STALL_BOUND_MS / 2).max(2),
             step_ms: ARTIFACT_CREATION_STALL_BOUND_MS / 2,
             checkpoints,
         };

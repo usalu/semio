@@ -11,8 +11,9 @@ use framework_schema::ArtifactSchema;
 /// instead. See `crate::🔖️Composition` (`🗿️artifacts/📋️forms/🦀️.rs`)
 /// for the converters/working-scene this slot pair is built and read through. `#[child(...)]`
 /// drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
+#[dsl(extension = "forms")]
 #[artifact_schema(id = "s.forms.forms")]
 pub struct FormsSnapshot {
     #[state(artifact)]

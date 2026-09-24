@@ -8,7 +8,7 @@ fn fixture() -> Value {
 }
 
 fn locale_refresh_fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../🧪️fixtures/🌐️settings-locale-panel-refresh/🔣️.json")).expect("locale panel refresh fixture")
+    serde_json::from_str(include_str!("../../../../🧫️fixtures/🌐️settings-locale-panel-refresh/🔣️.json")).expect("locale panel refresh fixture")
 }
 
 fn control_identity(control: &UiControlNode) -> (&str, &str) {

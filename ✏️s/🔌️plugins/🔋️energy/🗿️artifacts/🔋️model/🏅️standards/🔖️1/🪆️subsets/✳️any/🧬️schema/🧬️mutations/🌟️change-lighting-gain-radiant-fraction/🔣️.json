@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeLightingGainRadiantFraction",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-lighting-gain-radiant-fraction",
-  "binaryTag": null,
+  "binaryTag": 90,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

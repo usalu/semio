@@ -7,7 +7,7 @@
   "aggregateVariant": "CreatePart",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "create-part",
-  "binaryTag": null,
+  "binaryTag": 0,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

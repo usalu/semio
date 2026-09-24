@@ -1,4 +1,6 @@
 //! 🏙️ 🏙️ S Home launcher app command — `create-studio`.
+//! Temporary studios are classified `ephemeralLocalOnly` (no backbone);
+//! share/collaboration stay blocked until `promote-to-hub-space` or `persist-locally`.
 
 use crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation;
 use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
@@ -53,7 +55,6 @@ pub fn handle_with_identity(
             {
                 if let Some(folder_path) = &payload.folder_path {
                     if let Ok(entry) = create_folder_studio(&payload.name, folder_path, owner_id, owner_name) {
-                        eprintln!("[DEBUG] createStudio folder id={}", entry.id);
                         return Ok(created_studio_emit(generation, &entry.id));
                     }
                 }
@@ -70,7 +71,6 @@ pub fn handle_with_identity(
             // call is bridged via `resolve_ready` — the same poll-once bridge the framework's own
             // `composer_entry_of`/`deserializer_entry_of` use for an identical sync/async seam.
             let space_id = semio_framework_plugin::resolve_ready(crate::create_and_register_ephemeral_studio(&payload.name, owner_id, owner_name));
-            eprintln!("[DEBUG] createStudio ephemeral id={space_id}");
             Ok(created_studio_emit(generation, &space_id))
         }
     }

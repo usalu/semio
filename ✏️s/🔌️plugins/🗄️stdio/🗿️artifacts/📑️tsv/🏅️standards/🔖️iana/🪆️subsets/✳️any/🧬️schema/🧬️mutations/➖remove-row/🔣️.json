@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveRow",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-row",
-  "binaryTag": null,
+  "binaryTag": 4,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

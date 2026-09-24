@@ -159,21 +159,12 @@
         "set-global-color-table",
         "set-background-color-index",
         "set-pixel-aspect-ratio",
-        "set-loop-count",
         "insert-frame",
         "remove-frame",
         "move-frame",
         "set-frame-geometry",
         "set-frame-pixels",
-        "set-frame-interlace",
-        "set-frame-delay",
-        "set-frame-disposal",
-        "set-frame-transparency",
-        "set-frame-user-input",
-        "insert-comment",
-        "remove-comment",
-        "add-app-extension",
-        "remove-app-extension"
+        "set-frame-interlace"
       ]
     }
   ],
@@ -561,7 +552,8 @@
         },
         {
           "id": "set-loop-count",
-          "capability": "gif-89a-mutate",
+          "capability": "gif-89a-application-mutate",
+          "subset": "application",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetLoopCount",
           "outcomes": [
             "applied"
@@ -573,7 +565,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-89a-mutate",
+              "capability": "gif-89a-application-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-89a-any-mutate-reader"
             }
@@ -583,7 +575,7 @@
           ],
           "invariants": {
             "local": [
-              "netscape-looping-extension-count-agrees"
+              "netscape-loop-extension-count-agrees"
             ],
             "enclosing": [
               "gif-reencode-round-trip-agrees-with-reference-decoder"
@@ -592,7 +584,8 @@
         },
         {
           "id": "set-frame-delay",
-          "capability": "gif-89a-mutate",
+          "capability": "gif-89a-graphic-control-mutate",
+          "subset": "graphic-control",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameDelay",
           "outcomes": [
             "applied"
@@ -604,7 +597,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-89a-mutate",
+              "capability": "gif-89a-graphic-control-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-89a-any-mutate-reader"
             }
@@ -614,7 +607,7 @@
           ],
           "invariants": {
             "local": [
-              "graphic-control-extension-delay-agrees"
+              "frame-delay-centiseconds-agree"
             ],
             "enclosing": [
               "gif-reencode-round-trip-agrees-with-reference-decoder"
@@ -623,7 +616,8 @@
         },
         {
           "id": "set-frame-disposal",
-          "capability": "gif-89a-mutate",
+          "capability": "gif-89a-graphic-control-mutate",
+          "subset": "graphic-control",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameDisposal",
           "outcomes": [
             "applied"
@@ -635,7 +629,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-89a-mutate",
+              "capability": "gif-89a-graphic-control-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-89a-any-mutate-reader"
             }
@@ -645,7 +639,7 @@
           ],
           "invariants": {
             "local": [
-              "graphic-control-extension-disposal-agrees"
+              "frame-disposal-method-agrees"
             ],
             "enclosing": [
               "gif-reencode-round-trip-agrees-with-reference-decoder"
@@ -654,7 +648,8 @@
         },
         {
           "id": "set-frame-transparency",
-          "capability": "gif-89a-mutate",
+          "capability": "gif-89a-graphic-control-mutate",
+          "subset": "graphic-control",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameTransparency",
           "outcomes": [
             "applied"
@@ -666,7 +661,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-89a-mutate",
+              "capability": "gif-89a-graphic-control-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-89a-any-mutate-reader"
             }
@@ -676,7 +671,7 @@
           ],
           "invariants": {
             "local": [
-              "graphic-control-extension-transparency-agrees"
+              "frame-transparent-index-agrees"
             ],
             "enclosing": [
               "gif-reencode-round-trip-agrees-with-reference-decoder"
@@ -685,7 +680,8 @@
         },
         {
           "id": "set-frame-user-input",
-          "capability": "gif-89a-mutate",
+          "capability": "gif-89a-graphic-control-mutate",
+          "subset": "graphic-control",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameUserInput",
           "outcomes": [
             "applied"
@@ -697,7 +693,7 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-89a-mutate",
+              "capability": "gif-89a-graphic-control-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "gif-89a-any-mutate-reader"
             }
@@ -707,7 +703,7 @@
           ],
           "invariants": {
             "local": [
-              "graphic-control-extension-user-input-agrees"
+              "frame-user-input-flag-agrees"
             ],
             "enclosing": [
               "gif-reencode-round-trip-agrees-with-reference-decoder"
@@ -716,7 +712,8 @@
         },
         {
           "id": "insert-comment",
-          "capability": "gif-89a-mutate",
+          "capability": "gif-89a-comment-mutate",
+          "subset": "comment",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertComment",
           "outcomes": [
             "applied"
@@ -728,9 +725,9 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-89a-mutate",
+              "capability": "gif-89a-comment-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-any-mutate-reader"
+              "oracle": "gif-89a-extension-reader"
             }
           ],
           "carriers": [
@@ -738,7 +735,7 @@
           ],
           "invariants": {
             "local": [
-              "comment-extension-blocks-agree"
+              "comment-extension-text-and-count-agree"
             ],
             "enclosing": [
               "gif-reencode-round-trip-agrees-with-reference-decoder"
@@ -747,7 +744,8 @@
         },
         {
           "id": "remove-comment",
-          "capability": "gif-89a-mutate",
+          "capability": "gif-89a-comment-mutate",
+          "subset": "comment",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveComment",
           "outcomes": [
             "applied"
@@ -759,9 +757,9 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-89a-mutate",
+              "capability": "gif-89a-comment-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-any-mutate-reader"
+              "oracle": "gif-89a-extension-reader"
             }
           ],
           "carriers": [
@@ -769,7 +767,7 @@
           ],
           "invariants": {
             "local": [
-              "comment-extension-blocks-agree"
+              "comment-extension-count-agrees"
             ],
             "enclosing": [
               "gif-reencode-round-trip-agrees-with-reference-decoder"
@@ -778,7 +776,8 @@
         },
         {
           "id": "add-app-extension",
-          "capability": "gif-89a-mutate",
+          "capability": "gif-89a-application-mutate",
+          "subset": "application",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#AddAppExtension",
           "outcomes": [
             "applied"
@@ -790,9 +789,9 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-89a-mutate",
+              "capability": "gif-89a-application-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-any-mutate-reader"
+              "oracle": "gif-89a-extension-reader"
             }
           ],
           "carriers": [
@@ -800,7 +799,7 @@
           ],
           "invariants": {
             "local": [
-              "application-extension-blocks-agree"
+              "application-extension-identifier-authcode-data-agree"
             ],
             "enclosing": [
               "gif-reencode-round-trip-agrees-with-reference-decoder"
@@ -809,7 +808,8 @@
         },
         {
           "id": "remove-app-extension",
-          "capability": "gif-89a-mutate",
+          "capability": "gif-89a-application-mutate",
+          "subset": "application",
           "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveAppExtension",
           "outcomes": [
             "applied"
@@ -821,9 +821,9 @@
           },
           "oracleRequirements": [
             {
-              "capability": "gif-89a-mutate",
+              "capability": "gif-89a-application-mutate",
               "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-any-mutate-reader"
+              "oracle": "gif-89a-extension-reader"
             }
           ],
           "carriers": [
@@ -831,7 +831,7 @@
           ],
           "invariants": {
             "local": [
-              "application-extension-blocks-agree"
+              "application-extension-count-agrees"
             ],
             "enclosing": [
               "gif-reencode-round-trip-agrees-with-reference-decoder"
@@ -1534,7 +1534,7 @@
         "engineFamily": "giflib",
         "engineVersion": "6.1",
         "command": "bun 📜️script.ts aspect",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-gif-screen-v1",
       "reproducible": true,

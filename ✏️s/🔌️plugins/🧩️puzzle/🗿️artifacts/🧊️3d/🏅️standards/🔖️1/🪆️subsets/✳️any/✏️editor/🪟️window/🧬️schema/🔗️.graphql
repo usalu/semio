@@ -43,6 +43,7 @@ type Puzzle3dSuggestionMenu {
   y: Float!
   windowId: String!
   vortexFullId: String!
+  submenu: Boolean!
 }
 
 type Puzzle3dWindowConfig {

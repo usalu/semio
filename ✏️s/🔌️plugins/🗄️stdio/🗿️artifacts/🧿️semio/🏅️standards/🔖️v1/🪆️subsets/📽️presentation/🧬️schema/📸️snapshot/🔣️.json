@@ -157,7 +157,10 @@
           "$ref": "#/definitions/SlideFrame"
         },
         "blocks": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/document/snapshot.json#/$defs/DocBlock"
+          }
         },
         "image": {
           "$ref": "#/definitions/SlidePictureImage"

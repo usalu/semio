@@ -1,0 +1,33 @@
+go 1.25
+
+use (
+	.
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚀️bin"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli"
+	"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
+)

@@ -1,0 +1,110 @@
+{
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎫️ Test-only references of the 🎫️tickets owner. `ajv` is already a devDependency of 🔨️modules/📚️library/📦️packages/🟦️typescript and is registered in the repository-root 🔒️dependencies.json; no production code of this module can reach it, and this module ships no TypeScript package at all. Everything else here is either a second in-repo implementation living only in a case's 🟦️.ts adapter, or a recorded no-oracle decision.",
+  "oracles": [
+    {
+      "id": "ajv-ticket-schema",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "ajv",
+      "version": "8.20.0",
+      "engine": {
+        "family": "none",
+        "implementation": "ajv",
+        "version": "8.20.0"
+      },
+      "capabilities": [
+        "repo.tickets.document-codec"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionDebt": {"reachableFrom": ["package.json", "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json", "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json", "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json", "🌎️hub/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"], "owner": "🧰️framework/🛍️products/💻️os", "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."},
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://ajv.js.org",
+      "rationale": "🔮️ Judges every REAL committed 🎫️ticket.json against 🧬️schema/🔣️.json with a genuine draft 2020-12 implementation, so a schema that has drifted away from the encoder fails here instead of agreeing with itself. Its JSON.parse is additionally a third reader of the same bytes, written by neither the Go nor the Rust author."
+    },
+    {
+      "id": "ticket-issue-sync-typescript",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "javascript",
+      "package": "",
+      "engine": {
+        "family": "none",
+        "implementation": "semio-tickets-issue-sync",
+        "version": "1"
+      },
+      "capabilities": [
+        "repo.tickets.issue-sync"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "🐙️ A second implementation of the same `IssueTracker` synchronisation contract, written in TypeScript inside `🧪️tests/🐙️issue-sync-transcripts/🟦️.ts` from the port's method set and the documented rule that a management failure is a warning rather than a fatal error, not from the Rust source. It is registered as `cross-semio-implementation` precisely because it is NOT independent evidence: it is a second implementation in this repository, and the accompanying `repo-ticket-issue-sync` decision records why nothing outside the repository can take its place."
+    }
+  ],
+  "probes": [],
+  "noOracleDecisions": [
+    {
+      "id": "repo-ticket-id-scheme",
+      "capabilities": [
+        "repo.tickets.id-scheme"
+      ],
+      "rationale": "A ticket's identity is a two-digit year, a month, a day and an upper-kebab slug, written both as `26/09/06/SOME-TICKET` and as the emoji-prefixed folder `🎆️26/🌙️09/☀️06/SOME-TICKET`, with the slug derived from the title by this repository's own camel-case-aware rule. No issue tracker, no filesystem convention and no third-party library names work items that way, so no reference implementation can exist. Confidence comes from frozen specification vectors that pin both spellings, from the round-trip law that reading either spelling reproduces the identity, and from the idempotence law that slugifying a slug changes nothing. A second, independently written implementation joins as a differential subject when the Go twin of `github.com/usalu/semio/repo/tickets` lands. This decision covers no runtime mutation capability.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-ticket-lifecycle",
+      "capabilities": [
+        "repo.tickets.lifecycle"
+      ],
+      "rationale": "Opening, closing, reopening and changing a ticket is this repository's own workflow: which document is written, which folder is materialised, which interaction is appended, which event is emitted and which artifacts a closed ticket loses. Nothing outside the repository runs it, so there is nothing to compare against, and reaching a real issue tracker or a real filesystem would put the network and the developer's own `.🧬semio` inside a test. Confidence comes from frozen request vectors executed against an in-memory store, a frozen clock and a recording event sink, so the whole observable outcome — document bytes, store paths, transaction journal, emitted events — is pinned rather than sampled. The differential half arrives with the Go twin of `github.com/usalu/semio/repo/tickets`; until then this is conformance against those vectors, which is stated here rather than dressed up as differential evidence. This decision DOES cover mutation: the mutations are confined to an in-memory store.",
+      "substitutes": [
+        "specification-vectors"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-ticket-important-document",
+      "capabilities": [
+        "repo.tickets.important-document-transaction"
+      ],
+      "rationale": "The empty `📌️important/📝️.md` a ticket owns while it is open, the four ways its bundle can be wrong, and the rule that a failed save removes exactly what the current operation created are this repository's own transaction, not any filesystem's or any library's. No third party implements it. Confidence comes from specification vectors that name each wrong bundle and from an injected write failure that forces the rollback path, both executed against an in-memory store so the assertion is about the transaction rather than about a platform's filesystem semantics. This decision DOES cover mutation: the mutations are confined to an in-memory store.",
+      "substitutes": [
+        "specification-vectors"
+      ],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-ticket-issue-sync",
+      "capabilities": [
+        "repo.tickets.issue-sync"
+      ],
+      "rationale": "What a ticket owes an issue tracker — ask the goal's milestone, create exactly one issue, read before reopening, comment then label then close, and turn every failure into a warning rather than a failed ticket — is this repository's own policy. Every third-party client that exists talks to the GitHub REST or GraphQL API directly, which would put the network and a live repository inside a test, and none of them encodes this ordering policy. The `gh`-level alternative is not usable either: the GitHub provider writes its comment bodies to a temporary file whose name carries the process id, so a recorded argv could never match twice, which is why the recording is taken at the port rather than at the process. Confidence therefore comes from scripted port answers plus a second, independently written reader of the same scripts in TypeScript. This decision covers no runtime mutation capability: every mutation is against the scripted recorder.",
+      "substitutes": [
+        "specification-vectors",
+        "independent-implementations"
+      ],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": [
+    {
+      "implementation": "typescript",
+      "package": "ajv",
+      "version": "8.20.0"
+    }
+  ]
+}

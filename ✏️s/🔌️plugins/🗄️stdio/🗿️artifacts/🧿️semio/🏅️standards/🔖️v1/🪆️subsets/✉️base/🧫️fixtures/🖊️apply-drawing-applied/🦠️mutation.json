@@ -1,0 +1,19 @@
+{
+  "mutation": "applyDrawing",
+  "payload": {
+    "mutation": {
+      "CreateLayer": {
+        "index": 1,
+        "layer": {
+          "id": "layer2",
+          "name": "Foreground",
+          "root": {
+            "kind": "path",
+            "segments": []
+          },
+          "visible": true
+        }
+      }
+    }
+  }
+}

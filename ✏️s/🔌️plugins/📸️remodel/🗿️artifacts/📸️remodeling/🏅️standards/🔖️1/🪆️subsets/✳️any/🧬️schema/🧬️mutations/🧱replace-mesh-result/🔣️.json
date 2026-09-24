@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceMeshResult",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-mesh-result",
-  "binaryTag": null,
+  "binaryTag": 28,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

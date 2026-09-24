@@ -1,0 +1,10 @@
+{
+  "mutation": "applyImage",
+  "payload": {
+    "mutation": {
+      "mutation": "setDimensions",
+      "width": 4,
+      "height": 2
+    }
+  }
+}

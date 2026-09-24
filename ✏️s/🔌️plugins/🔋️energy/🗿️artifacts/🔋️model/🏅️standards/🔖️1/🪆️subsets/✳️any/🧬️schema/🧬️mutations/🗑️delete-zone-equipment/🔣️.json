@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteZoneEquipment",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-zone-equipment",
-  "binaryTag": null,
+  "binaryTag": 145,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

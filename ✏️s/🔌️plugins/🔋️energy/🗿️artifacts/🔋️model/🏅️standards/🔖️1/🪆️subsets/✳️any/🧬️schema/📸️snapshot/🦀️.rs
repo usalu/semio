@@ -12,10 +12,8 @@ use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValu
 /// `value`/`table` subsets instead (see the artifact root's `🔖️Composition` region for the full
 /// before/after and the honest exception carve-out for `Surface.vertices_m`). `referenced_model` is
 /// a new forward `ArtifactLink` slot. `#[child(...)]`/`#[link_slot(...)]` drive
-/// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Dropped the
-/// `dsl::DslRecord` derive — `ArtifactChild<S>`/`ArtifactLink` have no `dsl::DslField` impl
-/// reachable from this crate, the same wall every composed exemplar hit; every field's text/binary
-/// shape is hand-rolled below instead.
+/// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Text and pack both encode
+/// the derived `EnergyModelPackRecord` below.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.energy.model")]
 pub struct EnergyModelSnapshot {
@@ -79,171 +77,42 @@ impl FromValue for EnergyModelSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️ChildCodecPrimitives
-/// 🧪️ Real hex/bracket child-handle codec — identical shape to `mathematical`'s/`layout`'s own
-/// `enc_child`/`dec_child` (the working reference for a composite subset's child-handle
-/// primitives): a handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened
-/// via `to_uri()`), never the child's own content.
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+//#region 🔖️PackRecord
+/// 🔋️ Derived pack record of an `EnergyModelSnapshot` — every field as persisted, with the typed
+/// `model` carried as its first-party value.
+#[derive(dsl::DslRecord)]
+#[dsl(extension = "energy")]
+struct EnergyModelPackRecord {
+    schema: String,
+    model: DslValue,
+    structure: EnergyStructureChild,
+    zones: EnergyZonesChild,
+    referenced_model: Option<store::ArtifactLink>,
+    weather_link: Option<store::ArtifactLink>,
 }
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
+
+impl EnergyModelPackRecord {
+    fn from_snapshot(snapshot: &EnergyModelSnapshot) -> Self {
+        Self { schema: snapshot.schema.clone(), model: snapshot.model.to_value(), structure: snapshot.structure.clone(), zones: snapshot.zones.clone(), referenced_model: snapshot.referenced_model.clone(), weather_link: snapshot.weather_link.clone() }
     }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
-}
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
-}
-fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
-fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
-    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
-    let parts: Vec<&str> = inner.splitn(2, ',').collect();
-    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
-}
-//#endregion 🔖️ChildCodecPrimitives
 
-//#region 🔖️JsonFieldPrimitives
-/// 🧾️ Every structured field on this snapshot — `model` (`crate::model::Model`) and BOTH link slots
-/// (`Option<store::ArtifactLink>`) — is carried through `ToValue`/`FromValue` and `pack::json`, then
-/// hex-encoded. There is no `serde_json` round trip left in either codec: `ArtifactLink`/`LinkPin`/
-/// `BlobRef` grew first-party `ToValue`/`FromValue` impls, so the "this ONE field stays on serde"
-/// carve-out this file used to document is gone (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END).
-///
-/// Round-tripping back into the SAME typed value through `DslValue` is exact: `FromValue` for every
-/// integer primitive recovers `n as $int_ty`, so no precision is lost across THIS round trip
-/// (contrast with the artifact root's `energy_structure_from_model`, which targets a foreign,
-/// generically-typed `SemioValue` tree that must distinguish `Int` from `Float` on the wire — a real
-/// reason to keep `serde_json` THERE, not here).
-fn enc_dsl_json<T: ToValue>(value: &T) -> String {
-    enc_str(&pack::json::to_json_string(value))
-}
-fn dec_dsl_json<T: FromValue>(s: &str) -> Result<T, String> {
-    pack::json::from_json_str(&dec_str(s)?).map_err(|error| error.to_string())
-}
-//#endregion 🔖️JsonFieldPrimitives
-
-//#region 🔖️TextPrimitives
-fn print_energy_model_snapshot_body(s: &EnergyModelSnapshot) -> String {
-    format!("schema={}\nmodel={}\nstructure={}\nzones={}\nreferencedModel={}\nweatherLink={}", enc_str(&s.schema), enc_dsl_json(&s.model), enc_child(&s.structure), enc_child(&s.zones), enc_dsl_json(&s.referenced_model), enc_dsl_json(&s.weather_link),)
-}
-fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, String> {
-    let mut schema = None;
-    let mut model = None;
-    let mut structure = None;
-    let mut zones = None;
-    let mut referenced_model = None;
-    let mut weather_link = None;
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("model=") {
-            model = Some(dec_dsl_json(rest)?);
-        } else if let Some(rest) = line.strip_prefix("structure=") {
-            structure = Some(dec_child(rest)?);
-        } else if let Some(rest) = line.strip_prefix("zones=") {
-            zones = Some(dec_child(rest)?);
-        } else if let Some(rest) = line.strip_prefix("referencedModel=") {
-            referenced_model = Some(dec_dsl_json(rest)?);
-        } else if let Some(rest) = line.strip_prefix("weatherLink=") {
-            weather_link = Some(dec_dsl_json(rest)?);
-        } else {
-            return Err(format!("energy model snapshot: unknown line {line:?}"));
-        }
+    fn into_snapshot(self) -> Result<EnergyModelSnapshot, String> {
+        let model = crate::model::Model::from_value(self.model).map_err(|error| error.to_string())?;
+        Ok(EnergyModelSnapshot { schema: self.schema, model, structure: self.structure, zones: self.zones, referenced_model: self.referenced_model, weather_link: self.weather_link })
     }
-    Ok(EnergyModelSnapshot {
-        schema: schema.ok_or_else(|| "energy model snapshot: missing schema line".to_string())?,
-        model: model.ok_or_else(|| "energy model snapshot: missing model line".to_string())?,
-        structure: structure.ok_or_else(|| "energy model snapshot: missing structure line".to_string())?,
-        zones: zones.ok_or_else(|| "energy model snapshot: missing zones line".to_string())?,
-        referenced_model: referenced_model.ok_or_else(|| "energy model snapshot: missing referencedModel line".to_string())?,
-        weather_link: weather_link.ok_or_else(|| "energy model snapshot: missing weatherLink line".to_string())?,
-    })
-}
-//#endregion 🔖️TextPrimitives
-
-//#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
-    write_str_lp(out, &r.to_uri());
-}
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
-}
-fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
-    write_str_lp(out, &c.child_id);
-    write_ref(out, &c.target);
-}
-fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
-    let child_id = read_str_lp(reader)?;
-    let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
-}
-fn write_dsl_json<T: ToValue>(out: &mut Vec<u8>, value: &T) {
-    write_str_lp(out, &pack::json::to_json_string(value));
-}
-fn read_dsl_json<T: FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
-    pack::json::from_json_str(&read_str_lp(reader)?).map_err(|error| error.to_string())
 }
 
-fn encode_energy_model_snapshot_binary(s: &EnergyModelSnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 2;
-    let mut out = vec![PACK_BINARY_FORMAT];
-    write_str_lp(&mut out, &s.schema);
-    write_dsl_json(&mut out, &s.model);
-    write_child(&mut out, &s.structure);
-    write_child(&mut out, &s.zones);
-    write_dsl_json(&mut out, &s.referenced_model);
-    write_dsl_json(&mut out, &s.weather_link);
-    out
+/// 🖨️ The derived text body: the same `EnergyModelPackRecord` the pack encodes, printed by the spec-driven engine.
+pub(crate) fn print_pack_record_text(snapshot: &EnergyModelSnapshot) -> String {
+    dsl::print(&EnergyModelPackRecord::from_snapshot(snapshot).__dsl_to_record(), &EnergyModelPackRecord::__dsl_spec(), dsl::JoinMode::Document)
 }
-fn decode_energy_model_snapshot_binary(bytes: &[u8]) -> Result<EnergyModelSnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 2;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
-        return Err(format!("unsupported pack format {format}"));
-    }
-    Ok(EnergyModelSnapshot {
-        schema: read_str_lp(&mut reader)?,
-        model: read_dsl_json(&mut reader)?,
-        structure: read_child(&mut reader)?,
-        zones: read_child(&mut reader)?,
-        referenced_model: read_dsl_json(&mut reader)?,
-        weather_link: read_dsl_json(&mut reader)?,
-    })
+
+/// 📖️ Parses a derived text body back through `EnergyModelPackRecord`, with the same decode steps as the pack.
+pub(crate) fn parse_pack_record_text(body: &str) -> Result<EnergyModelSnapshot, store::TextError> {
+    let record = dsl::parse(body, &EnergyModelPackRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+    EnergyModelPackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
 }
-//#endregion 🔖️BinaryPrimitives
+//#endregion 🔖️PackRecord
 
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for EnergyModelSnapshot {
@@ -256,10 +125,10 @@ impl store::ArtifactDsl for EnergyModelSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_energy_model_snapshot_body(body.trim()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_pack_record_text(body)
     }
     fn print_dsl(&self) -> String {
-        let body = print_energy_model_snapshot_body(self);
+        let body = print_pack_record_text(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -267,18 +136,20 @@ impl store::ArtifactDsl for EnergyModelSnapshot {
 
 impl store::ArtifactPack for EnergyModelSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_energy_model_snapshot_binary(self);
+        let inner = store::pack_rt::encode_document(&EnergyModelPackRecord::__dsl_spec(), &EnergyModelPackRecord::from_snapshot(self).__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        decode_energy_model_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        let (record, _report) = store::pack_rt::decode_document(&inner, &EnergyModelPackRecord::__dsl_spec(), options)?;
+        EnergyModelPackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(store::PackError::Schema)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(EnergyModelPackRecord::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -318,3 +189,4 @@ pub fn energy_model_identity_report_json(dsl_text: &str) -> Result<String, Strin
     Ok(pack::json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge
+

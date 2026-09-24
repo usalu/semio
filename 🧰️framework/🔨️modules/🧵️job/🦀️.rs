@@ -44,7 +44,7 @@ use std::task::{Context, Poll, Waker};
 use std::time::Instant;
 
 use semio_framework_async::ChannelPolicy;
-use semio_framework_trace::{TraceEvent, Watchdog, record_cancelled, record_checkpoint, record_committed, record_failed, record_operation_started, record_preview_published, record_stage_changed};
+use semio_framework_trace::{TraceEvent, Watchdog, record_operation_started};
 
 pub use semio_framework_async::CancelToken;
 pub use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
@@ -985,6 +985,7 @@ pub struct StepContext<'a> {
     fuel_remaining: u64,
     deadline_us: u64,
     now_us: fn() -> Option<u64>,
+    clock: std::cell::Cell<ClockStride>,
     cancel: CancelToken,
     stage: &'static str,
     preview_sequence: &'a mut u64,
@@ -994,13 +995,14 @@ pub struct StepContext<'a> {
 
 impl<'a> StepContext<'a> {
     pub fn new(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64) -> StepContext<'a> {
-        StepContext::with_payload_ledger(operation, generation, budget, cancel, now_us, preview_sequence, Arc::new(JobPayloadOperationLedger::new(operation, generation)))
+        StepContext::with_payload_ledger(operation, generation, budget, cancel, now_us, ClockStride::new(), preview_sequence, Arc::new(JobPayloadOperationLedger::new(operation, generation)))
     }
 
-    fn with_payload_ledger(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64, payload_ledger: Arc<JobPayloadOperationLedger>) -> StepContext<'a> {
+    #[allow(clippy::too_many_arguments)]
+    fn with_payload_ledger(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, clock: ClockStride, preview_sequence: &'a mut u64, payload_ledger: Arc<JobPayloadOperationLedger>) -> StepContext<'a> {
         assert_eq!(payload_ledger.operation, operation, "job payload ledger operation must match its step context");
         assert_eq!(payload_ledger.generation, generation, "job payload ledger generation must match its step context");
-        StepContext { operation, generation, fuel_remaining: budget.fuel, deadline_us: budget.deadline_us, now_us, cancel, stage: "initial", preview_sequence, payload_ledger, payload_page_granted: false }
+        StepContext { operation, generation, fuel_remaining: budget.fuel, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel, stage: "initial", preview_sequence, payload_ledger, payload_page_granted: false }
     }
 
     pub fn operation(&self) -> OperationId {
@@ -1017,8 +1019,18 @@ impl<'a> StepContext<'a> {
         self.stage
     }
 
+    /// ⏱️ The step's clock, read for real only every [`ClockStride`] calls — see there. A job may
+    /// call this after every unit of work; inside a Wasm guest each real read is a host call.
     pub fn now_us(&self) -> Option<u64> {
-        (self.now_us)()
+        let mut clock = self.clock.get();
+        let now = clock.read(self.now_us);
+        self.clock.set(clock);
+        now
+    }
+
+    /// 🕰️ The latest reading this step holds, without reading the clock.
+    pub fn latest_us(&self) -> Option<u64> {
+        self.clock.get().latest_us()
     }
 
     pub fn deadline_us(&self) -> u64 {
@@ -1067,9 +1079,13 @@ impl<'a> StepContext<'a> {
     /// brush → fill switch is the template). Terminal per-call events (preview/checkpoint/commit/
     /// cancel/fail) are recorded once by [`drive_step`] from the returned [`StepOutcome`] instead —
     /// see the module doc's "trace, not a second instrumentation layer" section.
+    ///
+    /// 🕰️ The event is stamped with the step's latest reading ([`StepContext::latest_us`]), at most
+    /// one stride old, instead of a read of its own.
     pub fn set_stage(&mut self, label: &'static str) -> Option<TraceEvent> {
         self.stage = label;
-        record_stage_changed(self.operation, self.generation, label)
+        let at_us = self.latest_us().or_else(|| self.now_us());
+        semio_framework_trace::record_trace_event_at(self.operation, self.generation, semio_framework_trace::TraceStage::StageChanged { label }, at_us)
     }
 
     /// 🔢️ The next preview-sequence number for this operation, advancing a cursor that survives
@@ -1115,6 +1131,72 @@ impl<'a> StepContext<'a> {
     }
 }
 //#endregion 🧭️StepContext
+
+//#region 🪜️ClockStride
+/// 🪜️ A step's clock, read for real only every `stride` calls. A job that checks its deadline after
+/// every unit of work used to read the host clock just as often; inside a Wasm guest that read is a
+/// component-model host call, and measured 2026-09-24 (ticket 26/09/23 slice G6) the `🀄️wfc` genesis
+/// solve made 6.7 million of them in one `inference_run`. The stride is recalibrated at every real
+/// read so reads land about [`ClockStride::TARGET_READ_INTERVAL_US`] apart, which is also the most a
+/// deadline is overshot by. Every [`StepContext`] a driver builds carries one: the step begins at the
+/// driver's own entry reading ([`ClockStride::begin`]), so a new step costs no read of its own, and the
+/// calibrated stride carries from step to step. Law: `🧫️fixtures/🪜️clock-stride-law.json`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ClockStride {
+    stride: u32,
+    remaining: u32,
+    last_read_us: Option<u64>,
+}
+
+impl ClockStride {
+    pub const TARGET_READ_INTERVAL_US: u64 = 64;
+    pub const MAXIMUM_STRIDE: u32 = 4_096;
+
+    pub const fn new() -> Self {
+        Self { stride: 1, remaining: 0, last_read_us: None }
+    }
+
+    /// 🏁️ Begins a step at `start_us`, the reading its driver made at entry: the step's first
+    /// `stride - 1` reads answer it, and the calibrated stride is kept.
+    pub fn begin(&mut self, start_us: Option<u64>) {
+        self.last_read_us = start_us;
+        self.remaining = if start_us.is_some() { self.stride - 1 } else { 0 };
+    }
+
+    /// ⏱️ The clock as of the last real read of `clock`, which is at most one stride of calls old.
+    pub fn read(&mut self, clock: fn() -> Option<u64>) -> Option<u64> {
+        if self.remaining > 0 {
+            self.remaining -= 1;
+            return self.last_read_us;
+        }
+        let now = clock();
+        if let (Some(now), Some(last)) = (now, self.last_read_us) {
+            let elapsed = now.saturating_sub(last).max(1);
+            let calibrated = u64::from(self.stride) * Self::TARGET_READ_INTERVAL_US / elapsed;
+            self.stride = calibrated.clamp(1, u64::from(Self::MAXIMUM_STRIDE).min(u64::from(self.stride) * 2)) as u32;
+        }
+        self.last_read_us = now;
+        self.remaining = self.stride - 1;
+        now
+    }
+
+    /// 🕰️ The last reading, without reading the clock.
+    pub fn latest_us(&self) -> Option<u64> {
+        self.last_read_us
+    }
+
+    /// 🪜️ How many calls the next real read is apart — the law's observable.
+    pub fn stride(&self) -> u32 {
+        self.stride
+    }
+}
+
+impl Default for ClockStride {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+//#endregion 🪜️ClockStride
 
 //#region 🚦️StepOutcome
 /// 📸️ A pause point where work is resumable but not yet committed — `state` is opaque, pack-encoded
@@ -1249,7 +1331,7 @@ pub fn drive_step<J: InteractiveJob + ?Sized>(
     preview_sequence: &mut u64,
     callback_verdict: &mut Option<semio_framework_trace::CallbackVerdict>,
 ) -> StepOutcome {
-    drive_step_with_payload_ledger(job, site, operation, generation, stage, budget, cancel, now_us, preview_sequence, callback_verdict, Arc::new(JobPayloadOperationLedger::new(operation, generation)))
+    drive_step_with_payload_ledger(job, site, operation, generation, stage, budget, cancel, now_us, now_us(), &mut ClockStride::new(), preview_sequence, callback_verdict, Arc::new(JobPayloadOperationLedger::new(operation, generation))).0
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1262,49 +1344,42 @@ fn drive_step_with_payload_ledger<J: InteractiveJob + ?Sized>(
     budget: StepBudget,
     cancel: CancelToken,
     now_us: fn() -> Option<u64>,
+    start_us: Option<u64>,
+    clock: &mut ClockStride,
     preview_sequence: &mut u64,
     callback_verdict: &mut Option<semio_framework_trace::CallbackVerdict>,
     payload_ledger: Arc<JobPayloadOperationLedger>,
-) -> StepOutcome {
+) -> (StepOutcome, Option<u64>) {
     *callback_verdict = None;
     if poll_ready_now(cancel.is_cancelled()) {
-        record_cancelled(operation, generation);
-        return StepOutcome::Cancelled;
+        semio_framework_trace::record_trace_event_at(operation, generation, semio_framework_trace::TraceStage::Cancelled, start_us);
+        return (StepOutcome::Cancelled, start_us);
     }
-    if budget.fuel == 0 || now_us().is_none_or(|now_us| now_us >= budget.deadline_us) {
-        return StepOutcome::Yield;
+    if budget.fuel == 0 || start_us.is_none_or(|start_us| start_us >= budget.deadline_us) {
+        return (StepOutcome::Yield, start_us);
     }
-    let outcome = {
-        let watchdog = Watchdog::start(site, operation, generation, stage);
-        if !watchdog.is_admitted() {
-            *callback_verdict = Some(watchdog.finish());
-            return StepOutcome::Yield;
-        }
-        let mut cx = StepContext::with_payload_ledger(operation, generation, budget, cancel, now_us, preview_sequence, payload_ledger);
-        let outcome = job.step(&mut cx);
-        *callback_verdict = Some(watchdog.finish());
-        outcome
+    let watchdog = Watchdog::start_at(site, operation, generation, stage, start_us);
+    clock.begin(start_us);
+    let mut cx = StepContext::with_payload_ledger(operation, generation, budget, cancel, now_us, *clock, preview_sequence, payload_ledger);
+    let outcome = job.step(&mut cx);
+    *clock = cx.clock.get();
+    let end_us = now_us();
+    *callback_verdict = Some(watchdog.finish_at(end_us));
+    if callback_verdict.as_ref().is_some_and(|verdict| verdict.clock_fault().is_some()) {
+        return (outcome, end_us);
+    }
+    let stage = match &outcome {
+        StepOutcome::Yield => None,
+        StepOutcome::PreviewReady(_) => Some(semio_framework_trace::TraceStage::PreviewPublished),
+        StepOutcome::CheckpointReady(_) => Some(semio_framework_trace::TraceStage::Checkpoint),
+        StepOutcome::Complete(_) => Some(semio_framework_trace::TraceStage::Committed),
+        StepOutcome::Cancelled => Some(semio_framework_trace::TraceStage::Cancelled),
+        StepOutcome::Fault(_) => Some(semio_framework_trace::TraceStage::Failed),
     };
-    if callback_verdict.as_ref().is_some_and(|verdict| verdict.clock_fault().is_some()) { return outcome; }
-    match &outcome {
-        StepOutcome::Yield => {}
-        StepOutcome::PreviewReady(_) => {
-            record_preview_published(operation, generation);
-        }
-        StepOutcome::CheckpointReady(_) => {
-            record_checkpoint(operation, generation);
-        }
-        StepOutcome::Complete(_) => {
-            record_committed(operation, generation);
-        }
-        StepOutcome::Cancelled => {
-            record_cancelled(operation, generation);
-        }
-        StepOutcome::Fault(_) => {
-            record_failed(operation, generation);
-        }
+    if let Some(stage) = stage {
+        semio_framework_trace::record_trace_event_at(operation, generation, stage, end_us);
     }
-    outcome
+    (outcome, end_us)
 }
 //#endregion 🐕️Drive
 
@@ -1940,6 +2015,8 @@ struct WorkerJobAuthority<J> {
     callback_verdict: Option<semio_framework_trace::CallbackVerdict>,
     overruns: semio_framework_trace::StepOverrunLedger,
     quarantined_outcome: Option<StepOutcome>,
+    clock: ClockStride,
+    last_step_end_us: Option<u64>,
     close_stage: u8,
 }
 
@@ -1992,6 +2069,8 @@ impl<J> WorkerJobAuthorityOwner<J> {
             std::ptr::addr_of_mut!((*target).callback_verdict).write(None);
             std::ptr::addr_of_mut!((*target).overruns).write(overruns);
             std::ptr::addr_of_mut!((*target).quarantined_outcome).write(None);
+            std::ptr::addr_of_mut!((*target).clock).write(ClockStride::new());
+            std::ptr::addr_of_mut!((*target).last_step_end_us).write(None);
             std::ptr::addr_of_mut!((*target).close_stage).write(0);
             storage.set_len(1);
         }
@@ -2179,6 +2258,24 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
             }
             poll => Ok(poll),
         }
+    }
+
+    /// 🧵️ Runs the session's next step on the calling thread and checks its outcome out. For a caller
+    /// that already owns a bounded slice of its own — a guest `semio.infer` `step-job` crossing —
+    /// where handing the step to a pool and waiting for it only adds a round trip per step.
+    pub fn step_on_caller(&mut self) -> Result<WorkerJobPoll, MountedWorkerJobPumpFault> {
+        if self.checked_out.is_some() {
+            return Err(MountedWorkerJobPumpFault::CheckedOut);
+        }
+        let (ticket, poll) = self.session.try_step_on_caller().map_err(|contention| MountedWorkerJobPumpFault::Submit(WorkerJobSubmitFault::Contention(contention)))?;
+        let owner = if poll == WorkerJobPoll::Terminal { self.session.take_terminal() } else { self.session.take_outcome(ticket) };
+        self.checked_out = Some(owner.map_err(MountedWorkerJobPumpFault::Take)?);
+        Ok(poll)
+    }
+
+    /// 🕰️ See [`WorkerJobSession::last_step_end_us`].
+    pub fn last_step_end_us(&self) -> Option<u64> {
+        self.session.last_step_end_us()
     }
 
     /// 🏃️ [`pump_one`] for one reactor-turn slice: on native hosts a submitted step runs on a pool
@@ -2463,6 +2560,7 @@ struct WorkerJobSessionInner<J> {
     wake_exhausted: AtomicBool,
     wake_guard: AtomicBool,
     waker: ManuallyDrop<std::cell::UnsafeCell<Option<Waker>>>,
+    last_step_end_us: AtomicU64,
 }
 
 unsafe impl<J: Send> Send for WorkerJobSessionInner<J> {}
@@ -2676,7 +2774,9 @@ fn drive_worker_job_authority<J: InteractiveJob>(authority: &mut WorkerJobAuthor
     }
     let params = authority.params.as_ref().expect("submitted job authority owns parameters").clone();
     let config = params.config;
-    let Some(budget) = (params.now_us)().and_then(|start_us| StepBudget::from_duration(config.fuel_per_step, start_us, config.step_budget_us)) else {
+    let start_us = (params.now_us)();
+    authority.last_step_end_us = start_us;
+    let Some(budget) = start_us.and_then(|start_us| StepBudget::from_duration(config.fuel_per_step, start_us, config.step_budget_us)) else {
         authority.outcome = Some(StepOutcome::Fault(JobFault { detail: authority.preadmitted_fault.take().expect("invalid deadline retains its pre-admitted terminal fault page") }));
         return true;
     };
@@ -2690,11 +2790,17 @@ fn drive_worker_job_authority<J: InteractiveJob>(authority: &mut WorkerJobAuthor
             budget,
             params.cancel.clone(),
             params.now_us,
+            start_us,
+            &mut authority.clock,
             &mut authority.preview_sequence,
             &mut authority.callback_verdict,
             Arc::clone(&authority.payload_ledger),
         )
-    }));
+    }))
+    .map(|(outcome, end_us)| {
+        authority.last_step_end_us = end_us;
+        outcome
+    });
     authority.step_sequence = authority.step_sequence.saturating_add(1);
     let quarantine = match authority.callback_verdict {
         Some(verdict) => authority.overruns.admit(&verdict),
@@ -2716,6 +2822,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSubmission<J> {
         self.ran = true;
         let mut authority = self.authority.take().expect("submitted worker closure owns exact job authority");
         let terminal = drive_worker_job_authority(&mut authority);
+        self.inner.last_step_end_us.store(authority.last_step_end_us.unwrap_or(u64::MAX), Ordering::Release);
         if self.inner.close_requested.load(Ordering::Acquire) {
             self.inner.terminal_intent.store(1, Ordering::Release);
         }
@@ -2902,6 +3009,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
             wake_exhausted: AtomicBool::new(false),
             wake_guard: AtomicBool::new(false),
             waker: ManuallyDrop::new(std::cell::UnsafeCell::new(None)),
+            last_step_end_us: AtomicU64::new(u64::MAX),
         });
         let retirement = Box::new(WorkerJobRetirementNode { header: WorkerJobRetirementHeader { slot, pump: pump_worker_job_retirement_node::<J>, destroy: destroy_worker_job_retirement_node::<J> }, inner: None });
         Ok(Self { inner, retirement: std::cell::UnsafeCell::new(Some(retirement)), retirement_state: AtomicU8::new(0) })
@@ -2932,6 +3040,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         let mut authority = unsafe { self.inner.take_authority() };
         let ticket = WorkerJobTicket { generation: self.inner.generation, step_sequence: authority.step_sequence };
         let terminal = drive_worker_job_authority(&mut authority);
+        self.inner.last_step_end_us.store(authority.last_step_end_us.unwrap_or(u64::MAX), Ordering::Release);
         if self.inner.close_requested.load(Ordering::Acquire) {
             self.inner.terminal_intent.store(1, Ordering::Release);
         }
@@ -2941,6 +3050,12 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
 
     pub fn try_step_on_caller(&self) -> Result<(WorkerJobTicket, WorkerJobPoll), WorkerJobContention> {
         self.try_step_inline()
+    }
+
+    /// 🕰️ The clock reading the last step of this session ended at — its driver's exit reading, so a
+    /// caller deciding whether to run another step needs no read of its own.
+    pub fn last_step_end_us(&self) -> Option<u64> {
+        Some(self.inner.last_step_end_us.load(Ordering::Acquire)).filter(|end_us| *end_us != u64::MAX)
     }
 
     /// 🧵️ Executes one exact owner turn from a retained scheduler already running inside its worker.
@@ -3508,6 +3623,22 @@ impl InteractiveJob for TortureJob {
 //#endregion 🔥️TortureJob
 
 //#region 🧪️Tests
+/// 🎟️ The [`WORKER_JOB_SESSION_SLOTS`] are process-wide, so one test binary's parallel tests share
+/// them. A test that admits sessions holds a shared guard; the one test that owns every slot at
+/// once holds the exclusive guard, so neither ever observes the other's admissions.
+#[cfg(test)]
+static WORKER_SESSION_SLOTS_TEST_AUTHORITY: std::sync::RwLock<()> = std::sync::RwLock::new(());
+
+#[cfg(test)]
+fn worker_session_slots_shared() -> std::sync::RwLockReadGuard<'static, ()> {
+    WORKER_SESSION_SLOTS_TEST_AUTHORITY.read().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+#[cfg(test)]
+fn worker_session_slots_exclusive() -> std::sync::RwLockWriteGuard<'static, ()> {
+    WORKER_SESSION_SLOTS_TEST_AUTHORITY.write().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 #[cfg(test)]
 #[path = "⏱️budget/🧪️tests/⏱️budget/🦀️.rs"]
 mod microsecond_budget_tests;
@@ -3515,3 +3646,7 @@ mod microsecond_budget_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️retained-ownership/🦀️.rs"]
 mod retained_ownership_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️clock-stride/🦀️.rs"]
+mod clock_stride_tests;

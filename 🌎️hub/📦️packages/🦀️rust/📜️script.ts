@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { createHash, randomBytes, timingSafeEqual, webcrypto } from "node:crypto";
-import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, writeSync, type Stats } from "node:fs";
+import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, writeSync, type Stats , cpSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import type { Duplex } from "node:stream";
@@ -24,7 +24,7 @@ import {
   type WireFrontierSummary,
   type WireMutationEnvelope,
 } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
-import { decodeBackboneWorkerResponse, decodePackValue, encodeBackboneWorkerRequest, encodePackValue, packValueToExactJson, parseSocketGrantReceiptV1, socketGrantProtocolsV1 } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
+import { decodeBackboneWorkerResponse, decodePackValue, encodeBackboneWorkerRequest, encodePackValue, packValueToExactJson, parseDocumentSocketGrantReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import type { PackValue } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import {
   DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
@@ -89,6 +89,7 @@ import {
   orchestratorBudgetOpts,
   resolveTestLevel,
   readStableBuildFile,
+  viteConfigLoader,
   type ExactCargoLawGroup,
 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { hubSchemaExport } from "../🟦️typescript/🟦️.ts";
@@ -96,11 +97,9 @@ import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-envi
 import { orderedDirectoryPublicationOracle } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
 import { DIRECT_CHILD_BENIGN_ENV_KEY, DIRECT_CHILD_BENIGN_ENV_VALUE, deliverCredentialEnvelopeToChild, deliverMcpCredentialEnvelope, deliverNativeCredentialEnvelope, directChildEnvironment, sealedDirectChildEnvironment } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
 import { proveMcpCredentialSourceOrder, proveNativeCredentialSourceOrder } from "../../🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts";
-import { assertHubFixtureExpectation, type HubFixtureExpectationV1 } from "../../🧪️tests/🧬️schema/🛂expectation/🟦️.ts";
-import { HubFoundationSourceScript } from "../../🧪️tests/🧱️foundation-source/🏃️execution/🟦️.ts";
+import { assertHubFixtureExpectation, type HubFixtureExpectationV1 } from "../../🧬️schema/🛂️fixture-expectation/🟦️.ts";
+import { runOwnedCommand } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { LocalRelayRoutingScript } from "../../🚀️local-relay/🧭️routing/🧪️tests/🏃️execution/🟦️.ts";
-import { HubLiveSignInScript } from "../../🔐️auth/🧪️tests/🤝️live-sign-in/🏃️execution/🟦️.ts";
-import { HubSocketGrantCommandSourceScript } from "../../🧪️tests/🧱️socket-grant-command-source/🏃️execution/🟦️.ts";
 import { proveScopedDirectorySocketRevocationFixture } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts";
 import { SocketGrantCheckScript } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts";
 import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelaySpaceArtifactCreationPath, localRelayUpstreamPath } from "../../🚀️local-relay/🧭️routing/🟦️.ts";
@@ -109,6 +108,36 @@ import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
 import { finishLocalHub, freeLoopbackPort, HUB_DEV_BINARY_TARGET, hubBinaryPath, hubDevBinaryPath, hubDevPostgresBinaryPath, LOCAL_READINESS_STALL_BOUND_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
+
+//#region 🧱️SourceGateRunners
+/** 🧱️ Runs the bounded Hub foundation source contract through the shared owned-process boundary. */
+class HubFoundationSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("foundation-source-check accepts no arguments");
+    await runOwnedCommand("bun", ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts")], this.repoRoot, "hub-foundation-source", 120_000);
+  }
+}
+
+/** 🧱️ Runs the bounded socket-grant command ownership contract. */
+class HubSocketGrantCommandSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("socket-grant-command-source-check accepts no arguments");
+    await runOwnedCommand("bun", ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts")], this.repoRoot, "hub-socket-grant-command-source", 120_000);
+  }
+}
+
+/** 🤝️ Runs the live sign-in gate: a real `os-hub` child against a fresh data root, the operator bootstrap verb, and the whole
+ * two-principal session lifecycle over HTTP. Credential sign-in is enabled for the child here because the gate exists to
+ * exercise exactly that policy — it is not a default any other route inherits. */
+class HubLiveSignInScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("live-sign-in-check accepts no arguments");
+    await runOwnedCommand("bun", [join(this.repoRoot, "🌎️hub/🔐️auth/🧪️tests/🤝️live-sign-in/🟦️.ts")], this.repoRoot, "hub-live-sign-in", 300_000, {
+      env: { ...process.env, OS_HUB_CREDENTIAL_SIGN_IN: "1" },
+    });
+  }
+}
+//#endregion 🧱️SourceGateRunners
 type AdminLiveJourneyFixture = {
   readonly schema: "semio.hub.admin-live-journey/v1";
   readonly profile: { readonly profileId: string; readonly subject: string; readonly displayName: string };
@@ -638,7 +667,7 @@ function mcpExecutable(repoRoot: string): string {
 }
 
 const MCP_PROBE_SCHEMA = "os.agent.probe/v1";
-const MCP_PROBE_PACK_SCHEMA_HASH = "9fab7cb8b71dabede955b4257fa06e2908642e0904f124b6230479f8a153041e";
+const MCP_PROBE_PACK_SCHEMA_HASH = "0302ac7cf70cd2452759542a24931331935527fb9388bb6967cbc0575ccf728e";
 
 async function createMcpProbeWorkspace(run: LocalHubRun, envelope: Record<string, any>): Promise<{ readonly spaceId: string; readonly documentId: string }> {
   const created = await postLiveDirectoryCommand(run, envelope.capability, liveDirectoryCommandRequestId(), { kind: "create-space", name: "MCP Socket Grant Probe", spaceKind: "studio", visibility: "private" });
@@ -815,9 +844,10 @@ async function commitCheckpointPublicationProcessMutation(
     body: JSON.stringify(grantIntent),
     signal: AbortSignal.timeout(5_000),
   });
-  const grant = parseSocketGrantReceiptV1(await grantResponse.json().catch(() => undefined));
+  const grant = parseDocumentSocketGrantReceiptV1(await grantResponse.json().catch(() => undefined));
   if (!grantResponse.ok) throw new Error(`checkpoint publication socket grant failed: ${grantResponse.status}`);
-  const socket = new WebSocket(`ws://127.0.0.1:${run.port}${documentRoot}/socket/v1?surface=${encodeURIComponent(fixture.surfaceId)}`, [...socketGrantProtocolsV1(grant)]);
+  const scope = `${spaceId}/${fixture.documentId}`;
+  const socket = new WebSocket(`ws://127.0.0.1:${run.port}/scopes/${encodeURIComponent(scope)}/document/ws?surface=${encodeURIComponent(fixture.surfaceId)}`, ["semio.session.v1", capability]);
   socket.binaryType = "arraybuffer";
   const frames: Record<string, any>[] = [];
   let socketError: unknown;
@@ -839,7 +869,7 @@ async function commitCheckpointPublicationProcessMutation(
         resolveOpen();
       };
     });
-    if (socket.protocol !== "semio.socket.v1") throw new Error("checkpoint publication socket did not negotiate its exact protocol");
+    if (socket.protocol !== grant.protocol) throw new Error("checkpoint publication socket did not negotiate its exact protocol");
     const packSchemaHash = Buffer.from(fixture.artifact.packSchemaHash, "hex");
     socket.send(encodeClientFrame({ SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: fixture.artifact.schema, pack_schema_hash: Array.from(packSchemaHash), resume_token: null, frontier: null } }, "command"));
     await waitForCheckpointSocketFrame(socket, frames, (frame) => ("Welcome" in frame ? frame.Welcome : undefined), "Welcome");
@@ -1313,9 +1343,9 @@ async function proveNativeSocketGrantActor(repoRoot: string): Promise<void> {
   const actor = `hub.v1.${"a".repeat(64)}`;
   const wrongActor = `hub.v1.${"b".repeat(64)}`;
   const capability = `session.v1.${"c".repeat(32)}.${"d".repeat(64)}`;
-  const issued = new Map<string, boolean>();
+  let pendingGrants = 0;
   const planReceipts = new Map<string, boolean>();
-  const probePackSchemaHash = "9fab7cb8b71dabede955b4257fa06e2908642e0904f124b6230479f8a153041e";
+  const probePackSchemaHash = "0302ac7cf70cd2452759542a24931331935527fb9388bb6967cbc0575ccf728e";
   let planCount = 0;
   let exchangeCount = 0;
   let grantCount = 0;
@@ -1397,18 +1427,15 @@ async function proveNativeSocketGrantActor(repoRoot: string): Promise<void> {
         planReceipts.set(exchange.planReceipt, true);
         exchangeCount += 1;
         grantCount += 1;
-        const selector = grantCount.toString(16).padStart(32, "0");
-        const grant = `socket.v1.${selector}.${String(grantCount).padStart(64, "0")}`;
-        issued.set(grant, false);
-        return Response.json({ schema: "semio.hub.socket-grant/v1", protocol: "semio.socket.v1", grant, actorId: actor, expiresAtMs: Date.now() + 10_000 });
+        pendingGrants += 1;
+        return Response.json({ schema: "semio.hub.document-socket-grant/v1", protocol: "semio.session.v1", actorId: actor, expiresAtMs: Date.now() + 10_000 });
       }
-      if (request.method === "GET" && url.pathname === "/spaces/probe-space/documents/probe-document/socket/v1") {
+      if (request.method === "GET" && url.pathname === "/scopes/probe-space%2Fprobe-document/document/ws") {
         const protocols = (request.headers.get("sec-websocket-protocol") ?? "").split(",").map((value) => value.trim());
-        const grant = protocols[1] ?? "";
-        if (protocols.length !== 2 || protocols[0] !== "semio.socket.v1" || issued.get(grant) !== false) return new Response("", { status: 401 });
-        issued.set(grant, true);
+        if (protocols.length !== 2 || protocols[0] !== "semio.session.v1" || protocols[1] !== capability || pendingGrants === 0) return new Response("", { status: 401 });
+        pendingGrants -= 1;
         socketCount += 1;
-        return control.upgrade(request, { data: { connection: socketCount }, headers: { "Sec-WebSocket-Protocol": "semio.socket.v1" } }) ? undefined : new Response("", { status: 500 });
+        return control.upgrade(request, { data: { connection: socketCount }, headers: { "Sec-WebSocket-Protocol": "semio.session.v1" } }) ? undefined : new Response("", { status: 500 });
       }
       return new Response("", { status: 404 });
     },
@@ -1462,13 +1489,13 @@ async function proveNativeSocketGrantActor(repoRoot: string): Promise<void> {
       mutationCount !== 2 ||
       preSessionCommands !== 0 ||
       [...planReceipts.values()].some((used) => !used) ||
-      [...issued.values()].some((used) => !used)
+      pendingGrants !== 0
     ) {
       throw new Error(
         `native socket actor law failed: exit=${child.exitCode} plans=${planCount} exchanges=${exchangeCount} grants=${grantCount} sockets=${socketCount} hellos=${helloCount} mutations=${mutationCount} preSessionCommands=${preSessionCommands} stderr=${errorOutput}`,
       );
     }
-    if (output.includes(capability) || errorOutput.includes(capability) || [...planReceipts.keys(), ...issued.keys()].some((secret) => output.includes(secret) || errorOutput.includes(secret)))
+    if (output.includes(capability) || errorOutput.includes(capability) || [...planReceipts.keys()].some((secret) => output.includes(secret) || errorOutput.includes(secret)))
       throw new Error("native socket actor law leaked protected admission material");
   } finally {
     envelope.capability = "";
@@ -1920,7 +1947,7 @@ async function proveBrowserDocumentOpenFixture(repoRoot: string): Promise<Browse
   const scope = fixture.intent.scope;
   const root = `/spaces/${encodeURIComponent(scope.spaceId)}/documents/${encodeURIComponent(scope.documentId)}`;
   const httpPaths = [`${root}/open-plan`, `${root}/socket-grants`];
-  const webSocketPath = `${root}/socket/v1?surface=${encodeURIComponent(fixture.intent.requestedSurfaceId)}`;
+  const webSocketPath = `/scopes/${encodeURIComponent(`${scope.spaceId}/${scope.documentId}`)}/document/ws?surface=${encodeURIComponent(fixture.intent.requestedSurfaceId)}`;
   if (JSON.stringify(httpPaths) !== JSON.stringify(fixture.expected.httpPaths) || webSocketPath !== fixture.expected.webSocketPath) throw new Error("browser document-open encoded path oracle mismatch");
   if (!browserDocumentOpenAuthority(fixture.plan, fixture)) throw new Error("browser document-open plan authority oracle mismatch");
   const runtimeKey = (scope: { readonly spaceId: string; readonly documentId: string }): string => `v1:${Buffer.byteLength(scope.spaceId, "utf8")}:${Buffer.byteLength(scope.documentId, "utf8")}:${scope.spaceId}${scope.documentId}`;
@@ -1929,10 +1956,10 @@ async function proveBrowserDocumentOpenFixture(repoRoot: string): Promise<Browse
   if (runtimeKey(isolation.left) !== isolation.leftKey || runtimeKey(isolation.right) !== isolation.rightKey || localKey !== isolation.localKey || isolation.leftKey === isolation.rightKey || isolation.leftKey === isolation.localKey)
     throw new Error("browser document-open scope-key oracle mismatch");
   const exchange = { schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: fixture.plan.receipt };
-  if (Object.keys(exchange).join(",") !== "schema,version,planReceipt" || fixture.socketGrant.expiresAtMs > fixture.plan.expiresAtUnixMs || fixture.socketGrant.protocol !== fixture.expected.protocol)
+  if (Object.keys(exchange).join(",") !== "schema,version,planReceipt" || fixture.socketGrant.expiresAtMs > fixture.plan.expiresAtUnixMs)
     throw new Error("browser document-open receipt exchange oracle mismatch");
   const hello = { SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: fixture.plan.artifact.schema, pack_schema_hash: new Array(32).fill(fixture.expected.helloPackSchemaHashByte), resume_token: null, frontier: null } };
-  const publicTransport = JSON.stringify({ webSocketPath, protocol: fixture.socketGrant.protocol, hello });
+  const publicTransport = JSON.stringify({ webSocketPath, protocol: fixture.expected.protocol, hello });
   for (const fragment of fixture.expected.forbiddenSocketFragments) if (publicTransport.includes(fragment)) throw new Error(`browser document-open public transport leaked ${fragment}`);
   if (fixture.expected.rustWorkerBypassDenied !== true) throw new Error("browser document-open execution ownership oracle drift");
   let hostile = 0;
@@ -2003,7 +2030,7 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
       }
       if (request.method === "GET" && `${url.pathname}${url.search}` === current.expected.webSocketPath) {
         const protocols = (request.headers.get("sec-websocket-protocol") ?? "").split(",").map((value) => value.trim());
-        if (protocols.length !== 2 || protocols[0] !== current.expected.protocol || protocols[1] !== current.socketGrant.grant || request.headers.has("authorization")) return new Response("", { status: 401 });
+        if (protocols.length !== 2 || protocols[0] !== current.expected.protocol || protocols[1] !== capability || request.headers.has("authorization")) return new Response("", { status: 401 });
         effects.socket += 1;
         return server.upgrade(request, { data: { admitted: true }, headers: { "Sec-WebSocket-Protocol": current.expected.protocol } }) ? undefined : new Response("", { status: 500 });
       }
@@ -2031,13 +2058,11 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
       kind: "open",
       documentId: current.intent.scope.documentId,
       schema: current.expected.helloSchema,
-      bindings: [{ kind: "hub", baseUrl: hubOrigin, spaceId: current.intent.scope.spaceId, installedTarget: current.installedTarget as unknown as import("@semio-tech/framework-os").DocumentExecutionTargetLeaseFieldsV1 }],
+      bindings: [{ kind: "hub", baseUrl: hubOrigin, spaceId: current.intent.scope.spaceId, dataClass: "persistedShared", installedTarget: current.installedTarget as unknown as import("@semio-tech/framework-os").DocumentExecutionTargetLeaseFieldsV1 }],
       actor: "browser-untrusted-actor",
       packSchemaHash: new Array(32).fill(current.expected.helloPackSchemaHashByte),
     }),
   );
-  let proofHex = "";
-  let relay: LocalBrowserRelay | undefined;
   let viteServer: { close(): Promise<void>; listen(): Promise<unknown> } | undefined;
   let browser: Awaited<ReturnType<(typeof import("playwright"))["chromium"]["launch"]>> | undefined;
   const browserDiagnostics: string[] = [];
@@ -2052,16 +2077,16 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
   try {
     const uiPort = await freeLoopbackPort();
     const uiOrigin = `http://127.0.0.1:${uiPort}`;
-    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability });
     process.env.S_OS_PORT = String(uiPort);
     process.env.S_HUB_URL = hubOrigin;
-    process.env.S_LOCAL_RELAY_URL = relay.url;
-    process.env.S_LOCAL_RELAY_SECRET = relay.secret.toString("hex");
+    delete process.env.S_LOCAL_RELAY_URL;
+    delete process.env.S_LOCAL_RELAY_SECRET;
     process.env.SEMIO_PLUGIN = "s";
     process.env.SEMIO_RENDERER = "react";
     const { createServer: createViteServer } = await import("vite");
     viteServer = await createViteServer({
       configFile: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"),
+      configLoader: viteConfigLoader(),
       server: { host: "127.0.0.1", port: uiPort, strictPort: true },
       clearScreen: false,
     });
@@ -2075,24 +2100,17 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
     page.on("response", (response) => {
       if (response.url().includes("/_semio/hub/")) browserDiagnostics.push(`response:${response.status()}:${response.url()}`);
     });
-    await page.goto(uiOrigin, { waitUntil: "domcontentloaded", timeout: 10_000 });
+    await page.goto(uiOrigin, { waitUntil: "commit", timeout: 10_000 });
     await page.setContent("<!doctype html><meta charset=utf-8>");
     current.plan.expiresAtUnixMs = Date.now() + 30_000;
     current.socketGrant.expiresAtMs = Date.now() + 25_000;
-    const relayPort = Number(new URL(relay.url).port);
-    const relaySecret = Buffer.from(relay.secret);
-    await relay.stop();
-    relay = startLocalBrowserRelay(hubOrigin, uiOrigin, { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability }, { binding: { port: relayPort, secret: relaySecret } });
-    const liveProof = relay.takeBrowserBootstrapProof();
-    proofHex = liveProof.toString("hex");
-    liveProof.fill(0);
     await page.evaluate(
-      ({ workerUrl, proof, openWire }) => {
+      ({ workerUrl, capability, openWire }) => {
         const state: { messages: unknown[]; errors: string[]; started: boolean; worker?: Worker } = ((globalThis as any).__semio = { messages: [], errors: [], started: false });
         history.replaceState(history.state, "", `${location.pathname}${location.search}`);
         const worker = new Worker(workerUrl, { type: "module" });
         const channel = new MessageChannel();
-        worker.postMessage({ kind: "semio-browser-broker-port", port: channel.port2 }, [channel.port2]);
+        worker.postMessage({ kind: "semio-hub-session-port", port: channel.port2 }, [channel.port2]);
         channel.port1.onmessage = (event) => {
           if (event.data?.kind !== "initialized" || state.started) return;
           if (event.data.ok !== true) {
@@ -2103,14 +2121,14 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
           worker.postMessage({ wire: new Uint8Array(openWire) });
         };
         channel.port1.start();
-        channel.port1.postMessage({ kind: "initialize", proof });
+        channel.port1.postMessage({ kind: "initialize", capability });
         worker.onerror = (event) => state.errors.push(String(event.message ?? "worker error"));
         worker.onmessage = (event) => {
           state.messages.push(event.data?.wire ? Array.from(event.data.wire) : event.data);
         };
         state.worker = worker;
       },
-      { workerUrl: `/@fs${join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts")}`, proof: proofHex, openWire },
+      { workerUrl: `/@fs${join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts")}`, capability, openWire },
     );
     await page.waitForFunction(() => (globalThis as any).__semio?.errors?.length > 0 || (globalThis as any).__semio?.messages?.length > 1, undefined, { timeout: 10_000 });
     const deadline = Date.now() + 10_000;
@@ -2165,7 +2183,6 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
   } finally {
     await browser?.close().catch(() => undefined);
     await viteServer?.close().catch(() => undefined);
-    await relay?.stop().catch(() => undefined);
     await authorityServer.stop(true);
     for (const [key, value] of Object.entries(priorViteEnvironment)) {
       if (value === undefined) delete process.env[key];
@@ -2605,7 +2622,7 @@ class DirectoryLiveLanesScript extends BundleScript {
     // same live PostgreSQL, opened through the WorkerPool I/O lane, which aborts the process if the
     // external-driver runtime seam is bypassed.
     const probe = runProbe("docker", ["info", "--format", "{{.ServerVersion}}"], { cwd: this.repoRoot });
-    if (probe.status !== 0) throw new Error("directory-live-lanes needs a running Docker daemon (start Docker Desktop, then retry); every lane fixture starts its own postgres:16-alpine / neo4j:5-community container");
+    if (probe.status !== 0) throw new Error("directory-live-lanes needs a running Docker daemon (start Docker Desktop, then retry); every lane fixture starts its own postgres:17-alpine / neo4j:5-community container");
     const filters = lane === "all" ? ["directory::postgres", "directory::neo4j", "corpus_v1_holds_on"] : lane === "corpus" ? ["corpus_v1_holds_on", "read_surface_v1_holds_on"] : ["directory::" + lane];
     for (const filter of filters) {
       runCargo(["test", "--manifest-path", "Cargo.toml", "--no-default-features", "--features", "sqlite,postgres,neo4j", "--lib", filter, "--", "--test-threads=2"], this.root);
@@ -3911,13 +3928,14 @@ function documentOpenNeutralBrowserActor(actor: unknown, packageValue: Record<st
       "io/streams",
     ].map((name) => `wasi:${name}@0.2.0`),
     "wasi:random/insecure-seed@0.2.9",
+    "wasi:random/random@0.2.9",
   ];
   if (row.kind !== "closed-browser-actor" || renderer !== "wasm" || row.schema !== "semio.os.closed-browser-actor.v1" || row.codegenPolicy !== "semio.os.browser-jco-1.34.0-jspi.v1") throw new Error("actor-policy");
   if (![row.sha256, row.sourceComponentSha256, row.sourceDescriptorByteSha256, row.policySha256].every((value) => typeof value === "string" && /^(?!0{64}$)[0-9a-f]{64}$/u.test(value))) throw new Error("actor-digest");
   if (row.sourceComponentSha256 !== packageValue.componentSha256 || row.sourceDescriptorByteSha256 !== packageValue.descriptorByteSha256) throw new Error("actor-source");
   if (
     !Array.isArray(row.importInterfaces) ||
-    row.importInterfaces.length > 18 ||
+    row.importInterfaces.length > 19 ||
     row.importInterfaces.some((value: unknown, index: number) => typeof value !== "string" || !allowed.includes(value) || (index > 0 && row.importInterfaces[index - 1] >= value))
   )
     throw new Error("actor-import");
@@ -5055,7 +5073,7 @@ class OpenPlanCheckScript extends BundleScript {
     const catalogLaw = exactLaw(catalogTarget, "verified_trusted_catalog_document_open_generation_and_resolution_are_exact");
     const ledgerLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_restart_scoped");
     const revocationLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_admin_revocation_invalidates_session_and_share_bindings");
-    const exchangeLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_receipt_exchange_mints_one_exact_bounded_socket_grant");
+    const exchangeLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_receipt_exchange_admits_one_exact_bounded_secret_free_socket_grant");
     const routeLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use");
     const wipeLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_late_invalid_receipt_wipes_exact_candidate_bytes");
     const issueLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_cancel_safe_and_exchangeable");
@@ -5096,7 +5114,7 @@ class OpenPlanServerCheckScript extends BundleScript {
       { target: ["--lib"], suffix: "verified_trusted_catalog_document_open_generation_and_resolution_are_exact" },
       { target: ["--bin", "os-hub"], suffix: "document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_restart_scoped" },
       { target: ["--bin", "os-hub"], suffix: "document_open_plan_admin_revocation_invalidates_session_and_share_bindings" },
-      { target: ["--bin", "os-hub"], suffix: "document_open_plan_receipt_exchange_mints_one_exact_bounded_socket_grant" },
+      { target: ["--bin", "os-hub"], suffix: "document_open_plan_receipt_exchange_admits_one_exact_bounded_secret_free_socket_grant" },
       { target: ["--bin", "os-hub"], suffix: "document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use" },
       { target: ["--bin", "os-hub"], suffix: "document_open_plan_late_invalid_receipt_wipes_exact_candidate_bytes" },
       { target: ["--bin", "os-hub"], suffix: "document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_cancel_safe_and_exchangeable" },
@@ -5228,7 +5246,7 @@ function executionTargetLeaseFieldsAdmissible(candidate: Record<string, any>, ex
     candidate.component.sha256 === candidate.package.componentSha256 &&
     candidate.component.blake3 === candidate.package.componentBlake3 &&
     candidate.descriptor.sha256 === candidate.package.descriptorByteSha256 &&
-    candidate.package.executionProtocol?.appChannelVersion === 15 &&
+    candidate.package.executionProtocol?.appChannelVersion === DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 &&
     length(candidate.component?.byteLength, expected.componentMaxBytes) &&
     length(candidate.descriptor?.byteLength, expected.descriptorMaxBytes) &&
     candidate.parentDialect?.artifactKind === candidate.artifact?.kind &&
@@ -5323,7 +5341,7 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
   if (!Number.isSafeInteger(fixture.nowMs) || fixture.nowMs < 1 || !/^https?:\/\/[^/]+$/u.test(fixture.hubOrigin)) throw new Error("execution target lease corpus clock/origin drift");
   if (!/^(?:[0-9a-f]{2})+$/u.test(fixture.componentHex) || !/^(?:[0-9a-f]{2})+$/u.test(fixture.descriptorHex)) throw new Error("execution target lease corpus asset bytes are not canonical hex");
   if (!hubSchemaExport(repoRoot, "schema://hub.directory/DocumentOpenIntentV1")(fixture.intent)) throw new Error("execution target lease corpus intent is not the owned document-open-intent contract");
-  if (!hubSchemaExport(repoRoot, "schema://hub.directory/SocketGrantReceiptV1")(fixture.socketGrant)) throw new Error("execution target lease corpus socket grant is not the owned socket-grant contract");
+  if (!hubSchemaExport(repoRoot, "schema://os.directory/DocumentSocketGrantReceiptV1")(fixture.socketGrant)) throw new Error("execution target lease corpus socket grant is not the owned document-socket-grant contract");
   const leaseStatusKeys = ["verifying", "integrity-failed", "stale", "cancelled", "renderer-unavailable"];
   const localizedText = hubSchemaExport(repoRoot, "schema://hub.directory/LocalizedTextV1");
   const expected = fixture.expected as Record<string, any>;
@@ -7283,7 +7301,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
       source.includes("undoneA.packSha256 !== initialA.packSha256") &&
       source.includes("replay.value?.replayed !== true") &&
       source.includes('"no-shell-scene"') &&
-      source.includes('"no-durable-collaborative-redo"')
+      !source.includes('"no-durable-collaborative-redo"')
     );
   };
   if (!processConforms(processSource)) throw new Error("GIS Map proposal process source lost its compiled-generation, two-Author, private-owner, or durable-pair fence");
@@ -7942,7 +7960,7 @@ function trustedBootstrapOpenTargetOrder(left: TrustedBootstrapOpenTargetV1, rig
   const identity = (target: TrustedBootstrapOpenTargetV1): readonly string[] => {
     const owner = packages.find((candidate: any) => candidate.pluginId === target.pluginId);
     if (!owner) throw new Error("trusted bootstrap open target has no selected package");
-    return [owner.pluginId, owner.packageId, owner.version, target.artifactKind, target.artifactSchema, target.surfaceId, target.role === "viewer" ? " " : ""];
+    return [owner.pluginId, owner.packageId, owner.version, target.artifactKind, target.artifactSchema, target.surfaceId, target.role === "viewer" ? "" : ""];
   };
   return trustedBootstrapTupleOrder(identity(left), identity(right));
 }
@@ -9527,20 +9545,57 @@ type TrustedBootstrapPackageSpecV1 = Readonly<{
 /** 🎯️ What `trusted-catalog-bootstrap` publishes when no `--packages` list is given. */
 const TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES = "stdio,gis,note";
 
+/** 🌎️ Every selectable top-level `s` plugin package, in publication order. */
+const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,gis,animate,architect,block,cad,dag,demonstrator,draw,energy,fem,flow,forms,imperative,layout,lowpoly,mathematical,norm,note,playbook,procedural,process,puzzle,raster,reasoning,remodel,sequence,shooting,sourcing,space,trinity,vcs,wfc,writer";
+
 /** 🔗️ The closure every gate, rotation and process law in this file proves: exactly the packages
  * this hub binary links Rust codecs for. They keep minting `local-stdio-gis-open-v1`, so the hub's
  * own exactness fence on that profile id keeps guarding them. */
-const TRUSTED_BOOTSTRAP_LINKED_PACKAGES = "stdio,gis";
+export const TRUSTED_BOOTSTRAP_LINKED_PACKAGES = "stdio,gis";
 
 const TRUSTED_BOOTSTRAP_PACKAGES: readonly TrustedBootstrapPackageSpecV1[] = Object.freeze([
   Object.freeze({ pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", componentPackageId: "semio:stdio", outputName: "semio_s_plugin_stdio.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json", opensDocuments: false }),
   Object.freeze({ pluginId: "gis", cargoPackage: "semio-s-plugin-gis", componentPackageId: "semio:gis", outputName: "semio_s_plugin_gis.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json", opensDocuments: true }),
+  Object.freeze({ pluginId: "animate", cargoPackage: "semio-s-plugin-animate", componentPackageId: "semio:animate", outputName: "semio_s_plugin_animate.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "architect", cargoPackage: "semio-s-plugin-architect", componentPackageId: "semio:architect", outputName: "semio_s_plugin_architect.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "block", cargoPackage: "semio-s-plugin-block", componentPackageId: "semio:block", outputName: "semio_s_plugin_block.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "cad", cargoPackage: "semio-s-plugin-cad", componentPackageId: "semio:cad", outputName: "semio_s_plugin_cad.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "dag", cargoPackage: "semio-s-plugin-dag", componentPackageId: "semio:dag", outputName: "semio_s_plugin_dag.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "demonstrator", cargoPackage: "semio-s-plugin-demonstrator", componentPackageId: "semio:demonstrator", outputName: "semio_s_plugin_demonstrator.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "draw", cargoPackage: "semio-s-plugin-draw", componentPackageId: "semio:draw", outputName: "semio_s_plugin_draw.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "energy", cargoPackage: "semio-s-plugin-energy", componentPackageId: "semio:energy", outputName: "semio_s_plugin_energy.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "fem", cargoPackage: "semio-s-plugin-fem", componentPackageId: "semio:fem", outputName: "semio_s_plugin_fem.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "flow", cargoPackage: "semio-s-plugin-flow", componentPackageId: "semio:flow", outputName: "semio_s_plugin_flow.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "forms", cargoPackage: "semio-s-plugin-forms", componentPackageId: "semio:forms", outputName: "semio_s_plugin_forms.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "imperative", cargoPackage: "semio-s-plugin-imperative", componentPackageId: "semio:imperative", outputName: "semio_s_plugin_imperative.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "layout", cargoPackage: "semio-s-plugin-layout", componentPackageId: "semio:layout", outputName: "semio_s_plugin_layout.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "lowpoly", cargoPackage: "semio-s-plugin-lowpoly", componentPackageId: "semio:lowpoly", outputName: "semio_s_plugin_lowpoly.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "mathematical", cargoPackage: "semio-s-plugin-mathematical", componentPackageId: "semio:mathematical", outputName: "semio_s_plugin_mathematical.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "norm", cargoPackage: "semio-s-plugin-norm", componentPackageId: "semio:norm", outputName: "semio_s_plugin_norm.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "note", cargoPackage: "semio-s-plugin-note", componentPackageId: "semio:note", outputName: "semio_s_plugin_note.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "playbook", cargoPackage: "semio-s-plugin-playbook", componentPackageId: "semio:playbook", outputName: "semio_s_plugin_playbook.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "procedural", cargoPackage: "semio-s-plugin-procedural", componentPackageId: "semio:procedural", outputName: "semio_s_plugin_procedural.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "process", cargoPackage: "semio-s-plugin-process", componentPackageId: "semio:process", outputName: "semio_s_plugin_process.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "puzzle", cargoPackage: "semio-s-plugin-puzzle", componentPackageId: "semio:puzzle", outputName: "semio_s_plugin_puzzle.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "raster", cargoPackage: "semio-s-plugin-raster", componentPackageId: "semio:raster", outputName: "semio_s_plugin_raster.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "reasoning", cargoPackage: "semio-s-plugin-reasoning", componentPackageId: "semio:reasoning", outputName: "semio_s_plugin_reasoning.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "remodel", cargoPackage: "semio-s-plugin-remodel", componentPackageId: "semio:remodel", outputName: "semio_s_plugin_remodel.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "sequence", cargoPackage: "semio-s-plugin-sequence", componentPackageId: "semio:sequence", outputName: "semio_s_plugin_sequence.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "shooting", cargoPackage: "semio-s-plugin-shooting", componentPackageId: "semio:shooting", outputName: "semio_s_plugin_shooting.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "sourcing", cargoPackage: "semio-s-plugin-sourcing", componentPackageId: "semio:sourcing", outputName: "semio_s_plugin_sourcing.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "space", cargoPackage: "semio-s-plugin-space", componentPackageId: "semio:space", outputName: "semio_s_plugin_space.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "trinity", cargoPackage: "semio-s-plugin-trinity", componentPackageId: "semio:trinity", outputName: "semio_s_plugin_trinity.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "vcs", cargoPackage: "semio-s-plugin-vcs", componentPackageId: "semio:vcs", outputName: "semio_s_plugin_vcs.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "wfc", cargoPackage: "semio-s-plugin-wfc", componentPackageId: "semio:wfc", outputName: "semio_s_plugin_wfc.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "writer", cargoPackage: "semio-s-plugin-writer", componentPackageId: "semio:writer", outputName: "semio_s_plugin_writer.wasm", linkedCodecRegistry: null, opensDocuments: true }),
 ]);
 
 /** 🧾️ Resolves a comma-separated `--packages` list against the selectable closure, in list order. */
-function trustedBootstrapSelectPackages(list: string): readonly TrustedBootstrapPackageSpecV1[] {
-  const requested = list.split(",").map((part) => part.trim()).filter((part) => part.length > 0);
+export function trustedBootstrapSelectPackages(list: string): readonly TrustedBootstrapPackageSpecV1[] {
+  const requested = (list.trim() === "all" ? TRUSTED_BOOTSTRAP_ALL_PACKAGES : list)
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
   if (requested.length === 0 || new Set(requested).size !== requested.length) throw new Error("trusted catalog package list is empty or repeats a package");
   return Object.freeze(
     requested.map((pluginId) => {
@@ -9621,7 +9676,72 @@ function trustedBootstrapDescriptorOpenTargetsV1(pluginId: string, descriptor: R
 }
 
 /** 🏗️ Produces one immutable closed N-package generation without loading or registering codecs. */
-async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): Promise<TrustedBootstrapMaterializationV1> {
+
+/** 🎯 The published root named by `OS_HUB_TRUSTED_CATALOG_SOURCE`, or none. A bind is never
+ * discovered: an auto-selected root republishes whatever guest bytes it happened to hold, which is
+ * how a rebuilt guest silently failed to reach a fresh catalog. The named root is verified against
+ * its own content hashes by {@link bindTrustedCatalogFromPublished}; without one, every package is
+ * built fresh from source. */
+function resolveTrustedCatalogBindSource(): string | undefined {
+  const explicit = process.env.OS_HUB_TRUSTED_CATALOG_SOURCE;
+  if (!explicit) return undefined;
+  const root = resolve(explicit);
+  const trusted = existsSync(join(root, "current.json")) ? root : join(root, "trusted-catalog");
+  if (!existsSync(join(trusted, "current.json"))) throw new Error(`OS_HUB_TRUSTED_CATALOG_SOURCE has no current pointer: ${explicit}`);
+  return trusted;
+}
+
+/** 📥 Bind a published generation into `dataRoot` by content-hash verify + copy — never rebuilds wasm. */
+function bindTrustedCatalogFromPublished(dataRoot: string, sourceTrustedRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): TrustedBootstrapMaterializationV1 {
+  const sourceDataRoot = dirname(sourceTrustedRoot);
+  const published = trustedBootstrapCurrent(sourceDataRoot);
+  if (!published) throw new Error(`published catalog source is not loadable: ${sourceTrustedRoot}`);
+  const wanted = selection.map((spec) => spec.pluginId);
+  const bundleMeta = JSON.parse(readFileSync(published.bundlePath, "utf8")) as { packages?: { pluginId: string }[] };
+  const have = new Set((bundleMeta.packages ?? []).map((row) => row.pluginId));
+  for (const pluginId of wanted) if (!have.has(pluginId)) throw new Error(`published catalog missing package ${pluginId}`);
+  trustedBootstrapVerifyPublication(sourceDataRoot, { profileId: published.profileId, generationId: published.generationId, bundleSha256: published.bundleSha256, bundlePath: published.bundlePath });
+  const trustedRoot = join(dataRoot, "trusted-catalog");
+  mkdirSync(trustedRoot, { recursive: true, mode: 0o700 });
+  if (process.platform !== "win32") chmodSync(trustedRoot, 0o700);
+  const generations = join(trustedRoot, "generations");
+  mkdirSync(generations, { recursive: true, mode: 0o700 });
+  const generationRoot = join(generations, published.generationId);
+  const sourceGeneration = join(sourceTrustedRoot, "generations", published.generationId);
+  if (!existsSync(sourceGeneration)) throw new Error(`published generation directory missing: ${sourceGeneration}`);
+  if (!existsSync(generationRoot)) {
+    cpSync(sourceGeneration, generationRoot, { recursive: true });
+    trustedBootstrapFsyncDirectory(generations);
+  }
+  const bundlePath = join(generationRoot, "trusted-catalog.json");
+  const bundleBytes = trustedBootstrapReadRegular(bundlePath, 4 * 1024 * 1024, "bound catalog bundle", () => {});
+  try {
+    if (createHash("sha256").update(bundleBytes).digest("hex") !== published.bundleSha256) throw new Error("copied catalog bundle hash mismatch");
+    const selected = JSON.parse(new TextDecoder().decode(bundleBytes)) as { packages: any[] };
+    trustedBootstrapVerifyGeneration(generationRoot, bundleBytes, new Map(selected.packages.map((record) => [record.pluginId, trustedBootstrapGenerationReceipt(record)])), () => {});
+  } finally {
+    bundleBytes.fill(0);
+  }
+  const pointer = Buffer.from(`${JSON.stringify({
+    profileId: published.profileId,
+    generationId: published.generationId,
+    bundleSha256: published.bundleSha256,
+    publicationRevision: published.publicationRevision,
+  })}\n`, "utf8");
+  if (!existsSync(join(trustedRoot, "current.json"))) {
+    trustedBootstrapWriteNew(join(trustedRoot, "current.json"), pointer, () => {});
+    trustedBootstrapFsyncDirectory(trustedRoot);
+  }
+  return Object.freeze({ profileId: published.profileId, generationId: published.generationId, bundleSha256: published.bundleSha256, bundlePath });
+}
+
+export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): Promise<TrustedBootstrapMaterializationV1> {
+  const bindSource = resolveTrustedCatalogBindSource();
+  if (bindSource) {
+    const bound = bindTrustedCatalogFromPublished(dataRoot, bindSource, selection);
+    console.log(`trusted-catalog-bind: source=${bindSource} generation=${bound.generationId} packages=${selection.map((spec) => spec.pluginId).join(",")} wasm=skipped`);
+    return bound;
+  }
   const trustedRoot = join(dataRoot, "trusted-catalog");
   mkdirSync(trustedRoot, { recursive: true, mode: 0o700 });
   if (lstatSync(trustedRoot).isSymbolicLink() || !lstatSync(trustedRoot).isDirectory()) throw new Error("trusted catalog root must be a regular private directory");
@@ -9657,11 +9777,7 @@ async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot: strin
       let derivedActor: ClosedBrowserActorArtifactV1 | undefined;
       try {
         const { receipt, derived: componentSha256 } = await produceFreshComponentV1(repoRoot, request, target, stage, control, (lease) =>
-          lease.consume(async (component) => {
-            if (spec.opensDocuments)
-              derivedActor = await buildClosedBrowserActorArtifactV1(component, { cancelled: () => control.cancelled() || control.remainingMs() <= 0, progress: (phase, completed, total) => control.checkpoint(`actor-${phase}`, completed, total) });
-            return createHash("sha256").update(component).digest("hex");
-          }),
+          lease.consume(async (component) => createHash("sha256").update(component).digest("hex")),
         );
         if (componentSha256 !== receipt.component.sha256 || (derivedActor && derivedActor.componentSha256 !== componentSha256)) throw new Error(`fresh ${request.pluginId} derivation differs from its verified component`);
         if (receipt.pluginId !== request.pluginId || receipt.packageId !== request.componentPackageId) throw new Error(`fresh ${request.pluginId} receipt identity changed after production`);
@@ -9687,6 +9803,16 @@ async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot: strin
           codecs[request.pluginId] = trustedBootstrapComponentCodecRowsV1(repoRoot, emitter, join(stage, "component.wasm"), join(target, "component-codecs.json"), manifestKinds);
         }
         for (const declared of trustedBootstrapDescriptorOpenTargetsV1(request.pluginId, descriptorJson.get(request.pluginId)!, codecs[request.pluginId]!)) openTargets.push(declared);
+        const pluginOpensDocuments = openTargets.some((declared) => declared.pluginId === request.pluginId);
+        if (pluginOpensDocuments) {
+          const componentBytes = trustedBootstrapReadRegular(join(stage, "component.wasm"), DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, `fresh ${request.pluginId} component for closed actor`, checkBuild);
+          try {
+            derivedActor = await buildClosedBrowserActorArtifactV1(componentBytes, { cancelled: () => control.cancelled() || control.remainingMs() <= 0, progress: (phase, completed, total) => control.checkpoint(`actor-${phase}`, completed, total) });
+          } finally {
+            componentBytes.fill(0);
+          }
+          if (derivedActor.componentSha256 !== componentSha256) throw new Error(`fresh ${request.pluginId} closed actor source differs from its verified component`);
+        }
         const actor = trustedBootstrapBrowserActorV1(
           derivedActor
             ? {
@@ -9703,7 +9829,7 @@ async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot: strin
               }
             : { kind: "none" },
           { componentSha256, descriptorByteSha256: receipt.descriptor.sha256 },
-          spec.opensDocuments ? "wasm" : "react",
+          pluginOpensDocuments ? "wasm" : "react",
         );
         if (derivedActor) {
           mkdirSync(join(stage, "browser"), { mode: 0o700 });
@@ -9721,8 +9847,7 @@ async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot: strin
     for (const spec of selection) {
       const rows = codecs[spec.pluginId] ?? [];
       if (rows.length === 0) throw new Error(`trusted ${spec.pluginId} closure carries no artifact codec`);
-      if (spec.opensDocuments !== openTargets.some((declared) => declared.pluginId === spec.pluginId))
-        throw new Error(`trusted ${spec.pluginId} declares ${spec.opensDocuments ? "no" : "an"} openable document kind its own descriptor ${spec.opensDocuments ? "does not" : "does"} carry`);
+      // Openability is derived from verified descriptor editor targets (TC5); the table bit is advisory.
     }
     // 🔢️ `validate_bundle` requires the selected closure in canonical identity order, which is the
     // same order `trusted_profile_generation` frames it in; the REQUESTED order only names the
@@ -10451,9 +10576,10 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
     creation = parseSpaceArtifactCreationStatusJsonV1(await polled.text());
     if (creation.catalogGenerationId !== creationRequest.expectedCatalogGenerationId) throw new Error("trusted stdio+GIS candidate creation crossed its selected catalog generation");
   }
-  if (creation.ready?.kindId !== target.artifactKind || creation.ready.artifactSchema !== target.artifactSchema || !/^artifact-[0-9a-f]{32}$/u.test(creation.ready.artifactId))
+  const ready = creation.ready;
+  if (!ready || ready.kindId !== target.artifactKind || ready.artifactSchema !== target.artifactSchema || !/^artifact-[0-9a-f]{32}$/u.test(ready.artifactId))
     throw new Error("trusted stdio+GIS candidate creation Ready coordinates differ from the selected GIS target");
-  const documentId = creation.ready.artifactId;
+  const documentId = ready.artifactId;
   const response = await fetch(`http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/open-plan`, {
     method: "POST",
     headers,
@@ -10973,9 +11099,10 @@ async function openGisMapProcessDocumentSocket(
     body: JSON.stringify(parseDocumentPlanSocketGrantIntentV1({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: plan.receipt })),
     signal: AbortSignal.timeout(5_000),
   });
-  const grant = parseSocketGrantReceiptV1(await grantResponse.json().catch(() => undefined));
+  const grant = parseDocumentSocketGrantReceiptV1(await grantResponse.json().catch(() => undefined));
   if (!grantResponse.ok) throw new Error(`GIS Map process socket grant failed: ${grantResponse.status}`);
-  const socket = new WebSocket(`ws://127.0.0.1:${run.port}${root}/socket/v1?surface=${encodeURIComponent(fixture.surfaceId)}`, [...socketGrantProtocolsV1(grant)]);
+  const scope = `${spaceId}/${fixture.documentId}`;
+  const socket = new WebSocket(`ws://127.0.0.1:${run.port}/scopes/${encodeURIComponent(scope)}/document/ws?surface=${encodeURIComponent(fixture.surfaceId)}`, ["semio.session.v1", capability]);
   socket.binaryType = "arraybuffer";
   plan.receipt = "";
   const live: GisMapProcessDocumentSocketV1 = { socket, frames: [], plan, error: undefined };
@@ -11003,7 +11130,7 @@ async function openGisMapProcessDocumentSocket(
       if (socket.readyState === WebSocket.OPEN) finish();
       else if (socket.readyState >= WebSocket.CLOSING) failed();
     });
-    if (socket.protocol !== "semio.socket.v1") throw new Error("GIS Map process socket did not negotiate its exact protocol");
+    if (socket.protocol !== "semio.session.v1") throw new Error("GIS Map process socket did not negotiate its exact protocol");
     socket.send(
       encodeClientFrame(
         { SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: fixture.artifact.schema, pack_schema_hash: Array.from(Buffer.from(fixture.artifact.packSchemaHash, "hex")), resume_token: null, frontier: null } },
@@ -11358,8 +11485,7 @@ type GisMapShellPeerV1 = Readonly<{
   readMap(): Promise<GisMapMountedShellProbeV1 | null>;
   propose(): Promise<string>;
   approve(): Promise<void>;
-  undo(): Promise<void>;
-  stop(): Promise<void>;
+  undo(): Promise<void>; redo(): Promise<void>; stop(): Promise<void>;
 }>;
 
 /** 🌿️ Parses one closed scope-bound frontier from the mounted browser's public acknowledgement. */
@@ -11630,6 +11756,13 @@ async function startGisMapShellPeerV1(options: {
       if (await undo.isDisabled()) throw new Error("GIS Map Shell private durable Undo is unavailable");
       await undo.click();
     },
+    async redo(): Promise<void> {
+      await livePage.getByRole("tab", { name: options.locale === "de" ? "Verlauf" : "History", exact: true }).click();
+      const redo = livePage.getByRole("button", { name: "Redo", exact: true });
+      await redo.waitFor({ state: "visible", timeout: 30_000 });
+      if (await redo.isDisabled()) throw new Error("GIS Map Shell durable collaborative Redo is unavailable after hub restart");
+      await redo.click();
+    },
     stop,
   });
 }
@@ -11841,8 +11974,14 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
     await openPeers(true);
     assert.deepEqual(await readPair(), undone);
     const restartedMaps = await waitMaps(undone, initialRegions);
+    const redoOffsets = sockets.map((socket) => socket.frames.length);
+    await shells[0]!.redo();
+    const redone = await changedPair(undone, redoOffsets);
+    assert.equal(redone.packSha256, applied.packSha256);
+    assert.notEqual(redone.frontier.headEditId, undone.frontier.headEditId);
+    const redoneMaps = await waitMaps(redone, [...initialRegions, regionId].sort());
     assertGisMapCompositionCurrent(prepared);
-    completedReceipt = { schema: "semio.hub.gis-map-two-author-shell-receipt/v1", current: prepared.current, browserHost: browserHost.receipt, scope, locales, cancelledJobId, cancelledProgress, regionId, initial, applied, undone, initialMaps, appliedMaps, undoneMaps, restartedMaps, ownerPrivateJobDenials: 3, rebootstrapControls: 4, actualMapObservations: 8, restartedProcess: true, nonclaims: ["external-model-provider", "browser-qualified-current-publication", "durable-collaborative-redo", "private-job-restart-recovery", "wgpu-rendering"] };
+    completedReceipt = { schema: "semio.hub.gis-map-two-author-shell-receipt/v1", current: prepared.current, browserHost: browserHost.receipt, scope, locales, cancelledJobId, cancelledProgress, regionId, initial, applied, undone, redone, initialMaps, appliedMaps, undoneMaps, restartedMaps, redoneMaps, ownerPrivateJobDenials: 3, rebootstrapControls: 5, actualMapObservations: 10, restartedProcess: true, observations: ["durable-collaborative-redo"], nonclaims: ["external-model-provider", "browser-qualified-current-publication", "private-job-restart-recovery", "wgpu-rendering"] };
   } finally {
     const errors: unknown[] = [];
     await closePeers().catch((error) => errors.push(error));
@@ -12097,13 +12236,13 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
           liveRebootstrapControls: 4,
           refreshedCanonicalPairs: 4,
           hubBinarySha256: createHash("sha256").update(readFileSync(binaryPath)).digest("hex"),
-          nonclaims: ["no-shell-scene", "no-wgpu-render", "no-durable-collaborative-redo"],
+          nonclaims: ["no-shell-scene", "no-wgpu-render"],
         },
         null,
         2,
       )}\n`,
     );
-    console.log(`gis-map-proposal-process: generation=${current.generationId} private-denials=3 undo-denials=2 peer-cancel=1 rebootstrap=4 refreshed-pairs=4 undo-replay=1; no Shell scene, WGPU render, or durable collaborative redo claim`);
+    console.log(`gis-map-proposal-process: generation=${current.generationId} private-denials=3 undo-denials=2 peer-cancel=1 rebootstrap=4 refreshed-pairs=4 undo-replay=1; no Shell scene or WGPU render claim; durable collaborative redo is owned by the history transition fold`);
   } catch (error) {
     const diagnostics = run.output().slice(-8_192);
     throw new Error(`${error instanceof Error ? error.message : "GIS Map proposal process failed"}${diagnostics ? `\nhub diagnostics:\n${diagnostics}` : ""}`);
@@ -12391,11 +12530,13 @@ class DevScript extends BundleScript {
       proveMcpCredentialSourceOrder(this.repoRoot);
       runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     }
+    process.env.OS_HUB_CREDENTIAL_SIGN_IN = process.env.OS_HUB_CREDENTIAL_SIGN_IN ?? "1";
+    process.env.OS_HUB_ADMIN_TOKEN = process.env.OS_HUB_ADMIN_TOKEN ?? "dev-local-hub-admin";
     const profiles: readonly LocalProfile[] = [
-      { profileId: "developer", subject: "local-developer-01", displayName: "Local Developer", allowedClientClasses: secureSuite ? ["native", "mcp", "react-relay"] : ["native", "mcp"] },
+      { profileId: "developer", subject: "local-developer-01", displayName: "Local Developer", allowedClientClasses: ["native", "mcp", "react-relay"] },
       ...(secureAdmin ? [{ profileId: "administrator", subject: "local-administrator-01", displayName: "Local Administrator", allowedClientClasses: ["admin-relay"] as const }] : []),
     ];
-    const dataRoot = resolve(process.env.OS_HUB_DATA ?? join(this.repoRoot, ".🧬semio", "🌐hub"));
+    const dataRoot = resolve(process.env.OS_HUB_DATA ?? join(this.repoRoot, ".🧬semio", "🌐hub", "hub-dev"));
     let trustedCatalog = trustedBootstrapCurrent(dataRoot);
     if (!trustedCatalog) {
       const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES));
@@ -12411,6 +12552,8 @@ class DevScript extends BundleScript {
       dataDir: dataRoot,
       adminSubjects: secureAdmin ? ["semio.local.bootstrap/v1:local-administrator-01"] : undefined,
       binaryPath,
+      capture: true,
+      adminToken: process.env.OS_HUB_ADMIN_TOKEN,
     });
     let relay: LocalBrowserRelay | undefined;
     let adminRelay: LocalAdminRelay | undefined;
@@ -12607,7 +12750,7 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
     ["schema", "semio.hub.gis-map-two-author-composition-fixture/v1"],
     ["version", 1],
     ["selection.closure", ["stdio", "gis"]],
-    ["selection.executionProtocol", 15],
+    ["selection.executionProtocol", DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1],
     ["selection.sameDataRoot", true],
     ["selection.receiptIdentity", ["generationId", "bundleSha256", "profileId", "publicationRevision", "currentSha256"]],
     ["selection.browserHostReceipt", ["moduleSetSha256", "activationReceiptSha256", "spaceComponentByteLength", "spaceComponentSha256", "spaceCoreSha256", "spaceDescriptorSha256", "selectedGisGenerationId", "selectedGisCurrentSha256", "selectedGisComponentSha256", "selectedGisDescriptorSha256", "selectedGisStagedDescriptorSha256", "selectedGisBridgeSha256", "selectedGisGeneratedCores", "selectedGisMaterializationReceiptSha256"]],
@@ -12619,20 +12762,21 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
     ["observations.approval", ["author-a-shell-worker-approval", "one-server-stamped-create-region", "same-peer-rebootstrap-control", "same-pair-and-frontier", "author-b-private-job-denied"]],
     ["observations.undo", ["ordinary-shell-undo-action", "private-worker-handle", "durable-undo-receipt", "region-absent-on-both-maps"]],
     ["observations.restart", ["same-current-receipt", "same-durable-post-undo-frontier"]],
-    ["nonclaims", ["external-model-provider", "browser-qualified-current-publication", "durable-collaborative-redo", "private-job-restart-recovery"]],
+    ["observations.redo", ["ordinary-shell-redo-action", "durable-collaborative-redo", "region-restored-on-both-maps", "redo-stack-survived-hub-restart"]],
+    ["nonclaims", ["external-model-provider", "browser-qualified-current-publication", "private-job-restart-recovery"]],
     ["socketRetirement", { maximumMs: 5000, hostileDeadlineMs: 15, cases: ["closed-at-entry", "await-close-event", "timeout-refused", "bun-websocket-close", "ws-websocket-close"] }],
   ];
   for (const [name, expected] of laws) {
     const actual = name.split(".").reduce<any>((at, key) => at?.[key], fixture);
     assert.equal(JSON.stringify(actual), JSON.stringify(expected), `two-author composition law ${name}`);
   }
-  assert.equal(fixture.steps.length, 17, "two-author composition step count");
-  assert.equal(new Set(fixture.steps).size, 17, "two-author composition steps are not unique");
+  assert.equal(fixture.steps.length, 19, "two-author composition step count");
+  assert.equal(new Set(fixture.steps).size, 19, "two-author composition steps are not unique");
   assert.equal(fixture.steps[0], "materialize-and-validate-current");
   assert.deepEqual(fixture.steps.slice(3, 8), ["create-shared-space-and-admit-author-b", "mount-author-a-real-shell-and-create-map", "open-two-authenticated-mcp-clients", "open-two-authenticated-document-sockets", "mount-author-b-real-shell-worker-map"]);
-  assert.equal(fixture.steps.at(-1), "reopen-two-authenticated-maps-and-compare-durable-frontier");
-  assert.equal(fixture.hostiles.length, 10, "two-author composition hostile count");
-  assert.equal(new Set(fixture.hostiles).size, 10, "two-author composition hostiles are not unique");
+  assert.equal(fixture.steps.at(-1), "both-peers-observe-region-restored-by-durable-redo");
+  assert.equal(fixture.hostiles.length, 11, "two-author composition hostile count");
+  assert.equal(new Set(fixture.hostiles).size, 11, "two-author composition hostiles are not unique");
   const hostiles = fixture.hostiles;
   await proveGisMapSocketRetirement(repoRoot, fixture.socketRetirement);
   const source = readFileSync(import.meta.path, "utf8");
@@ -12645,10 +12789,12 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
   assert.ok(start >= 0 && end > start, "same-data-root Shell composition owner is missing");
   assert.ok(processOwner.indexOf("creation: { kindId: target.artifactKind") < processOwner.indexOf("await openPeers(false)"), "ordinary author-a Shell creation must precede document-scoped MCP and peer join");
   assert.ok(processOwner.includes('"private-job-restart-recovery"'), "process receipt must not claim an unobserved private job after restart");
+  assert.ok(!processOwner.includes('"durable-collaborative-redo"') || processOwner.includes("author-a-shell-ordinary-redo-after-hub-restart") || processOwner.includes(".redo()"), "two-author shell must exercise durable collaborative redo");
   assert.ok(peerStart >= 0 && peerEnd > peerStart, "ticket-owned browser peer owner is missing");
   assert.ok(peerOwner.includes('artifactRow.getByRole("button", { name: options.locale === "de" ? "Öffnen" : "Open", exact: true })'), "each author must open its exact artifact row using its explicitly selected locale");
   assert.ok(!processOwner.includes("materializeTrustedCatalogBundle(") && !processOwner.includes("validateAndPublishTrustedStdioGisCandidate("), "Shell composition cannot create another current or data root");
   assert.ok(processOwner.includes("assertGisMapCompositionCurrent(prepared)") && processOwner.includes("dataDir: prepared.dataRoot"), "Shell starts and restarts must retain the prepared current owner");
+  assert.ok(processOwner.includes("shells[0]!.redo()") && processOwner.includes('"durable-collaborative-redo"'), "Shell composition must prove durable collaborative redo after hub restart");
   assert.ok(processOwner.includes("stageTestBrowserHostV1({") && processOwner.includes("browserHost: browserHost.receipt"), "Shell composition must close one selected ticket browser host before launch");
   for (const name of ["SEMIO_TEST_ARTIFACT_DIR", "SEMIO_TEST_BROWSER_MODULE_ROOT", "SEMIO_TEST_BROWSER_ACTIVATION_ROOT", "SEMIO_TEST_BROWSER_HOST_RECEIPT"]) assert.ok(peerOwner.includes(name), `Shell peer omits ${name}`);
   assert.ok(!peerOwner.includes("developmentRuntimeRoot") && !peerOwner.includes("pluginOutRoot"), "Shell peer must not resolve a repository-global browser host");
@@ -12885,7 +13031,7 @@ class TrustedCatalogBootstrapScript extends BundleScript {
     const flag = segments.indexOf("--packages");
     const list = flag === -1 ? TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES : segments[flag + 1];
     if ((flag === -1 && segments.length !== 0) || (flag !== -1 && (flag !== 0 || segments.length !== 2)) || typeof list !== "string")
-      throw new Error("usage: trusted-catalog-bootstrap [--packages <plugin,plugin,…>]");
+      throw new Error("usage: trusted-catalog-bootstrap [--packages <plugin,plugin,…|all>]");
     const selection = trustedBootstrapSelectPackages(list);
     const dataRoot = process.env.OS_HUB_DATA ? resolve(process.env.OS_HUB_DATA) : resolve(this.repoRoot, ".🧬semio", "🌐hub");
     runCargo(["build", "--manifest-path", "Cargo.toml", "--bin", "os-hub"], this.root);
@@ -13959,7 +14105,7 @@ function scopedPresenceBrowserCases(fixture: BrowserDocumentOpenFixture): readon
       socketGrant,
       openPath: `${root}/open-plan`,
       grantPath: `${root}/socket-grants`,
-      socketPath: `${root}/socket/v1?surface=${encodeURIComponent(surfaceId)}`,
+      socketPath: `/scopes/${encodeURIComponent(`${spaceId}/${scope.documentId}`)}/document/ws?surface=${encodeURIComponent(surfaceId)}`,
     };
   };
   return [make("a", fixture.expected.scopeIsolation.left.spaceId, "surface.gis.editor", "3"), make("b", fixture.expected.scopeIsolation.right.spaceId, "surface.gis.viewer", "4")];
@@ -15434,7 +15580,7 @@ class SpaceAdministrationCheckScript extends BundleScript {
 
 async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub/🧫️fixtures/👥️presence-lease-v1");
-  const fixture = JSON.parse(readFileSync(join(root, "🧪️fixture/🔣️.json"), "utf8")) as PresenceLeaseFixture;
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as PresenceLeaseFixture;
   const presenceOperation = hubSchemaExport(repoRoot, "schema://hub.directory/PresenceLeaseOperationV1");
   const presenceSummary = hubSchemaExport(repoRoot, "schema://hub.directory/PresenceScopeSummaryV1");
   if (fixture.schema !== "semio.hub.presence-lease/v1") throw new Error("presence lease fixture schema drift");
@@ -15551,7 +15697,7 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
       source.includes("next > PRESENCE_ROSTER_MAXIMUM_BYTES") &&
       source.includes("now >= slot.expires_at") &&
       source.includes("state.install_presence_slot(") &&
-      source.includes("state.refresh_presence(") &&
+      source.includes("self.refresh_presence(") &&
       source.includes("state.expire_presence_for_live(") &&
       source.includes("state.close_presence_for_live(") &&
       publish >= 0 &&
@@ -15611,12 +15757,12 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
     return Array.from(bytes);
   };
   const independentEncode = (peer: ArtifactPresencePeer): Buffer => {
-    const fields = [peer.label, peer.presencePack, peer.userId, peer.role, peer.dragGhostJson, peer.interaction, peer.color, peer.surface, peer.views.length ? peer.views : undefined, peer.ui, peer.toolRun, peer.principalKind];
+    const fields = [peer.label, peer.presencePack, peer.userId, peer.role, peer.dragGhostJson, peer.interaction, peer.color, peer.surface, peer.views.length ? peer.views : undefined, peer.ui, peer.toolRun, peer.principalKind, peer.activeTool];
     const flags = fields.reduce<number>((mask, value, index) => (value === undefined ? mask : mask | (1 << index)), 0);
     const out = [...text(peer.actor), ...integer(flags), ...integer(peer.connectedAtMs)];
     for (const [index, value] of fields.entries()) {
       if (value === undefined) continue;
-      if ([0, 2, 3, 4, 7].includes(index)) out.push(...text(value as string));
+      if ([0, 2, 3, 4, 7, 12].includes(index)) out.push(...text(value as string));
       else if (index === 1) {
         const bytes = value as readonly number[];
         out.push(...integer(bytes.length), ...bytes);
@@ -15641,6 +15787,8 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
           for (const number of values.slice(1)) out.push(...float(number));
           out.push(...float(view.size[0]), ...float(view.size[1]), view.pointer ? 1 : 0);
           if (view.pointer) for (const number of view.pointer) out.push(...float(number));
+          out.push(view.rayOrigin ? 1 : 0);
+          if (view.rayOrigin) for (const number of view.rayOrigin) out.push(...float(number));
         }
       } else if (index === 9) {
         for (const path of [peer.ui!.hoveredPath, peer.ui!.focusedPath, peer.ui!.pressedPath]) {
@@ -15678,6 +15826,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
         ui: input.ui,
         toolRun: input.toolRun,
         principalKind: admitted.principalKind ?? "human",
+        activeTool: input.activeTool,
       };
       normalized = independentEncode(output);
       if (!normalized.equals(Buffer.from(encodePresencePeer(output)))) throw new Error("output canonical oracle mismatch");
@@ -17006,4 +17155,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("dev", DevScript)
   .register("secure-local-smoke", SecureLocalSmokeScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });
+if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });

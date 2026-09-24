@@ -84,7 +84,7 @@
     {
       "id": "semantic-svg-1-1-v1",
       "description": "SVG 1.1 mutation round trips compared structurally: element/text/CDATA/comment/PI tree shape and content exact, attributes compared as a name-sorted set (SVG attribute order is real writer freedom -- see this subset's own `write_svg_xml`, which never claims to preserve source attribute order beyond update-in-place), and the `viewBox`/`transform` attribute values specifically decomposed into typed numeric geometry (never compared as raw strings) with a small absolute tolerance for cross-implementation float-formatting noise between quick-xml's writer and this subset's own. Self-closing vs explicit empty open/close tags are equivalent by construction (both parse to zero children) and never distinguished by either side.",
-      "tolerance": 1e-09,
+      "tolerance": 1e-9,
       "ignoreKeys": []
     },
     {

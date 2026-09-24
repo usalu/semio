@@ -9,7 +9,7 @@ mod subject {
     use semio_framework_repo_tickets::{ticket_slug_from_title, validate_ticket_emoji_title, TicketId, TicketLayout};
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    const VECTORS: &str = "local://🪪️id-vectors.json";
+    const VECTORS: &str = "shared://🪪️ticket-id-scheme/🪪️id-vectors.json";
 
     fn strings(value: &Json, key: &str) -> Vec<String> {
         value

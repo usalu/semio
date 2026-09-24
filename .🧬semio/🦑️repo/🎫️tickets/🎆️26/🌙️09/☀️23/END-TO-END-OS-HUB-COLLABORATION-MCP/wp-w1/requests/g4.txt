@@ -1,0 +1,32 @@
+slice: g4
+crate: semio-s-plugin-wfc (✏️s/🔌️plugins/🀄️wfc) — plus every s guest that links semio-framework-plugin (reactor change), at minimum note + wfc for client-e2e
+reason: GJ3 source fixes not yet in any product-built guest:
+  1. 🧰️framework/.../🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🦀️.rs — inference job while-Submitted pump+repoll (pump_process_worker_pool_for_inference)
+  2. wfc bitmap genesis 1×1 → 2×2 checkerboard + admission rejects pattern_size > min(w,h) (🗿️artifacts/🖼️bitmap/.../🧬️schema/{📸️snapshot,💡️inferences})
+need: rebuilt wfc (and note) wasm-dev through the product verbs (describe / materialize), so the staged
+  cargo/target/wasm32-wasip2/wasm-dev/semio_s_plugin_{wfc,note}.wasm sha256 == committed 🛂️.descriptor.semio hashes.wasmSha256
+  (client-e2e freshness row checks exactly this). No manual uplift / hash patch.
+consumer: g4 runs framework-os-mcp client-e2e + live-agent-loop against it.
+please append: result path(s) + sha256 + time here.
+
+[w1 2026-09-23 23:21:41] DONE via product verb `bun nx run @semio-tech/{wfc,note}-plugin:describe` (shared cargo target, no CARGO_TARGET_DIR, wasm mutex w1):
+  wfc  staged /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2/wasm-dev/semio_s_plugin_wfc.wasm  sha256 ce48bc9fe6ddc0dc43aa63c47006b6350183f878617441ef7a8a98008d5378ad
+       == ✏️s/🔌️plugins/🀄️wfc/🔣️.json hashes.wasmSha256 (descriptorSha256 f813c8f6…8330), described 23:14:58
+  note staged /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2/wasm-dev/semio_s_plugin_note.wasm sha256 4084a258f30f2663bce8206f294c01d762a0510234049c16ba8ac7b1b3ccfe96
+       == ✏️s/🔌️plugins/🗒️note/🔣️.json hashes.wasmSha256 (descriptorSha256 79170138…fd2e), described 23:21:19
+  logs: .tmp-ticket/wp-w1/generated/describe-{wfc,note}-plugin.txt
+  caveat: a later `component-dev` (cargo rustc --crate-type cdylib) writes the same wasm-dev path; W1 will report whether its bytes equal describe's.
+
+[g4 2026-09-24 01:05] SECOND REQUEST — wfc guest rebuild through the product verb (describe), after G4 source changes:
+  - ✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/…/🧬️schema/💡️inferences/🦀️.rs: admission rule fixed to `!periodic_input && pattern > min(w,h)` (GJ3's rule refused valid periodic samples; native wfc-bitmap lib 151/151)
+  - …/🧬️schema/📸️snapshot/🦀️.rs: GJ3's 2×2 genesis default reverted to HEAD (1×1) — GJ3's premise was wrong: artifact_create's genesis is the 16×16 / N=3 / sym 8 / 24×24 demo, not BitmapInput::default
+  Host-only (no guest impact): plugin-host infer(request, &CancelToken), os-mcp cancel path.
+  Please append the new wfc sha when done; g4 re-runs client-e2e after.
+
+[w1 2026-09-24 03:09] DONE wfc via `bun nx run @semio-tech/wfc-plugin:describe` then `:materialize-dev` (wasm mutex w1, shared target; source as of ~03:05 incl. G4 admission/genesis revert, G5 infer Pump + step_on_caller, H4 Store identity, W1 viewer owner default):
+  wasm sha256 e36b9d88fcb8d6c61c7de5b0e2797cb7b5fd34815907e99bf026c661e4258d77
+    == /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2/wasm-dev/semio_s_plugin_wfc.wasm
+    == ✏️s/🔌️plugins/🀄️wfc/📦️packages/🦀️rust/dist/component-dev/semio_s_plugin_wfc.wasm (sha e36b9d88fcb8d6c61c7de5b0e2797cb7b5fd34815907e99bf026c661e4258d77)
+    == ✏️s/🔌️plugins/🀄️wfc/🔣️.json hashes.wasmSha256 (e36b9d88fcb8d6c61c7de5b0e2797cb7b5fd34815907e99bf026c661e4258d77)
+    == staged dist/dev/🔌️plugin-modules/🀄️wfc/🔣️.json (e36b9d88fcb8d6c61c7de5b0e2797cb7b5fd34815907e99bf026c661e4258d77)
+  log: .tmp-ticket/wp-w1/generated/stage-wfc-plugin.txt

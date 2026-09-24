@@ -410,7 +410,7 @@ fn publish_select_accessibility_document(ui: &mut Ui, law: &serde_json::Value) {
 }
 
 fn puzzle3d_settings_law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧪️fixtures/⚙️puzzle3d-settings-document/🔣️.json")).expect("Puzzle3D Settings fixture parses")
+    serde_json::from_str(include_str!("../../🧫️fixtures/⚙️puzzle3d-settings-document/🔣️.json")).expect("Puzzle3D Settings fixture parses")
 }
 
 fn puzzle3d_settings_document(law: &serde_json::Value) -> UiDocumentTree {

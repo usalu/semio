@@ -30,5 +30,5 @@ pub fn engagement_abort(ctx: &mut Puzzle5dActionCtx<'_>, _args: Option<&Value>) 
         ctx.scene.active_utility = PUZZLE5D_DEFAULT_UTILITY.into();
         return;
     }
-    ctx.scene.active_utility = if ctx.window_kind == world3d::WINDOW_KIND_ID { "move".into() } else { PUZZLE5D_DEFAULT_UTILITY.into() };
+    ctx.scene.active_utility = if ctx.window_kind == world3d::WINDOW_KIND_ID { world3d::utilities::transform::UTILITY_ID.into() } else { PUZZLE5D_DEFAULT_UTILITY.into() };
 }

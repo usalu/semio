@@ -10,7 +10,7 @@ mod subject {
     use semio_framework_repo_hooks::serde_json::{self, Value};
     use semio_repo_test_host::{Context, Json, Outcome};
 
-    const VECTORS: &str = "local://🛡️invocations.json";
+    const VECTORS: &str = "shared://🛡️tool-blocking-policy/🛡️invocations.json";
 
     fn vectors(ctx: &Context) -> Result<Value, String> {
         let bytes = ctx.fixture_bytes(VECTORS)?;

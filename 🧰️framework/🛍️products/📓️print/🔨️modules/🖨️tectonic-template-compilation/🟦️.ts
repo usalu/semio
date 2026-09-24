@@ -1,5 +1,5 @@
 import { printDocuments, printDocument, printDocumentOutputDirectory, printLibrarySources, printSourceDateEpoch } from "./📇️catalog/🟦️.ts";
-import { preparedTectonic } from "./🔧️toolchain/📜️script.ts";
+import { prepareTectonic, preparedTectonic } from "./🔧️toolchain/📜️script.ts";
 import { preparedPrintBundle } from "./📚️bundle/📜️script.ts";
 import { stagePrintSources, printCompilerName } from "../📥️source-staging/🟦️.ts";
 import { createRequire } from "node:module";
@@ -9,7 +9,7 @@ import { basename, dirname, join, relative } from "node:path";
 import { buildBudgetMs } from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { stageArtifacts } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import { printFontSearchPaths } from "../🔤print-font-catalog/🟦️.ts";
+import { printFontSearchPaths, stagePrintFonts } from "../🔤print-font-catalog/🟦️.ts";
 import { resolvePrintPanelGlassStyle, type PrintTheme } from "../🎨print-design-token-paints/🟦️.ts";
 
 //#region 🖨️TectonicTemplateCompilation
@@ -84,6 +84,24 @@ export async function publishPrintArtifact(document: PrintArtifact, signal?: Abo
     await stageArtifacts(document.output, document.owner, files, { signal });
     console.log(`[print] Published ${document.id}: ${files.size} PDFs`);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
+}
+
+/** 🔤️ The tracked fonts staged once per process for probe compilations. */
+let stagedPrintFonts: Promise<{ readonly total: number }> | undefined;
+
+/**
+ * 🧪️ Compiles one staged TeX document exactly once — light only, no panel-glass pass — against the
+ * print library staged beside it, with the pinned compiler and the tracked fonts prepared on first use. Probe documents use
+ * it to read the records their pages emit.
+ */
+export async function compilePrintTexOnce(texPath: string, outDirectory: string, workDirectory: string, signal?: AbortSignal): Promise<void> {
+  const tectonic = await prepareTectonic(workspaceRoot, signal);
+  stagedPrintFonts ??= stagePrintFonts(workspaceRoot);
+  await stagedPrintFonts;
+  const library = join(workDirectory, ".semio-library");
+  rmSync(library, { recursive: true, force: true });
+  stagePrintSources(productRoot, printLibrarySources(), library);
+  await compilePrintDocument(tectonic, texPath, outDirectory, workDirectory, library, signal);
 }
 
 /** 🪟️ Renders registered panel-glass PNGs from a first-pass template PDF. */

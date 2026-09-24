@@ -111,7 +111,7 @@
   ],
   "noOracleDecisions": [
     {
-      "id": "png-tIME-and-unknown-ancillary-chunks-uncarried",
+      "id": "png-time-and-unknown-ancillary-chunks-uncarried",
       "capabilities": [
         "png-1-2-mutate-uncarried"
       ],
@@ -1763,7 +1763,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-png-chunk-v1",
       "reproducible": true,
@@ -1812,7 +1812,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-png-chunk-v1",
       "reproducible": true,
@@ -1861,7 +1861,7 @@
         "engineFamily": "pillow",
         "engineVersion": "11.3.0",
         "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/📜️script.ts chunks",
-        "platform": "darwin"
+        "platform": "darwin-arm64"
       },
       "comparisonProfile": "semantic-png-chunk-v1",
       "reproducible": true,

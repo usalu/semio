@@ -23,7 +23,7 @@ type corpus struct {
 // region 🔖️Scenarios
 
 func malformedInputsAreRejected(ctx *host.Context) (host.Outcome, error) {
-	bytes, err := ctx.FixtureBytes("local://🔣️malformed.json")
+	bytes, err := ctx.FixtureBytes("shared://🚫️syntax-errors/🔣️malformed.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

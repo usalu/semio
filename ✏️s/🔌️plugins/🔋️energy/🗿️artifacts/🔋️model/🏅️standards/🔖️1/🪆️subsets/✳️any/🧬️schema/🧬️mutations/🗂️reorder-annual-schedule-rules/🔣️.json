@@ -7,7 +7,7 @@
   "aggregateVariant": "ReorderAnnualScheduleRules",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "reorder-annual-schedule-rules",
-  "binaryTag": null,
+  "binaryTag": 267,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

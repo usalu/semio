@@ -1,10 +1,10 @@
 //! 🚪️ IO s.imperative (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from the artifact root's `declaration()`), not per-leaf register().
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
+    &["stdio.json", "stdio.txt"]
 }
 pub fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
+    &["stdio.json", "stdio.txt"]
 }
 
 //#region 🔖️Bootstrap
@@ -53,9 +53,7 @@ pub mod derived_composition {
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.imperative.procedure", standard: StandardId("1"), subset: SubsetId("*") };
-    const DEP_CSV: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_MD: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
     pub struct ProcedureComposerComposition;
@@ -65,7 +63,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_CSV, DEP_JSON, DEP_MD, DEP_TXT]
+            &[DIALECT, DEP_JSON, DEP_TXT]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -77,30 +75,12 @@ pub mod derived_composition {
                     };
                     return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::High, diagnostics: Vec::new() });
                 }
-                if source.dialect == DEP_CSV {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::csv::v_rfc4180::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
                 if source.dialect == DEP_JSON {
                     let bytes: Vec<u8> = match &source.payload {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = crate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_MD {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::md::v_commonmark::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -166,23 +146,6 @@ pub mod io_registry {
         }
         Err(ComposeError { message: "ProcedureComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
-
-    const EXPORT_CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
-    fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_CSV_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
-    fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_MD_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
@@ -198,8 +161,6 @@ pub mod io_registry {
             .get_or_init(|| {
                 vec![
                     composer_entry_of::<ProcedureAnyComposer>(),
-                    ComposerEntry { writes: EXPORT_CSV_DIALECT, reads: &[PROCEDURE_DIALECT], compose: compose_export_csv },
-                    ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[PROCEDURE_DIALECT], compose: compose_export_md },
                     ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PROCEDURE_DIALECT], compose: compose_export_json },
                 ]
             })

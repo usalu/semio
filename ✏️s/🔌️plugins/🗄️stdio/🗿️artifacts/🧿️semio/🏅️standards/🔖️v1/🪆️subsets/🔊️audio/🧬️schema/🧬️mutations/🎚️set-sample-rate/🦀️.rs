@@ -10,7 +10,7 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetSampleRate {
-    pub(crate) sample_rate: u32,
+    pub sample_rate: u32,
 }
 
 impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetSampleRate {

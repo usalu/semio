@@ -445,6 +445,12 @@ impl ArtifactChannel for ShellArtifactChannel {
         let instance_id = self.resolve_instance_id(&handle, connection, instance, &command)?;
         self.round_trip(&handle, connection, &instance_id, &command)
     }
+
+    /// 🐚️ The attached shell owns this session's guest and its document; the gateway has nothing of
+    /// its own to bring up, so activation only honours the caller's cancel.
+    fn activate(&mut self, _instance: u32, scope: &crate::actions::ActivationScope) -> Result<(), Fault> {
+        scope.checkpoint()
+    }
 }
 //#endregion 🔖️ShellArtifactChannel
 

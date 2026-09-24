@@ -352,24 +352,24 @@ async fn op_text_binary_roundtrip_law() {
 fn kind_of(mutation: &SemioMutation) -> &'static str {
     match mutation {
         SemioMutation::SetSnapshot(_) => "set-snapshot",
-        SemioMutation::ApplyBrep(_) => "brep",
-        SemioMutation::ApplyMesh(_) => "mesh",
-        SemioMutation::ApplyModel(_) => "model",
-        SemioMutation::ApplyValue(_) => "value",
-        SemioMutation::ApplyDocument(_) => "document",
-        SemioMutation::ApplyCad(_) => "cad",
-        SemioMutation::ApplyDrawing(_) => "drawing",
-        SemioMutation::ApplyImage(_) => "image",
-        SemioMutation::ApplyVideo(_) => "video",
-        SemioMutation::ApplyAudio(_) => "audio",
-        SemioMutation::ApplyAnimation(_) => "animation",
-        SemioMutation::ApplyPresentation(_) => "presentation",
-        SemioMutation::ApplyFlow(_) => "flow",
-        SemioMutation::ApplyText(_) => "text",
-        SemioMutation::ApplyTable(_) => "table",
-        SemioMutation::ApplyGraph(_) => "graph",
-        SemioMutation::ApplyObject(_) => "object",
-        SemioMutation::ApplyKit(_) => "kit",
+        SemioMutation::ApplyBrep(_) => "apply-brep",
+        SemioMutation::ApplyMesh(_) => "apply-mesh",
+        SemioMutation::ApplyModel(_) => "apply-model",
+        SemioMutation::ApplyValue(_) => "apply-value",
+        SemioMutation::ApplyDocument(_) => "apply-document",
+        SemioMutation::ApplyCad(_) => "apply-cad",
+        SemioMutation::ApplyDrawing(_) => "apply-drawing",
+        SemioMutation::ApplyImage(_) => "apply-image",
+        SemioMutation::ApplyVideo(_) => "apply-video",
+        SemioMutation::ApplyAudio(_) => "apply-audio",
+        SemioMutation::ApplyAnimation(_) => "apply-animation",
+        SemioMutation::ApplyPresentation(_) => "apply-presentation",
+        SemioMutation::ApplyFlow(_) => "apply-flow",
+        SemioMutation::ApplyText(_) => "apply-text",
+        SemioMutation::ApplyTable(_) => "apply-table",
+        SemioMutation::ApplyGraph(_) => "apply-graph",
+        SemioMutation::ApplyObject(_) => "apply-object",
+        SemioMutation::ApplyKit(_) => "apply-kit",
     }
 }
 
@@ -409,7 +409,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     assert_eq!(KINDS.len(), arms.len() + 1, "KINDS must name the one envelope-owned verb plus exactly one entry per subset arm");
     assert_eq!(KINDS[0], kind_of(&SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SemioSnapshot::default() })), "the full-replace verb comes first");
     for (kind, arm) in KINDS[1..].iter().zip(arms) {
-        assert_eq!(*kind, semio_subset_tag(&enveloped(arm)), "KINDS must follow SemioSubsetSnapshot's own declaration order and the envelope's own runtime subset tag");
+        assert_eq!(*kind, format!("apply-{}", semio_subset_tag(&enveloped(arm))), "KINDS must follow SemioSubsetSnapshot's own declaration order and wrap the envelope's own runtime subset tag");
     }
     let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {

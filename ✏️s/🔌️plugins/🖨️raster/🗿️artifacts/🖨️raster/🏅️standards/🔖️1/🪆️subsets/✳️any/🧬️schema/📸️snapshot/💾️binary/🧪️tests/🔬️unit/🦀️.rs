@@ -20,7 +20,7 @@ async fn pack_round_trips_and_agrees_with_dsl() {
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_representative_document() {
     let mut assets = RasterOwnedMap::new();
-    assets.insert("asset-1".into(), crate::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
+    assets.insert("asset-1".into(), crate::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }).with_local_owner(std::sync::Arc::new(semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot::default()))).expect("bounded fixture operation succeeds");
     let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), dsl::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
     params.insert("label".into(), dsl::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");
@@ -83,7 +83,15 @@ async fn pack_round_trips_representative_document() {
         ],
     };
     store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
+    let spec = <RasterSnapshot as store::ArtifactPack>::record_spec().expect("raster declares its pack record spec");
+    assert_ne!(store::os_pack::schema_hash(&spec), [0u8; 32]);
+    let decoded = decode(&encode(&document)).expect("decode");
+    let image = |snapshot: &RasterSnapshot| snapshot.assets.iter().next().and_then(|(_, child)| child.local_owner::<semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot>()).map(|image| image.as_ref().clone());
+    let (before, after) = (image(&document), image(&decoded));
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(decoded);
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    assert!(before.is_some(), "the fixture asset carries its composed image");
+    assert_eq!(after, before, "the pack carries the composed image content beside its handle");
 }
 
 //#region 🔖️CommandEnvelopeTests

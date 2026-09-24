@@ -6,7 +6,7 @@ import { runInNewContext } from "node:vm";
 
 /** 🎮️ Checks one shared discovery snapshot per call against a language-neutral fixture and lodash. */
 export async function testPlaygroundInputView(workspace: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")), ts = require("typescript");
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎮️playground-input-view/🔣️.json"), "utf8")), ts = require("typescript");
   const registry = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
   const source = ts.createSourceFile("playgrounds.ts", readFileSync(join(registry, "🎮️playground/🔎️discovery/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
   const definition = source.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "generatePlaygroundRegistry");

@@ -6,6 +6,8 @@ import { isHostPlaygroundFilter } from "../../🟦️.ts";
 import { type PluginRegistryEntry, resolveRegistryPluginIdsForFilter } from "../../🔎️discovery/🟦️.ts";
 import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
 import type { PlaygroundEntry } from "../../🎮️playground/🔎️discovery/🟦️.ts";
+import { emitRustArtifacts } from "../../📽️projection/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures", "📖️generated-projection.json"), "utf8")) as {
   readonly entries: PluginRegistryEntry[];
@@ -84,5 +86,23 @@ describe("generated catalog projection", () => {
     writeFileSync(join(broken, "🎠️playgrounds.json"), "[]\n");
     expect(() => readGeneratedCatalogProjection(broken)).toThrow(/not a projected row array/u);
     rmSync(broken, { recursive: true, force: true });
+  });
+});
+
+/** 🔮️ Generated wasm target dir must follow .cargo/config.toml, never private uplift env. */
+describe("registry rust artifacts projection", () => {
+  test("PLUGIN_WASM_TARGET_DIR ignores private CARGO_TARGET_DIR overrides", () => {
+    const previous = process.env.CARGO_TARGET_DIR;
+    process.env.CARGO_TARGET_DIR = "/tmp/semio-private-uplift-must-not-land-in-catalog";
+    try {
+      const body = emitRustArtifacts([], getWorkspaceRoot());
+      expect(body).toContain("PLUGIN_WASM_TARGET_DIR");
+      expect(body).toContain("wasm32-wasip2");
+      expect(body).toContain("cache/cargo/target");
+      expect(body).not.toContain("semio-private-uplift-must-not-land-in-catalog");
+    } finally {
+      if (previous === undefined) delete process.env.CARGO_TARGET_DIR;
+      else process.env.CARGO_TARGET_DIR = previous;
+    }
   });
 });

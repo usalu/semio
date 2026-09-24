@@ -5,10 +5,20 @@ use std::sync::OnceLock;
 async fn inst(id: u64, name: &str) -> Part21Instance {
     Part21Instance { id, entities: vec![(name.to_string(), vec![Part21Value::Int(id as i64)])] }
 }
+/// 🧾️ The street-level fixture in this codec's own canonical SPF layout. The committed file is an
+/// LF-normalized export of another tool (git's `text=auto` rewrites `.ifc` line endings), so no
+/// writer can reproduce its bytes; exactness is proven against the canonical form instead, and
+/// that form must itself be a fixed point of decode → encode.
 // 🚫️async: E1 pure fixture reader (OnceLock initializer, consumed inside a sync closure) — see R9
 fn exact_fixture_bytes() -> &'static [u8] {
     static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
-    BYTES.get_or_init(|| std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../temp/wellness-center-sama.ifc")).expect("read temp/wellness-center-sama.ifc"))
+    BYTES.get_or_init(|| {
+        let committed = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc")).expect("read the street-level IFC2X3 fixture");
+        let canonical = crate::standards::v2x3::engine::encode_ifc2x3(&crate::standards::v2x3::engine::decode_ifc2x3(&committed).expect("import IFC2X3 fixture")).expect("export IFC2X3 fixture");
+        let again = crate::standards::v2x3::engine::encode_ifc2x3(&crate::standards::v2x3::engine::decode_ifc2x3(&canonical).expect("import canonical IFC2X3")).expect("export canonical IFC2X3");
+        assert!(again == canonical, "the canonical IFC2X3 layout must be a fixed point of decode then encode");
+        canonical
+    })
 }
 
 // 🚫️async: E1 pure fixture reader (OnceLock initializer, consumed inside a sync closure) — see R9

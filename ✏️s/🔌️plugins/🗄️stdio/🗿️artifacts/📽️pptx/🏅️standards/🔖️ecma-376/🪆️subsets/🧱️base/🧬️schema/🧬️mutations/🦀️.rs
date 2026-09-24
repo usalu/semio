@@ -242,6 +242,11 @@ impl OpText for PptxMutation {
 /// -iteration-order caveat those text forms document.
 /// 🌳 Full `PptxSnapshot`: `[schema,opc,xml-parts,slides]`, mirroring `enc_snapshot`'s text form above.
 //#endregion 🔖️OpBinaryCodec
+//#region 🏷️WireTags
+/// 🏷️ `PptxMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+//#endregion 🏷️WireTags
+
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F1's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
@@ -249,13 +254,11 @@ impl OpText for PptxMutation {
 /// match uses.
 impl OpBinary for PptxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let value = dsl::ToValue::to_value(self);
-        Ok(store::pack_rt::encode_wire_value(&value))
+        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail: error.to_string() })?;
-        dsl::FromValue::from_value(value).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail: error.to_string() })
+        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
     }
 }
 //#endregion OpCodecs

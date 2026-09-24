@@ -32,9 +32,9 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 /// usvg/resvg renderer, whose OUTPUT is then canonicalized through the real png↔semio/image codec.
 use crate::{RasterImageAsset, RasterLayerNode, RasterSnapshot, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use semio_framework::{io::io_compose_via, io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
-use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
 use semio_s_artifact_stdio_png::PngSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{compose_affine, flatten_segments, semio_transform_affine, transformed_segments};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_svg::SvgSnapshot;
@@ -143,45 +143,65 @@ fn drawing_snapshot_from_raster(document: &RasterSnapshot) -> SemioDrawingSnapsh
     }
 }
 
-/// 🧬️ Converts a legacy `DwgDrawing`'s line-shaped entities into a real `DrawNode::Path` tree —
-/// typed geometry, not hand-formatted SVG `<path d="…">` strings.
-fn drawing_snapshot_from_dwg(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
-    let width = (drawing.extmax[0] - drawing.extmin[0]).max(1.0);
-    let height = (drawing.extmax[1] - drawing.extmin[1]).max(1.0);
-    let to_point = |v: &[f64; 2]| SemioPoint2 { x: v[0] - drawing.extmin[0], y: height - (v[1] - drawing.extmin[1]) };
-    let mut children = Vec::new();
-    for entity in &drawing.entities {
-        let (vertices, closed): (Vec<[f64; 2]>, bool) = match &entity.geometry {
-            DwgGeometry::LwPolyline { vertices, closed, .. } => (vertices.clone(), *closed),
-            DwgGeometry::Polyline3d { vertices, closed } => (vertices.iter().map(|v| [v[0], v[1]]).collect(), *closed),
-            DwgGeometry::Line { start, end } => (vec![[start[0], start[1]], [end[0], end[1]]], false),
-            _ => continue,
+/// 🌐️ World-space bounds `[min_x, min_y, max_x, max_y]` of everything `world` paints (group
+/// transforms applied, arcs and curves flattened, text anchors included); `None` when it paints nothing.
+fn world_drawing_bounds(world: &SemioDrawingSnapshot) -> Option<[f64; 4]> {
+    fn walk(node: &DrawNode, matrix: [f64; 6], bounds: &mut Option<[f64; 4]>) {
+        let mut include = |p: [f64; 2]| {
+            let (x, y) = (matrix[0] * p[0] + matrix[2] * p[1] + matrix[4], matrix[1] * p[0] + matrix[3] * p[1] + matrix[5]);
+            let b = bounds.get_or_insert([x, y, x, y]);
+            *b = [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)];
         };
-        if vertices.is_empty() {
-            continue;
+        match node {
+            DrawNode::Group { transform, children } => {
+                let inner = compose_affine(&matrix, &semio_transform_affine(transform));
+                children.iter().for_each(|child| walk(child, inner, bounds));
+            }
+            DrawNode::Path { segments, .. } => flatten_segments(segments, 16.0).iter().flat_map(|(points, _)| points).for_each(|p| include(*p)),
+            DrawNode::Text { at, .. } => include([at.x, at.y]),
+            DrawNode::Image { at, width, height, .. } => {
+                include([at.x, at.y]);
+                include([at.x + width, at.y + height]);
+            }
         }
-        let mut segments = Vec::with_capacity(vertices.len() + 1);
-        segments.push(PathSegment::MoveTo { to: to_point(&vertices[0]) });
-        for vertex in &vertices[1..] {
-            segments.push(PathSegment::LineTo { to: to_point(vertex) });
-        }
-        if closed {
-            segments.push(PathSegment::Close);
-        }
-        children.push(DrawNode::Path { segments, style: None });
     }
+    let mut bounds = None;
+    world.layers.iter().for_each(|layer| walk(&layer.root, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &mut bounds));
+    bounds
+}
+
+/// 🗺️ `node` baked through `matrix` (group transforms folded in, arcs become cubics under the mirror).
+fn page_node(node: &DrawNode, matrix: [f64; 6]) -> DrawNode {
+    let apply = |p: &SemioPoint2| SemioPoint2 { x: matrix[0] * p.x + matrix[2] * p.y + matrix[4], y: matrix[1] * p.x + matrix[3] * p.y + matrix[5] };
+    match node {
+        DrawNode::Group { transform, children } => {
+            let inner = compose_affine(&matrix, &semio_transform_affine(transform));
+            DrawNode::Group { transform: SemioTransform::identity(), children: children.iter().map(|child| page_node(child, inner)).collect() }
+        }
+        DrawNode::Path { segments, style } => DrawNode::Path { segments: transformed_segments(segments, &matrix), style: style.clone() },
+        DrawNode::Text { value, at, style } => DrawNode::Text { value: value.clone(), at: apply(at), style: style.clone() },
+        DrawNode::Image { at, width, height, mime, bytes } => DrawNode::Image { at: apply(&SemioPoint2 { x: at.x, y: at.y + height }), width: *width, height: *height, mime: mime.clone(), bytes: bytes.clone() },
+    }
+}
+
+/// 📄️ A WORLD drawing (y up, a CAD file's model space) fitted onto a page (y down): the page is the
+/// painted bounds (at least 1×1 unit), every vertex moves by `(x − min_x, max_y − y)`. An empty drawing
+/// becomes an empty 1×1 page.
+fn page_drawing_from_world(world: &SemioDrawingSnapshot) -> SemioDrawingSnapshot {
+    let [min_x, min_y, max_x, max_y] = world_drawing_bounds(world).unwrap_or([0.0; 4]);
+    let matrix = [1.0, 0.0, 0.0, -1.0, -min_x, max_y];
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
-        canvas: DrawCanvas { width, height, background: None },
-        styles: Vec::new(),
-        layers: vec![DrawLayer { id: "0".into(), name: "dwg-import".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }],
+        canvas: DrawCanvas { width: (max_x - min_x).max(1.0), height: (max_y - min_y).max(1.0), background: None },
+        styles: world.styles.clone(),
+        layers: world.layers.iter().map(|layer| DrawLayer { id: layer.id.clone(), name: layer.name.clone(), visible: layer.visible, root: page_node(&layer.root, matrix) }).collect(),
     }
 }
 
 /// 🚪️ Dispatches `s.stdio.semio/v1/drawing` → `s.stdio.svg` through stdio's real SVG serializer
 /// (`io_dispatch`), then prints the composed `SvgSnapshot` as bare XML (`write_svg_xml`, NOT
 /// `ArtifactDsl::print_dsl` — w5b-close fix: `print_dsl` wraps the text in stdio's `.semio`
-/// envelope preamble, which `raster_document_json_from_dwg`'s `semio_framework_os::
+/// envelope preamble, which `raster_document_from_dwg_drawing`'s `semio_framework_os::
 /// rasterize_svg_to_png_base64` call below then fails to parse as XML at all ("unknown token at
 /// 1:1"); every downstream consumer of this function's return value wants a bare `<svg>…</svg>`
 /// document, matching 🗒️note's/🖍️draw's own `write_svg_xml` usage for the identical bridge).
@@ -240,7 +260,7 @@ pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<V
 /// working-scene shape) and the composed `s.stdio.semio/v1/image` child's real content
 /// (`SemioImageSnapshot`, decoded RGBA8 pixels) — reuses the SAME real png↔semio/image bridge above,
 /// never a stub. Only `image/png` is lossless today (the only mime this plugin ever produces, via
-/// `raster_document_json_from_dwg`/`raster_image_layer_and_asset` below); any other mime is honestly
+/// `raster_document_from_dwg_drawing`/`raster_image_layer_and_asset` below); any other mime is honestly
 /// reported as an error, never silently coerced.
 pub fn semio_image_snapshot_from_raster_asset(asset: &RasterImageAsset) -> Result<SemioImageSnapshot, String> {
     if asset.mime != "image/png" {
@@ -523,7 +543,7 @@ pub fn raster_composite_image(document: &RasterSnapshot) -> Result<SemioImageSna
 /// 📥️ The inverse hub hop every real pixel IMPORT in this subset ends on: one decoded
 /// `s.stdio.semio/v1/image` becomes a one-`Pixel`-layer raster document whose single asset child is
 /// that same content (canonicalized to PNG bytes by the real png serializer, exactly as
-/// `raster_document_json_from_dwg`/`raster_image_layer_and_asset` already do).
+/// `raster_document_from_dwg_drawing`/`raster_image_layer_and_asset` already do).
 pub fn raster_document_from_semio_image(image: &SemioImageSnapshot, id_prefix: &str, title: &str) -> Result<RasterSnapshot, String> {
     if image.width == 0 || image.height == 0 {
         return Err(format!("{id_prefix}: decoded image is {}x{} — an empty raster cannot become a pixel layer", image.width, image.height));
@@ -609,24 +629,19 @@ pub fn raster_document_json_to_svg(document: &RasterSnapshot) -> Result<(String,
 //#endregion 🔖️MediaExport
 
 //#region 🔖️MediaImport
-/// 📥️ Rewires the DWG import path onto real stdio bridges: the DWG entities become a real
-/// `SemioDrawingSnapshot` (`drawing_snapshot_from_dwg`), composed to real SVG text via
-/// `s.stdio.semio/v1/drawing` (`io_dispatch`). SVG→pixels still needs a real vector renderer — no
-/// stdio bridge does that (reported `stdio_gaps`) — so `semio_framework_os`'s real usvg/resvg
-/// renderer stays, but its raw PNG bytes are then canonicalized through the real
-/// `s.stdio.semio/v1/image` ↔ png round trip (`canonicalize_png_bytes`) instead of being trusted
-/// verbatim, which also recovers the real decoded width/height for the new pixel layer.
-pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<RasterSnapshot, String> {
-    let drawing_snapshot = drawing_snapshot_from_dwg(drawing);
-    let svg = dispatch_drawing_to_svg(&drawing_snapshot)?;
-    let fallback_width = drawing_snapshot.canvas.width.round().max(1.0) as u32;
-    let fallback_height = drawing_snapshot.canvas.height.round().max(1.0) as u32;
-    let rendered = semio_framework_os::rasterize_svg_to_png_base64(&svg, fallback_width, fallback_height)?;
+/// 📥️ A WORLD drawing (what `s.stdio.semio/v1/drawing`'s own dwg import leaf reads out of a DWG
+/// file) becomes a one-`Pixel`-layer raster document: fitted onto a page (`page_drawing_from_world`),
+/// composed to SVG through stdio's `s.stdio.semio/v1/drawing` → `s.stdio.svg` bridge (`io_dispatch`),
+/// rendered by `semio_framework_os`'s usvg/resvg renderer (no stdio bridge rasterizes vectors — a
+/// reported `stdio_gaps` entry), and canonicalized through the `s.stdio.semio/v1/image` ↔ png codec,
+/// which also yields the real decoded width/height.
+pub fn raster_document_from_dwg_drawing(world: &SemioDrawingSnapshot) -> Result<RasterSnapshot, String> {
+    let page = page_drawing_from_world(world);
+    let svg = dispatch_drawing_to_svg(&page)?;
+    let rendered = semio_framework_os::rasterize_svg_to_png_base64(&svg, page.canvas.width.round().max(1.0) as u32, page.canvas.height.round().max(1.0) as u32)?;
     let raw_bytes = base64_codec::base64_standard_decode(rendered.as_bytes()).map_err(|error| error.to_string())?;
-    let (data, width, height) = match semio_image_from_png_bytes(&raw_bytes).and_then(|image| Ok((png_bytes_from_semio_image(&image)?, image.width, image.height))) {
-        Ok((bytes, width, height)) => (bytes, width, height),
-        Err(_) => (raw_bytes, fallback_width, fallback_height),
-    };
+    let image = semio_image_from_png_bytes(&raw_bytes)?;
+    let (data, width, height) = (png_bytes_from_semio_image(&image)?, image.width, image.height);
     let asset_key = crate::standards::v1::subsets::any::schema::create_raster_id("dwg-asset");
     let mut layer = crate::standards::v1::subsets::any::schema::create_pixel_layer("DWG Import", width, height);
     if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
@@ -682,7 +697,6 @@ pub mod derived_composition {
     const DEP_GIF: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
     const DEP_JPG: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_PDF: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
     const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
     const DEP_SVG: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
     const DEP_TIFF: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
@@ -694,7 +708,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_BMP, DEP_DWG, DEP_GIF, DEP_JPG, DEP_JSON, DEP_PDF, DEP_PNG, DEP_SVG, DEP_TIFF]
+            &[DIALECT, DEP_BMP, DEP_DWG, DEP_GIF, DEP_JPG, DEP_JSON, DEP_PNG, DEP_SVG, DEP_TIFF]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -753,13 +767,6 @@ pub mod derived_composition {
                     if let Ok(snapshot) = crate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
-                }
-                if source.dialect == DEP_PDF {
-                    // 🚫️ The pdf leaf can never succeed (this repo's `PdfSnapshot` decodes no pixels),
-                    // so swallowing its `Err` the way the real decoders above are swallowed would
-                    // answer a pdf source with "no source in a known read dialect" — a wrong reason.
-                    // The leaf's own sentence is returned instead.
-                    return Err(ComposeError { message: crate::io::import::deserializers::artifacts::pdf::v1_4::any::RASTER_PDF_IMPORT_UNSUPPORTED.into(), diagnostics: Vec::new() });
                 }
                 if source.dialect == DEP_PNG {
                     let bytes: Vec<u8> = match &source.payload {
@@ -860,14 +867,6 @@ pub mod io_registry {
             Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
-    const EXPORT_PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
-    fn compose_export_pdf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
     const EXPORT_JPG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
     fn compose_export_jpg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
@@ -890,14 +889,6 @@ pub mod io_registry {
             let snapshot = rebuild_native_snapshot(sources)?;
             let bytes = crate::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-        })
-    }
-    const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e, diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
     const EXPORT_BMP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
@@ -925,11 +916,9 @@ pub mod io_registry {
                     composer_entry_of::<RasterAnyComposer>(),
                     ComposerEntry { writes: EXPORT_GIF_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_gif },
                     ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_svg },
-                    ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_pdf },
                     ComposerEntry { writes: EXPORT_JPG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_jpg },
                     ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_png },
                     ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_json },
-                    ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_dwg },
                     ComposerEntry { writes: EXPORT_BMP_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_bmp },
                     ComposerEntry { writes: EXPORT_TIFF_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_tiff },
                 ]

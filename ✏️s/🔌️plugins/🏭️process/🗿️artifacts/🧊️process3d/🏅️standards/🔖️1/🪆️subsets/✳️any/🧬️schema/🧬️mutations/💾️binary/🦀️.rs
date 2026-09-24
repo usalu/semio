@@ -8,7 +8,6 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::schema::mutations::text::Process3dMutation;
-use crate::schema::snapshot::{read_capability, read_child, read_machine, read_measure, read_pose, read_str_lp, write_capability, write_child, write_machine, write_measure, write_pose, write_str_lp};
 use store::{ArtifactEnvelopeMutationFieldAuthority as _, ArtifactEnvelopeSnapshotFieldAuthority as _};
 
 const PROCESS3D_MUTATION_BINARY_FORMAT: u8 = 2;
@@ -198,8 +197,636 @@ pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolEr
     Ok(mutation)
 }
 
+//#region 🔖️MutationWirePrimitives
+/// 🧵️ Field codecs and one-byte-grant cursors of this facet's handcrafted mutation wire.
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    if len > 4096 {
+        return Err("process3d pack string exceeds fixed capacity".into());
+    }
+    let source = reader.read_bytes(len).map_err(|e| e.to_string())?;
+    let mut bytes = Vec::new();
+    bytes.try_reserve_exact(len).map_err(|_| "process3d pack string admission failed".to_string())?;
+    bytes.extend_from_slice(source);
+    Ok(bytes)
+}
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
+fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+    write_str_lp(out, &r.to_uri());
+}
+fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
+    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
+}
+fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
+    write_str_lp(out, &c.child_id);
+    write_ref(out, &c.target);
+}
+fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+    let child_id = read_str_lp(reader)?;
+    let target = read_ref(reader)?;
+    Ok(store::ArtifactChild::new(child_id, target))
+}
+fn write_pose(out: &mut Vec<u8>, pose: &Pose) {
+    for value in pose.position.iter().chain(pose.axis.iter()).chain(std::iter::once(&pose.angle)) {
+        out.extend_from_slice(&value.to_le_bytes());
+    }
+}
+
+fn read_pose(reader: &mut store::ByteReader<'_>) -> Result<Pose, String> {
+    Ok(Pose {
+        position: [reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?],
+        axis: [reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?],
+        angle: reader.read_f64_le().map_err(|e| e.to_string())?,
+    })
+}
+
+fn write_solid(out: &mut Vec<u8>, solid: &WorkingSolid) {
+    match solid {
+        WorkingSolid::Box { width, depth, height } => {
+            out.push(0);
+            for value in [width, depth, height] {
+                out.extend_from_slice(&value.to_le_bytes());
+            }
+        }
+        WorkingSolid::Cylinder { radius, height } => {
+            out.push(1);
+            out.extend_from_slice(&radius.to_le_bytes());
+            out.extend_from_slice(&height.to_le_bytes());
+        }
+        WorkingSolid::Sphere { radius } => {
+            out.push(2);
+            out.extend_from_slice(&radius.to_le_bytes());
+        }
+        WorkingSolid::ImportedMesh { mesh_url } => {
+            out.push(3);
+            write_str_lp(out, mesh_url);
+        }
+        WorkingSolid::ImportedSolid { solid_handle } => {
+            out.push(4);
+            write_str_lp(out, solid_handle);
+        }
+        WorkingSolid::Reference { reference_id } => {
+            out.push(5);
+            write_str_lp(out, reference_id);
+        }
+    }
+}
+
+fn read_solid(reader: &mut store::ByteReader<'_>) -> Result<WorkingSolid, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(WorkingSolid::Box { width: reader.read_f64_le().map_err(|e| e.to_string())?, depth: reader.read_f64_le().map_err(|e| e.to_string())?, height: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        1 => Ok(WorkingSolid::Cylinder { radius: reader.read_f64_le().map_err(|e| e.to_string())?, height: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        2 => Ok(WorkingSolid::Sphere { radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        3 => Ok(WorkingSolid::ImportedMesh { mesh_url: read_str_lp(reader)? }),
+        4 => Ok(WorkingSolid::ImportedSolid { solid_handle: read_str_lp(reader)? }),
+        5 => Ok(WorkingSolid::Reference { reference_id: read_str_lp(reader)? }),
+        _ => Err("process3d pack solid tag is invalid".into()),
+    }
+}
+
+fn write_measure(out: &mut Vec<u8>, measure: &ProcessMeasure) {
+    match measure {
+        ProcessMeasure::Cut { tool, pose } => {
+            out.push(0);
+            write_solid(out, tool);
+            write_pose(out, pose);
+        }
+        ProcessMeasure::Drill { radius, depth, pose } => {
+            out.push(1);
+            out.extend_from_slice(&radius.to_le_bytes());
+            out.extend_from_slice(&depth.to_le_bytes());
+            write_pose(out, pose);
+        }
+        ProcessMeasure::Attach { component, pose } => {
+            out.push(2);
+            write_solid(out, component);
+            write_pose(out, pose);
+        }
+    }
+}
+
+fn read_measure(reader: &mut store::ByteReader<'_>) -> Result<ProcessMeasure, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(ProcessMeasure::Cut { tool: read_solid(reader)?, pose: read_pose(reader)? }),
+        1 => Ok(ProcessMeasure::Drill { radius: reader.read_f64_le().map_err(|e| e.to_string())?, depth: reader.read_f64_le().map_err(|e| e.to_string())?, pose: read_pose(reader)? }),
+        2 => Ok(ProcessMeasure::Attach { component: read_solid(reader)?, pose: read_pose(reader)? }),
+        _ => Err("process3d pack measure tag is invalid".into()),
+    }
+}
+
+fn write_recipe(out: &mut Vec<u8>, recipe: &MeasureRecipe) {
+    let (tag, fields): (u8, [&str; 3]) = match recipe {
+        MeasureRecipe::DiscCut { diameter, kerf } => (0, [diameter, kerf, ""]),
+        MeasureRecipe::BladeCut { kerf, length, depth } => (1, [kerf, length, depth]),
+        MeasureRecipe::PocketCut { diameter, depth } => (2, [diameter, depth, ""]),
+        MeasureRecipe::BoreDrill { radius, depth } => (3, [radius, depth, ""]),
+        MeasureRecipe::CylinderAttach { radius, length } => (4, [radius, length, ""]),
+        MeasureRecipe::BoxAttach { width, depth, height } => (5, [width, depth, height]),
+    };
+    out.push(tag);
+    for field in fields {
+        write_str_lp(out, field);
+    }
+}
+
+fn read_recipe(reader: &mut store::ByteReader<'_>) -> Result<MeasureRecipe, String> {
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let first = read_str_lp(reader)?;
+    let second = read_str_lp(reader)?;
+    let third = read_str_lp(reader)?;
+    match tag {
+        0 => Ok(MeasureRecipe::DiscCut { diameter: first, kerf: second }),
+        1 => Ok(MeasureRecipe::BladeCut { kerf: first, length: second, depth: third }),
+        2 => Ok(MeasureRecipe::PocketCut { diameter: first, depth: second }),
+        3 => Ok(MeasureRecipe::BoreDrill { radius: first, depth: second }),
+        4 => Ok(MeasureRecipe::CylinderAttach { radius: first, length: second }),
+        5 => Ok(MeasureRecipe::BoxAttach { width: first, depth: second, height: third }),
+        _ => Err("process3d pack recipe tag is invalid".into()),
+    }
+}
+
+fn write_count(out: &mut Vec<u8>, count: usize) {
+    store::pack_rt::write_varint_u64(out, count as u64);
+}
+
+fn read_count(reader: &mut store::ByteReader<'_>) -> Result<usize, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    if count > 8192 {
+        return Err("process3d pack item count exceeds fixed capacity".into());
+    }
+    Ok(count)
+}
+
+fn write_capability(out: &mut Vec<u8>, capability: &Capability) {
+    write_str_lp(out, &capability.id);
+    write_str_lp(out, &capability.label);
+    write_str_lp(out, &capability.icon_id);
+    write_recipe(out, &capability.recipe);
+    write_count(out, capability.parameters.len());
+    for parameter in &capability.parameters {
+        write_str_lp(out, &parameter.id);
+        write_str_lp(out, &parameter.label);
+        out.extend_from_slice(&parameter.value.to_le_bytes());
+    }
+    write_count(out, capability.rules.len());
+    for rule in &capability.rules {
+        let (tag, quantity, parameter, margin) = match rule {
+            CapabilityRule::Min { quantity, parameter, margin } => (0, quantity, parameter, margin),
+            CapabilityRule::Max { quantity, parameter, margin } => (1, quantity, parameter, margin),
+        };
+        out.push(tag);
+        out.push(match quantity {
+            StockQuantity::Width => 0,
+            StockQuantity::Depth => 1,
+            StockQuantity::Height => 2,
+            StockQuantity::MaxDimension => 3,
+            StockQuantity::MinDimension => 4,
+        });
+        write_str_lp(out, parameter);
+        out.extend_from_slice(&margin.to_le_bytes());
+    }
+}
+
+fn read_capability(reader: &mut store::ByteReader<'_>) -> Result<Capability, String> {
+    let id = read_str_lp(reader)?;
+    let label = read_str_lp(reader)?;
+    let icon_id = read_str_lp(reader)?;
+    let recipe = read_recipe(reader)?;
+    let parameter_count = read_count(reader)?;
+    let mut parameters = Vec::with_capacity(parameter_count);
+    for _ in 0..parameter_count {
+        parameters.push(CapabilityParameter { id: read_str_lp(reader)?, label: read_str_lp(reader)?, value: reader.read_f64_le().map_err(|e| e.to_string())? });
+    }
+    let rule_count = read_count(reader)?;
+    let mut rules = Vec::with_capacity(rule_count);
+    for _ in 0..rule_count {
+        let tag = reader.read_u8().map_err(|e| e.to_string())?;
+        let quantity = match reader.read_u8().map_err(|e| e.to_string())? {
+            0 => StockQuantity::Width,
+            1 => StockQuantity::Depth,
+            2 => StockQuantity::Height,
+            3 => StockQuantity::MaxDimension,
+            4 => StockQuantity::MinDimension,
+            _ => return Err("process3d pack stock quantity tag is invalid".into()),
+        };
+        let parameter = read_str_lp(reader)?;
+        let margin = reader.read_f64_le().map_err(|e| e.to_string())?;
+        rules.push(match tag {
+            0 => CapabilityRule::Min { quantity, parameter, margin },
+            1 => CapabilityRule::Max { quantity, parameter, margin },
+            _ => return Err("process3d pack capability rule tag is invalid".into()),
+        });
+    }
+    Ok(Capability { id, label, icon_id, recipe, parameters, rules })
+}
+
+fn write_machine(out: &mut Vec<u8>, machine: &WorkshopMachine) {
+    write_str_lp(out, &machine.id);
+    write_str_lp(out, &machine.label);
+    write_str_lp(out, &machine.icon_id);
+    out.push(u8::from(machine.catalog_id.is_some()));
+    if let Some(catalog_id) = &machine.catalog_id {
+        write_str_lp(out, catalog_id);
+    }
+    write_count(out, machine.capabilities.len());
+    for capability in &machine.capabilities {
+        write_capability(out, capability);
+    }
+}
+
+fn read_machine(reader: &mut store::ByteReader<'_>) -> Result<WorkshopMachine, String> {
+    let id = read_str_lp(reader)?;
+    let label = read_str_lp(reader)?;
+    let icon_id = read_str_lp(reader)?;
+    let catalog_id = match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => None,
+        1 => Some(read_str_lp(reader)?),
+        _ => return Err("process3d pack catalog tag is invalid".into()),
+    };
+    let count = read_count(reader)?;
+    let mut capabilities = Vec::with_capacity(count);
+    for _ in 0..count {
+        capabilities.push(read_capability(reader)?);
+    }
+    Ok(WorkshopMachine { id, label, icon_id, catalog_id, capabilities })
+}
+
+#[derive(Default)]
+struct Process3dRetainedPoseCursor {
+    index: usize,
+    values: [f64; 7],
+}
+
+impl Process3dRetainedPoseCursor {
+    fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<Pose>, String> {
+        self.values[self.index] = reader.read_f64_le().map_err(|error| error.to_string())?;
+        self.index += 1;
+        Ok((self.index == self.values.len()).then(|| Pose { position: [self.values[0], self.values[1], self.values[2]], axis: [self.values[3], self.values[4], self.values[5]], angle: self.values[6] }))
+    }
+
+    fn take_partial(&mut self) -> Pose {
+        self.index = 0;
+        Pose { position: [self.values[0], self.values[1], self.values[2]], axis: [self.values[3], self.values[4], self.values[5]], angle: self.values[6] }
+    }
+}
+
+#[derive(Default)]
+struct Process3dRetainedSolidCursor {
+    tag: Option<u8>,
+    index: usize,
+    values: [f64; 3],
+    text: Option<String>,
+    string: Process3dRetainedStringCursor,
+}
+
+impl Process3dRetainedSolidCursor {
+    fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<WorkingSolid>, String> {
+        let Some(tag) = self.tag else {
+            let tag = reader.read_u8().map_err(|error| error.to_string())?;
+            if tag > 5 {
+                return Err("process3d retained solid tag is invalid".into());
+            }
+            self.tag = Some(tag);
+            return Ok(None);
+        };
+        let scalar_count = match tag {
+            0 => 3,
+            1 => 2,
+            2 => 1,
+            _ => 0,
+        };
+        if self.index < scalar_count {
+            self.values[self.index] = reader.read_f64_le().map_err(|error| error.to_string())?;
+            self.index += 1;
+            if self.index < scalar_count {
+                return Ok(None);
+            }
+        } else if tag >= 3 {
+            let Some(text) = self.string.step(reader)? else { return Ok(None) };
+            self.string = Process3dRetainedStringCursor::default();
+            self.text = Some(text);
+        }
+        Ok(Some(self.take_partial()))
+    }
+
+    fn take_partial(&mut self) -> WorkingSolid {
+        let tag = self.tag.take().unwrap_or(0);
+        self.index = 0;
+        if tag >= 3 && self.text.is_none() {
+            self.text = Some(self.string.take_partial());
+        }
+        match tag {
+            0 => WorkingSolid::Box { width: self.values[0], depth: self.values[1], height: self.values[2] },
+            1 => WorkingSolid::Cylinder { radius: self.values[0], height: self.values[1] },
+            2 => WorkingSolid::Sphere { radius: self.values[0] },
+            3 => WorkingSolid::ImportedMesh { mesh_url: self.text.take().unwrap_or_default() },
+            4 => WorkingSolid::ImportedSolid { solid_handle: self.text.take().unwrap_or_default() },
+            5 => WorkingSolid::Reference { reference_id: self.text.take().unwrap_or_default() },
+            _ => unreachable!("validated retained solid tag"),
+        }
+    }
+}
+
+#[derive(Default)]
+struct Process3dRetainedChildCursor {
+    phase: u8,
+    child_id: Option<String>,
+    target: Option<store::os_io::ArtifactRef>,
+    string: Process3dRetainedStringCursor,
+}
+
+impl Process3dRetainedChildCursor {
+    fn step<S>(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
+        if self.phase == 0 {
+            let Some(child_id) = self.string.step(reader)? else { return Ok(None) };
+            self.string = Process3dRetainedStringCursor::default();
+            self.child_id = Some(child_id);
+            self.phase = 1;
+            return Ok(None);
+        }
+        let Some(uri) = self.string.step(reader)? else { return Ok(None) };
+        self.string = Process3dRetainedStringCursor::default();
+        let target = store::os_io::ArtifactRef::parse_uri(&uri)?;
+        self.target = Some(target);
+        Ok(Some(store::ArtifactChild::new(self.child_id.take().unwrap_or_default(), self.target.take().expect("Process3d retained child target exists"))))
+    }
+
+    fn take_partial<S>(&mut self) -> store::ArtifactChild<S> {
+        if self.phase == 0 && self.child_id.is_none() {
+            self.child_id = Some(self.string.take_partial());
+        } else if self.phase == 1 && self.target.is_none() {
+            self.target = store::os_io::ArtifactRef::parse_uri(&self.string.take_partial()).ok();
+        }
+        store::ArtifactChild::new(
+            self.child_id.take().unwrap_or_default(),
+            self.target.take().unwrap_or(store::os_io::ArtifactRef { artifact_id: String::new(), dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } }),
+        )
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Process3dRetainedMeasurePhase {
+    Tag,
+    Solid,
+    Radius,
+    Depth,
+    Pose,
+}
+
+struct Process3dRetainedMeasureCursor {
+    phase: Process3dRetainedMeasurePhase,
+    tag: u8,
+    radius: f64,
+    depth: f64,
+    solid: Option<WorkingSolid>,
+    solid_cursor: Process3dRetainedSolidCursor,
+    pose_cursor: Process3dRetainedPoseCursor,
+}
+
+impl Default for Process3dRetainedMeasureCursor {
+    fn default() -> Self {
+        Self { phase: Process3dRetainedMeasurePhase::Tag, tag: 0, radius: 0.0, depth: 0.0, solid: None, solid_cursor: Process3dRetainedSolidCursor::default(), pose_cursor: Process3dRetainedPoseCursor::default() }
+    }
+}
+
+impl Process3dRetainedMeasureCursor {
+    fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<ProcessMeasure>, String> {
+        match self.phase {
+            Process3dRetainedMeasurePhase::Tag => {
+                self.tag = reader.read_u8().map_err(|error| error.to_string())?;
+                self.phase = match self.tag {
+                    0 | 2 => Process3dRetainedMeasurePhase::Solid,
+                    1 => Process3dRetainedMeasurePhase::Radius,
+                    _ => return Err("process3d retained measure tag is invalid".into()),
+                };
+            }
+            Process3dRetainedMeasurePhase::Solid => {
+                if let Some(solid) = self.solid_cursor.step(reader)? {
+                    self.solid = Some(solid);
+                    self.phase = Process3dRetainedMeasurePhase::Pose;
+                }
+            }
+            Process3dRetainedMeasurePhase::Radius => {
+                self.radius = reader.read_f64_le().map_err(|error| error.to_string())?;
+                self.phase = Process3dRetainedMeasurePhase::Depth;
+            }
+            Process3dRetainedMeasurePhase::Depth => {
+                self.depth = reader.read_f64_le().map_err(|error| error.to_string())?;
+                self.phase = Process3dRetainedMeasurePhase::Pose;
+            }
+            Process3dRetainedMeasurePhase::Pose => {
+                if let Some(pose) = self.pose_cursor.step(reader)? {
+                    let solid = self.solid.take();
+                    return Ok(Some(match self.tag {
+                        0 => ProcessMeasure::Cut { tool: solid.unwrap_or(WorkingSolid::Sphere { radius: 0.0 }), pose },
+                        1 => ProcessMeasure::Drill { radius: self.radius, depth: self.depth, pose },
+                        2 => ProcessMeasure::Attach { component: solid.unwrap_or(WorkingSolid::Sphere { radius: 0.0 }), pose },
+                        _ => unreachable!("validated retained measure tag"),
+                    }));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn take_partial(&mut self) -> ProcessMeasure {
+        let pose = self.pose_cursor.take_partial();
+        let solid = self.solid.take().unwrap_or_else(|| self.solid_cursor.take_partial());
+        match self.tag {
+            1 => ProcessMeasure::Drill { radius: self.radius, depth: self.depth, pose },
+            2 => ProcessMeasure::Attach { component: solid, pose },
+            _ => ProcessMeasure::Cut { tool: solid, pose },
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Process3dRetainedStepPhase {
+    Id,
+    Label,
+    Enabled,
+    OriginTag,
+    OriginMachine,
+    OriginCapability,
+    Measure,
+}
+
+struct Process3dRetainedStepCursor {
+    phase: Process3dRetainedStepPhase,
+    id: Option<String>,
+    label: Option<String>,
+    enabled: bool,
+    origin_machine: Option<String>,
+    origin_capability: Option<String>,
+    string: Process3dRetainedStringCursor,
+    measure_cursor: Process3dRetainedMeasureCursor,
+}
+
+impl Default for Process3dRetainedStepCursor {
+    fn default() -> Self {
+        Self { phase: Process3dRetainedStepPhase::Id, id: None, label: None, enabled: false, origin_machine: None, origin_capability: None, string: Process3dRetainedStringCursor::default(), measure_cursor: Process3dRetainedMeasureCursor::default() }
+    }
+}
+
+impl Process3dRetainedStepCursor {
+    fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<ProcessStep>, String> {
+        match self.phase {
+            Process3dRetainedStepPhase::Id => {
+                let Some(id) = self.string.step(reader)? else { return Ok(None) };
+                self.string = Process3dRetainedStringCursor::default();
+                self.id = Some(id);
+                self.phase = Process3dRetainedStepPhase::Label;
+            }
+            Process3dRetainedStepPhase::Label => {
+                let Some(label) = self.string.step(reader)? else { return Ok(None) };
+                self.string = Process3dRetainedStringCursor::default();
+                self.label = Some(label);
+                self.phase = Process3dRetainedStepPhase::Enabled;
+            }
+            Process3dRetainedStepPhase::Enabled => {
+                self.enabled = reader.read_u8().map_err(|error| error.to_string())? != 0;
+                self.phase = Process3dRetainedStepPhase::OriginTag;
+            }
+            Process3dRetainedStepPhase::OriginTag => {
+                self.phase = match reader.read_u8().map_err(|error| error.to_string())? {
+                    0 => Process3dRetainedStepPhase::Measure,
+                    1 => Process3dRetainedStepPhase::OriginMachine,
+                    _ => return Err("process3d retained origin tag is invalid".into()),
+                };
+            }
+            Process3dRetainedStepPhase::OriginMachine => {
+                let Some(machine) = self.string.step(reader)? else { return Ok(None) };
+                self.string = Process3dRetainedStringCursor::default();
+                self.origin_machine = Some(machine);
+                self.phase = Process3dRetainedStepPhase::OriginCapability;
+            }
+            Process3dRetainedStepPhase::OriginCapability => {
+                let Some(capability) = self.string.step(reader)? else { return Ok(None) };
+                self.string = Process3dRetainedStringCursor::default();
+                self.origin_capability = Some(capability);
+                self.phase = Process3dRetainedStepPhase::Measure;
+            }
+            Process3dRetainedStepPhase::Measure => {
+                if let Some(measure) = self.measure_cursor.step(reader)? {
+                    return Ok(Some(ProcessStep {
+                        id: self.id.take().unwrap_or_default(),
+                        label: self.label.take().unwrap_or_default(),
+                        enabled: self.enabled,
+                        origin: self.origin_machine.take().map(|machine_id| StepOrigin { machine_id, capability_id: self.origin_capability.take().unwrap_or_default() }),
+                        measure,
+                    }));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn take_partial(&mut self) -> ProcessStep {
+        let partial = self.string.take_partial();
+        match self.phase {
+            Process3dRetainedStepPhase::Id if self.id.is_none() => self.id = Some(partial),
+            Process3dRetainedStepPhase::Label if self.label.is_none() => self.label = Some(partial),
+            Process3dRetainedStepPhase::OriginMachine if self.origin_machine.is_none() => self.origin_machine = Some(partial),
+            Process3dRetainedStepPhase::OriginCapability if self.origin_capability.is_none() => self.origin_capability = Some(partial),
+            _ => drop(partial),
+        }
+        ProcessStep {
+            id: self.id.take().unwrap_or_default(),
+            label: self.label.take().unwrap_or_default(),
+            enabled: self.enabled,
+            origin: self.origin_machine.take().map(|machine_id| StepOrigin { machine_id, capability_id: self.origin_capability.take().unwrap_or_default() }),
+            measure: self.measure_cursor.take_partial(),
+        }
+    }
+}
+
+struct Process3dRetainedStringCursor {
+    length: usize,
+    shift: u32,
+    remaining: Option<usize>,
+    bytes: Vec<u8>,
+    maximum_bytes: usize,
+}
+
+impl Default for Process3dRetainedStringCursor {
+    fn default() -> Self {
+        Self { length: 0, shift: 0, remaining: None, bytes: Vec::new(), maximum_bytes: store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES }
+    }
+}
+
+impl Process3dRetainedStringCursor {
+    #[cfg(test)]
+    fn with_maximum_bytes(maximum_bytes: usize) -> Self {
+        let mut cursor = Self::default();
+        cursor.maximum_bytes = maximum_bytes;
+        cursor
+    }
+
+    fn finish(&mut self) -> Result<String, String> {
+        self.length = 0;
+        self.shift = 0;
+        self.remaining = None;
+        String::from_utf8(std::mem::take(&mut self.bytes)).map_err(|error| error.to_string())
+    }
+
+    fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+        if let Some(remaining) = self.remaining {
+            let byte = reader.read_u8().map_err(|error| error.to_string())?;
+            self.bytes.push(byte);
+            let remaining = remaining - 1;
+            self.remaining = Some(remaining);
+            return if remaining == 0 { Ok(Some(self.finish()?)) } else { Ok(None) };
+        }
+        let byte = reader.read_u8().map_err(|error| error.to_string())?;
+        let payload = usize::from(byte & 0x7f);
+        self.length = self.length.checked_add(payload.checked_shl(self.shift).ok_or_else(|| "process3d retained string length overflow".to_string())?).ok_or_else(|| "process3d retained string length overflow".to_string())?;
+        if byte & 0x80 != 0 {
+            self.shift = self.shift.checked_add(7).filter(|shift| *shift < usize::BITS).ok_or_else(|| "process3d retained string length overflow".to_string())?;
+            return Ok(None);
+        }
+        if self.length > self.maximum_bytes {
+            return Err("process3d retained string exceeded its fixed byte credit".into());
+        }
+        self.bytes.try_reserve_exact(self.length).map_err(|_| "process3d retained string admission failed".to_string())?;
+        self.remaining = Some(self.length);
+        if self.length == 0 {
+            Ok(Some(self.finish()?))
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn take_partial(&mut self) -> String {
+        self.finish().unwrap_or_default()
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.length == 0 && self.shift == 0 && self.remaining.is_none() && self.bytes.is_empty()
+    }
+
+    fn has_partial(&self) -> bool {
+        self.length != 0 || self.shift != 0 || self.remaining.is_some() || !self.bytes.is_empty()
+    }
+}
+
+impl Drop for Process3dRetainedStringCursor {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "Process3d retained string cursor reached Drop before exact handback");
+    }
+}
+//#endregion 🔖️MutationWirePrimitives
+
 //#region 🔖️RetainedEnvelopeOwnership
-use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
+use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
 
 const PROCESS3D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 const PROCESS3D_RETAINED_STACK_CAPACITY: usize = 64;
@@ -1104,24 +1731,28 @@ impl store::ArtifactOwnedValueRetirementFactory<Process3dMutation> for Process3d
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Process3dSnapshotDecodeState {
     AwaitToken,
-    Hex,
-    Structural,
+    Ingest,
+    Drive,
+    CloseSession,
     Ready,
     Published,
     Closing,
     Complete,
 }
 
+/// 🧵️ The envelope's `snapshot` field: hex pack bytes streamed nibble by nibble into this
+/// artifact's mounted canonical pack session, then the typed snapshot published exactly once.
 struct Process3dSnapshotDecodeAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     path: store::OwnedSchemaPath,
     state: Process3dSnapshotDecodeState,
-    hex: std::mem::ManuallyDrop<Option<store::OwnedSchemaHexAuthority<PROCESS3D_OWNER_BYTES>>>,
-    reader: std::mem::ManuallyDrop<Option<crate::schema::snapshot::Process3dRetainedSnapshotReader>>,
+    token: Option<store::OwnedSchemaToken>,
+    relative: usize,
+    high: Option<u8>,
+    session: std::mem::ManuallyDrop<Option<crate::schema::snapshot::Process3dMountedPackSession>>,
     value: std::mem::ManuallyDrop<Option<Process3dSnapshot>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    retirement_terminal: bool,
 }
 
 impl Process3dSnapshotDecodeAuthority {
@@ -1131,16 +1762,40 @@ impl Process3dSnapshotDecodeAuthority {
             generation,
             path,
             state: Process3dSnapshotDecodeState::AwaitToken,
-            hex: std::mem::ManuallyDrop::new(None),
-            reader: std::mem::ManuallyDrop::new(None),
+            token: None,
+            relative: 1,
+            high: None,
+            session: std::mem::ManuallyDrop::new(None),
             value: std::mem::ManuallyDrop::new(None),
             retirement: std::mem::ManuallyDrop::new(None),
-            retirement_terminal: false,
         }
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
         store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+    }
+
+    fn session(&mut self) -> &mut crate::schema::snapshot::Process3dMountedPackSession {
+        self.session.as_mut().expect("Process3d mounted pack session retained")
+    }
+
+    fn nibble(value: u8) -> Option<u8> {
+        match value {
+            b'0'..=b'9' => Some(value - b'0'),
+            b'a'..=b'f' => Some(value - b'a' + 10),
+            b'A'..=b'F' => Some(value - b'A' + 10),
+            _ => None,
+        }
+    }
+
+    fn reserve_pending(&mut self, code: &'static str, offset: u64, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, store::OwnedSchemaDecodeDiagnostic> {
+        let Some(exact) = self.session().next_retained_allocation_bytes().map_err(|_| self.diagnostic(code, offset))? else { return Ok(false) };
+        let step = self.session().reserve_retained_allocation(exact).map_err(|_| self.diagnostic(code, offset))?;
+        if !step.progressed {
+            return Err(self.diagnostic("process3d-envelope.snapshot-allocation-stalled", offset));
+        }
+        cx.consume_fuel(1);
+        Ok(true)
     }
 }
 
@@ -1162,42 +1817,77 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Proces
             return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Process3dSnapshotDecodeState::AwaitToken {
-            if !terminal {
+            if !terminal || token.kind != store::OwnedSchemaTokenKind::String {
                 return Err(self.diagnostic("process3d-envelope.snapshot-pack-must-be-scalar", token.start));
             }
-            *self.hex = Some(store::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
-            self.state = Process3dSnapshotDecodeState::Hex;
+            let span = token.end.checked_sub(token.start).and_then(|span| span.checked_sub(2)).ok_or_else(|| self.diagnostic("process3d-envelope.snapshot-pack-length", token.start))?;
+            if span == 0 || span & 1 != 0 {
+                return Err(self.diagnostic("process3d-envelope.snapshot-pack-odd-hex", token.start));
+            }
+            let expected = usize::try_from(span / 2).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-length", token.start))?;
+            let maximum_items = process3d_publication_item_credit(self.operation, self.generation).map_err(|_| self.diagnostic("process3d-envelope.snapshot-item-authority", token.start))?;
+            *self.session = Some(crate::schema::snapshot::process3d_mounted_pack_session(expected, maximum_items).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-preflight", token.start))?);
+            self.token = Some(token);
+            self.state = Process3dSnapshotDecodeState::Ingest;
         }
-        if self.state == Process3dSnapshotDecodeState::Hex {
-            return match self.hex.as_mut().expect("Process3d snapshot hex owner retained").step(source, cx) {
-                store::OwnedSchemaHexStep::Pending => Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
-                store::OwnedSchemaHexStep::Complete => {
-                    let maximum_items = process3d_publication_item_credit(self.operation, self.generation).map_err(|_| self.diagnostic("process3d-envelope.snapshot-item-authority", token.start))?;
-                    *self.reader = Some(crate::schema::snapshot::Process3dRetainedSnapshotReader::new(maximum_items));
-                    self.state = Process3dSnapshotDecodeState::Structural;
-                    Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
+        if self.state == Process3dSnapshotDecodeState::Ingest {
+            let retained = self.token.ok_or_else(|| self.diagnostic("process3d-envelope.snapshot-token-owner", token.start))?;
+            if retained != token {
+                return Err(self.diagnostic("process3d-envelope.snapshot-token-replayed", token.start));
+            }
+            let offset = retained.start + self.relative as u64;
+            if offset + 1 >= retained.end {
+                if self.high.is_some() {
+                    return Err(self.diagnostic("process3d-envelope.snapshot-pack-odd-hex", offset));
                 }
-                store::OwnedSchemaHexStep::Cancelled => Err(self.diagnostic("process3d-envelope.snapshot-pack-cancelled", token.start)),
-                store::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
-            };
-        }
-        if self.state != Process3dSnapshotDecodeState::Structural {
-            return Err(self.diagnostic("process3d-envelope.snapshot-token-replayed", token.start));
-        }
-        let bytes = self.hex.as_ref().and_then(store::OwnedSchemaHexAuthority::as_bytes).ok_or_else(|| self.diagnostic("process3d-envelope.snapshot-backing-missing", token.start))?;
-        let complete = self.reader.as_mut().expect("Process3d retained snapshot reader exists").step(bytes, cx).map_err(|_| self.diagnostic("process3d-envelope.snapshot-structural-malformed", token.start))?;
-        if !complete {
+                self.session().seal().map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-seal", retained.end))?;
+                self.state = Process3dSnapshotDecodeState::Drive;
+                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            }
+            if self.reserve_pending("process3d-envelope.snapshot-source-allocation", offset, cx)? {
+                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            }
+            let mut byte = [0u8; 1];
+            if source.copy_token_bytes(retained, self.relative, &mut byte) != 1 {
+                return Err(self.diagnostic("process3d-envelope.snapshot-pack-source", offset));
+            }
+            let nibble = Self::nibble(byte[0]).ok_or_else(|| self.diagnostic("process3d-envelope.snapshot-pack-hex", offset))?;
+            self.relative += 1;
+            cx.consume_fuel(1);
+            if let Some(high) = self.high.take() {
+                self.session().admit_byte((high << 4) | nibble).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-handback", offset))?;
+            } else {
+                self.high = Some(nibble);
+            }
             return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
-        let value = self.reader.as_mut().expect("Process3d retained snapshot reader exists").take().ok_or_else(|| self.diagnostic("process3d-envelope.snapshot-handoff-missing", token.start))?;
-        drop(self.reader.take());
-        if !self.hex.as_mut().expect("Process3d snapshot hex owner retained").release() {
-            return Err(self.diagnostic("process3d-envelope.snapshot-backing-release", token.start));
+        if self.state == Process3dSnapshotDecodeState::Drive {
+            cx.set_stage("process3d-retained-canonical-pack");
+            if self.reserve_pending("process3d-envelope.snapshot-retained-allocation", token.start, cx)? {
+                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            }
+            cx.consume_fuel(1);
+            if !self.session().grant().map_err(|_| self.diagnostic("process3d-envelope.snapshot-structural-malformed", token.start))? {
+                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            }
+            let value = self.session().take().ok_or_else(|| self.diagnostic("process3d-envelope.snapshot-handoff-missing", token.start))?;
+            *self.value = Some(value);
+            self.session().request_cancel();
+            self.state = Process3dSnapshotDecodeState::CloseSession;
+            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
-        drop(self.hex.take());
-        *self.value = Some(value);
-        self.state = Process3dSnapshotDecodeState::Ready;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+        if self.state == Process3dSnapshotDecodeState::CloseSession {
+            cx.consume_fuel(1);
+            let maximum_bytes = self.session().next_retained_release_allocation_bytes().unwrap_or(0);
+            if matches!(self.session().close_step(1, maximum_bytes).map_err(|_| self.diagnostic("process3d-envelope.snapshot-session-close", token.start))?, store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { .. }) {
+                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            }
+            drop(self.session.take());
+            self.token = None;
+            self.state = Process3dSnapshotDecodeState::Ready;
+            return Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete);
+        }
+        Err(self.diagnostic("process3d-envelope.snapshot-token-replayed", token.start))
     }
 
     fn publish_reserved(
@@ -1216,44 +1906,42 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Proces
     }
 
     fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        if let Some(session) = self.session.as_ref() {
+            return Ok(session.next_retained_release_allocation_bytes().unwrap_or(0));
+        }
         Ok(usize::from(self.retirement.is_some()) * PROCESS3D_OWNER_BYTES)
     }
 
     fn maximum_close_byte_demand(&self) -> usize {
-        PROCESS3D_OWNER_BYTES
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn maximum_retained_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES
+        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.retirement_terminal {
-            drop(self.retirement.take());
-            self.retirement_terminal = false;
-            self.state = Process3dSnapshotDecodeState::Complete;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(reader) = self.reader.as_mut() {
-            if let Some(value) = reader.take_rejected() {
-                *self.value = Some(value);
+        if self.session.is_some() {
+            self.session().request_cancel();
+            match self.session().close_step(1, maximum_bytes).map_err(|_| self.diagnostic("process3d-envelope.snapshot-session-close", 0))? {
+                store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { released_items, released_bytes } => {
+                    self.state = Process3dSnapshotDecodeState::Closing;
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes });
+                }
+                store::mounted_pack_rt::RetainedTypedPackCloseStep::Complete => {}
             }
-            drop(self.reader.take());
-            self.state = Process3dSnapshotDecodeState::Closing;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(hex) = self.hex.as_mut() {
-            hex.cancel();
-            drop(self.hex.take());
+            drop(self.session.take());
+            self.token = None;
             self.state = Process3dSnapshotDecodeState::Closing;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.retirement.is_none() {
             if let Some(value) = self.value.take() {
                 *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&Process3dSnapshotRetirementFactory, value));
+                self.state = Process3dSnapshotDecodeState::Closing;
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
             self.state = Process3dSnapshotDecodeState::Complete;
@@ -1263,8 +1951,9 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Proces
         let retirement = self.retirement.as_mut().expect("Process3d snapshot retirement retained");
         match retirement.close_step(1, maximum_bytes.min(PROCESS3D_OWNER_BYTES)).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "process3d-envelope.snapshot-retirement-fault", offset: 0, line: 0, column: 0, path })? {
             store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                self.retirement_terminal = true;
-                Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                drop(self.retirement.take());
+                self.state = Process3dSnapshotDecodeState::Complete;
+                Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
             }
             store::SnapshotRetirementStep::Complete => Err(self.diagnostic("process3d-envelope.snapshot-retirement-false-terminal", 0)),
             step => Ok(step),
@@ -1272,7 +1961,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Proces
     }
 
     fn terminal_is_empty(&self) -> bool {
-        matches!(self.state, Process3dSnapshotDecodeState::Published | Process3dSnapshotDecodeState::Complete) && self.hex.is_none() && self.reader.is_none() && self.value.is_none() && self.retirement.is_none() && !self.retirement_terminal
+        matches!(self.state, Process3dSnapshotDecodeState::Published | Process3dSnapshotDecodeState::Complete) && self.session.is_none() && self.value.is_none() && self.retirement.is_none()
     }
 }
 
@@ -1297,14 +1986,14 @@ fn process3d_retained_advance<T>(bytes: &[u8], offset: &mut usize, read: impl Fn
     Ok(value)
 }
 
-fn process3d_retained_string_step(bytes: &[u8], offset: &mut usize, cursor: &mut crate::schema::snapshot::Process3dRetainedStringCursor) -> Result<Option<String>, protocol::ProtocolError> {
+fn process3d_retained_string_step(bytes: &[u8], offset: &mut usize, cursor: &mut Process3dRetainedStringCursor) -> Result<Option<String>, protocol::ProtocolError> {
     process3d_retained_advance(bytes, offset, |reader| cursor.step(reader))
 }
 
 #[derive(Default)]
 struct Process3dRetainedCapabilityCursor {
     phase: u8,
-    string: crate::schema::snapshot::Process3dRetainedStringCursor,
+    string: Process3dRetainedStringCursor,
     id: Option<String>,
     label: Option<String>,
     icon_id: Option<String>,
@@ -1489,7 +2178,7 @@ impl Process3dRetainedCapabilityCursor {
 #[derive(Default)]
 struct Process3dRetainedMachineCursor {
     phase: u8,
-    string: crate::schema::snapshot::Process3dRetainedStringCursor,
+    string: Process3dRetainedStringCursor,
     id: Option<String>,
     label: Option<String>,
     icon_id: Option<String>,
@@ -1598,13 +2287,13 @@ struct Process3dRetainedMutationReader {
     index: usize,
     expected: usize,
     strings: [Option<String>; 3],
-    string: crate::schema::snapshot::Process3dRetainedStringCursor,
+    string: Process3dRetainedStringCursor,
     enabled: bool,
     origin_tag: u8,
-    step: Option<crate::schema::snapshot::Process3dRetainedStepCursor>,
-    measure: Option<crate::schema::snapshot::Process3dRetainedMeasureCursor>,
-    pose: Option<crate::schema::snapshot::Process3dRetainedPoseCursor>,
-    child: Option<crate::schema::snapshot::Process3dRetainedChildCursor>,
+    step: Option<Process3dRetainedStepCursor>,
+    measure: Option<Process3dRetainedMeasureCursor>,
+    pose: Option<Process3dRetainedPoseCursor>,
+    child: Option<Process3dRetainedChildCursor>,
     machine: Option<Process3dRetainedMachineCursor>,
     capability: Option<Process3dRetainedCapabilityCursor>,
     capabilities: Vec<Capability>,
@@ -2231,8 +2920,8 @@ fn process3d_copy_string(source: &str) -> Result<String, &'static str> {
     Ok(value)
 }
 
-fn process3d_copy_pose(source: &crate::Pose) -> crate::Pose {
-    crate::Pose { position: source.position, axis: source.axis, angle: source.angle }
+fn process3d_copy_pose(source: &Pose) -> Pose {
+    Pose { position: source.position, axis: source.axis, angle: source.angle }
 }
 
 fn process3d_copy_solid(source: &WorkingSolid) -> Result<WorkingSolid, &'static str> {
@@ -2650,7 +3339,7 @@ fn process3d_observe_mutation(digest: &mut store::ArtifactStoreInitializationDig
     }
 }
 
-fn process3d_observe_pose(digest: &mut store::ArtifactStoreInitializationDigest, pose: &crate::Pose) {
+fn process3d_observe_pose(digest: &mut store::ArtifactStoreInitializationDigest, pose: &Pose) {
     for scalar in pose.position.iter().chain(pose.axis.iter()).chain(std::iter::once(&pose.angle)) {
         digest.observe(&scalar.to_bits().to_be_bytes());
     }
@@ -3348,7 +4037,7 @@ pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutat
         replace_step_measure::ReplaceStepMeasure, replace_stock_solid::ReplaceStockSolid,
     };
 
-    let pose = crate::Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.5 };
+    let pose = Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.5 };
     let capability = Capability {
         id: "deep-capability".into(),
         label: "Deep Capability".into(),

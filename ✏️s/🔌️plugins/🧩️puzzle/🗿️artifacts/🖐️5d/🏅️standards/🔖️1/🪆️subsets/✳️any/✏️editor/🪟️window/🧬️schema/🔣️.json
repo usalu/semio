@@ -222,6 +222,34 @@
         }
       }
     },
+    "Puzzle5dSuggestionMenu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "windowId",
+        "vortexFullId",
+        "submenu"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "windowId": {
+          "type": "string"
+        },
+        "vortexFullId": {
+          "type": "string"
+        },
+        "submenu": {
+          "type": "boolean"
+        }
+      }
+    },
     "Puzzle5dWindowTransient": {
       "type": "object",
       "additionalProperties": false,
@@ -230,6 +258,16 @@
         "brushCandidateIndex"
       ],
       "properties": {
+        "suggestionMenu": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Puzzle5dSuggestionMenu"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "engagementInput": {
           "type": "string"
         },

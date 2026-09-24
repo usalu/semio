@@ -42,8 +42,6 @@ pub mod set_channel_target;
 pub mod set_keyframe_time;
 #[path = "🔢set-keyframe-value/🦀️.rs"]
 pub mod set_keyframe_value;
-/// 🏷️ Variant ordinals for the real binary `OpBinary` frame below (`tag u8`) — declaration order,
-/// 0-11. Must stay in lockstep with `variant_ordinal`/`OP_KEYWORDS`.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
@@ -76,7 +74,7 @@ pub enum SemioAnimationMutation {
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.animation`, in enum
 /// declaration order — what the `🎞️mutate-semio-animation` case's completeness gate counts against
 /// and what `../../🔮️oracles/🔣️.json`'s catalog repeats. Unlike its audio/video siblings
-/// this subset's wire keywords are the two-letter `OP_KEYWORDS` tags (`IT`, `KV`, …), so the two
+/// this subset's wire keywords are the two-letter `TEXT_KEYWORDS` heads (`IT`, `KV`, …), so the two
 /// tables are related only by position; `kinds_match_the_enum_and_the_catalog` below asserts that
 /// positional agreement rather than string equality.
 pub const KINDS: &[&str] =
@@ -336,31 +334,61 @@ impl OpText for SemioAnimationMutation {
     }
 }
 
-/// 🏷️ `SemioAnimationMutation` variant ordinals — declaration order, 0-11 (matches
-/// `parse_op`'s own keyword match). Used by the real `OpBinary` frame below.
-const OP_KEYWORDS: [&str; 12] = ["S", "IT", "RT", "TN", "IC", "RC", "CT", "CI", "IK", "RK", "KT", "KV"];
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioAnimationMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_INSERT_TIMELINE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-timeline");
+const TAG_REMOVE_TIMELINE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-timeline");
+const TAG_SET_TIMELINE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-timeline-name");
+const TAG_INSERT_CHANNEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-channel");
+const TAG_REMOVE_CHANNEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-channel");
+const TAG_SET_CHANNEL_TARGET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-channel-target");
+const TAG_SET_CHANNEL_INTERPOLATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-channel-interpolation");
+const TAG_INSERT_KEYFRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-keyframe");
+const TAG_REMOVE_KEYFRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-keyframe");
+const TAG_SET_KEYFRAME_TIME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-keyframe-time");
+const TAG_SET_KEYFRAME_VALUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-keyframe-value");
+//#endregion 🏷️WireTags
+
+/// 🧾️ Each record kind's text-grammar tag, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
+const TEXT_KEYWORDS: [(&str, &str); 12] = [
+    ("set-snapshot", "S"),
+    ("insert-timeline", "IT"),
+    ("remove-timeline", "RT"),
+    ("set-timeline-name", "TN"),
+    ("insert-channel", "IC"),
+    ("remove-channel", "RC"),
+    ("set-channel-target", "CT"),
+    ("set-channel-interpolation", "CI"),
+    ("insert-keyframe", "IK"),
+    ("remove-keyframe", "RK"),
+    ("set-keyframe-time", "KT"),
+    ("set-keyframe-value", "KV"),
+];
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioAnimationMutation) -> u8 {
+fn wire_tag(m: &SemioAnimationMutation) -> u8 {
     use SemioAnimationMutation::*;
     match m {
-        SetSnapshot(_) => 0,
-        InsertTimeline(_) => 1,
-        RemoveTimeline(_) => 2,
-        SetTimelineName(_) => 3,
-        InsertChannel(_) => 4,
-        RemoveChannel(_) => 5,
-        SetChannelTarget(_) => 6,
-        SetChannelInterpolation(_) => 7,
-        InsertKeyframe(_) => 8,
-        RemoveKeyframe(_) => 9,
-        SetKeyframeTime(_) => 10,
-        SetKeyframeValue(_) => 11,
+        SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        InsertTimeline(_) => TAG_INSERT_TIMELINE,
+        RemoveTimeline(_) => TAG_REMOVE_TIMELINE,
+        SetTimelineName(_) => TAG_SET_TIMELINE_NAME,
+        InsertChannel(_) => TAG_INSERT_CHANNEL,
+        RemoveChannel(_) => TAG_REMOVE_CHANNEL,
+        SetChannelTarget(_) => TAG_SET_CHANNEL_TARGET,
+        SetChannelInterpolation(_) => TAG_SET_CHANNEL_INTERPOLATION,
+        InsertKeyframe(_) => TAG_INSERT_KEYFRAME,
+        RemoveKeyframe(_) => TAG_REMOVE_KEYFRAME,
+        SetKeyframeTime(_) => TAG_SET_KEYFRAME_TIME,
+        SetKeyframeValue(_) => TAG_SET_KEYFRAME_VALUE,
     }
 }
+
 const OP_BINARY_FORMAT: u8 = 1;
 
 /// 🔢️ Real binary op frame (animation wave — off the old whole-`OpText`-line `.into_bytes()` F6
-/// text-as-binary shortcut). `format u8` + `tag u8` (the variant ordinal above) as two real fixed
+/// text-as-binary shortcut). `format u8` + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) as two real fixed
 /// fields, then the variant's own `key=value,...` argument text (i.e. `print_op`'s output with its
 /// `TAG:` prefix stripped) as one opaque trailing `bytes` chain — reuses the real, tested
 /// `print_op`/`parse_op` text codec (one source of truth), same treatment every prior semio wave's
@@ -372,7 +400,7 @@ impl OpBinary for SemioAnimationMutation {
             Some((_, rest)) => rest,
             None => "",
         };
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(args.as_bytes());
         Ok(out)
     }
@@ -382,7 +410,8 @@ impl OpBinary for SemioAnimationMutation {
         if *format != OP_BINARY_FORMAT {
             return Err(malformed("op format", format!("unsupported op format {format}")));
         }
-        let keyword = OP_KEYWORDS.get(*tag as usize).ok_or_else(|| malformed("op tag", format!("unknown op tag {tag}")))?;
+        let kind = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(*tag)).ok_or_else(|| malformed("op tag", format!("tag {tag} names no record of 📡️.protocol.semio")))?;
+        let keyword = TEXT_KEYWORDS.iter().find(|(record, _)| *record == kind).map(|(_, keyword)| *keyword).ok_or_else(|| malformed("op tag", format!("record {kind} has no text keyword")))?;
         let args = std::str::from_utf8(rest).map_err(|e| malformed("op args utf8", e.to_string()))?;
         let line = format!("{keyword}:{args}");
         <Self as OpText>::parse_op(&line).map_err(|e| malformed("op text", e.to_string()))

@@ -38,52 +38,53 @@ async fn json_export_import_round_trips_the_snapshot() {
     assert_eq!(snapshot, recovered);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn obj_export_import_round_trips_the_snapshot() {
-    let snapshot = fixture();
-    let bytes = crate::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).expect("obj export");
-    let recovered = crate::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&bytes).expect("obj import");
-    assert_eq!(snapshot, recovered);
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn geometry_of(snapshot: &LowpolySnapshot) -> (usize, usize) {
+    snapshot.objects.iter().filter(|o| !o.mesh_content.is_empty()).map(|o| mesh_of(o)).fold((0, 0), |(v, f), mesh| (v + mesh.vertex_count(), f + mesh.face_count()))
 }
 
 #[semio_framework_async_macros::async_test]
-async fn png_export_import_round_trips_the_snapshot() {
+async fn mesh_formats_carry_the_geometry_and_nothing_else() {
     let snapshot = fixture();
-    let bytes = crate::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).expect("png export");
-    let recovered = crate::io::import::deserializers::artifacts::png::v1_2::any::deserialize_bytes(&bytes).expect("png import");
-    assert_eq!(snapshot, recovered);
+    let (_, box_faces) = geometry_of(&snapshot);
+    let obj = crate::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).expect("obj export");
+    assert!(!String::from_utf8(obj.clone()).expect("obj text").contains("semio"), "no private side channel in the file");
+    assert_eq!(geometry_of(&crate::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&obj).expect("obj import")), (8, box_faces));
+    let ply = crate::io::export::serializers::artifacts::ply::v1_0::any::serialize_bytes(&snapshot).expect("ply export");
+    assert_eq!(geometry_of(&crate::io::import::deserializers::artifacts::ply::v1_0::any::deserialize_bytes(&ply).expect("ply import")), (8, box_faces));
+    let gltf = crate::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&snapshot).expect("gltf export");
+    assert_eq!(geometry_of(&crate::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(&gltf).expect("gltf import")).0, 8);
+    let dwg = crate::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).expect("dwg export");
+    assert_eq!(geometry_of(&crate::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&dwg).expect("dwg import")).0, 8);
+    let las = semio_s_artifact_stdio_las::io::decode_las(&crate::io::export::serializers::artifacts::las::v1_0::any::serialize_bytes(&snapshot).expect("las export")).expect("las decodes");
+    assert_eq!(las.points.len(), 8);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn ply_export_import_round_trips_the_snapshot() {
-    let snapshot = fixture();
-    let bytes = crate::io::export::serializers::artifacts::ply::v1_0::any::serialize_bytes(&snapshot).expect("ply export");
-    let recovered = crate::io::import::deserializers::artifacts::ply::v1_0::any::deserialize_bytes(&bytes).expect("ply import");
-    assert_eq!(snapshot, recovered);
+async fn png_is_a_picture_of_the_model() {
+    let bytes = crate::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&fixture()).expect("png export");
+    let png = semio_s_artifact_stdio_png::io::decode_png(&bytes).expect("decodes as png");
+    assert_eq!((png.width, png.height), (512, 512));
+    assert!(png.pixels.chunks(4).filter(|px| px[0] < 250).count() > 10_000, "the box is painted");
 }
 
-/// 🚫️ gltf/dwg/las are honest stubs (see those leaves' own doc comments) -- proves they fail
-/// LOUDLY, never silently miscompile as a pack-envelope-mismatch lie.
+/// 🔮️ The third-party `gltf` reader (test-only) loads the GLB export.
 #[semio_framework_async_macros::async_test]
-async fn unimplemented_geometry_formats_error_honestly_instead_of_lying() {
-    let snapshot = fixture();
-    assert!(crate::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&snapshot).is_err());
-    assert!(crate::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).is_err());
-    assert!(crate::io::export::serializers::artifacts::las::v1_0::any::serialize_bytes(&snapshot).is_err());
+async fn gltf_export_is_read_by_the_gltf_crate() {
+    let bytes = crate::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&fixture()).expect("gltf export");
+    let (document, buffers, _) = gltf::import_slice(&bytes).expect("the gltf crate imports the GLB");
+    let primitive = document.meshes().next().expect("one mesh").primitives().next().expect("one primitive");
+    let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+    assert_eq!(reader.read_positions().expect("positions").count(), 8);
+    assert_eq!(reader.read_indices().expect("indices").into_u32().count(), 36);
 }
 
-/// 🚫️ Import-direction counterpart: gltf/dwg/las deserializers are honest stubs too (stl now
-/// parses real geometry, and still rejects garbage loudly)
-/// (creating a resolvable mesh child artifact from parsed geometry needs a store/session
-/// handle, not available to a synchronous `&[u8] -> LowpolySnapshot` function) -- arbitrary
-/// input bytes must error, never silently fabricate a geometry-less `LowpolySnapshot`.
 #[semio_framework_async_macros::async_test]
-async fn unimplemented_geometry_import_formats_error_honestly_instead_of_lying() {
-    let bytes = b"not a real payload, contents are irrelevant -- these stubs ignore input entirely";
+async fn geometry_format_garbage_bytes_still_error_loudly() {
+    let bytes = b"not a real payload";
     assert!(crate::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_bytes(bytes).is_err());
     assert!(crate::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(bytes).is_err());
     assert!(crate::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(bytes).is_err());
-    assert!(crate::io::import::deserializers::artifacts::las::v1_0::any::deserialize_bytes(bytes).is_err());
 }
 
 //#region 🕸️RealGeometryIo
@@ -98,10 +99,6 @@ fn mesh_of(object: &LowpolyObject) -> HalfedgeMesh {
 
 fn total_faces(snapshot: &LowpolySnapshot) -> usize {
     snapshot.objects.iter().filter(|o| !o.mesh_content.is_empty()).map(|o| mesh_of(o).face_count()).sum()
-}
-
-fn strip_lines_starting_with(text: &[u8], prefix: &str) -> Vec<u8> {
-    String::from_utf8(text.to_vec()).unwrap().lines().filter(|l| !l.trim_start().starts_with(prefix)).collect::<Vec<_>>().join("\n").into_bytes()
 }
 
 const MULTI_OBJECT_OBJ: &str = "# hand-written, Blender-style\n\
@@ -226,10 +223,8 @@ async fn geometry_export_then_import_preserves_face_counts_and_applies_transform
     let box_faces = HalfedgeMesh::from_json(&snapshot.objects[0].mesh_content).unwrap().face_count();
     assert_eq!(total_faces(&snapshot), box_faces);
 
-    // OBJ: lossless via the DSL comment; geometry-only once the comment is stripped.
     let obj_bytes = obj_export::serialize_bytes(&snapshot).expect("obj export");
-    assert_eq!(obj_import::deserialize_bytes(&obj_bytes).expect("lossless obj"), snapshot);
-    let geometry_only = obj_import::deserialize_bytes(&strip_lines_starting_with(&obj_bytes, "# semio-lowpoly-dsl")).expect("geometry obj");
+    let geometry_only = obj_import::deserialize_bytes(&obj_bytes).expect("geometry obj");
     assert_eq!(geometry_only.objects.len(), 1, "empty-mesh objects contribute no geometry");
     assert_eq!(geometry_only.objects[0].name, "First_Object");
     assert_eq!(total_faces(&geometry_only), box_faces);
@@ -237,15 +232,11 @@ async fn geometry_export_then_import_preserves_face_counts_and_applies_transform
     let xs: Vec<f32> = (0..world.vertex_count()).map(|v| world.vertex_position(semio_framework_3d::mesh::VertexId(v as u32)).unwrap().0[0]).collect();
     assert!(xs.iter().all(|x| (*x - 10.0).abs() <= 1.0 + 1e-4), "translated + scaled: {xs:?}");
 
-    // PLY: lossless via the comment; geometry-only once the comment is stripped.
-    let ply_bytes = ply_export::serialize_bytes(&snapshot).expect("ply export");
-    assert_eq!(ply_import::deserialize_bytes(&ply_bytes).expect("lossless ply"), snapshot);
-    let ply_geometry = ply_import::deserialize_bytes(&strip_lines_starting_with(&ply_bytes, "comment semio-lowpoly-dsl")).expect("geometry ply");
+    let ply_geometry = ply_import::deserialize_bytes(&ply_export::serialize_bytes(&snapshot).expect("ply export")).expect("geometry ply");
     assert_eq!(total_faces(&ply_geometry), box_faces);
 
-    // STL: triangulated, so face count = fan triangles.
+    let stl_geometry = stl_import::deserialize_bytes(&stl_export::serialize_bytes(&snapshot).expect("stl export")).expect("geometry stl");
     let triangles: usize = (0..world.face_count()).map(|f| world.face_vertex_ids(semio_framework_3d::mesh::FaceId(f as u32)).unwrap().len() - 2).sum();
-    let stl = stl_import::deserialize_bytes(&stl_export::serialize_bytes(&snapshot).expect("stl export")).expect("stl import");
-    assert_eq!(total_faces(&stl), triangles);
+    assert_eq!(total_faces(&stl_geometry), triangles);
 }
 //#endregion 🕸️RealGeometryIo

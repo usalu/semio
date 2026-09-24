@@ -3,33 +3,51 @@ protocol stdio.gif.89a.mutations
 version 1
 schema stdio.gif.89a.op
 start op
-
-# `protocol::OpBinary::encode_op`/`decode_op` (../🦀️.rs) forward straight to
-# `dsl::variants_binary::encode_op`/`decode_op` — this was ALREADY real binary before this
-# program touched it, NOT the F6-era `print_op().into_bytes()` text-as-binary shortcut
-# (confirmed by direct reading: `encode_op` calls `os_pack::encode_record_body`, never
-# `print_op`). Layout, byte-for-byte, per that helper's own doc comment (`OP_BINARY_FORMAT`):
-# a fixed `format` byte (always `1`), the matched variant's ordinal as a `varint`
-# (declaration order, `NoMutation` dropped: `SetSnapshot`=0, `SetScreenSize`=1,
-# `SetGlobalColorTable`=2, `SetBackgroundColorIndex`=3, `SetPixelAspectRatio`=4,
-# `SetLoopCount`=5, `InsertFrame`=6, `RemoveFrame`=7, `MoveFrame`=8, `SetFrameGeometry`=9,
-# `SetFramePixels`=10, `SetFrameInterlace`=11, `SetFrameDelay`=12, `SetFrameDisposal`=13,
-# `SetFrameTransparency`=14, `SetFrameUserInput`=15, `InsertComment`=16, `RemoveComment`=17,
-# `AddAppExtension`=18, `RemoveAppExtension`=19 — `dsl::DslVariants::variants()`'s own
-# emission order), then the variant's own field payload,
-# `os_pack::encode_record_body(spec, record)` — itself a varint-prefixed STRING-SYMBOL TABLE
-# followed by a generic, self-describing per-field-id TAG+value wire. This inner wire is the
-# FRAMEWORK's own generic record-body encoding — shared verbatim by every
-# `#[derive(dsl::DslRecord)]`/`DslOps`/`DslDiff` type in the whole repo, not anything specific
-# to `stdio.gif.89a`, and is genuinely NOT expressible by this dialect's `Array`/`Ref`/
-# `repeat` primitives as they stand today (no dynamic per-field TAG dispatch keyed by a
-# runtime field-id, no symbol-table back-reference resolution) — the same
-# `txt-opbinary-record-body-wire-is-framework-generic` gap txt's own sibling protocol file
-# documents (`🔤️txt/…/🧬️mutations/💾️binary/📡️.protocol.semio`) and 87a's own sibling
-# protocol file, copied verbatim per its own "copy the shape" instruction. Modeled honestly:
-# `format`/`ordinal` are genuinely, individually byte-walked and validated; the remaining
-# record-body bytes are one opaque tail.
 framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
 field format u8
-field ordinal varint
-chain bytes
+field tag varint
+record set-snapshot tag=0
+field payload bytes
+record set-screen-size tag=1
+field payload bytes
+record set-global-color-table tag=2
+field payload bytes
+record set-background-color-index tag=3
+field payload bytes
+record set-pixel-aspect-ratio tag=4
+field payload bytes
+record set-loop-count tag=5
+field payload bytes
+record insert-frame tag=6
+field payload bytes
+record remove-frame tag=7
+field payload bytes
+record move-frame tag=8
+field payload bytes
+record set-frame-geometry tag=9
+field payload bytes
+record set-frame-pixels tag=10
+field payload bytes
+record set-frame-interlace tag=11
+field payload bytes
+record set-frame-delay tag=12
+field payload bytes
+record set-frame-disposal tag=13
+field payload bytes
+record set-frame-transparency tag=14
+field payload bytes
+record set-frame-user-input tag=15
+field payload bytes
+record insert-comment tag=16
+field payload bytes
+record remove-comment tag=17
+field payload bytes
+record add-app-extension tag=18
+field payload bytes
+record remove-app-extension tag=19
+field payload bytes

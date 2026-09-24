@@ -7,13 +7,13 @@
 import { readFileSync } from "node:fs";
 import { defineTestAdapter, type AdapterContext } from "../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 import { loadVizCatalog } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
-import { measurePrintGalleryVariant, printGalleryMatrix, type PrintGalleryFixture } from "../../🎮️commands/🧪️print-pipeline-verification/🧪️tests/🟦️.ts";
+import { measurePrintGalleryVariant, printGalleryMatrix, type PrintGalleryFixture } from "../../🔨️modules/📊️visualization-gallery/🔬️probes/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Evidence
 /** 🧫️ The committed evidence, read through the plan so an unreferenced fixture can never be used. */
 function evidence(ctx: AdapterContext): PrintGalleryFixture {
-  return JSON.parse(readFileSync(ctx.fixture("local://🖼️gallery-render.json"), "utf8")) as PrintGalleryFixture;
+  return JSON.parse(readFileSync(ctx.fixture("shared://🖼️gallery-render/🖼️gallery-render.json"), "utf8")) as PrintGalleryFixture;
 }
 
 /** 🔀️ Every family whose kinds collide on their option string — the projection the property asserts is empty. */

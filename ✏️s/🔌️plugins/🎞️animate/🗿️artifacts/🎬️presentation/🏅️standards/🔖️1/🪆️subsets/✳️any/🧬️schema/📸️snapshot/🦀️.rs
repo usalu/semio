@@ -1,13 +1,8 @@
 //! 🧬️ Presentation snapshot schema — persistent fields only.
 //!
-//! P6 handcrafted `ArtifactDsl`/`ArtifactPack` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`,
-//! `animate→C:presentation,animation`): `PresentationSnapshot` now carries two owned composed-child
-//! handles (`presentation`/`animation`) instead of the old inline `source: FigureTileSource` +
-//! `tiles: Vec<FigureTileDraft>` fields — `store::ArtifactChild<S>` has no `DslField` impl, so the
-//! old `dsl::DslRecord`-derived mirror (`PresentationSnapshotDsl`) is gone. The hand-rolled codec itself
-//! (hex/bracket text + LEB128-length-prefixed binary child-handle convention) now lives in
-//! `../../../../🚪️io/📸️snapshot/{📝️text,💾️binary}/🦀️.rs` (ticket
-//! `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` §1 CORRECTION) — this file keeps only the
+//! `PresentationSnapshot` carries the shared `source` figure, its `tiles`, and two owned composed-child
+//! handles (`presentation`/`animation`). `ArtifactPack` encodes its derived `dsl::DslRecord` spec; the
+//! hex/bracket text codec lives in `../../../../🚪️io/📸️snapshot/📝️text/🦀️.rs`. This file keeps only the
 //! type + its pure transforms.
 
 use crate::{AnimationChild, PresentationChild};
@@ -20,8 +15,9 @@ use schema::ArtifactSchema;
 /// doc comment for the honest gap). Both slots are bare (never absent) — this artifact always
 /// composes exactly one of each, matching writer's `document: WriterDocumentChild` single-`Option`-in-
 /// the-diff convention rather than lowpoly's optional-slot double-`Option` shape.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
+#[dsl(extension = "presentation")]
 #[artifact_schema(id = "s.animate.presentation")]
 pub struct PresentationSnapshot {
     #[state(artifact)]

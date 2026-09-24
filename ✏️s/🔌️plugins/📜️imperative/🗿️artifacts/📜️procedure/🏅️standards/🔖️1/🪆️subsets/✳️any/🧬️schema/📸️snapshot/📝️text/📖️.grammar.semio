@@ -4,21 +4,12 @@ extension procedure
 use family-scene
 start document
 
-# Grammar for `ProcedureSnapshot::print_dsl`/`parse_dsl` (`🧬️schema/📸️snapshot/🦀️.rs`
-# `print_procedure_snapshot_body`/`parse_procedure_snapshot_body`): a hex/bracket `key=value` line
-# codec, one required line per field. `path` and `seed` carry the content of the `flow` and `text`
-# composed children; the handles alone name the children but never their content.
+# Real grammar for `ProcedureSnapshot::print_dsl`/`parse_dsl`: the derived spec-driven text of
+# `ProcedurePackRecord` (📸️snapshot/🦀️.rs), the same record the pack encodes: both composed child
+# handles plus the content their local owners hold — the flow child's `path` program and the text
+# child's `seed` dictionary — each as a dynamic value literal (`{ key=value … }`, `[ … ]`).
+# Fields are space-separated `key=value` tokens in any order; an absent optional field is omitted.
 artifact-mark = "semio imperative.imperative.dsl v1"
-document = artifact-mark schema-line flow-line text-line path-line seed-line
-
-schema-line = "schema" "=" hex
-flow-line = "flow" "=" child-handle
-text-line = "text" "=" child-handle
-path-line = "path" "=" hex
-seed-line = "seed" "=" hex
-
-child-handle = "[" hex "," hex "]"
-
-# `hex` is the framework's built-in macro: lowercase-hex UTF-8 bytes. `path` and `seed` hex-encode
-# first-party JSON of the imperative `Path` (ordered, nested steps) and the seed dictionary; a child
-# handle hex-encodes its `child_id` and its target `ArtifactRef` URI.
+document = artifact-mark field*
+field = {"schema" "=" TEXT} | {"flow" "=" child-handle} | {"text" "=" child-handle} | {"path" "=" VALUE} | {"seed" "=" VALUE}
+child-handle = {"child_id" "=" TEXT} {"target" "=" TEXT}

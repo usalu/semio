@@ -35,7 +35,7 @@ Feature: The theme kernel answers every colour question the library is allowed t
   @level-quick
   @mode-differential
   Scenario: A series index wraps onto the palette exactly as d3-scale's ordinal scale does
-    Given the committed probe document local://theme-palettes.tex and the categorical palettes
+    Given the committed probe document shared://🌈️theme-palettes/theme-palettes.tex and the categorical palettes
       | palette  | colours                                                                                                                                                                                                                        |
       | presence | semio-presence-light-0;semio-presence-light-1;semio-presence-light-2;semio-presence-light-3;semio-presence-light-4;semio-presence-light-5;semio-presence-light-6;semio-presence-light-7;semio-presence-light-8;semio-presence-light-9;semio-presence-light-10;semio-presence-light-11 |
       | brand    | semio-primary;semio-secondary;semio-tertiary;semio-info;semio-success;semio-warning;semio-danger                                                                                                                                |
@@ -47,7 +47,7 @@ Feature: The theme kernel answers every colour question the library is allowed t
   @level-quick
   @mode-differential
   Scenario: A series index wraps onto the hatch set exactly as d3-scale's ordinal scale does
-    Given the committed probe document local://theme-palettes.tex and the hatch set
+    Given the committed probe document shared://🌈️theme-palettes/theme-palettes.tex and the hatch set
       | patterns                                                                                              |
       | north east lines;horizontal lines;vertical lines;north west lines;crosshatch;dots;grid;crosshatch dots |
     Then the compiled probe and d3-scale's ordinal scale name the same hatch for every slot
@@ -56,7 +56,7 @@ Feature: The theme kernel answers every colour question the library is allowed t
   @level-quick
   @mode-differential
   Scenario: Every declared scheme stop is an sRGB colour d3-color reads back unchanged
-    Given the committed probe document local://theme-palettes.tex and the scheme stop lists
+    Given the committed probe document shared://🌈️theme-palettes/theme-palettes.tex and the scheme stop lists
       | scheme          | light                                | dark                                 |
       | primary         | f7f3e3;ff344f;6b2c32                 | 001117;ff344f;ffa9a0                 |
       | grays           | f7f3e3;7b827d;001117                 | 001117;7b827d;f7f3e3                 |
@@ -68,7 +68,7 @@ Feature: The theme kernel answers every colour question the library is allowed t
   @level-quick
   @mode-differential
   Scenario: The CIE Lab ramp of a scheme agrees with d3-interpolate's piecewise interpolation
-    Given the committed probe document local://theme-palettes.tex and the sampled ramps
+    Given the committed probe document shared://🌈️theme-palettes/theme-palettes.tex and the sampled ramps
       | scheme         | stops                              | positions              |
       | viridis-like   | 051a47;1a1a89;1a8989;1a891a;89891a | 0;0.125;0.5;0.8;1      |
       | danger-success | a60009;f7f3e3;7eb77f               | 0.25;0.75              |
@@ -78,7 +78,7 @@ Feature: The theme kernel answers every colour question the library is allowed t
   @level-quick
   @mode-differential
   Scenario: The HCL ramp of a scheme agrees with d3-interpolate's piecewise interpolation
-    Given the committed probe document local://theme-palettes.tex and the sampled ramps
+    Given the committed probe document shared://🌈️theme-palettes/theme-palettes.tex and the sampled ramps
       | scheme  | stops                | positions          |
       | primary | f7f3e3;ff344f;6b2c32 | 0;0.25;0.5;0.75;1  |
       | grays   | f7f3e3;7b827d;001117 | 0.375;0.625        |
@@ -88,7 +88,7 @@ Feature: The theme kernel answers every colour question the library is allowed t
   @level-quick
   @mode-differential
   Scenario: The default OKLab ramp returns its own stops unchanged at the stop positions
-    Given the committed probe document local://theme-palettes.tex and the sampled ramps
+    Given the committed probe document shared://🌈️theme-palettes/theme-palettes.tex and the sampled ramps
       | scheme       | stops                              | positions             |
       | viridis-like | 051a47;1a1a89;1a8989;1a891a;89891a | 0;0.25;0.5;0.75;1     |
     Then the compiled probe and d3-color agree on every stop the ramp lands on

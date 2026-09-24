@@ -397,6 +397,24 @@ fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, 
 }
 //#endregion 🔖️OpBinaryCodec
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `BcfMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_SET_VERSION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-version");
+const TAG_INSERT_TOPIC: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-topic");
+const TAG_REMOVE_TOPIC: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-topic");
+const TAG_SET_TOPIC_MARKUP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-topic-markup");
+const TAG_INSERT_COMMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-comment");
+const TAG_REMOVE_COMMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-comment");
+const TAG_SET_COMMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-comment");
+const TAG_INSERT_VIEWPOINT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-viewpoint");
+const TAG_REMOVE_VIEWPOINT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-viewpoint");
+const TAG_SET_VIEWPOINT_CAMERA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-viewpoint-camera");
+const TAG_SET_VIEWPOINT_COMPONENTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-viewpoint-components");
+const TAG_SET_VIEWPOINT_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-viewpoint-snapshot");
+//#endregion 🏷️WireTags
+
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
@@ -405,19 +423,19 @@ fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, 
 impl protocol::OpBinary for BcfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            BcfMutation::SetSnapshot(_) => 1,
-            BcfMutation::SetVersion(_) => 2,
-            BcfMutation::InsertTopic(_) => 3,
-            BcfMutation::RemoveTopic(_) => 4,
-            BcfMutation::SetTopicMarkup(_) => 5,
-            BcfMutation::InsertComment(_) => 6,
-            BcfMutation::RemoveComment(_) => 7,
-            BcfMutation::SetComment(_) => 8,
-            BcfMutation::InsertViewpoint(_) => 9,
-            BcfMutation::RemoveViewpoint(_) => 10,
-            BcfMutation::SetViewpointCamera(_) => 11,
-            BcfMutation::SetViewpointComponents(_) => 12,
-            BcfMutation::SetViewpointSnapshot(_) => 13,
+            BcfMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+            BcfMutation::SetVersion(_) => TAG_SET_VERSION,
+            BcfMutation::InsertTopic(_) => TAG_INSERT_TOPIC,
+            BcfMutation::RemoveTopic(_) => TAG_REMOVE_TOPIC,
+            BcfMutation::SetTopicMarkup(_) => TAG_SET_TOPIC_MARKUP,
+            BcfMutation::InsertComment(_) => TAG_INSERT_COMMENT,
+            BcfMutation::RemoveComment(_) => TAG_REMOVE_COMMENT,
+            BcfMutation::SetComment(_) => TAG_SET_COMMENT,
+            BcfMutation::InsertViewpoint(_) => TAG_INSERT_VIEWPOINT,
+            BcfMutation::RemoveViewpoint(_) => TAG_REMOVE_VIEWPOINT,
+            BcfMutation::SetViewpointCamera(_) => TAG_SET_VIEWPOINT_CAMERA,
+            BcfMutation::SetViewpointComponents(_) => TAG_SET_VIEWPOINT_COMPONENTS,
+            BcfMutation::SetViewpointSnapshot(_) => TAG_SET_VIEWPOINT_SNAPSHOT,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -499,11 +517,11 @@ impl protocol::OpBinary for BcfMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            1 => Ok(BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_bcf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? })),
-            2 => Ok(BcfMutation::SetVersion(set_version::SetVersion { version: read_str_lp(&mut reader).map_err(|e| malformed("op version", reader.position(), e))? })),
-            3 => Ok(BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: dec_topic_bin(&mut reader).map_err(|e| malformed("op topic", reader.position(), e))? })),
-            4 => Ok(BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))? })),
-            5 => {
+            TAG_SET_SNAPSHOT => Ok(BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_bcf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? })),
+            TAG_SET_VERSION => Ok(BcfMutation::SetVersion(set_version::SetVersion { version: read_str_lp(&mut reader).map_err(|e| malformed("op version", reader.position(), e))? })),
+            TAG_INSERT_TOPIC => Ok(BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: dec_topic_bin(&mut reader).map_err(|e| malformed("op topic", reader.position(), e))? })),
+            TAG_REMOVE_TOPIC => Ok(BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))? })),
+            TAG_SET_TOPIC_MARKUP => {
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
                 let title = read_opt_str_bin(&mut reader).map_err(|e| malformed("op title", reader.position(), e))?;
                 let description = read_opt_str_bin(&mut reader).map_err(|e| malformed("op description", reader.position(), e))?;
@@ -514,17 +532,17 @@ impl protocol::OpBinary for BcfMutation {
                 let creation_author = read_opt_str_bin(&mut reader).map_err(|e| malformed("op creation_author", reader.position(), e))?;
                 Ok(BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author }))
             }
-            6 => {
+            TAG_INSERT_COMMENT => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let comment = dec_comment_bin(&mut reader).map_err(|e| malformed("op comment", reader.position(), e))?;
                 Ok(BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid, comment }))
             }
-            7 => {
+            TAG_REMOVE_COMMENT => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
                 Ok(BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid, guid }))
             }
-            8 => {
+            TAG_SET_COMMENT => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
                 let date = read_opt_str_bin(&mut reader).map_err(|e| malformed("op date", reader.position(), e))?;
@@ -537,30 +555,30 @@ impl protocol::OpBinary for BcfMutation {
                 };
                 Ok(BcfMutation::SetComment(set_comment::SetComment { topic_guid, guid, date, author, text, viewpoint_ref }))
             }
-            9 => {
+            TAG_INSERT_VIEWPOINT => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let viewpoint = dec_viewpoint_bin(&mut reader).map_err(|e| malformed("op viewpoint", reader.position(), e))?;
                 Ok(BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid, viewpoint }))
             }
-            10 => {
+            TAG_REMOVE_VIEWPOINT => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
                 Ok(BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid, guid }))
             }
-            11 => {
+            TAG_SET_VIEWPOINT_CAMERA => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
                 let camera = if reader.read_u8().map_err(|e| malformed("op camera presence", reader.position(), e.to_string()))? != 0 { Some(dec_camera_bin(&mut reader).map_err(|e| malformed("op camera", reader.position(), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid, guid, camera }))
             }
-            12 => {
+            TAG_SET_VIEWPOINT_COMPONENTS => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
                 let components =
                     if reader.read_u8().map_err(|e| malformed("op components presence", reader.position(), e.to_string()))? != 0 { Some(dec_components_bin(&mut reader).map_err(|e| malformed("op components", reader.position(), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid, guid, components }))
             }
-            13 => {
+            TAG_SET_VIEWPOINT_SNAPSHOT => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
                 let snapshot = if reader.read_u8().map_err(|e| malformed("op snapshot presence", reader.position(), e.to_string()))? != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?) } else { None };

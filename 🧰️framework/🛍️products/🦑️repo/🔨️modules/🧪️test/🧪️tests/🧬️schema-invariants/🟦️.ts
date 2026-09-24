@@ -607,6 +607,8 @@ describe("🔗️ export resolution", () => {
 
   test("a malformed uri is refused before the catalog is even read", () => {
     expect(parseSchemaUri("schema://s.writer.writer/Artifact")).toEqual({ scope: "s.writer.writer", export: "Artifact" });
+    expect(parseSchemaUri("schema://s.writer.writer/Artifact?format=graphql")).toEqual({ scope: "s.writer.writer", export: "Artifact", format: "graphql" });
+    expect(parseSchemaUri("schema://s.writer.writer/Artifact?format=")).toBeNull();
     expect(parseSchemaUri("schema://s.writer.writer/artifact")).toBeNull();
     expect(parseSchemaUri("shared://s.writer.writer/Artifact")).toBeNull();
     expect(parseSchemaUri("schema://s.writer.writer")).toBeNull();

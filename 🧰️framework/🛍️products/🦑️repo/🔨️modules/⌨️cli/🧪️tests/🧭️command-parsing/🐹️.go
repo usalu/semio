@@ -15,7 +15,7 @@ import (
 
 // 📥️ The committed vectors every scenario reads.
 func vectors(ctx *host.Context) ([]map[string]interface{}, error) {
-	raw, err := ctx.FixtureBytes("local://🔣️argv-vectors.json")
+	raw, err := ctx.FixtureBytes("shared://🧭️command-parsing/🔣️argv-vectors.json")
 	if err != nil {
 		return nil, err
 	}

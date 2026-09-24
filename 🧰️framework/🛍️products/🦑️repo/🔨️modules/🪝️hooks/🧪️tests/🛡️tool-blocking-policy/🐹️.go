@@ -12,7 +12,7 @@ import (
 
 // region 🔖️Vectors
 
-const blockingVectors = "local://🛡️invocations.json"
+const blockingVectors = "shared://🛡️tool-blocking-policy/🛡️invocations.json"
 
 type blockingInvocation struct {
 	ID      string `json:"id"`

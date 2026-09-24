@@ -26,7 +26,7 @@
     "**/🎯️target/**",
     "**/🗑️generated/**",
     "**/🤖️generated/**",
-    "🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/**",
+    "🔨️modules/📜️statutes/🧫️fixtures/📁️some/**",
     "🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/**"
   ]
 }

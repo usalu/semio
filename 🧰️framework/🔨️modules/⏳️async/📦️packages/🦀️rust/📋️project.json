@@ -16,6 +16,16 @@
       "options": { "command": "bun ./📜️script.ts worker-pool-use-check --native", "cwd": "{projectRoot}" },
       "outputs": []
     },
+    "worker-parking-check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun ./📜️script.ts worker-parking-check", "cwd": "{projectRoot}" },
+      "outputs": []
+    },
+    "worker-parking-native-check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun ./📜️script.ts worker-parking-check --native", "cwd": "{projectRoot}" },
+      "outputs": []
+    },
     "worker-deferred-wake-check": {
       "executor": "nx:run-commands",
       "options": { "command": "bun ./📜️script.ts worker-deferred-wake-check", "cwd": "{projectRoot}" },

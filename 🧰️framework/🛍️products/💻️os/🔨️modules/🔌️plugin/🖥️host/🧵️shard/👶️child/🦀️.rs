@@ -33,8 +33,8 @@ const INSTANTIATE_BUDGET: Budget = Budget { fuel: 200_000_000, deadline_ms: 500,
 fn main() {
     // 🎚️ P1f: this process hosts exactly ONE `ShardLoop`, pumped directly on THIS thread (below) —
     // never submitted to `semio_framework_plugin_host::plugin_host_worker_pool()`. That pool's only
-    // tenants here are the epoch ticker and `StdioTransport`'s heartbeat sender (two sub-millisecond
-    // periodic jobs), so it needs exactly one worker, not `available_parallelism()-1`.
+    // tenant here is `StdioTransport`'s heartbeat sender (a sub-millisecond periodic job), so it
+    // needs exactly one worker, not `available_parallelism()-1`.
     let args: Vec<String> = std::env::args().collect();
     let [_, wasm_path, package_id, actor_id_arg] = args.as_slice() else {
         eprintln!("[semio-shard] usage: semio-shard <component.wasm> <package-id> <actor-id>");

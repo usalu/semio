@@ -74,7 +74,16 @@ message Puzzle5dWorldWindowConfig {
   repeated uint32 voxel_dims = 14;
 }
 
+message Puzzle5dSuggestionMenu {
+  double x = 1;
+  double y = 2;
+  string window_id = 3;
+  string vortex_full_id = 4;
+  bool submenu = 5;
+}
+
 message Puzzle5dWindowTransient {
   string engagement_input = 1;
   uint64 brush_candidate_index = 2;
+  optional Puzzle5dSuggestionMenu suggestion_menu = 3;
 }

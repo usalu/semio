@@ -7,7 +7,7 @@
   "aggregateVariant": "AddStep",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "add-step",
-  "binaryTag": null,
+  "binaryTag": 0,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

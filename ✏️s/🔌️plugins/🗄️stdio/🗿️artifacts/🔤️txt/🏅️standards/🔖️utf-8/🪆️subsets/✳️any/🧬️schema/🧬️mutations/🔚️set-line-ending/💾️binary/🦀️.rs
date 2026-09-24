@@ -2,7 +2,7 @@
 //#region 💾️PayloadCodec
 use super::SetLineEndingPayload;
 use crate::schema::mutations::TxtMutation;
-pub const BINARY_TAG: u32 = 2;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "set-line-ending");
 pub fn encode_payload(value: &SetLineEndingPayload) -> Result<Vec<u8>, String> {
     Ok(pack::to_json_string(value).into_bytes())
 }

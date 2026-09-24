@@ -20,7 +20,7 @@ Feature: A candlestick body and a moving average are computed, not drawn by eye
   @level-long
   @mode-differential
   Scenario: Candle bodies run from open to close on the price scale
-    Given the committed probe document local://candlestick.tex and the periods
+    Given the committed probe document shared://💹️charts-financial/candlestick.tex and the periods
       | t | open | high | low | close |
       | 1 | 10   | 12   | 9   | 11    |
       | 2 | 11   | 13   | 10  | 10    |
@@ -38,7 +38,7 @@ Feature: A candlestick body and a moving average are computed, not drawn by eye
   @level-long
   @mode-differential
   Scenario: The moving-average overlay is a trailing mean
-    Given the committed probe document local://moving-average.tex and the closes
+    Given the committed probe document shared://💹️charts-financial/moving-average.tex and the closes
       | closes                  | window |
       | 11,10,9,12,13,11,14,15  | 3      |
     Then the compiled probe and the reference implementation agree on every window mean

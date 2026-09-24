@@ -11,7 +11,7 @@ ordering that make a walk reproducible, and the Mermaid rendering the documentat
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
-`🧪️test` harness; the third-party references are registered in `🔮️oracle/🔣️.json`.
+`🧪️test` harness; the third-party references are registered in `🔮️oracles/🔣️.json`.
 
 `🌳️monorepo-tree-build`, `🎯️goal-statute-territory-trees`, `🔎️tree-filtering`, `🔀️child-sorting`,
 `🧜️mermaid-rendering`.

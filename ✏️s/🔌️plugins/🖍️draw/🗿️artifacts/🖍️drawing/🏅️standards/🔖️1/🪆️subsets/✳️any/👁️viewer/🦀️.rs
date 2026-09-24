@@ -52,6 +52,13 @@ impl ArtifactViewer for DrawingViewer {
     const DIALECT: semio_framework::Dialect = DRAWING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
 
+    /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields;
+    /// without it every live envelope load faults `viewer did not declare a loaded-parent child
+    /// projection` before the decoded document can replace the store.
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("drawing.child-projection"), error.to_string()))
+    }
+
     fn initial_snapshot() -> DrawingSnapshot {
         default_drawing_document("empty", None)
     }

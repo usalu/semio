@@ -1,6 +1,6 @@
 //! 💾️ Operation-specific binary payload codec for insert-array-element/InsertArrayElement.
 use super::InsertArrayElementPayload;
-pub const BINARY_TAG: u32 = 3;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "insert-array-element");
 pub fn encode_payload(value: &InsertArrayElementPayload) -> Result<Vec<u8>, String> {
     Ok(pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(value))).into_bytes())
 }

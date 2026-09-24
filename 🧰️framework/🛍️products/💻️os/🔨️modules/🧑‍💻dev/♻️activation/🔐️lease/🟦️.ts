@@ -63,11 +63,11 @@ function acquirePluginBuildLease(variant: string, port: number): { readonly role
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
     }
     const existing = readPluginBuildLease(path);
-    if (!existing || !isPidAlive(existing.pid)) {
+    if (!existing || !isPidAlive(existing.pid) || (existing.pid === process.pid && !existing.registryReady)) {
       try {
         rmSync(path, { force: true });
       } catch {
-        // 🏁️ Raced with another taker's own stale-cleanup; the atomic `wx` retry above is the real gate.
+        void 0;
       }
       continue;
     }

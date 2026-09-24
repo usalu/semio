@@ -1,6 +1,6 @@
 //! 🗣️ Direct binary identity for `set-language`.
 
-pub const TAG: u8 = 53;
+pub const TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../../💾️binary/📡️.protocol.semio"), "set-language");
 pub const BINARY_TAG: u8 = TAG;
 
 use super::SetLanguage;

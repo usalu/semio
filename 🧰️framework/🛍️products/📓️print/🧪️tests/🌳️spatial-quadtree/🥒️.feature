@@ -36,7 +36,7 @@ Feature: The spatial index covers the same square and finds the same neighbour a
   @level-quick
   @mode-differential
   Scenario: The covering square is grown by doubling exactly as d3-quadtree grows it
-    Given the committed probe document local://spatial-quadtree.tex and the point tables
+    Given the committed probe document shared://🌳️spatial-quadtree/spatial-quadtree.tex and the point tables
       | table      | x                          | y                            |
       | qt-scatter | 1;5;2;9;4;7.5;0.5          | 1;2;7;9;4;3.25;8.5           |
       | qt-shifted | -3;12;-7;2.5               | -2;6;11;-6.5                 |
@@ -47,7 +47,7 @@ Feature: The spatial index covers the same square and finds the same neighbour a
   @level-quick
   @mode-differential
   Scenario: An unbounded query finds the same nearest point as d3-quadtree's find
-    Given the committed probe document local://spatial-quadtree.tex and the queries
+    Given the committed probe document shared://🌳️spatial-quadtree/spatial-quadtree.tex and the queries
       | x   | y   |
       | 4.4 | 4.1 |
       | 9   | 1   |
@@ -61,7 +61,7 @@ Feature: The spatial index covers the same square and finds the same neighbour a
   @level-quick
   @mode-differential
   Scenario: A bounded query returns nothing when the nearest point lies beyond the radius
-    Given the committed probe document local://spatial-quadtree.tex and the bounded queries
+    Given the committed probe document shared://🌳️spatial-quadtree/spatial-quadtree.tex and the bounded queries
       | x | y | radius |
       | 9 | 1 | 2      |
       | 9 | 1 | 3      |

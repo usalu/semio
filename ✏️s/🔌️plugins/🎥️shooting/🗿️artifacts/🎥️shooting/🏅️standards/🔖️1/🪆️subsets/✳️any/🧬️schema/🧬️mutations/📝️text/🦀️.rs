@@ -30,14 +30,17 @@ impl protocol::OpText for ShootingMutation {
 //#endregion 🔖️OpText
 
 //#region 🔖️OpBinary
+//#region 🏷️WireTags
+/// 🏷️ `ShootingMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
+const WIRE_PROTOCOL: &str = include_str!("../💾️binary/📡️.protocol.semio");
+//#endregion 🏷️WireTags
+
 impl protocol::OpBinary for ShootingMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(dsl::os_pack::json::to_json_string(self).into_bytes())
+        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let json_value = dsl::os_pack::json::parse_bytes(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "shooting-mutation", offset: 0, detail: e.to_string() })?;
-        let dsl_value = dsl::os_pack::json::to_dsl_value(&json_value);
-        dsl::FromValue::from_value(dsl_value).map_err(|e: dsl::ValueError| protocol::ProtocolError::Malformed { what: "shooting-mutation", offset: 0, detail: e.to_string() })
+        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
     }
 }
 //#endregion 🔖️OpBinary

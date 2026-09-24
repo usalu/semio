@@ -215,6 +215,42 @@ fn cancelling_a_running_job_only_sets_the_cooperative_flag_until_the_producer_ac
     assert_eq!(registry.snapshot(&job_id).unwrap().status, JobStatus::Cancelled);
 }
 
+/// 🛑️ Replays `🧫️fixtures/🛑️job-cancel-hook-law.json`: the hook `inference_run` binds to reach a
+/// guest blocked in a solve fires once per cancel, late binds fire immediately, terminal jobs never.
+#[test]
+fn a_bound_cancel_hook_obeys_the_language_agnostic_law() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛑️job-cancel-hook-law.json")).expect("law fixture is JSON");
+    for case in fixture["cases"].as_array().expect("cases") {
+        let name = case["name"].as_str().expect("name");
+        let registry = JobRegistry::new();
+        let fired = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let mut job_id = String::new();
+        let mut cancel_errors = Vec::new();
+        for step in case["steps"].as_array().expect("steps") {
+            match step.as_str().expect("step") {
+                "begin" => job_id = registry.begin("inference.law"),
+                "progress" => assert!(registry.report_progress(&job_id, 0.5, None), "{name}"),
+                "succeed" => assert!(registry.succeed(&job_id, serde_json::Value::Null), "{name}"),
+                "bind" => {
+                    let fired = std::sync::Arc::clone(&fired);
+                    registry.bind_cancel(&job_id, move || {
+                        fired.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                    });
+                }
+                "cancel" => {
+                    if let Err(error) = registry.request_cancel(&job_id) {
+                        cancel_errors.push(serde_json::to_value(error.code).expect("code"));
+                    }
+                }
+                other => panic!("{name}: unknown step {other}"),
+            }
+        }
+        assert_eq!(fired.load(std::sync::atomic::Ordering::SeqCst) as u64, case["fired"].as_u64().expect("fired"), "{name}: hook firings");
+        assert_eq!(serde_json::to_value(registry.snapshot(&job_id).expect("job").status).expect("status"), case["status"], "{name}: status");
+        assert_eq!(serde_json::Value::Array(cancel_errors), case["cancelErrors"], "{name}: cancel errors");
+    }
+}
+
 #[test]
 fn cancelling_an_unknown_or_already_terminal_job_is_a_typed_error_not_a_silent_no_op() {
     let registry = JobRegistry::new();

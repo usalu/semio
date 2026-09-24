@@ -7,7 +7,7 @@
   "aggregateVariant": "ReplaceTrajectory",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "replace-trajectory",
-  "binaryTag": null,
+  "binaryTag": 29,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -142,6 +142,9 @@ import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
 import { contextMenuGroupLabel, createCoalescingActionDispatcher, declareSurfaceCancelAction, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dAnnounceableBrushMeshUrls, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
+import { suggestionMenuOwnsWindow, suggestionPopupOwnsWindow, suggestionRowsWithFocus, suggestionSubmenuTarget, useSuggestionSubmenuSearch, withSuggestionSubmenu } from "../🎣️suggestion-submenu/🟦️.ts";
+import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";
+import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../👕️canvas-presence/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️World3dHost
@@ -263,6 +266,8 @@ type WorldSelectionRecord = {
 
 type WorldSuggestionCandidateRecord = {
   readonly index: number;
+  /** 🔦️ The candidate's key in the suggestion run's `toolRunTrace` lane — hovering its row focuses exactly that record. */
+  readonly key?: number;
   readonly objectLabel: string;
   readonly vortexLabel: string;
   readonly icon?: string;
@@ -271,6 +276,8 @@ type WorldSuggestionCandidateRecord = {
 
 type WorldSuggestionMenuRecord = {
   readonly open: boolean;
+  /** 📂️ The list lives inside the regular context menu as the "suggest" row's submenu instead of floating as its own popup. */
+  readonly submenu?: boolean;
   readonly x: number;
   readonly y: number;
   readonly windowId?: string;
@@ -2462,7 +2469,7 @@ function ToolRunTraceGlbGeometry({ url, onGeometry }: { readonly url: string; re
  * each drawn through `meshesJson[mesh]` — inline mesh data directly, a GLB once it has loaded, a unit box
  * until then. Only meshes a resident `instance3d` record names are loaded.
  * @see ./⏯️tool-run-trace/🟦️.tsx */
-function WorldToolRunTrace({ lane, meshes, trace }: { readonly lane: string | null | undefined; readonly meshes: readonly WorldMeshRecord[]; readonly trace: { readonly store: ToolRunTraceRecordStore; readonly version: number } }) {
+function WorldToolRunTrace({ lane, meshes, trace, focus }: { readonly lane: string | null | undefined; readonly meshes: readonly WorldMeshRecord[]; readonly trace: { readonly store: ToolRunTraceRecordStore; readonly version: number }; readonly focus?: bigint | null }) {
   const inline = useMemo(() => meshes.map((mesh) => (mesh.data ? geometryFromMesh(mesh.data) : null)), [meshes]);
   useEffect(() => () => inline.forEach((geometry) => geometry?.dispose()), [inline]);
   const [loaded, setLoaded] = useState<ReadonlyMap<string, BufferGeometry>>(() => new Map());
@@ -2490,7 +2497,7 @@ function WorldToolRunTrace({ lane, meshes, trace }: { readonly lane: string | nu
           <ToolRunTraceGlbGeometry url={url} onGeometry={onGeometry} />
         </Suspense>
       ))}
-      <ToolRunTraceLayer lane={lane} store={trace} geometryForMesh={geometryForMesh} />
+      <ToolRunTraceLayer lane={lane} store={trace} geometryForMesh={geometryForMesh} focus={focus} />
     </>
   );
 }
@@ -4131,18 +4138,9 @@ function EngagementPreviewLayer({ items, color }: { readonly items: readonly Wor
   );
 }
 
-/** @emoji 🪟️ True when this world host pane owns the open one-shot suggestion popup (by `windowId`). */
-export function worldSuggestionMenuOwnsWindow(
-  menu: { readonly open?: boolean; readonly windowId?: string } | null | undefined,
-  windowInstanceId: string | undefined,
-): boolean {
-  if (!menu?.open) return false;
-  return !menu.windowId || menu.windowId === windowInstanceId;
-}
-
 /** @emoji 🧭️ Floating per-vortex candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — a one-shot placement picker that does not switch the active utility into brush mode; hovering a row previews the ghost, clicking places it. Icon + active highlight only (no color swatch — object-kind color stays on the 3D ghost). */
 export function suggestionMenuItems(
-  menu: WorldSuggestionMenuRecord,
+  menu: Pick<WorldSuggestionMenuRecord, "pending" | "candidates" | "vortexFullId">,
   activeIndex: number,
   labels: { readonly checkingPlacement: UiLabel; readonly noPlacement: UiLabel },
 ): ContextMenuItemSpec[] {
@@ -5586,6 +5584,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     projectionContentFrameSeededRef.current = false;
   }, [sceneCameraJson]);
   const cameraState = viewportCamera ?? sceneCamera;
+
   const cameraSeedKey = world3dViewportCameraSeedKey(sceneCameraAttachJson, detachEpoch);
 
   // 🎥️ Registers this window's live camera get/set for tutorial playback/recording (see
@@ -5674,6 +5673,51 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const relocateMode = activeUtility === "worldRelocate";
   const volumeLayersInteractive = !brushMode && !volumeBrushMode;
   const hostRef = useRef<HTMLDivElement | null>(null);
+  const presencePublishAtRef = useRef(0);
+  const presenceWindowId = windowInstanceId || node.surfaceId || "world";
+  const localPresenceActor = useLocalPresenceActorIdV1("local");
+  const presenceObjectWorldPositions = useMemo(() => {
+    const map: Record<string, readonly [number, number, number]> = {};
+    for (const instance of instances) {
+      if (!instance.id) continue;
+      const position =
+        instance.position ??
+        ([instance.x ?? 0, instance.y ?? 0, instance.z ?? 0] as [number, number, number]);
+      map[instance.id] = position;
+    }
+    return map;
+  }, [instances]);
+
+  useEffect(() => () => clearLocalPresenceWindowViewV1(presenceWindowId), [presenceWindowId]);
+  const publishWorldPresenceView = useCallback((pointer?: readonly [number, number, number], rayOrigin?: readonly [number, number, number]) => {
+    const now = Date.now();
+    if (now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS) return;
+    presencePublishAtRef.current = now;
+    const rect = hostRef.current?.getBoundingClientRect();
+    const size: [number, number] = [Math.max(1, rect?.width ?? 1), Math.max(1, rect?.height ?? 1)];
+    const tip = pointer ?? (cameraState.target as [number, number, number]);
+    const origin = rayOrigin ?? (cameraState.position as [number, number, number]);
+    publishLocalPresenceWindowViewV1("local", presenceWindowId, {
+      windowId: presenceWindowId,
+      space: "world",
+      kind: {
+        kind: "orbit",
+        position: cameraState.position as [number, number, number],
+        target: cameraState.target as [number, number, number],
+        up: (cameraState.up as [number, number, number] | undefined) ?? [0, 0, 1],
+        fov: cameraState.fov ?? 45,
+      },
+      size,
+      pointer: tip,
+      rayOrigin: origin,
+    });
+    publishLocalActiveToolV1("local", activeUtility);
+  }, [presenceWindowId, cameraState, activeUtility]);
+
+  useEffect(() => {
+    publishLocalActiveToolV1("local", activeUtility);
+  }, [activeUtility]);
+
   const overlayRailRef = useRef<HTMLDivElement | null>(null);
   const overlayRailSafeArea = useChromePanelSafeArea({ hostRef, affordanceRef: overlayRailRef, anchor: "top-right", yieldAxis: "either", gapPx: uiSpacingPx(1) });
   const instancesGroupRef = useRef<Group | null>(null);
@@ -5738,7 +5782,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     [attractions, displayVortices, sharedGumballTransformPreview],
   );
   const gumballTransformPreviewSourceId = windowInstanceId ?? node.surfaceId;
-  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number; readonly suggestTarget: string | null }) | null>(null);
   const contextMenuOpenEpochRef = useRef(0);
   const dismissContextMenu = useCallback(() => {
     contextMenuOpenEpochRef.current += 1;
@@ -5797,7 +5841,10 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const gridSnapEnabled = lod.gridSnapEnabled ?? false;
   const suggestionMenuOpen = Boolean(interaction.suggestionMenu?.open);
-  const suggestionMenuOwnsThisWindow = worldSuggestionMenuOwnsWindow(interaction.suggestionMenu, windowInstanceId ?? undefined);
+  const suggestionMenuOwnsThisWindow = suggestionMenuOwnsWindow(interaction.suggestionMenu, windowInstanceId ?? undefined);
+  const suggestionPopupOwnsThisWindow = suggestionPopupOwnsWindow(interaction.suggestionMenu, windowInstanceId ?? undefined);
+  /** 🔦️ The trace record of the suggestion row under the pointer — the viewport draws only that candidate. */
+  const [suggestionFocus, setSuggestionFocus] = useState<bigint | null>(null);
   const suggestionMenuCheckingPlacementLabel = useLabel("ui.host.checkingPlacement");
   const suggestionMenuNoPlacementLabel = useLabel("ui.host.noPlacement");
   const suggestionMenuTitleLabel = useLabel("ui.surfaceContextMenu.placementSuggestions");
@@ -6174,21 +6221,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         handleZoomToSelection();
         return;
       }
-      if (action === "openVortexSuggestions") {
-        setVortexPointerArm(null);
-        setConnectDragSource(null);
-        setConnectDragHoverPosition(null);
-        dispatch(action, {
-          windowId: windowInstanceId ?? undefined,
-          x: contextMenu?.x ?? 0,
-          y: contextMenu?.y ?? 0,
-          ...args,
-        });
-        return;
-      }
       dispatch(action, args);
     },
-    [contextMenu, dispatch, handleZoomToSelection, windowInstanceId],
+    [dispatch, handleZoomToSelection],
   );
 
   const mapWorldContextMenuSpecs = useMapContextMenuSpecs(handleWorldMenuDispatch);
@@ -6201,6 +6236,20 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     }
     dispatch(action, args);
   });
+  useSuggestionSubmenuSearch(contextMenu?.suggestTarget ?? null, { x: contextMenu?.x ?? 0, y: contextMenu?.y ?? 0 }, windowInstanceId ?? undefined, dispatch, () => setSuggestionFocus(null));
+  useEffect(() => {
+    if (!suggestionMenuOwnsThisWindow) setSuggestionFocus(null);
+  }, [suggestionMenuOwnsThisWindow]);
+  /** 📂️ The candidate rows one suggestion menu lists — the context menu's "suggest" submenu and the floating
+   * popup share them. A submenu whose search has not echoed back yet lists the pending row. */
+  const suggestionRows = useMemo(() => {
+    const menu = interaction.suggestionMenu?.open && suggestionMenuOwnsThisWindow ? interaction.suggestionMenu : null;
+    const listed = menu ?? { pending: true, candidates: [] };
+    const rows = mapSuggestionContextMenuSpecs(
+      suggestionMenuItems(listed, interaction.brushCandidateIndex ?? 0, { checkingPlacement: suggestionMenuCheckingPlacementLabel, noPlacement: suggestionMenuNoPlacementLabel }),
+    );
+    return suggestionRowsWithFocus(rows, listed, setSuggestionFocus);
+  }, [interaction.brushCandidateIndex, interaction.suggestionMenu, mapSuggestionContextMenuSpecs, suggestionMenuCheckingPlacementLabel, suggestionMenuNoPlacementLabel, suggestionMenuOwnsThisWindow]);
 
   const hoveredVortexFullIdRef = useRef<string | null>(null);
   /** 🎯️ The interaction id this pane's OWN raycast last resolved under the pointer — see
@@ -6967,6 +7016,17 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
+      if (hostRef.current && cameraRef.current) {
+        const rect = hostRef.current.getBoundingClientRect();
+        const hit = raycastGroundPoint(event.clientX, event.clientY, rect, cameraRef.current);
+        const origin = cameraRef.current.position;
+        publishWorldPresenceView(
+          hit ?? (cameraState.target as [number, number, number]),
+          [origin.x, origin.y, origin.z] as [number, number, number],
+        );
+      } else {
+        publishWorldPresenceView(cameraState.target as [number, number, number], cameraState.position as [number, number, number]);
+      }
       gesturePointersRef.current = gesturePointerMove(gesturePointersRef.current, { pointerId: event.pointerId, x: event.clientX, y: event.clientY });
       if (gestureIsMultiTouch(gesturePointersRef.current)) return;
       if (updateRelocateDrag(event)) return;
@@ -6997,7 +7057,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
       setMarqueePath((path) => [...path, local]);
     },
-    [dispatch, marqueeDown, node.surfaceId, selection.engagementSessionActive, toLocalPoint, updateRelocateDrag, volumeBrushMode, voxelGroundOriginAt],
+    [cameraState.position, cameraState.target, dispatch, marqueeDown, node.surfaceId, publishWorldPresenceView, selection.engagementSessionActive, toLocalPoint, updateRelocateDrag, volumeBrushMode, voxelGroundOriginAt],
   );
 
   const finalizeMarqueeSelection = useCallback(() => {
@@ -7344,6 +7404,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-viewport-camera-json={world3dCameraDomJson(cameraState)}
       data-vortices-json={scene.vorticesJson ?? undefined}
       data-suggestion-menu-json={interaction.suggestionMenu ? JSON.stringify(interaction.suggestionMenu) : ""}
+      data-suggestion-focus={suggestionFocus === null ? undefined : String(suggestionFocus)}
       data-interaction-json={JSON.stringify(interaction)}
       data-status-json={scene.statusJson ?? undefined}
       data-sun-json={world3dSunDomJson(environment)}
@@ -7368,6 +7429,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         contextMenuOpenEpochRef.current = epoch;
         void (async () => {
           const surface = world3dContextMenuSurfaceV1(target, selection);
+          const suggest = { target: null as string | null };
           const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
@@ -7376,11 +7438,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
               windowInstanceId: windowInstanceId ?? undefined,
               point: { x: event.clientX, y: event.clientY },
             },
-            mapWorldContextMenuSpecs,
+            (specs) => {
+              suggest.target = suggestionSubmenuTarget(specs);
+              return mapWorldContextMenuSpecs(specs);
+            },
             shellContextMenuFallback,
           );
           if (contextMenuOpenEpochRef.current !== epoch) return;
-          setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
+          setContextMenu({ x: event.clientX, y: event.clientY, ...menu, suggestTarget: suggest.target });
         })();
       }}
       onPointerDown={handlePointerDown}
@@ -7424,6 +7489,24 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             >
               <WorldComputeStatusPane status={computeStatus} glassClass={glassClass} locale={shellScope?.i18n.language} onCancel={() => dispatch(computeStatus.cancelAction, computeStatus.cancelArgs)} />
             </div>
+            <CanvasPresenceOverlayV1
+              runtimeKey="local"
+              windowId={presenceWindowId}
+              space="world"
+              myActor={localPresenceActor ?? ""}
+              locale={shellScope?.i18n.language}
+              localOrbit={{
+                position: cameraState.position as [number, number, number],
+                target: cameraState.target as [number, number, number],
+                up: (cameraState.up as [number, number, number] | undefined) ?? [0, 0, 1],
+                fov: cameraState.fov ?? 45,
+              }}
+              localSizePx={hostRef.current ? [hostRef.current.clientWidth, hostRef.current.clientHeight] : [1, 1]}
+              objectWorldPositions={presenceObjectWorldPositions}
+              scenePath={`world/${presenceWindowId}`}
+              domain={interactionDomainId}
+              selectedIds={selection.ids}
+            />
           </>
         }
       >
@@ -7557,7 +7640,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             {connectDragSource && connectDragHoverPosition ? <WorldConnectRubberBand from={connectDragSource.position} to={connectDragHoverPosition} /> : null}
             <WorldAttractionLines attractions={previewAttractions} />
             {catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : null}
-            <WorldToolRunTrace lane={scene.toolRunTrace} meshes={meshes} trace={toolRunTrace} />
+            <WorldToolRunTrace lane={scene.toolRunTrace} meshes={meshes} trace={toolRunTrace} focus={suggestionFocus} />
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}
             <WorldVolumeLayer
               volumes={targetVolumes
@@ -7616,25 +7699,20 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       ) : null}
       <ContextMenuController
         title={contextMenuTitleLabel}
-        open={contextMenu != null && (contextMenu.items?.length ?? 0) > 0 && !suggestionMenuOwnsThisWindow}
+        open={contextMenu != null && (contextMenu.items?.length ?? 0) > 0 && !suggestionPopupOwnsThisWindow}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={contextMenu?.items ?? []}
+        items={contextMenu?.suggestTarget ? withSuggestionSubmenu(contextMenu.items, suggestionRows) : (contextMenu?.items ?? [])}
         onOpenChange={(open) => {
           if (!open) dismissContextMenu();
         }}
       />
-      {suggestionMenuOwnsThisWindow ? (
+      {suggestionPopupOwnsThisWindow ? (
         <ContextMenuController
           title={suggestionMenuTitleLabel}
           open
           closeOnSelect={false}
           position={{ x: interaction.suggestionMenu!.x, y: interaction.suggestionMenu!.y }}
-          items={mapSuggestionContextMenuSpecs(
-            suggestionMenuItems(interaction.suggestionMenu!, interaction.brushCandidateIndex ?? 0, {
-              checkingPlacement: suggestionMenuCheckingPlacementLabel,
-              noPlacement: suggestionMenuNoPlacementLabel,
-            }),
-          )}
+          items={suggestionRows}
           onOpenChange={(open) => {
             if (!open) handleSuggestionClose();
           }}

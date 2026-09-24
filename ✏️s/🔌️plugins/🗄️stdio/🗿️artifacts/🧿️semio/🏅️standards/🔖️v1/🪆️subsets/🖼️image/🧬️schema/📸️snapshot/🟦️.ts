@@ -3,7 +3,7 @@ export type SemioColorspace = "rgb" | "rgba" | "grayscale" | "grayscaleAlpha" | 
 
 export interface SemioImageFrame {
   delayMs: number;
-  rgba8: string; // base64/hex-encoded RGBA8 bytes, row-major, width*height*4 long
+  rgba8: number[];
 }
 
 export interface SemioImageMetadataEntry {
@@ -18,6 +18,6 @@ export interface SemioImageSnapshot {
   /** @state artifact */ colorspace: SemioColorspace;
   /** @state artifact */ bitDepth: number;
   /** @state artifact */ frames: SemioImageFrame[];
-  /** @state artifact */ icc: string | null;
+  /** @state artifact */ icc: number[] | null;
   /** @state artifact */ metadata: SemioImageMetadataEntry[];
 }

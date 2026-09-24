@@ -35,8 +35,8 @@ Feature: The chart-kind catalogue covers the handcrafted taxonomy exactly once, 
   @level-fundamental
   @mode-conformance
   Scenario: The catalogue validates against its own JSON Schema
-    Given the catalogue asset://🖼️assets/🔣️viz-catalog.json
-    And the schema asset://🧬️schema/🔣️.json
+    Given the catalogue asset://🔣️viz-catalog.json
+    And the schema schema://print/CatalogEntry
     When the catalogue is validated with ajv in draft 2020-12 mode
     Then ajv reports no errors
 
@@ -44,7 +44,7 @@ Feature: The chart-kind catalogue covers the handcrafted taxonomy exactly once, 
   @level-fundamental
   @mode-differential
   Scenario: Every taxonomy leaf markdown-it finds is covered by exactly one chart kind
-    Given the taxonomy asset://🖼️assets/📊️viz-taxonomy.md
+    Given the taxonomy asset://📊️viz-taxonomy.md
     When the leaf identifiers are read out of the markdown-it token stream
     Then the catalogue's `covers` lists contain each of them exactly once
     And the catalogue contains no leaf identifier the token stream does not hold
@@ -53,7 +53,7 @@ Feature: The chart-kind catalogue covers the handcrafted taxonomy exactly once, 
   @level-fundamental
   @mode-conformance
   Scenario: Chart-kind slugs are global, section-free and unique
-    Given the catalogue asset://🖼️assets/🔣️viz-catalog.json
+    Given the catalogue asset://🔣️viz-catalog.json
     Then no slug ends in a taxonomy section number
     And no two entries share a slug
 
@@ -87,7 +87,7 @@ Feature: The chart-kind catalogue covers the handcrafted taxonomy exactly once, 
   @level-fundamental
   @mode-conformance
   Scenario: No two chart kinds of one family carry the same options
-    Given the catalogue asset://🖼️assets/🔣️viz-catalog.json
+    Given the catalogue asset://🔣️viz-catalog.json
     Then the pair of family and rendered option list is unique across all entries
 
   @id-languages

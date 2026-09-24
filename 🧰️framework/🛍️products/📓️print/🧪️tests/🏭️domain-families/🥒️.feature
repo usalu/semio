@@ -26,7 +26,7 @@ Feature: The sixteen long-tail domain families draw every catalogue kind they ow
   different. The oracle is therefore the specification written in this feature: for a family that
   owns *n* catalogue kinds the probe must yield *n* non-empty record streams and *n* distinct
   signatures. That is `@no-oracle-domain-families`, registered with its rationale in
-  `🔮️oracle/🔣️.json`.
+  `🔮️oracles/🔣️.json`.
 
   **What d3-array is the reference for.** The one part of these families that a third party does
   define is the term scale of the §13 word charts: the glyph body height of a term is an affine map

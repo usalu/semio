@@ -23,28 +23,28 @@ Feature: The pie family assigns its angles exactly like d3-shape's pie generator
   @level-quick
   @mode-differential
   Scenario: A full sorted pie reproduces d3's angles
-    Given the committed probe document local://pie.tex
+    Given the committed probe document shared://🥧️charts-pie-donut/pie.tex
     Then the compiled probe and the reference implementation agree on every arc angle
 
   @id-pie-unsorted
   @level-quick
   @mode-differential
   Scenario: An unsorted pie hands out its angles in table order
-    Given the committed probe document local://pie-unsorted.tex
+    Given the committed probe document shared://🥧️charts-pie-donut/pie-unsorted.tex
     Then the compiled probe and the reference implementation agree on every arc angle
 
   @id-pie-padded
   @level-quick
   @mode-differential
   Scenario: A padded partial circle applies both of d3's clamps
-    Given the committed probe document local://pie-padded.tex
+    Given the committed probe document shared://🥧️charts-pie-donut/pie-padded.tex
     Then the compiled probe and the reference implementation agree on every arc angle
 
   @id-donut
   @level-long
   @mode-differential
   Scenario: A donut renders those angles into an annulus of the frame
-    Given the committed probe document local://donut.tex and the frame
+    Given the committed probe document shared://🥧️charts-pie-donut/donut.tex and the frame
       | width | height | pad | inner |
       | 60    | 34     | 3   | 0.55  |
     Then the compiled probe and the reference implementation agree on every annular sector

@@ -7,7 +7,7 @@
   "aggregateVariant": "UpdateGeoParams",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "update-geo-params",
-  "binaryTag": null,
+  "binaryTag": 25,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

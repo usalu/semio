@@ -18,7 +18,7 @@
 //! ⏳️ Progress and cancellation: `dispatchOpenedFiles` (`🛠️ShellHelpers/🟦️.tsx`) sends one
 //! invocation per [`importPayloadChunks`] chunk, IN ORDER, awaiting each — so a chunk that lands is
 //! `Staged { next_chunk, chunk_count }`, which is a real "n of N" the surface can report and which
-//! costs no document edit and no history row. Cancelling is dropping the run: an abandoned run holds
+//! costs no document edit. The command still logs one unapplied history row. Cancelling is dropping the run: an abandoned run holds
 //! one slot until [`Generation3dImportStaging::retire_abandoned`] sweeps it, never unbounded memory,
 //! and the next pick re-opens at chunk 0 rather than resuming into bytes nobody can account for.
 //!
@@ -100,7 +100,7 @@ impl Generation3dImportFault {
 /// 🧱️ What one accepted chunk did to its run.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Generation3dImportStep {
-    /// 🧱️ The chunk landed and the run is still open — no document edit, no history row. `next_chunk`
+    /// 🧱️ The chunk landed and the run is still open — no document edit. The command logs one unapplied row. `next_chunk`
     /// of `chunk_count` is the progress a surface reports.
     Staged { next_chunk: usize, chunk_count: usize },
     /// ✅️ The chunk closed the run; the pages are the whole payload in arrival order.
@@ -246,7 +246,8 @@ fn import_fault(code: &str, message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new(code), message.into())
 }
 
-/// 📥️ Admits one chunk. A run that is still open emits NOTHING — no document edit, no history row —
+/// 📥️ Admits one chunk. A run that is still open emits NOTHING — no document edit. The command still
+/// logs one unapplied history row, the same empty-emit row every lane-less Mutation owes —
 /// and the surface reads its progress off [`Generation3dImportStaging::open_runs`].
 pub fn emit(
     payload: &ImportDocument,

@@ -160,3 +160,24 @@ async fn background_surfaces_name_every_window_then_fall_back_to_panels() {
     assert!(!contexts.background_surfaces().iter().any(|surface| surface.ends_with(":window")));
     eprintln!("[DEBUG] background surfaces windows={:?} then panels={:?}", windows, contexts.background_surfaces());
 }
+
+/// ⚖️ A remote edit merged into the document re-projects EVERY bound surface: the windows and the
+/// panels beside them (the peer's inspector stayed stale while `background_surfaces` named windows only).
+#[semio_framework_async_macros::async_test]
+async fn document_surfaces_name_every_window_and_every_panel() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let view: semio_framework::ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
+    let mut contexts = SurfaceContexts::default();
+    let mut expected: Vec<String> = view.window_instances.iter().map(|window| format!("7:{}", window.id)).collect();
+    for window in &view.window_instances {
+        let projected = view.for_window_instance(&window.id).unwrap();
+        contexts.insert(format!("7:{}", window.id), fixture["defaultWindowSurface"]["bodyKey"].as_str().unwrap().into(), projected).unwrap();
+    }
+    contexts.insert("7:panel".into(), "properties".into(), view.clone()).unwrap();
+    expected.push("7:panel".to_owned());
+    let mut surfaces = contexts.document_surfaces();
+    surfaces.sort();
+    expected.sort();
+    assert_eq!(surfaces, expected);
+    assert!(contexts.background_surfaces().len() < surfaces.len(), "background work still addresses windows only");
+}

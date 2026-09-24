@@ -78,17 +78,36 @@ pub fn fill_entropy(bytes: &mut [u8]) -> Result<(), EntropyError> {
     Ok(())
 }
 
-/// 🚧️ `wasm32-wasip2` has no arm of its own here: a correct `wasi:random/random` component import
-/// needs a hand-rolled canonical-ABI binding (the same shape as `semio_browser_host` in
-/// `ui-host`'s `🦀️window.rs`, but for the component model rather than a core-wasm import), which
-/// is real implementation work beyond this slice — left unimplemented rather than stubbed with a
-/// false success. wasip2 therefore falls into this catch-all `Err(EntropyError)` path deliberately
-/// (widened from the pre-existing "every other platform" arm, not a new stub), which
-/// `time_ordered_id` below already degrades from gracefully via a clock/pid-seeded `splitmix64` —
-/// so nothing here panics or fabricates cryptographic strength it doesn't have.
-#[cfg(any(not(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows", target_arch = "wasm32")), target_env = "p2"))]
+/// 🎲️ `wasm32-wasip2` guests read `wasi:random/random.get-random-u64`, the cryptographically secure
+/// Preview2 source every Semio runtime supplies (wasmtime's WASI context, the owned interpreter and
+/// the browser WASI profile). The import is declared by the interface version libstd's own `wasip2`
+/// bindings embed, so the component linker resolves it without a separate world.
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+pub fn fill_entropy(bytes: &mut [u8]) -> Result<(), EntropyError> {
+    #[link(wasm_import_module = "wasi:random/random@0.2.9")]
+    unsafe extern "C" {
+        #[link_name = "get-random-u64"]
+        fn get_random_u64() -> i64;
+    }
+    for chunk in bytes.chunks_mut(8) {
+        let word = unsafe { get_random_u64() }.to_le_bytes();
+        chunk.copy_from_slice(&word[..chunk.len()]);
+    }
+    Ok(())
+}
+
+/// 🚫️ Every platform without an entropy boundary refuses instead of fabricating one.
+#[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows", target_arch = "wasm32")))]
 pub fn fill_entropy(_bytes: &mut [u8]) -> Result<(), EntropyError> {
     Err(EntropyError)
+}
+
+/// 🎲️ One platform-entropy word, e.g. a replica identity that must differ between every process,
+/// tab and guest instance that authors history.
+pub fn entropy_u64() -> Result<u64, EntropyError> {
+    let mut bytes = [0u8; 8];
+    fill_entropy(&mut bytes)?;
+    Ok(u64::from_le_bytes(bytes))
 }
 // #endregion 🔖️Entropy
 

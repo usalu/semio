@@ -1,0 +1,20 @@
+{
+  "mutation": "applyMesh",
+  "payload": {
+    "mutation": {
+      "CreateMaterial": {
+        "material": {
+          "baseColor": {
+            "a": 1.0,
+            "b": 0.9,
+            "g": 0.4,
+            "r": 0.2
+          },
+          "id": "mat2",
+          "metallic": 0.2,
+          "roughness": 0.8
+        }
+      }
+    }
+  }
+}

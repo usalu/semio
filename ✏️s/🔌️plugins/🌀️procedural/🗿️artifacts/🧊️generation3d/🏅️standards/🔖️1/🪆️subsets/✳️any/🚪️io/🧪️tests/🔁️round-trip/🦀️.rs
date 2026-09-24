@@ -192,9 +192,7 @@ mod las;
 mod dwg;
 #[path = "../../📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🧪️tests/🔁️round-trip/🦀️.rs"]
 mod txt;
-#[path = "../../📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🧪️tests/🔁️round-trip/🦀️.rs"]
-mod png;
-// 📄️ The user-facing surface those nine leaves reach the user THROUGH — the roster, the download
+// 📄️ The user-facing surface those eight leaves reach the user THROUGH — the roster, the download
 // envelope, the accept filter and the picked-file path. It shares this lane's fixture, projection
 // and third-party oracle rather than standing up a second copy of them.
 #[path = "../🗿️artifact-surface/🦀️.rs"]

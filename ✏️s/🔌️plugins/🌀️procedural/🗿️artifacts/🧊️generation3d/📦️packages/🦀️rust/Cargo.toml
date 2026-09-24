@@ -79,6 +79,7 @@ fnv = "1.0.7"
 [[test]]
 name = "example-geometry"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️geometry/🦀️.rs"
+required-features = ["component-app-assembly"]
 
 # 🔁️ The 🚪️io round-trip lane: one committed unit cube through all nine format leaves, with
 # `parry3d` as the third-party check on every recovered mesh. Its per-format cases live beside the

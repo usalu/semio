@@ -1203,6 +1203,7 @@ export interface Taxonomy {
   readonly storyFileKindId: string;
   readonly testFeatureFileKindId: string;
   readonly testAdapterFileKinds: Readonly<Record<string, string>>;
+  readonly testImplementationIds: Readonly<Record<string, string>>;
   readonly testImplementationFileKindIds: readonly string[];
   readonly testLegacyDirectoryNames: readonly string[];
   readonly testFixtureLegacyDirectoryNames: readonly string[];
@@ -1217,6 +1218,12 @@ export interface Taxonomy {
   readonly testObsoleteCategoryStems: readonly string[];
   readonly testObsoleteTestEmojiCategoryStems: readonly string[];
   readonly testLegacyFilenamePatterns: readonly Readonly<{ id: string; pattern: string }>[];
+  /** 🐹️ Language conventions whose toolchain compiles a test only beside the package it tests; such a file is a canonical in-package test implementation. */
+  readonly testInPackageImplementations: readonly Readonly<{ id: string; implementation: string; fileKindId: string; filenameSuffix: string; rationale: string }>[];
+  /** 🎚️ The case name that holds a package's test-runner configuration; it configures one delivery package, so it may sit under a delivery scope. */
+  readonly testRunnerConfigurationCaseName: string;
+  /** 🔬️ Owner collections whose members bound the search for a case's subject package. */
+  readonly testSubjectBoundaryOwnerKinds: readonly string[];
   readonly testDeliveryScopeDirectoryNames: readonly string[];
   readonly testJavaScriptFrameworkModules: readonly string[];
   readonly testAssertionModules: readonly string[];
@@ -5155,6 +5162,8 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   for (const [key, values] of [["testObsoleteCategoryStems", taxonomy.testObsoleteCategoryStems], ["testObsoleteTestEmojiCategoryStems", taxonomy.testObsoleteTestEmojiCategoryStems]] as const) {
     if (!Array.isArray(values) || values.some((name) => typeof name !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(name) || name !== name.normalize("NFC")) || new Set(values).size !== values.length) problems.push(`${key} must contain unique normalized lowercase stems.`);
   }
+  if (typeof taxonomy.testRunnerConfigurationCaseName !== "string" || !taxonomy.testRunnerConfigurationCaseName || /[\\/]/u.test(taxonomy.testRunnerConfigurationCaseName)) problems.push("testRunnerConfigurationCaseName must be one directory name.");
+  if (!Array.isArray(taxonomy.testSubjectBoundaryOwnerKinds) || taxonomy.testSubjectBoundaryOwnerKinds.some((name) => typeof name !== "string" || !taxonomy.testOwnerKinds.includes(name))) problems.push("testSubjectBoundaryOwnerKinds must name owner collections from testOwnerKinds.");
   if (!Array.isArray(taxonomy.testDeliveryScopeDirectoryNames) || taxonomy.testDeliveryScopeDirectoryNames.some((name) => typeof name !== "string" || !name || /[\\/]/u.test(name))) problems.push("testDeliveryScopeDirectoryNames must contain non-empty directory names.");
   if (!Array.isArray(taxonomy.testJavaScriptFrameworkModules) || taxonomy.testJavaScriptFrameworkModules.some((name) => typeof name !== "string" || !name)) problems.push("testJavaScriptFrameworkModules must contain non-empty module specifiers.");
   if (!Array.isArray(taxonomy.testAssertionModules) || taxonomy.testAssertionModules.some((name) => typeof name !== "string" || !name)) problems.push("testAssertionModules must contain non-empty module specifiers.");
@@ -5163,6 +5172,12 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   else for (const [index, entry] of taxonomy.testLegacyFilenamePatterns.entries()) {
     if (!entry || typeof entry.id !== "string" || !entry.id || typeof entry.pattern !== "string" || !entry.pattern) problems.push(`testLegacyFilenamePatterns[${index}] must declare an id and pattern.`);
     else try { new RegExp(entry.pattern, "u"); } catch { problems.push(`testLegacyFilenamePatterns[${index}].pattern is not a valid Unicode regular expression.`); }
+  }
+  if (!Array.isArray(taxonomy.testInPackageImplementations)) problems.push("testInPackageImplementations must be an array.");
+  else for (const [index, entry] of taxonomy.testInPackageImplementations.entries()) {
+    if (!entry || typeof entry.id !== "string" || !entry.id || typeof entry.implementation !== "string" || !Object.values(taxonomy.testImplementationIds).includes(entry.implementation) || typeof entry.rationale !== "string" || !entry.rationale) problems.push(`testInPackageImplementations[${index}] must declare an id, a registered implementation, and a rationale.`);
+    else if (!taxonomy.testImplementationFileKindIds.includes(entry.fileKindId) || typeof entry.filenameSuffix !== "string" || !taxonomy.fileKinds[entry.fileKindId]?.extensionChains.some((extension) => entry.filenameSuffix.endsWith(extension) && entry.filenameSuffix.length > extension.length)) problems.push(`testInPackageImplementations[${index}] must name a test implementation file kind and a suffix that extends one of its extensions.`);
+    else if (taxonomy.testLegacyFilenamePatterns.some((legacy) => new RegExp(legacy.pattern, "u").test(`x${entry.filenameSuffix}`))) problems.push(`testInPackageImplementations[${index}].filenameSuffix is also a legacy test filename pattern.`);
   }
   for (const [key, kindId] of [
     ["semanticManifestFileKindId", taxonomy.semanticManifestFileKindId], ["subsetsManifestFileKindId", taxonomy.subsetsManifestFileKindId],

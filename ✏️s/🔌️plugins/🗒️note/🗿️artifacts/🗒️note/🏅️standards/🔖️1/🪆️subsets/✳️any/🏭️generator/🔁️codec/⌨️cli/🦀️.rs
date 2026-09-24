@@ -1,4 +1,4 @@
-//! 🚪️ Entry point — two roles, one binary, exactly `…✳️cad/🔬️probes/🔮️oracle/📦️packages/🦀️rust`'s shape:
+//! 🚪️ Entry point — two roles, one binary, exactly `…✳️cad/🔬️probes/📖️reader/📦️packages/🦀️rust`'s shape:
 //!
 //!   note-oracle-codec generate --out <dir> [--physical-directories] [--only <recipe-id>]*
 //!   note-oracle-codec dxf-project|svg-project|pdf-project --input <path>

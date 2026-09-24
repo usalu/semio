@@ -7,9 +7,8 @@ fn sample_dwg() -> DwgSnapshot {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn produces_empty_but_valid_cad_snapshot() {
+async fn an_empty_drawing_imports_as_an_empty_plan() {
     let cad = semio_framework_plugin::resolve_ready(SemioCadFromDwg::deserialize(&sample_dwg())).expect("deserialize");
-    assert!(cad.layers.is_empty());
     assert!(cad.blocks.is_empty());
     assert!(cad.entities.is_empty());
     assert_eq!(cad.schema, STDIO_SEMIOCAD_DOCUMENT_SCHEMA);

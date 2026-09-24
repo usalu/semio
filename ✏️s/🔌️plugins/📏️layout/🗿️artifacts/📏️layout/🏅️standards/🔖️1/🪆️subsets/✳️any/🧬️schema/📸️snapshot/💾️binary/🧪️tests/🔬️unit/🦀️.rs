@@ -6,6 +6,7 @@ use crate::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, Page
 async fn pack_round_trips_and_agrees_with_dsl() {
     let document = dsl::parse_dsl(dsl::LAYOUT_SAMPLE_TEXT).expect("parse sample layout fixture");
     store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    store::os_store::test_support::assert_pack_schema_identity(&document);
     let bytes = encode(&document);
     assert_eq!(decode(&bytes).expect("decode"), document);
 }
@@ -70,4 +71,12 @@ async fn pack_round_trips_overrides_frame_flags_and_absent_print_target() {
         referenced_model: None,
     };
     store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn pack_schema_identity_carries_the_background_drawing_child_and_model_link() {
+    let mut document = dsl::parse_dsl(dsl::LAYOUT_SAMPLE_TEXT).expect("parse sample layout fixture");
+    document.background_drawing = Some(crate::background_drawing_child_handle("dxf", &semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot::default()));
+    document.referenced_model = Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("plan-1!s.architect.model@1/*").expect("uri"), pin: store::LinkPin::Checkpoint { id: "cp-1".into() }, role: "model".into() });
+    store::os_store::test_support::assert_pack_schema_identity(&document);
 }

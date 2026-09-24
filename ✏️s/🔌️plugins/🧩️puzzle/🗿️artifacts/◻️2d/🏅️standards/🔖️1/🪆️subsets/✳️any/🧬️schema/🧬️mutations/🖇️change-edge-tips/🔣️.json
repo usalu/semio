@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeEdgeTips",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-edge-tips",
-  "binaryTag": null,
+  "binaryTag": 19,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

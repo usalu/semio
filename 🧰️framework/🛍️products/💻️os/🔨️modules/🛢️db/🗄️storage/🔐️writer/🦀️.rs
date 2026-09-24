@@ -23,6 +23,12 @@ pub struct WalWriterKey {
     generation: u64,
 }
 
+impl WalWriterKey {
+    pub(crate) fn generation(&self) -> u64 {
+        self.generation
+    }
+}
+
 impl WalWriterPermit {
     pub(crate) fn key(&self) -> WalWriterKey {
         self.key
@@ -60,6 +66,14 @@ struct WalWriterEntry<G> {
 pub(crate) trait WalWriterGuard {
     fn close_step(&mut self) -> Result<bool, DbError>;
     fn terminal_is_empty(&self) -> bool;
+
+    /// ⏸️ A remote unlock in flight re-requests its controller itself; until then the slot is not runnable.
+    fn awaiting_wake(&self) -> bool {
+        false
+    }
+
+    /// 🔔 Backend close parks here while a remote unlock is in flight.
+    fn register_wake(&self, _waker: &std::task::Waker) {}
 }
 
 impl WalWriterGuard for () {
@@ -133,7 +147,7 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
         if document.as_str().is_empty() {
             return Err(DbError::InvalidArgument("empty WAL writer document".to_string()));
         }
-        if self.entries.iter().flatten().any(|entry| entry.document == *document) {
+        if !self.retire_abandoned_predecessor(document)? {
             return Err(DbError::Conflict("WAL document already has a writer".to_string()));
         }
         let slot = self.entries.iter().position(Option::is_none).ok_or(DbError::LimitExceeded("WAL writer capacity"))?;
@@ -145,6 +159,22 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
         self.entries[slot] = Some(WalWriterEntry { document: document.clone(), generation, active_operation: None, releasing: false, guard });
         self.next_generation = next;
         Ok(WalWriterPermit { key, document: document.clone(), release: signal.map(release::WalWriterSignalReservation::commit) })
+    }
+
+    /// @emoji ⏭️ A successor for the same document completes the release its dropped predecessor
+    /// already requested, in the same table turn, instead of racing the backend's retirement hook:
+    /// a dropped engine's writer is therefore retired deterministically before any reopen. Returns
+    /// `false` while a live, pinned, faulted or multi-step predecessor still holds the document.
+    fn retire_abandoned_predecessor(&mut self, document: &DbIoText) -> Result<bool, DbError> {
+        let Some(slot) = self.entries.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.document == *document)) else { return Ok(true) };
+        let entry = self.entries[slot].as_ref().expect("selected predecessor writer");
+        let key = WalWriterKey { backend: self.backend(), slot: slot as u8, generation: entry.generation };
+        let abandoned = entry.active_operation.is_none() && (entry.releasing || self.signalled && release::requested(key)) && !(self.signalled && release::faulted(key));
+        if !abandoned {
+            return Ok(false);
+        }
+        let document = entry.document.clone();
+        Ok(!self.release_step(key, self.backend(), &document)?)
     }
 
     #[cfg(test)]
@@ -199,6 +229,22 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
         Ok(&entry.guard)
     }
 
+    /// 🔑 The exact pinned operation borrows its guard mutably, e.g. to drive writes through the lock session.
+    pub(crate) fn pinned_guard_mut(&mut self, key: WalWriterKey, backend: DbIoBackendControl, document: &DbIoText, operation: u64) -> Result<&mut G, DbError> {
+        self.matching_entry(key, backend, document)?;
+        let entry = self.entries[usize::from(key.slot)].as_mut().expect("validated writer slot");
+        if entry.active_operation != Some(operation) {
+            return Err(DbError::Fenced { expected: entry.active_operation.unwrap_or(0), actual: operation });
+        }
+        Ok(&mut entry.guard)
+    }
+
+    pub(crate) fn register_wake(&self, waker: &std::task::Waker) {
+        for entry in self.entries.iter().flatten() {
+            entry.guard.register_wake(waker);
+        }
+    }
+
     pub(crate) fn finish_operation(&mut self, key: WalWriterKey, backend: DbIoBackendControl, document: &DbIoText, operation: u64) -> Result<(), DbError> {
         self.matching_entry(key, backend, document)?;
         let entry = self.entries[usize::from(key.slot)].as_mut().expect("validated writer slot");
@@ -234,10 +280,10 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
         if !entry.guard.terminal_is_empty() {
             return Err(DbError::Internal("WAL writer guard returned a false terminal witness".to_string()));
         }
+        self.entries[usize::from(key.slot)] = None;
         if self.signalled {
             release::finish(key);
         }
-        self.entries[usize::from(key.slot)] = None;
         Ok(false)
     }
 
@@ -259,6 +305,7 @@ impl<G: WalWriterGuard> WalWriterTable<G> {
         let Some(slot) = (0..WAL_WRITER_CAPACITY).map(|offset| (self.close_cursor + offset) % WAL_WRITER_CAPACITY).find(|slot| {
             self.entries[*slot].as_ref().is_some_and(|entry| {
                 entry.active_operation.is_none()
+                    && !entry.guard.awaiting_wake()
                     && (entry.releasing || self.signalled && release::requested(WalWriterKey { backend: self.backend(), slot: *slot as u8, generation: entry.generation }))
                     && (!self.signalled || !release::faulted(WalWriterKey { backend: self.backend(), slot: *slot as u8, generation: entry.generation }))
             })
@@ -329,3 +376,7 @@ impl WalWriterGuard for WalFileWriterGuard {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(all(test, feature = "sqlite", not(target_arch = "wasm32")))]
+#[path = "🧪️tests/🔬️fence-conformance/🦀️.rs"]
+mod fence_conformance;

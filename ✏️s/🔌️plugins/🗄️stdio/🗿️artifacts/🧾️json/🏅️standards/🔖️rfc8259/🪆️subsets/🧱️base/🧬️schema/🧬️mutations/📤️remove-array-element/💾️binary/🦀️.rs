@@ -1,6 +1,6 @@
 //! 💾️ Operation-specific binary payload codec for remove-array-element/RemoveArrayElement.
 use super::RemoveArrayElementPayload;
-pub const BINARY_TAG: u32 = 4;
+pub const BINARY_TAG: u32 = dsl::protocol_record::tag_u32(include_str!("../../💾️binary/📡️.protocol.semio"), "remove-array-element");
 pub fn encode_payload(value: &RemoveArrayElementPayload) -> Result<Vec<u8>, String> {
     Ok(pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(value))).into_bytes())
 }

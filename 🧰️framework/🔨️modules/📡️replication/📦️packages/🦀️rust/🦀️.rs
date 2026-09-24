@@ -81,6 +81,11 @@ pub mod format;
 mod component;
 pub use component::*;
 
+
+#[path = "../../👕️peer-overlay/🦀️.rs"]
+pub mod peer_overlay;
+pub use peer_overlay::*;
+
 pub use crate::causal::*;
 pub use crate::causal::{FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary};
 pub use crate::codec::*;

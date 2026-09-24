@@ -1,0 +1,15 @@
+{
+  "mutation": "applyTable",
+  "payload": {
+    "mutation": {
+      "EditCell": {
+        "row_index": 0,
+        "column_name": "ID",
+        "new_value": {
+          "kind": "str",
+          "value": "F1-mutated"
+        }
+      }
+    }
+  }
+}

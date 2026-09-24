@@ -20,7 +20,7 @@ type idVectors struct {
 }
 
 func loadIDVectors(ctx *host.Context) (idVectors, error) {
-	data, err := ctx.FixtureBytes("local://🪪️id-vectors.json")
+	data, err := ctx.FixtureBytes("shared://🪪️ticket-id-scheme/🪪️id-vectors.json")
 	if err != nil {
 		return idVectors{}, err
 	}

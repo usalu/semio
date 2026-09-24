@@ -7,7 +7,7 @@
   "aggregateVariant": "RenamePuzzle5d",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-puzzle5d",
-  "binaryTag": null,
+  "binaryTag": 22,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

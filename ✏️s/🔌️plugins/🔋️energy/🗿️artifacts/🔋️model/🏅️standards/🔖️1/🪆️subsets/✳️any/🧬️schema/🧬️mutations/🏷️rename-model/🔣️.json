@@ -7,7 +7,7 @@
   "aggregateVariant": "RenameModel",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "rename-model",
-  "binaryTag": null,
+  "binaryTag": 0,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -1,4 +1,5 @@
 @capability-wfc-bitmap-1-mount
+@no-oracle-wfc-bitmap-mount-contract-statement
 @comparison-ordered-json-v1
 Feature: The bitmap subset mounts the identities, windows and examples it declares
   The committed `../../🧫️fixtures/🧩️mount-contract/🔣️.json` is the language-agnostic statement of
@@ -6,6 +7,9 @@ Feature: The bitmap subset mounts the identities, windows and examples it declar
   the plugin builder produces — and `🐍️.py` is a second reader that links nothing of this repository
   and checks the same statement against the kind directories on disk.
 
+  @id-surface-ids
+  @level-fundamental
+  @mode-conformance
   Scenario: The declared surface ids are the canonical ones
     Given the committed mount contract
     Then the editor app id is s.wfc.bitmap@1/*#editor
@@ -13,16 +17,25 @@ Feature: The bitmap subset mounts the identities, windows and examples it declar
     And the OS artifact kind id is 2d.wfcbitmap
     And the inference tool id is s.wfc.bitmap.solve
 
+  @id-window-kinds
+  @level-fundamental
+  @mode-conformance
   Scenario: Both surfaces declare exactly the committed window kinds
     Given the committed mount contract
     Then the editor declares wfc-bitmap-input and wfc-bitmap-output, in that order
     And the viewer declares the same two window kinds, in the same order
 
+  @id-mutation-vocabulary
+  @level-fundamental
+  @mode-conformance
   Scenario: The mutation vocabulary on disk is the declared one
     Given the committed mount contract
     Then every kind directory under 🧬️schema/🧬️mutations declares a semantic kind the contract lists
     And the contract lists no kind that has no directory
 
+  @id-examples
+  @level-fundamental
+  @mode-conformance
   Scenario: Every bundled example is real and localized
     Given the committed mount contract
     Then every example declares a sample with a positive extent and at least two palette colours

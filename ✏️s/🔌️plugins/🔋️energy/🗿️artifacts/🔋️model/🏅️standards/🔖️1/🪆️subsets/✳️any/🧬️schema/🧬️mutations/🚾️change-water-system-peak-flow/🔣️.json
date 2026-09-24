@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeWaterSystemPeakFlow",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-water-system-peak-flow",
-  "binaryTag": null,
+  "binaryTag": 234,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

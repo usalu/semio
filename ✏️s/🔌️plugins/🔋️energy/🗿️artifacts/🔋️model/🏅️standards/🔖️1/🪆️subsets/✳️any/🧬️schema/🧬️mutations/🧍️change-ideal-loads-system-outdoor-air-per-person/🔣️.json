@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeIdealLoadsSystemOutdoorAirPerPerson",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-ideal-loads-system-outdoor-air-per-person",
-  "binaryTag": null,
+  "binaryTag": 142,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

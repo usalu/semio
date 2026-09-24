@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSlideLayout {
-    pub(crate) index: usize,
-    pub(crate) layout_id: Option<String>,
+    pub index: usize,
+    pub layout_id: Option<String>,
 }
 
 impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation> for SetSlideLayout {

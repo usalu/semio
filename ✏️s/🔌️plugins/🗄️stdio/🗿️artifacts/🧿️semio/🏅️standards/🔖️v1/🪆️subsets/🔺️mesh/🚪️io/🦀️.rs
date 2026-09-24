@@ -20,6 +20,8 @@ pub mod derived_composition {
     #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly;
     #[cfg(feature = "conversion-mesh")]
+    use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::png::v1_2::any::SemioMeshToPng;
+    #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
     #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
@@ -179,6 +181,7 @@ pub mod derived_composition {
                     serializer_entry_of::<SemioMeshToGltf>(),
                     deserializer_entry_of::<SemioMeshFromStl>(),
                     serializer_entry_of::<SemioMeshToStl>(),
+                    serializer_entry_of::<SemioMeshToPng>(),
                     deserializer_entry_of::<SemioMeshFromObj>(),
                     serializer_entry_of::<SemioMeshToObj>(),
                     deserializer_entry_of::<SemioMeshFromPly>(),
@@ -199,3 +202,58 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+//#region 🧾️Encoding
+/// 🧾️ A standard file format a mesh is written as through this subset's own export leaves.
+#[cfg(feature = "conversion-mesh")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SemioMeshFormat {
+    Stl,
+    Obj,
+    Ply,
+    Gltf,
+    Las,
+    Dwg,
+    Png,
+}
+
+/// 🧾️ The file bytes of `mesh` in `format` — the one call every domain artifact that projects into a
+/// mesh makes, so each standard format has exactly one writer in the repository.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(feature = "conversion-mesh")]
+pub fn encode_mesh(mesh: &crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot, format: SemioMeshFormat) -> Result<Vec<u8>, String> {
+    use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::{dwg::v_ac1024::any::SemioMeshToDwg, gltf::v2_0::any::SemioMeshToGltf, las::v1_0::any::SemioMeshToLas, obj::v3_0::any::SemioMeshToObj, ply::v1_0::any::SemioMeshToPly, png::v1_2::any::SemioMeshToPng, stl::v_ascii::any::SemioMeshToStl};
+    use semio_framework_plugin::{resolve_ready, ArtifactSerializer};
+    match format {
+        SemioMeshFormat::Stl => Ok(semio_s_artifact_stdio_stl::engine::encode_stl_ascii(&resolve_ready(SemioMeshToStl::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),
+        SemioMeshFormat::Obj => Ok(semio_s_artifact_stdio_obj::engine::encode_obj(&resolve_ready(SemioMeshToObj::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),
+        SemioMeshFormat::Ply => semio_s_artifact_stdio_ply::engine::encode_ply(&resolve_ready(SemioMeshToPly::serialize(mesh)).map_err(|e| e.to_string())?),
+        SemioMeshFormat::Gltf => Ok(semio_s_artifact_stdio_gltf::engine::serialize_gltf_document(&resolve_ready(SemioMeshToGltf::serialize(mesh)).map_err(|e| e.to_string())?)),
+        SemioMeshFormat::Las => semio_s_artifact_stdio_las::engine::encode_las(&resolve_ready(SemioMeshToLas::serialize(mesh)).map_err(|e| e.to_string())?),
+        SemioMeshFormat::Dwg => semio_s_artifact_stdio_dwg::engine::dwg_to_bytes(&resolve_ready(SemioMeshToDwg::serialize(mesh)).map_err(|e| e.to_string())?.drawing.to_native()?),
+        SemioMeshFormat::Png => semio_s_artifact_stdio_png::io::encode_png(&resolve_ready(SemioMeshToPng::serialize(mesh)).map_err(|e| e.to_string())?),
+    }
+}
+
+/// 📥️ `bytes` in `format` read into a mesh through this subset's own import leaves (png has none: a
+/// picture of a mesh carries no geometry).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(feature = "conversion-mesh")]
+pub fn decode_mesh(bytes: &[u8], format: SemioMeshFormat) -> Result<crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot, String> {
+    use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::{dwg::v_ac1024::any::SemioMeshFromDwg, gltf::v2_0::any::SemioMeshFromGltf, las::v1_0::any::SemioMeshFromLas, obj::v3_0::any::SemioMeshFromObj, ply::v1_0::any::SemioMeshFromPly, stl::v_ascii::any::SemioMeshFromStl};
+    use semio_framework_plugin::{resolve_ready, ArtifactDeserializer};
+    let text = || std::str::from_utf8(bytes).map_err(|e| e.to_string());
+    match format {
+        SemioMeshFormat::Stl => resolve_ready(SemioMeshFromStl::deserialize(&semio_s_artifact_stdio_stl::io::decode_stl_auto(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Obj => resolve_ready(SemioMeshFromObj::deserialize(&semio_s_artifact_stdio_obj::io::decode_obj(text()?)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Ply => resolve_ready(SemioMeshFromPly::deserialize(&semio_s_artifact_stdio_ply::io::decode_ply(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Gltf => {
+            let gltf = if bytes.starts_with(b"glTF") { semio_s_artifact_stdio_gltf::io::decode_glb(bytes)? } else { semio_s_artifact_stdio_gltf::io::parse_gltf_document(bytes)? };
+            resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).map_err(|e| e.to_string())
+        }
+        SemioMeshFormat::Las => resolve_ready(SemioMeshFromLas::deserialize(&semio_s_artifact_stdio_las::io::decode_las(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Dwg => resolve_ready(SemioMeshFromDwg::deserialize(&semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Png => Err("semio/mesh←png: a picture of a mesh carries no geometry".into()),
+    }
+}
+//#endregion 🧾️Encoding

@@ -1058,9 +1058,10 @@ fn assert_delivered_bounds_frame_inside_the_viewport(fixture: &ExampleGeometryFi
     let delivery = &fixture.delivery;
     let minimum = [delivery.bounding_box_min[0] as f32, delivery.bounding_box_min[1] as f32, delivery.bounding_box_min[2] as f32];
     let maximum = [delivery.bounding_box_max[0] as f32, delivery.bounding_box_max[1] as f32, delivery.bounding_box_max[2] as f32];
+    const VIEWPORT_HEIGHT_PX: f32 = 900.0;
     for aspect in [1.7f32, 1.0, 0.7] {
         let seed = OrbitController::default();
-        let framed = frame_orbit_to_bounds(&seed, minimum, maximum, aspect, WORLD_FRAME_BOUNDS_MARGIN);
+        let framed = frame_orbit_to_bounds(&seed, minimum, maximum, VIEWPORT_HEIGHT_PX * aspect, VIEWPORT_HEIGHT_PX, WORLD_FRAME_BOUNDS_MARGIN);
         let camera = framed.to_camera();
         let half_vertical = (camera.fov_y * 0.5).tan();
         let forward = [camera.target.x - camera.position.x, camera.target.y - camera.position.y, camera.target.z - camera.position.z];

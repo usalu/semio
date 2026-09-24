@@ -7,7 +7,7 @@
   "aggregateVariant": "DisconnectSurfaces",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "disconnect-surfaces",
-  "binaryTag": null,
+  "binaryTag": 51,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

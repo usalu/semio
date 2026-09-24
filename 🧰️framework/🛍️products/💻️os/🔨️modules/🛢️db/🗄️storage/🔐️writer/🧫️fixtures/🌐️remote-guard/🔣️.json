@@ -1,11 +1,117 @@
 {
-  "version": "semio.db.wal-writer-remote-guard.v1",
-  "mutations": ["create", "append", "sync", "seal", "truncateTail", "delete"],
-  "cases": [
-    { "backend": "sqlite", "name": "canonical-alias-conflict", "holderExit": "explicitClose", "expect": "conflictThenAcquire" },
-    { "backend": "sqlite", "name": "crash-releases-sidecar", "holderExit": "processExitWithoutRelease", "expect": "reacquire" },
-    { "backend": "postgres", "name": "session-advisory-conflict", "holderExit": "explicitClose", "expect": "conflictThenAcquire" },
-    { "backend": "postgres", "name": "session-crash-releases-lock", "holderExit": "processExitWithoutRelease", "expect": "reacquire" },
-    { "backend": "neo4j", "name": "no-fence-fails-before-inventory", "expect": "unavailableNoWalEffect" }
+  "version": "semio.db.wal-writer-fence.v1",
+  "document": "wal-writer-fence-law",
+  "mutations": [
+    "create",
+    "append",
+    "sync",
+    "seal",
+    "truncateTail",
+    "delete"
+  ],
+  "postgres": {
+    "lockNamespace": "semio/db/wal-writer/v1",
+    "applicationName": "semio-wal-writer",
+    "keepalive": {
+      "idleSeconds": 10,
+      "intervalSeconds": 5,
+      "count": 3
+    },
+    "lockKeys": [
+      {
+        "document": "wal-writer-fence-law",
+        "key": "-2968780164311839700"
+      },
+      {
+        "document": "v1:space-1/artifact-0001",
+        "key": "-796530419472476283"
+      },
+      {
+        "document": "ü",
+        "key": "2177302134761624965"
+      }
+    ]
+  },
+  "neo4j": {
+    "label": "WalWriter",
+    "leaseTtlMs": 15000,
+    "renewEveryMs": 5000,
+    "clock": "server"
+  },
+  "backends": [
+    {
+      "backend": "sqlite",
+      "mechanism": "sidecar-file-lock",
+      "ownershipLoss": "process-exit-only",
+      "crashRelease": "immediate"
+    },
+    {
+      "backend": "postgres",
+      "mechanism": "session-advisory-lock",
+      "ownershipLoss": "session-terminated",
+      "crashRelease": "immediate"
+    },
+    {
+      "backend": "neo4j",
+      "mechanism": "lease-node-fencing-token",
+      "ownershipLoss": "lease-expired",
+      "crashRelease": "after-lease-ttl"
+    }
+  ],
+  "laws": [
+    {
+      "name": "second-instance-conflicts",
+      "holder": "held",
+      "contender": "same-process-instance",
+      "expect": "conflict",
+      "backends": [
+        "sqlite",
+        "postgres",
+        "neo4j"
+      ]
+    },
+    {
+      "name": "other-process-conflicts",
+      "holder": "held",
+      "contender": "other-process",
+      "expect": "conflict",
+      "backends": [
+        "sqlite",
+        "postgres",
+        "neo4j"
+      ]
+    },
+    {
+      "name": "release-admits-contender",
+      "holder": "released",
+      "contender": "same-process-instance",
+      "expect": "acquire",
+      "backends": [
+        "sqlite",
+        "postgres",
+        "neo4j"
+      ]
+    },
+    {
+      "name": "process-exit-releases",
+      "holder": "process-exited",
+      "contender": "same-process-instance",
+      "expect": "acquire",
+      "backends": [
+        "sqlite",
+        "postgres",
+        "neo4j"
+      ]
+    },
+    {
+      "name": "lost-owner-is-fenced",
+      "holder": "ownership-lost",
+      "contender": "stale-holder",
+      "expect": "fenced-without-wal-effect",
+      "backends": [
+        "postgres",
+        "neo4j"
+      ]
+    }
   ]
 }

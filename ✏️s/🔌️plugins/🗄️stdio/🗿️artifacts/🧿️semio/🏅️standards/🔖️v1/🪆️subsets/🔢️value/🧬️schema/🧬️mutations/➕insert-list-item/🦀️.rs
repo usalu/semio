@@ -9,9 +9,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertListItem {
-    pub(crate) path: SemioValuePath,
-    pub(crate) index: usize,
-    pub(crate) value: SemioValue,
+    pub path: SemioValuePath,
+    pub index: usize,
+    pub value: SemioValue,
 }
 
 impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for InsertListItem {

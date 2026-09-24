@@ -103,9 +103,9 @@ pub mod apply_video;
 /// least one hyphen, so a single-word kind like `brep` is rejected outright. `apply` is the
 /// approved verb every leaf already carried in its `SEMANTICS.verb`, so the variant becomes
 /// `ApplyBrep` / kind `apply-brep` — the same treatment `stdio.binary`'s `Splice` →
-/// `ReplaceByteRange` just got. Each renamed variant carries `#[value(rename = "<noun>")]` so the
-/// wire tag (`"brep"`, `"mesh"`, …) is unchanged — the catalog, the feature files and every
-/// committed fixture still speak the bare noun.
+/// `ReplaceByteRange` just got. That one spelling is the vocabulary everywhere: the leaf directory,
+/// the catalog, the production `DESCRIPTORS`, and the JSON wire tag `applyBrep` the published
+/// `🔣️.json` declares.
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
@@ -120,51 +120,32 @@ pub enum SemioMutation {
     /// 🧨 Full-snapshot replace — the only way to change SUBSET KIND (there is no sparse
     /// representation for "this artifact used to be a video, now it's a flow").
     SetSnapshot(set_snapshot::SetSnapshot),
-    #[value(rename = "brep")]
     ApplyBrep(apply_brep::ApplyBrep),
-    #[value(rename = "mesh")]
     ApplyMesh(apply_mesh::ApplyMesh),
-    #[value(rename = "model")]
     ApplyModel(apply_model::ApplyModel),
-    #[value(rename = "value")]
     ApplyValue(apply_value::ApplyValue),
-    #[value(rename = "document")]
     ApplyDocument(apply_document::ApplyDocument),
-    #[value(rename = "cad")]
     ApplyCad(apply_cad::ApplyCad),
-    #[value(rename = "drawing")]
     ApplyDrawing(apply_drawing::ApplyDrawing),
-    #[value(rename = "image")]
     ApplyImage(apply_image::ApplyImage),
-    #[value(rename = "video")]
     ApplyVideo(apply_video::ApplyVideo),
-    #[value(rename = "audio")]
     ApplyAudio(apply_audio::ApplyAudio),
-    #[value(rename = "animation")]
     ApplyAnimation(apply_animation::ApplyAnimation),
-    #[value(rename = "presentation")]
     ApplyPresentation(apply_presentation::ApplyPresentation),
-    #[value(rename = "flow")]
     ApplyFlow(apply_flow::ApplyFlow),
-    #[value(rename = "text")]
     ApplyText(apply_text::ApplyText),
-    #[value(rename = "table")]
     ApplyTable(apply_table::ApplyTable),
-    #[value(rename = "graph")]
     ApplyGraph(apply_graph::ApplyGraph),
-    #[value(rename = "object")]
     ApplyObject(apply_object::ApplyObject),
-    #[value(rename = "kit")]
     ApplyKit(apply_kit::ApplyKit),
 }
 
-/// 🏷️ Kebab-case spelling of every `SemioMutation` variant, in declaration order — the vocabulary
-/// the `semio-v1-base` mutation catalog (`../../🔣️oracle.json`) declares and
-/// `mutate-semio-any`'s exhaustive test case measures itself against. The eighteen wrapper variants
-/// are spelled by their SUBSET name (`brep`, `mesh`, …), which is what the envelope actually routes
-/// on; `kinds_match_the_enum_and_the_catalog` below pins the list with a WILDCARD-FREE match, so a
-/// nineteenth subset cannot be added without extending both it and `KINDS`.
-pub const KINDS: &[&str] = &["set-snapshot", "brep", "mesh", "model", "value", "document", "cad", "drawing", "image", "video", "audio", "animation", "presentation", "flow", "text", "table", "graph", "object", "kit"];
+/// 🏷️ Kebab-case spelling of every `SemioMutation` variant, in declaration order — the leaf kinds the
+/// `semio-v1-base` mutation catalog (`../../🔮️oracles/🔣️.json`) declares and `✉️mutate-semio-base`'s
+/// exhaustive test case measures itself against. Each wrapper is `apply-<arm>`, the arm being the
+/// subset tag the envelope routes on; `kinds_match_the_enum_and_the_catalog` pins the list with a
+/// WILDCARD-FREE match, so a nineteenth subset cannot be added without extending both it and `KINDS`.
+pub const KINDS: &[&str] = &["set-snapshot", "apply-brep", "apply-mesh", "apply-model", "apply-value", "apply-document", "apply-cad", "apply-drawing", "apply-image", "apply-video", "apply-audio", "apply-animation", "apply-presentation", "apply-flow", "apply-text", "apply-table", "apply-graph", "apply-object", "apply-kit"];
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
@@ -179,7 +160,7 @@ pub fn apply_semio_mutation(snapshot: &mut SemioSnapshot, mutation: &SemioMutati
 /// re-exports, so an owner-root test adapter compiled as an external crate cannot bring the
 /// `Mutation` trait into scope to call the method form — the structural gap wave 7 recorded for
 /// `kit`/`object`/`text`/`table`, and the same thin-wrapper remedy `kit` adopted. Used by
-/// `mutate-semio-any`'s `inverse-*` scenarios.
+/// `✉️mutate-semio-base`'s `inverse-*` scenarios.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) -> Vec<SemioMutation> {
     <SemioMutation as Mutation<SemioSnapshot>>::inverse(mutation, base)
@@ -205,7 +186,7 @@ pub fn semio_mutation_refusals<D>(outcome: &protocol::MutationOutcome<D>) -> Vec
 /// 🚦️ The FAULT CODES of the refusing messages in `outcome`, in order — the same `Error`/`Fatal`
 /// filter [`semio_mutation_refusals`] applies, reduced to the frozen `mutation.*` code alone. The
 /// envelope's own routing law is stated in terms of codes (a mismatched arm must raise exactly
-/// `mutation.target-missing`), and `mutate-semio-any` cannot read `MutationMessage::code` itself
+/// `mutation.target-missing`), and `✉️mutate-semio-base` cannot read `MutationMessage::code` itself
 /// because `protocol` is a private extern-crate alias of this crate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_mutation_refusal_codes<D>(outcome: &protocol::MutationOutcome<D>) -> Vec<String> {
@@ -218,6 +199,21 @@ pub fn semio_mutation_refusal_codes<D>(outcome: &protocol::MutationOutcome<D>) -
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_subset_tag(snapshot: &SemioSnapshot) -> &'static str {
     crate::standards::v1::subsets::base::schema::snapshot::subset_tag(&snapshot.subset)
+}
+
+/// 📤️ The envelope mutation's JSON carrier, derived from `SemioMutation`'s own `ToValue` (adjacently
+/// tagged `{"mutation": "<camelCaseVariant>", "payload": …}`, each payload the wrapped arm's own
+/// mutation) and printed by the first-party `pack` JSON codec — the shape `🔣️.json` beside this file
+/// publishes. See <🔣️.json>.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_mutation_json(mutation: &SemioMutation) -> String {
+    pack::to_json_string(mutation)
+}
+
+/// 📥️ The inverse of [`encode_semio_mutation_json`], through `SemioMutation`'s own `FromValue`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_mutation_json(text: &str) -> Result<SemioMutation, String> {
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Mutation
 
@@ -353,25 +349,25 @@ fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn mutation_tag(m: &SemioMutation) -> u8 {
     match m {
-        SemioMutation::SetSnapshot(_) => 0,
-        SemioMutation::ApplyBrep(_) => 1,
-        SemioMutation::ApplyMesh(_) => 2,
-        SemioMutation::ApplyModel(_) => 3,
-        SemioMutation::ApplyValue(_) => 4,
-        SemioMutation::ApplyDocument(_) => 5,
-        SemioMutation::ApplyCad(_) => 6,
-        SemioMutation::ApplyDrawing(_) => 7,
-        SemioMutation::ApplyImage(_) => 8,
-        SemioMutation::ApplyVideo(_) => 9,
-        SemioMutation::ApplyAudio(_) => 10,
-        SemioMutation::ApplyAnimation(_) => 11,
-        SemioMutation::ApplyPresentation(_) => 12,
-        SemioMutation::ApplyFlow(_) => 13,
-        SemioMutation::ApplyText(_) => 14,
-        SemioMutation::ApplyTable(_) => 15,
-        SemioMutation::ApplyGraph(_) => 16,
-        SemioMutation::ApplyObject(_) => 17,
-        SemioMutation::ApplyKit(_) => 18,
+        SemioMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioMutation::ApplyBrep(_) => TAG_APPLY_BREP,
+        SemioMutation::ApplyMesh(_) => TAG_APPLY_MESH,
+        SemioMutation::ApplyModel(_) => TAG_APPLY_MODEL,
+        SemioMutation::ApplyValue(_) => TAG_APPLY_VALUE,
+        SemioMutation::ApplyDocument(_) => TAG_APPLY_DOCUMENT,
+        SemioMutation::ApplyCad(_) => TAG_APPLY_CAD,
+        SemioMutation::ApplyDrawing(_) => TAG_APPLY_DRAWING,
+        SemioMutation::ApplyImage(_) => TAG_APPLY_IMAGE,
+        SemioMutation::ApplyVideo(_) => TAG_APPLY_VIDEO,
+        SemioMutation::ApplyAudio(_) => TAG_APPLY_AUDIO,
+        SemioMutation::ApplyAnimation(_) => TAG_APPLY_ANIMATION,
+        SemioMutation::ApplyPresentation(_) => TAG_APPLY_PRESENTATION,
+        SemioMutation::ApplyFlow(_) => TAG_APPLY_FLOW,
+        SemioMutation::ApplyText(_) => TAG_APPLY_TEXT,
+        SemioMutation::ApplyTable(_) => TAG_APPLY_TABLE,
+        SemioMutation::ApplyGraph(_) => TAG_APPLY_GRAPH,
+        SemioMutation::ApplyObject(_) => TAG_APPLY_OBJECT,
+        SemioMutation::ApplyKit(_) => TAG_APPLY_KIT,
     }
 }
 
@@ -458,6 +454,30 @@ impl OpText for SemioMutation {
     }
 }
 
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_APPLY_BREP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-brep");
+const TAG_APPLY_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-mesh");
+const TAG_APPLY_MODEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-model");
+const TAG_APPLY_VALUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-value");
+const TAG_APPLY_DOCUMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-document");
+const TAG_APPLY_CAD: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-cad");
+const TAG_APPLY_DRAWING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-drawing");
+const TAG_APPLY_IMAGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-image");
+const TAG_APPLY_VIDEO: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-video");
+const TAG_APPLY_AUDIO: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-audio");
+const TAG_APPLY_ANIMATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-animation");
+const TAG_APPLY_PRESENTATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-presentation");
+const TAG_APPLY_FLOW: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-flow");
+const TAG_APPLY_TEXT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-text");
+const TAG_APPLY_TABLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-table");
+const TAG_APPLY_GRAPH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-graph");
+const TAG_APPLY_OBJECT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-object");
+const TAG_APPLY_KIT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-kit");
+//#endregion 🏷️WireTags
+
 impl OpBinary for SemioMutation {
     /// ⚡️ Real delegating binary: `format u8` + `tag u8` ([`mutation_tag`]) as two genuine,
     /// individually protocol-walkable fixed header fields, then ONE opaque trailing payload — for
@@ -504,25 +524,25 @@ impl OpBinary for SemioMutation {
         let tag = bytes[1];
         let payload = &bytes[2..];
         Ok(match tag {
-            0 => SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: <SemioSnapshot as store::ArtifactPack>::decode_pack(payload)? }),
-            1 => SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::decode_op(payload)? }),
-            2 => SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::decode_op(payload)? }),
-            3 => SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::decode_op(payload)? }),
-            4 => SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::decode_op(payload)? }),
-            5 => SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::decode_op(payload)? }),
-            6 => SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::decode_op(payload)? }),
-            7 => SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation: SemioDrawingMutation::decode_op(payload)? }),
-            8 => SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::decode_op(payload)? }),
-            9 => SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::decode_op(payload)? }),
-            10 => SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::decode_op(payload)? }),
-            11 => SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::decode_op(payload)? }),
-            12 => SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::decode_op(payload)? }),
-            13 => SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::decode_op(payload)? }),
-            14 => SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::decode_op(payload)? }),
-            15 => SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::decode_op(payload)? }),
-            16 => SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation: SemioGraphMutation::decode_op(payload)? }),
-            17 => SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::decode_op(payload)? }),
-            18 => SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::decode_op(payload)? }),
+            TAG_SET_SNAPSHOT => SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: <SemioSnapshot as store::ArtifactPack>::decode_pack(payload)? }),
+            TAG_APPLY_BREP => SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::decode_op(payload)? }),
+            TAG_APPLY_MESH => SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::decode_op(payload)? }),
+            TAG_APPLY_MODEL => SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::decode_op(payload)? }),
+            TAG_APPLY_VALUE => SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::decode_op(payload)? }),
+            TAG_APPLY_DOCUMENT => SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::decode_op(payload)? }),
+            TAG_APPLY_CAD => SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::decode_op(payload)? }),
+            TAG_APPLY_DRAWING => SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation: SemioDrawingMutation::decode_op(payload)? }),
+            TAG_APPLY_IMAGE => SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::decode_op(payload)? }),
+            TAG_APPLY_VIDEO => SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::decode_op(payload)? }),
+            TAG_APPLY_AUDIO => SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::decode_op(payload)? }),
+            TAG_APPLY_ANIMATION => SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::decode_op(payload)? }),
+            TAG_APPLY_PRESENTATION => SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::decode_op(payload)? }),
+            TAG_APPLY_FLOW => SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::decode_op(payload)? }),
+            TAG_APPLY_TEXT => SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::decode_op(payload)? }),
+            TAG_APPLY_TABLE => SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::decode_op(payload)? }),
+            TAG_APPLY_GRAPH => SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation: SemioGraphMutation::decode_op(payload)? }),
+            TAG_APPLY_OBJECT => SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::decode_op(payload)? }),
+            TAG_APPLY_KIT => SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::decode_op(payload)? }),
             other => return Err(protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("unknown tag {other}") }),
         })
     }
@@ -582,4 +602,13 @@ mod tests;
 #[cfg(test)]
 #[path = "📸️set-snapshot/🧪️tests/✉️replaces-the-envelope-wrapping-a-value-subset/🦀️.rs"]
 mod set_snapshot_replaces_the_envelope_wrapping_a_value_subset;
+#[cfg(test)]
+#[path = "📸️set-snapshot/🧪️tests/🪞️reasserts-the-value-envelope-unchanged/🦀️.rs"]
+mod set_snapshot_reasserts_the_value_envelope_unchanged;
+#[cfg(test)]
+#[path = "📸️set-snapshot/🧪️tests/🔁️retypes-a-value-envelope-to-an-empty-image/🦀️.rs"]
+mod set_snapshot_retypes_a_value_envelope_to_an_empty_image;
+#[cfg(test)]
+#[path = "🖼️apply-image/🧪️tests/🚫️refuses-a-value-envelope/🦀️.rs"]
+mod apply_image_refuses_a_value_envelope;
 //#endregion 🧪️FixtureCases

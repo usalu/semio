@@ -1,0 +1,19 @@
+{
+  "schema": "artifact-store-replica-edit-identity/v1",
+  "description": "Two fresh replicas of one genesis document author the identical gesture sequence. Every edit id and every wire operation id they mint must be distinct across replicas and within one replica; ledgers dedupe by id, so a shared id is a silently dropped edit.",
+  "artifactSchema": "demo/v1",
+  "documentId": "replica-edit-identity",
+  "genesisN": 0,
+  "replicas": 2,
+  "gestures": [
+    { "ops": [{ "set": 1 }] },
+    { "ops": [{ "set": 1 }] },
+    { "ops": [{ "add": 1 }, { "add": 1 }] }
+  ],
+  "expect": {
+    "editsPerReplica": 3,
+    "operationIdsPerReplica": 4,
+    "distinctEditIds": 6,
+    "distinctOperationIds": 8
+  }
+}

@@ -291,6 +291,7 @@ const SPACE_BOUNDED_TOOL_IDS: &[&str] = &[
     "goHome",
     "navigateVirtualFileSystemNode",
     "spawnApp",
+    "deleteSelection",
     "openSpace",
     "openInstance",
     "importSpacePackPayload",
@@ -308,7 +309,6 @@ const SPACE_BATCH_ONLY_TOOL_IDS: &[&str] = &[
     "connectMediaPorts",
     "disconnectMediaEdge",
     "removeAppInstance",
-    "deleteSelection",
     "copyAppInstance",
     "duplicateAppInstance",
     "pasteAppInstance",
@@ -361,12 +361,15 @@ fn space_bounded_reduce(
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.route"), "the bounded Space reducer rejects document, registry, payload, and graph routes"));
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    // 🕹️ `openInstance` with no explicit node falls back to the live `graph` selection, which the
-    // macro-generated 3-arg `dispatch` cannot see — the retained path reads it off the same
-    // `InteractionState` `SpaceApp::handle` passes to `open_instance::apply`.
+    // 🕹️ `openInstance` with no explicit node and `deleteSelection` read the live `graph` selection,
+    // which the macro-generated 3-arg `dispatch` cannot see — the retained path reads it off the same
+    // `InteractionState` `SpaceApp::handle` passes to their `apply`.
+    let selected = || interaction.selection.get(S_PLAY_INTERACTION_DOMAIN).map_or_else(Vec::new, |selection| selection.ids.clone());
     if let SpaceCommand::OpenInstance(payload) = command {
-        let selected = interaction.selection.get(S_PLAY_INTERACTION_DOMAIN).map_or_else(Vec::new, |selection| selection.ids.clone());
-        return Ok(crate::engine::space::engine::resolve_future(open_instance::open_with_selection(payload, &doc, config, &selected)));
+        return Ok(crate::engine::space::engine::resolve_future(open_instance::open_with_selection(payload, &doc, config, &selected())));
+    }
+    if let SpaceCommand::DeleteSelection(_) = command {
+        return Ok(crate::engine::space::engine::resolve_future(delete_selection::delete_selected(config, &selected())));
     }
     if let SpaceCommand::PresenceHeartbeat(payload) = command {
         let identity = context
@@ -442,6 +445,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceCommandJobFact
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "spawnApp", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openSpace", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importSpacePackPayload", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
@@ -517,6 +521,14 @@ fn space_config_mutation_bytes(mutation: &SpaceConfigMutation) -> Result<usize, 
         return Err("Space Config mutation exceeds its retained byte envelope".into());
     }
     Ok(bytes)
+}
+
+/// 🧮️ The exact candidate a preparation step retains, priced from the live base and the mutation
+/// rather than from the envelope: the post config (base plus the mutation's text and one item slot),
+/// the inverse (at most a whole-config snapshot) and the forward mutation. A real session config fits
+/// the host's fixed 4 KiB typed-operation page; only an envelope-sized config would not.
+fn space_config_candidate_bytes(base_bytes: usize, mutation_bytes: usize) -> usize {
+    base_bytes.saturating_mul(2).saturating_add(mutation_bytes.saturating_mul(2)).saturating_add(128)
 }
 
 fn prepare_space_config(base: &SpaceConfig, mutation: SpaceConfigMutation) -> Result<(SpaceConfig, SpaceConfigMutation, SpaceConfigMutation), String> {
@@ -637,9 +649,7 @@ impl store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation> fo
         if self.candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "Space Config preparation lost its exact base".to_string())?.get();
             let mutation = self.mutation.as_ref().ok_or_else(|| "Space Config preparation lost its mutation".to_string())?;
-            space_config_bytes(base)?;
-            space_config_mutation_bytes(mutation)?;
-            let bytes = SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024;
+            let bytes = space_config_candidate_bytes(space_config_bytes(base)?, space_config_mutation_bytes(mutation)?);
             if grant.maximum_bytes < bytes {
                 return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
             }
@@ -764,6 +774,7 @@ impl ArtifactApp for SpaceApp {
             "goHome",
             "navigateVirtualFileSystemNode",
             "spawnApp",
+            "deleteSelection",
             "openSpace",
             "openInstance",
             "importSpacePackPayload",
@@ -782,6 +793,10 @@ impl ArtifactApp for SpaceApp {
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(SpaceConfigPreparationFactory))
+    }
+
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -1110,7 +1125,7 @@ pub async fn create_space_app() -> App {
         .action_interactive_job("connectMediaPorts", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("disconnectMediaEdge", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("removeAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
-        .action_interactive_job("deleteSelection", InteractiveJobClassification::BatchOnlyPendingRewrite).await
+        .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated).await
         .action_interactive_job("copyAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("duplicateAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await
         .action_interactive_job("pasteAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite).await

@@ -10,8 +10,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetTimelineName {
-    pub(crate) index: usize,
-    pub(crate) name: Option<String>,
+    pub index: usize,
+    pub name: Option<String>,
 }
 
 impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for SetTimelineName {

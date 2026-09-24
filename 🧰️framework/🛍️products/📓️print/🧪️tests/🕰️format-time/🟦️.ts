@@ -11,7 +11,7 @@ import { compileVizProbe, probeProjection, type ProbeProjection } from "../../�
 
 // #region 🧫️Vectors
 const CASE = "format-time";
-const FIXTURE = "local://format-time.tex";
+const FIXTURE = "shared://🕰️format-time/format-time.tex";
 
 /** 🌍️ The two calendar name lists the library ships, as d3-time-format locale definitions. */
 const LOCALES: Readonly<Record<string, TimeLocaleDefinition>> = {

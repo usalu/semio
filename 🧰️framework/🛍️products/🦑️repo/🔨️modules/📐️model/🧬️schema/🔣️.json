@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://json.schemas.assets.semio-tech.com/repo/model/🔣️.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/model/schema.json",
   "title": "📐️ semio repo domain model",
   "$comment": "🧬️ The wire contract of 🦑️repo's domain model. One $def per domain type, with the exact JSON member names the Go struct tags declare; a member absent from `required` is the `omitempty` half of that tag. Generated from 📦️packages/🦀️rust/🦀️.rs by $TICKET/🗑️generated/model/build-schema.ts so the schema and both implementations cannot drift. The slug vocabularies live beside this file in 🔣️allowed-values.json, which every implementation embeds.",
   "type": "object",

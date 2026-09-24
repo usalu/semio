@@ -1,0 +1,41 @@
+{
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ Test-only references of the 🧑️contributors owner. `ajv` is already a devDependency of 🔨️modules/📚️library/📦️packages/🟦️typescript and is registered in the repository-root 🔒️dependencies.json; no production code of this module can reach it, and this module ships no TypeScript package at all.",
+  "oracles": [
+    {
+      "id": "ajv-contributor-document",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "ajv",
+      "version": "8.20.0",
+      "engine": { "family": "none", "implementation": "ajv", "version": "8.20.0" },
+      "capabilities": ["repo.contributors.identity"],
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "productionDebt": {"reachableFrom": ["package.json", "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json", "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json", "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json", "🌎️hub/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"], "owner": "🧰️framework/🛍️products/💻️os", "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."},
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://ajv.js.org",
+      "rationale": "The fixtures are the committed `🧑️‍💻️contributor.json` of every dev in this repository and real `git log`/`git shortlog` identity lines, so neither the documents nor the lines were written by either implementation. `ajv` is a real draft 2020-12 validator and decides whether each document actually satisfies 🧬️schema/🔣️.json, so a schema that has drifted away from the two implementations fails here rather than agreeing with itself; the resolution of every identity line back to an alias is additionally re-derived in TypeScript straight from the parsed documents, which is a third reading of the same data."
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-contributors-sessions",
+      "capabilities": ["repo.contributors.session-kind"],
+      "rationale": "Whether a session is running, completed or interrupted is decided from this repository's own event vocabulary and its own thirty minute silence window; no third party has that notion of a session, so no reference implementation can exist. This checkout carries no session directory to record, so the vectors are specification vectors written from the derivation's own branches — a recorded agent-ended event, a recent write, a long silence, an unreadable session.json, an agent-ended file name, an empty directory and a second recoverable only from an event file — and confidence comes from two independently written implementations agreeing on all seven plus the artifact identifier each session takes.",
+      "substitutes": ["specification-vectors", "independent-implementations"],
+      "coversMutations": false
+    },
+    {
+      "id": "repo-contributors-checkpoints",
+      "capabilities": ["repo.contributors.checkpoints"],
+      "rationale": "The checkpoint log is `git log` under a pretty format this repository chose, and how its four `|` separated parts map onto a checkpoint — including that a title keeps every `|` it contains and that a line with fewer than four parts is rejected rather than guessed at — is this repository's own convention. `git` itself is the producer of the fixture, not a reference for the parse, and no library parses this format. Confidence comes from the fixture being real output of this repository's own history plus two independently written implementations agreeing on every accepted line, every rejected line and the artifact identifier each checkpoint takes.",
+      "substitutes": ["specification-vectors", "independent-implementations"],
+      "coversMutations": false
+    }
+  ],
+  "oracleHostPackages": [{ "implementation": "typescript", "package": "ajv", "version": "8.20.0" }]
+}

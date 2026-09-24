@@ -234,20 +234,30 @@ impl OpText for SemioVideoMutation {
     }
 }
 
-/// 🏷️ Ordinal table, same declaration order as `SemioVideoMutation`'s own enum variants and
-/// `parse_semio_video_mutation`'s keyword match — the real binary `tag` field's source of truth.
-const OP_KEYWORDS: [&str; 8] = ["set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"];
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioVideoMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_INSERT_STREAM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-stream");
+const TAG_REMOVE_STREAM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-stream");
+const TAG_SET_STREAM_META: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-stream-meta");
+const TAG_INSERT_SAMPLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-sample");
+const TAG_REMOVE_SAMPLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-sample");
+const TAG_SET_SAMPLE_DATA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-sample-data");
+const TAG_SET_SAMPLE_FLAGS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-sample-flags");
+//#endregion 🏷️WireTags
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn variant_ordinal(m: &SemioVideoMutation) -> u8 {
+fn wire_tag(m: &SemioVideoMutation) -> u8 {
     match m {
-        SemioVideoMutation::SetSnapshot(_) => 0,
-        SemioVideoMutation::InsertStream(_) => 1,
-        SemioVideoMutation::RemoveStream(_) => 2,
-        SemioVideoMutation::SetStreamMeta(_) => 3,
-        SemioVideoMutation::InsertSample(_) => 4,
-        SemioVideoMutation::RemoveSample(_) => 5,
-        SemioVideoMutation::SetSampleData(_) => 6,
-        SemioVideoMutation::SetSampleFlags(_) => 7,
+        SemioVideoMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioVideoMutation::InsertStream(_) => TAG_INSERT_STREAM,
+        SemioVideoMutation::RemoveStream(_) => TAG_REMOVE_STREAM,
+        SemioVideoMutation::SetStreamMeta(_) => TAG_SET_STREAM_META,
+        SemioVideoMutation::InsertSample(_) => TAG_INSERT_SAMPLE,
+        SemioVideoMutation::RemoveSample(_) => TAG_REMOVE_SAMPLE,
+        SemioVideoMutation::SetSampleData(_) => TAG_SET_SAMPLE_DATA,
+        SemioVideoMutation::SetSampleFlags(_) => TAG_SET_SAMPLE_FLAGS,
     }
 }
 /// ✂️ Just the `key=value ...` argument tail of `print_semio_video_mutation` — the binary frame's
@@ -263,14 +273,14 @@ fn print_semio_video_mutation_args(m: &SemioVideoMutation) -> String {
 
 /// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut
 /// (same treatment flow's/mesh's own upgraded mutations facets use). `format u8`
-/// (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see [`OP_KEYWORDS`]) are two
+/// (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) are two
 /// REAL fixed fields; the variant's own `key=value ...` argument payload follows as one opaque
 /// trailing `bytes` chain — reusing the already-real, already-tested `print_semio_video_mutation`/
 /// `parse_semio_video_mutation` text codec rather than re-deriving a second independent encoding.
 impl OpBinary for SemioVideoMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
+        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_semio_video_mutation_args(self).as_bytes());
         Ok(out)
     }
@@ -283,7 +293,7 @@ impl OpBinary for SemioVideoMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })

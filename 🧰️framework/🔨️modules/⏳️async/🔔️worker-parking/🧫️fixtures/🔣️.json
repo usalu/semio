@@ -1,0 +1,15 @@
+{
+  "schema": "https://json.schemas.assets.semio-tech.com/framework/async/worker-parking/schema.json#/$defs/WorkerParkingFixture",
+  "idle": { "workers": 4, "settleMs": 50, "quietWindowMs": 250, "maximumSleepsInQuietWindow": 0 },
+  "timer": { "deadlineMs": 30, "toleranceMs": 250 },
+  "periodicTimer": { "workers": 4, "ticks": 50, "intervalMs": 1, "maximumSleepsPerTick": 1, "startupSleeps": 8 },
+  "protocol": [
+    { "case": "signal-before-park", "timerDue": false, "expected": "signalled" },
+    { "case": "close-before-park", "timerDue": false, "expected": "closed" },
+    { "case": "keeper-deadline-elapses", "timerDue": true, "expected": "timer-due" },
+    { "case": "work-signal-wakes-sleeper", "timerDue": false, "expected": "woken" },
+    { "case": "work-signal-wakes-lone-keeper", "timerDue": true, "expected": "woken" },
+    { "case": "firing-earlier-deadline-rearms-stale-keeper", "timerDue": true, "expected": "woken" }
+  ],
+  "cancellation": { "chainDepth": 3, "cancelLevel": 0, "expectedWakes": 1, "retainedWaitersAfterDrop": 0 }
+}

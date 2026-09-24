@@ -22,6 +22,7 @@ async fn structure_zones_and_both_link_slots_round_trip_through_text_and_binary(
     let bytes = store::ArtifactPack::encode_pack(&snapshot);
     let from_binary = <EnergyModelSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode round-tripped binary");
     assert_eq!(from_binary, snapshot);
+    store::os_store::test_support::assert_pack_schema_identity(&snapshot);
 }
 
 /// 🧪️ An absent link slot must come back absent, not as a decode error and not as a present

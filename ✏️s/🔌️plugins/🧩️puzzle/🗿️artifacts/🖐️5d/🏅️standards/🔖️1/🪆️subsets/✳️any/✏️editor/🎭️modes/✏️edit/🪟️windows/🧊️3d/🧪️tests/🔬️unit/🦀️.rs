@@ -69,16 +69,54 @@ fn grip_markers_follow_the_show_mode_and_the_live_marks() {
     assert_eq!(shown.len(), 1);
 }
 
-/// 🎛️ Law: the gumball renders only with a transform utility armed, a live part selection AND at
-/// least one handle flag on — all three off is a gumball nobody could grab.
+/// 🎛️ Law: the gumball renders only with the Transform utility armed, a live part selection AND at
+/// least one handle flag on — all three off is a gumball nobody could grab. The retired per-handle ids
+/// (`move`/`rotate`/`scale`) arm nothing.
 #[test]
-fn gumball_needs_a_transform_utility_a_selection_and_a_flag() {
+fn gumball_needs_the_transform_utility_a_selection_and_a_flag() {
+    let transform = utilities::transform::UTILITY_ID;
     let runtime = Puzzle5dRuntime::default();
-    assert!(crate::editor::puzzle5d::puzzle5d_gumball_active(&runtime, "move", &part_selection()));
-    assert!(!crate::editor::puzzle5d::puzzle5d_gumball_active(&runtime, "select", &part_selection()));
-    assert!(!crate::editor::puzzle5d::puzzle5d_gumball_active(&runtime, "move", &Puzzle5dInteractionSnapshot::default()));
+    assert!(puzzle5d_gumball_active(&runtime, transform, &part_selection()));
+    assert!(!puzzle5d_gumball_active(&runtime, "select", &part_selection()));
+    for retired in ["move", "rotate", "scale"] {
+        assert!(!puzzle5d_gumball_active(&runtime, retired, &part_selection()), "{retired} is no utility any more");
+    }
+    assert!(!puzzle5d_gumball_active(&runtime, transform, &Puzzle5dInteractionSnapshot::default()));
     let flagless = Puzzle5dRuntime { transform_move: false, transform_rotate: false, ..Puzzle5dRuntime::default() };
-    assert!(!crate::editor::puzzle5d::puzzle5d_gumball_active(&flagless, "move", &part_selection()));
+    assert!(!puzzle5d_gumball_active(&flagless, transform, &part_selection()));
+}
+
+/// 🕹️ Law: with Transform armed the selection record names the `transform` gumball — the handle the host's
+/// `gumballKindForTransformMode` resolves per grabbed handle — and arms it for the selected part.
+#[test]
+fn the_transform_utility_arms_the_host_gumball() {
+    let envelope = scene_with(part_selection(), Puzzle5dRuntime::default(), utilities::transform::UTILITY_ID);
+    let value: Value = serde_json::from_str(&world_selection_json_ex(&envelope)).expect("selectionJson");
+    assert_eq!(value["transformMode"], serde_json::json!("transform"));
+    assert_eq!(value["gumballActive"], serde_json::json!(true));
+    assert_eq!(value["gumballConfig"]["moveAxes"], serde_json::json!(true));
+    assert_eq!(value["gumballConfig"]["rotate"], serde_json::json!(true));
+    assert_eq!(value["targetVolumeIds"], serde_json::json!([]));
+}
+
+/// 🧰️ Law: the world window binds ONE transform utility, and its Utility Options are ONE group holding
+/// exactly the Move and Rotate flags — never a second copy per handle, never Move/Rotate/Scale utilities
+/// the utility bar would render as extra tabs.
+#[test]
+fn the_world_window_binds_one_transform_utility_with_one_flag_group() {
+    let labels = &Puzzle5dLabels::NATIVE_EN;
+    let envelope = scene_with(Puzzle5dInteractionSnapshot::default(), Puzzle5dRuntime::default(), "select");
+    let definition = definition(&envelope, labels);
+    assert!(definition.utilities.iter().any(|id| id.as_str() == utilities::transform::UTILITY_ID));
+    for retired in ["move", "rotate", "scale"] {
+        assert!(!definition.utilities.iter().any(|id| id.as_str() == retired), "{retired} must not be a utility of its own");
+    }
+    let measures = window_measures(&envelope, labels);
+    let groups: Vec<&WindowMeasure> = measures.iter().filter(|measure| matches!(measure, WindowMeasure::Group { active_utility_id: Some(id), .. } if id == utilities::transform::UTILITY_ID)).collect();
+    assert_eq!(groups.len(), 1, "exactly one Utility Options group belongs to Transform");
+    let WindowMeasure::Group { children, .. } = groups[0] else { unreachable!() };
+    let toggles: Vec<&str> = children.iter().filter_map(|child| match child { WindowMeasure::Toggle { id, .. } => Some(id.as_str()), _ => None }).collect();
+    assert_eq!(toggles, vec!["puzzle5d-transform-move", "puzzle5d-transform-rotate"]);
 }
 //#endregion 🕹️Interaction
 
@@ -108,8 +146,9 @@ fn window_measures_expose_every_world_option_group() {
         "puzzle5d-play-world-grip-show",
         "puzzle5d-play-world-grip-direction",
         "puzzle5d-measure-projection-orthographic",
-        "puzzle5d-play-utility-options-move-move",
-        "puzzle5d-play-utility-options-rotate-rotate",
+        "puzzle5d-play-utility-options-transform",
+        "puzzle5d-transform-move",
+        "puzzle5d-transform-rotate",
     ] {
         assert!(ids.iter().any(|id| id == expected), "missing measure {expected} in {ids:?}");
     }
@@ -177,7 +216,7 @@ fn every_world_instance_names_a_mesh_this_scene_publishes() {
 #[test]
 fn the_world_scene_stages_a_one_shot_fit_for_its_document() {
     let scene = scene_with(part_selection(), Puzzle5dRuntime::default(), "select");
-    let node = render(&scene, None, &[]).expect("the world surface assembles");
+    let node = render(&scene, &crate::editor::puzzle5d::terminology::Puzzle5dLabels::NATIVE_EN, None, &[], None).expect("the world surface assembles");
     let built: World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
     let fit = built.fit_json.as_deref().expect("the world window must publish a fit lane");
     assert!(fit.contains("\"enabled\":true"), "the fit lane must be enabled, else the authored camera is the only framing: {fit}");
@@ -203,4 +242,59 @@ fn the_fit_revision_tracks_document_identity_not_part_edits() {
     assert_ne!(world_fit_revision(&base), world_fit_revision(&recatalogued), "a different kind catalog resolves different meshes, so it is framed anew");
 }
 //#endregion 🎯️Fit
+
+//#region 🔗️DomainBinding
+/// 🔗️ Law: the world surface is bound to the ONE `vortex` domain the board pane writes, with parts as the
+/// instance granularity, so a pick in the 3D pane is `interactionSelect` on the same selection the board
+/// paints — never the domainless `worldPick`/`worldVortexSelect` verbs nothing handles.
+#[test]
+fn the_world_scene_binds_the_shared_vortex_domain() {
+    let scene = scene_with(part_selection(), Puzzle5dRuntime::default(), "select");
+    let node = render(&scene, &Puzzle5dLabels::NATIVE_EN, None, &[], None).expect("the world surface assembles");
+    let built: World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
+    assert_eq!(built.domain_id.as_deref(), Some(PUZZLE5D_INTERACTION_DOMAIN));
+    assert_eq!(built.domain_granularity_id.as_deref(), Some(PUZZLE5D_GRANULARITY_PART));
+    assert!(built.lod_json.as_deref().is_some_and(|lod| lod.contains("\"showLodGrid\"")), "the pane's grid/LOD options reach the host");
+}
+
+/// 🔗️ Law: a grip marker hit selects the GRIP granularity and a fastener hit the FASTENER granularity of the
+/// shared domain — the host's own layer defaults (`vortex`/`attraction`) are not granularities of it.
+#[test]
+fn world_markers_declare_this_domains_granularities() {
+    let projection = serde_json::json!({
+        "schema": "puzzle.5d",
+        "parts": [{ "id": "teil-ä", "partKind": "Part", "2d": { "x": 1.0, "y": 2.0 }, "3d": { "origin": [0.0, 0.0, 0.0] }, "grips": [
+            { "id": "g1", "gripKind": "griff-ü", "2d": {}, "3d": { "position": [1.0, 0.0, 0.0] } },
+            { "id": "g2", "gripKind": "griff-ü", "2d": {}, "3d": { "position": [-1.0, 0.0, 0.0] } }
+        ] }],
+        "fasteners": [{ "id": "f1", "source": "teil-ä:g1", "target": "teil-ä:g2" }]
+    });
+    let document = <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(&projection.to_string()).expect("projection"))).expect("document");
+    let grips: Vec<Value> = serde_json::from_str(&world_grips_json(&document, &Puzzle5dRuntime::default(), &part_selection(), "select")).expect("vorticesJson");
+    assert_eq!(grips[0]["interactionGranularityId"], serde_json::json!(PUZZLE5D_GRANULARITY_GRIP));
+    let fasteners: Vec<Value> = serde_json::from_str(&world_fasteners_json(&document)).expect("attractionsJson");
+    assert_eq!(fasteners[0]["interactionGranularityId"], serde_json::json!(PUZZLE5D_GRANULARITY_FASTENER));
+}
+//#endregion 🔗️DomainBinding
+
+//#region 🎣️Suggestions
+/// 🎣️ Law: the interaction lane names the hovered grip — the host's context-menu priority target — and an
+/// open suggestion menu reads pending (with its presentation) until the search has published candidates.
+#[test]
+fn the_interaction_lane_carries_the_hovered_grip_and_the_open_suggestion_menu() {
+    let labels = &Puzzle5dLabels::NATIVE_EN;
+    let hovered = Puzzle5dInteractionSnapshot { granularity: String::new(), selected: Vec::new(), hovered: vec!["teil-ä:g1".into()] };
+    let idle: Value = serde_json::from_str(&world_interaction_json(&scene_with(hovered.clone(), Puzzle5dRuntime::default(), "select"), labels, None)).expect("interactionJson");
+    assert_eq!(idle["hoveredVortexFullId"], serde_json::json!("teil-ä:g1"));
+    assert_eq!(idle["suggestionMenu"], Value::Null, "no menu is open");
+    let menu = crate::editor::puzzle5d::window::Puzzle5dSuggestionMenu { x: 4.0, y: 5.0, window_id: WINDOW_KIND_ID.into(), vortex_full_id: "teil-ä:g1".into(), submenu: true };
+    let runtime = Puzzle5dRuntime { suggestion_menu: Some(menu), ..Puzzle5dRuntime::default() };
+    let open: Value = serde_json::from_str(&world_interaction_json(&scene_with(hovered, runtime, "select"), labels, None)).expect("interactionJson");
+    assert_eq!(
+        open["suggestionMenu"],
+        serde_json::json!({ "open": true, "x": 4.0, "y": 5.0, "windowId": WINDOW_KIND_ID, "vortexFullId": "teil-ä:g1", "submenu": true, "pending": true, "candidates": [] }),
+        "a menu whose search has not published yet is pending"
+    );
+}
+//#endregion 🎣️Suggestions
 

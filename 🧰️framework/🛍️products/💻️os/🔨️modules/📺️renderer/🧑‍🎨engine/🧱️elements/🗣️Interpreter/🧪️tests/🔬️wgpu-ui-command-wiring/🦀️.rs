@@ -757,7 +757,7 @@ fn scene_command_dispatches_an_ink_canvas_scroll_action() {
 }
 
 fn ink_editing_law() -> Value {
-    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🖋️ink-canvas-editing/🔣️.json")).expect("shared InkCanvas editing law parses")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🖋️ink-canvas-editing/🔣️.json")).expect("shared InkCanvas editing law parses")
 }
 
 fn ink_editing_scene(law: &Value) -> UiNode {

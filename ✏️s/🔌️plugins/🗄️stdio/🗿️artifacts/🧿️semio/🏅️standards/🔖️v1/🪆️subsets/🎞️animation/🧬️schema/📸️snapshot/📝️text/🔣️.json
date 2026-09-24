@@ -7,7 +7,7 @@
     "timelines": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/timeline"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/snapshot.json#/definitions/AnimTimeline"
       }
     }
   }

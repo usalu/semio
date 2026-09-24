@@ -35,7 +35,7 @@ mod subject {
     }
 
     pub fn script_changes_records_and_emits_events(ctx: &Context) -> Result<Outcome, String> {
-        let script = fixture(ctx, "local://🔣️mutations.json")?;
+        let script = fixture(ctx, "shared://✏️mutation-execution/🔣️mutations.json")?;
         let context = context(ctx)?;
         let executor = Executor::new(&context);
         let mutations = script.get("mutations").and_then(SerdeJson::as_array).ok_or("script has no mutations array")?;

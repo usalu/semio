@@ -83,3 +83,40 @@ fn window_measures_expose_every_board_option_group() {
     assert_eq!(slider_value(&measures, "puzzle5d-play-board-grid-factor"), Some(4.0));
 }
 //#endregion ☑️Options
+
+//#region 🎣️Suggestions
+/// 🎣️ Law: the board pane publishes the SAME open grip suggestion menu the world pane lists, in the board host's
+/// shape — the grip as `handleId`, the submenu presentation, and pending until the search has published.
+#[test]
+fn the_board_publishes_the_open_grip_suggestion_menu() {
+    let labels = &crate::editor::puzzle5d::terminology::Puzzle5dLabels::NATIVE_EN;
+    let closed = Puzzle5dScene { document: board_document(), runtime: Puzzle5dRuntime::default(), active_utility: "select".into(), interaction: Default::default() };
+    assert_eq!(board_suggestion_menu_json(&closed, labels, None), None, "no menu, no record");
+    let menu = crate::editor::puzzle5d::window::Puzzle5dSuggestionMenu { x: 3.0, y: 4.0, window_id: WINDOW_KIND_ID.into(), vortex_full_id: "teil-ä:g1".into(), submenu: true };
+    let open = Puzzle5dScene { runtime: Puzzle5dRuntime { suggestion_menu: Some(menu), brush_candidate_index: 2, ..Puzzle5dRuntime::default() }, ..closed };
+    let record: Value = serde_json::from_str(&board_suggestion_menu_json(&open, labels, None).expect("an open menu publishes")).expect("board suggestion json");
+    assert_eq!(
+        record,
+        serde_json::json!({ "open": true, "x": 3.0, "y": 4.0, "windowId": WINDOW_KIND_ID, "handleId": "teil-ä:g1", "hoveredIndex": 2, "submenu": true, "pending": true, "candidates": [] })
+    );
+}
+
+/// 🖱️ Law: a right-click on a board handle (the board engine's `handle` pick domain) is the GRIP's menu, even
+/// with its part selected — the suggest row the board host turns into its live submenu.
+#[test]
+fn a_board_handle_hit_is_the_grips_menu() {
+    let surface = semio_framework_plugin::ContextMenuSurfaceTarget {
+        surface_id: SURFACE_ID.into(),
+        kind: "board2d".into(),
+        hits: vec![
+            semio_framework_plugin::ContextMenuHit { domain: "handle".into(), id: "teil-ä:g1".into(), label: None },
+            semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "teil-ä".into(), label: None },
+        ],
+        selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec!["teil-ä:g1".into()] }],
+        text: None,
+    };
+    let selection = crate::editor::puzzle5d::Puzzle5dContextSelection::from_surface(Some(&surface));
+    assert_eq!(selection.grip_ids, vec!["teil-ä:g1".to_string()]);
+    assert!(selection.part_ids.is_empty(), "the handle under the pointer is the whole subject");
+}
+//#endregion 🎣️Suggestions

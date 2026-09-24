@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetTypeAssignment {
-    pub(crate) id: u64,
-    pub(crate) assignment: Option<CobieTypeAssignment>,
+    pub id: u64,
+    pub assignment: Option<CobieTypeAssignment>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetTypeAssignment {

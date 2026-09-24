@@ -7,7 +7,7 @@
   "aggregateVariant": "DeleteReference",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-reference",
-  "binaryTag": null,
+  "binaryTag": 25,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

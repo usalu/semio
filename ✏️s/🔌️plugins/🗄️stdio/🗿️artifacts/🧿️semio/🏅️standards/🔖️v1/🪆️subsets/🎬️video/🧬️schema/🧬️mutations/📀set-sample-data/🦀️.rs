@@ -10,9 +10,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetSampleData {
-    pub(crate) stream_index: usize,
-    pub(crate) index: usize,
-    pub(crate) data: Vec<u8>,
+    pub stream_index: usize,
+    pub index: usize,
+    pub data: Vec<u8>,
 }
 
 impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetSampleData {

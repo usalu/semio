@@ -16,6 +16,6 @@ does not know, and end of input never unmakes a request the peer already deliver
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
 `🧪️test` harness; the Model Context Protocol TypeScript SDK and Node `crypto` are registered as
-third-party references in `🔮️oracle/🔣️.json`.
+third-party references in `🔮️oracles/🔣️.json`.
 
 `🤝️jsonrpc-handshake`, `📋️capability-listing`, `📞️tool-call-roundtrip`, `🔗️event-log-chain`.

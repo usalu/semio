@@ -44,7 +44,7 @@ mod subject {
 
     /// 📥️ Reads the refusal corpus.
     fn corpus(ctx: &Context) -> Result<Vec<Refusal>, String> {
-        let parsed = fixture(ctx, "local://🔣️refusals.json")?;
+        let parsed = fixture(ctx, "shared://❌️execution-errors/🔣️refusals.json")?;
         let rows = parsed.get("refusals").and_then(SerdeJson::as_array).ok_or("corpus has no refusals array")?;
         rows.iter()
             .map(|entry| {

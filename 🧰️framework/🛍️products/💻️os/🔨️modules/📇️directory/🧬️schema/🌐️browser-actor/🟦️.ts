@@ -5,7 +5,7 @@ export const DOCUMENT_BROWSER_ACTOR_INTERFACES = Object.freeze([
   "wasi:cli/environment@0.2.0", "wasi:cli/exit@0.2.0", "wasi:cli/stderr@0.2.0", "wasi:cli/stdin@0.2.0", "wasi:cli/stdout@0.2.0",
   "wasi:cli/terminal-input@0.2.0", "wasi:cli/terminal-output@0.2.0", "wasi:cli/terminal-stderr@0.2.0", "wasi:cli/terminal-stdin@0.2.0", "wasi:cli/terminal-stdout@0.2.0",
   "wasi:clocks/monotonic-clock@0.2.0", "wasi:clocks/wall-clock@0.2.0", "wasi:io/error@0.2.0", "wasi:io/poll@0.2.0", "wasi:io/streams@0.2.0",
-  "wasi:random/insecure-seed@0.2.9",
+  "wasi:random/insecure-seed@0.2.9", "wasi:random/random@0.2.9",
 ]);
 
 /** 🧷️ Exact captured package bytes that an actor derivation must reference. */

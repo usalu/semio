@@ -49,7 +49,7 @@ export default defineTestAdapter({
       },
       /** 🎯️ `\SemioVizHull`'s monotone chain over the same point set. */
       subject: async (ctx: AdapterContext): Promise<{ projection: ProbeProjection }> => {
-        const records = await compileVizProbe(ctx.fixture("local://hull.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+        const records = await compileVizProbe(ctx.fixture("shared://🥚️spatial-hull/hull.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
         return { projection: probeProjection(records) };
       },
     },

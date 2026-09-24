@@ -415,13 +415,13 @@ pub struct RunEntry {
 }
 
 pub struct RunEntries {
-    entries: [Option<RunEntry>; MAX_RUN_ENTRIES as usize],
+    entries: Box<[Option<RunEntry>]>,
     len: u8,
 }
 
 impl RunEntries {
     pub fn new() -> Self {
-        Self { entries: std::array::from_fn(|_| None), len: 0 }
+        Self { entries: (0..MAX_RUN_ENTRIES).map(|_| None).collect(), len: 0 }
     }
 
     pub fn push(&mut self, entry: RunEntry) -> Result<(), RunEntry> {
@@ -476,7 +476,10 @@ impl RunEntries {
             return Ok(false);
         }
         let index = self.len as usize - 1;
-        let entry = self.entries[index].as_mut().ok_or_else(|| DbError::Internal("index close lost retained entry".to_string()))?;
+        let Some(entry) = self.entries[index].as_mut() else {
+            self.len -= 1;
+            return Ok(true);
+        };
         if let RunValue::Put(value) = &mut entry.value {
             if value.close_step()?.is_some() {
                 return Ok(true);

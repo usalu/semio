@@ -408,3 +408,45 @@ fn every_mutation_uses_retained_grants_and_incremental_terminal_retirement() {
         }
     }
 }
+
+#[test]
+fn retained_string_cursor_enforces_one_byte_grants_and_hostile_boundaries() {
+    fn grant(cursor: &mut Process3dRetainedStringCursor, byte: u8) -> Result<Option<String>, String> {
+        let mut reader = store::ByteReader::new(std::slice::from_ref(&byte));
+        let value = cursor.step(&mut reader);
+        assert_eq!(reader.position(), 1, "one retained string grant consumes one byte opportunity");
+        value
+    }
+
+    let mut exact = Process3dRetainedStringCursor::with_maximum_bytes(3);
+    assert_eq!(grant(&mut exact, 3).expect("exact length admission"), None);
+    assert_eq!(grant(&mut exact, b'a').expect("exact byte one"), None);
+    assert_eq!(grant(&mut exact, b'b').expect("exact byte two"), None);
+    assert_eq!(grant(&mut exact, b'c').expect("exact byte three"), Some("abc".into()));
+    assert!(exact.terminal_is_empty());
+
+    let mut plus_one = Process3dRetainedStringCursor::with_maximum_bytes(3);
+    assert!(grant(&mut plus_one, 4).expect_err("maximum plus one must fail before producer copy").contains("fixed byte credit"));
+    assert_eq!(plus_one.take_partial(), "", "maximum plus one returns its empty pre-copy owner");
+    assert!(plus_one.terminal_is_empty());
+
+    let mut malformed = Process3dRetainedStringCursor::with_maximum_bytes(3);
+    assert_eq!(grant(&mut malformed, 1).expect("malformed length admission"), None);
+    assert!(grant(&mut malformed, 0xff).expect_err("malformed UTF-8 must fail at its byte boundary").contains("utf-8"));
+    assert!(malformed.terminal_is_empty());
+
+    let mut truncated = Process3dRetainedStringCursor::with_maximum_bytes(3);
+    assert_eq!(grant(&mut truncated, 2).expect("truncated length admission"), None);
+    assert_eq!(grant(&mut truncated, b'x').expect("truncated first byte"), None);
+    assert!(truncated.step(&mut store::ByteReader::new(&[])).is_err(), "truncation must remain a resumable read failure");
+    assert_eq!(truncated.take_partial(), "x", "interrupted string bytes return through the exact handback owner");
+    assert!(truncated.terminal_is_empty());
+
+    let mut overflowing_length = Process3dRetainedStringCursor::with_maximum_bytes(3);
+    for _ in 0..(usize::BITS / 7) {
+        assert_eq!(grant(&mut overflowing_length, 0x80).expect("bounded length byte"), None);
+    }
+    assert!(grant(&mut overflowing_length, 0x80).is_err(), "overlong retained length must fail without payload allocation");
+    assert_eq!(overflowing_length.take_partial(), "");
+    assert!(overflowing_length.terminal_is_empty());
+}

@@ -1,7 +1,7 @@
 //! 🚪️ IO s.puzzle2d (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.txt"]
+    &["stdio.json", "stdio.txt"]
 }
 pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.txt"]
@@ -13,12 +13,7 @@ pub mod derived_composition {
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.puzzle.puzzle2d", standard: StandardId("1"), subset: SubsetId("*") };
-    const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    const DEP_DXF: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_PDF: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
-    const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    const DEP_SVG: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
     pub struct Puzzle2dComposerComposition;
@@ -28,7 +23,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_DWG, DEP_DXF, DEP_JSON, DEP_PDF, DEP_PNG, DEP_SVG, DEP_TXT]
+            &[DIALECT, DEP_JSON, DEP_TXT]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -43,57 +38,12 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
                 }
-                if source.dialect == DEP_DWG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_DXF {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::dxf::v_r12::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
                 if source.dialect == DEP_JSON {
                     let bytes: Vec<u8> = match &source.payload {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PDF {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::pdf::v1_4::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PNG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::png::v1_2::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_SVG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::svg::v1_1::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -224,3 +174,32 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+//#region 🕸️BoardDrawing
+/// 🎲️ The board as a node-link diagram: circle or rectangle nodes (the viewer's own shape rule and
+/// defaults) labelled with their text, edges between node centres, target regions as labelled frames;
+/// hidden items are left out. Every page export (svg, pdf, png, dxf, dwg) draws this one picture.
+pub fn puzzle2d_board_drawing(snapshot: &crate::Puzzle2dSnapshot) -> semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{diagram_drawing, SemioDiagram, SemioDiagramFrame, SemioDiagramLink, SemioDiagramNode, SemioDiagramShape};
+    let nodes = snapshot
+        .nodes
+        .iter()
+        .filter(|node| node.visible != Some(false))
+        .map(|node| {
+            let scale = node.scale.unwrap_or(1.0);
+            let rectangle = node.shape.as_deref() == Some("rectangle") || (node.shape.is_none() && node.width.is_some());
+            let shape = if rectangle { SemioDiagramShape::Rectangle { width: node.width.unwrap_or(48.0) * scale, height: node.height.unwrap_or(48.0) * scale } } else { SemioDiagramShape::Circle { radius: node.radius.unwrap_or(24.0) * scale } };
+            SemioDiagramNode { id: node.id.clone(), x: node.x, y: node.y, shape, label: node.text.clone().filter(|text| !text.is_empty()) }
+        })
+        .collect();
+    let links = snapshot.edges.iter().filter(|edge| edge.visible != Some(false)).map(|edge| SemioDiagramLink { from: edge.source.clone(), to: edge.target.clone(), label: None }).collect();
+    let frames = snapshot.target_regions.iter().filter(|region| !region.hidden).map(|region| SemioDiagramFrame { x: region.x, y: region.y, width: region.width, height: region.height, label: region.label.clone() }).collect();
+    diagram_drawing(&SemioDiagram { nodes, links, frames })
+}
+//#endregion 🕸️BoardDrawing
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

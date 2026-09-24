@@ -125,133 +125,6 @@ impl FromValue for EquationGraphDsl {
 //#endregion 🔖️Dsl
 
 //#region 🔖️HandcraftedArtifactDsl
-//#region 🔖️ChildCodecPrimitives
-/// 🧪️ Real hex/bracket child-handle codec (mirrors `📐️cad`'s/`✒️writer`'s own `enc_child`/
-/// `dec_child`) — a handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened
-/// via `to_uri()`), never the child's own content.
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
-}
-fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
-}
-fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
-fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
-    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
-    let parts: Vec<&str> = inner.splitn(2, ',').collect();
-    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
-}
-//#endregion 🔖️ChildCodecPrimitives
-
-//#region 🔖️TextPrimitives
-/// 🧮️ `equation` has no handcrafted grammar of its own yet (future wave) — round-tripped as
-/// hex-encoded first-party JSON (`pack::json::to_json_string`/`from_json_str`, over `EquationExprSnapshot`'s
-/// own `ToValue`/`FromValue`), the same "real codec, minimal grammar" trade `child` handles above
-/// already make for their own opaque payload half (the `ArtifactRef` URI).
-fn enc_equation(e: &EquationExprSnapshot) -> String {
-    enc_str(&pack::json::to_json_string(e))
-}
-fn dec_equation(s: &str) -> Result<EquationExprSnapshot, String> {
-    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
-}
-
-/// 🕸️ The live `(graph, geometry)` behind the composed-child triple, hex-encoded first-party JSON —
-/// the same trade `equation=` above already makes for its own payload.
-///
-/// 🐛️ This body used to be the three BARE HANDLES plus `equation=`, and the scene lives only in the
-/// handles' `EquationWorkingScene` local owner, so it did not survive a single `print_dsl`/`parse_dsl`
-/// round trip. `🕸️dag`'s own snapshot module spells the rule: "A codec that persisted only the bare
-/// handle would produce an UNRECOVERABLE snapshot the instant a fresh process parses it." The
-/// committed `🎬️demo` asset was written by that codec and therefore carries no graph at all, which is
-/// exactly why the mathematical play pane rendered an empty grid and a bare cursor (ticket 26/09/19,
-/// `📓️knowledge.md` §4).
-fn enc_graph(graph: &crate::EquationGraph) -> String {
-    enc_str(&pack::json::to_json_string(graph))
-}
-fn dec_graph(s: &str) -> Result<crate::EquationGraph, String> {
-    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
-}
-fn enc_geometry(geometry: &crate::EquationGeometry) -> String {
-    enc_str(&pack::json::to_json_string(geometry))
-}
-fn dec_geometry(s: &str) -> Result<crate::EquationGeometry, String> {
-    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
-}
-
-fn print_equation_snapshot_body(s: &EquationSnapshot) -> String {
-    let scene = crate::equation_scene(s);
-    format!(
-        "notation={}\nresults={}\ncomputed={}\nequation={}\ngraph={}\ngeometry={}",
-        enc_child(&s.notation),
-        enc_child(&s.results),
-        enc_child(&s.computed),
-        enc_equation(&s.equation),
-        enc_graph(&scene.graph),
-        enc_geometry(&scene.geometry)
-    )
-}
-/// 🏗️ The decoded scene is attached to the exact handles this document names, never to freshly
-/// minted ones: `equation_children_from_state` derives the same ids, but re-minting would silently
-/// discard whatever identity the document carried. Every line of `📖️.grammar.semio` is required.
-fn parse_equation_snapshot_body(body: &str) -> Result<EquationSnapshot, String> {
-    let mut notation = None;
-    let mut results = None;
-    let mut computed = None;
-    let mut equation = None;
-    let mut graph = None;
-    let mut geometry = None;
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("notation=") {
-            notation = Some(dec_child(rest)?);
-        } else if let Some(rest) = line.strip_prefix("results=") {
-            results = Some(dec_child(rest)?);
-        } else if let Some(rest) = line.strip_prefix("computed=") {
-            computed = Some(dec_child(rest)?);
-        } else if let Some(rest) = line.strip_prefix("equation=") {
-            equation = Some(dec_equation(rest)?);
-        } else if let Some(rest) = line.strip_prefix("graph=") {
-            graph = Some(dec_graph(rest)?);
-        } else if let Some(rest) = line.strip_prefix("geometry=") {
-            geometry = Some(dec_geometry(rest)?);
-        } else {
-            return Err(format!("equation snapshot: unknown line {line:?}"));
-        }
-    }
-    let owner = std::sync::Arc::new(crate::EquationWorkingScene {
-        graph: graph.ok_or_else(|| "equation snapshot: missing graph line".to_string())?,
-        geometry: geometry.ok_or_else(|| "equation snapshot: missing geometry line".to_string())?,
-    });
-    Ok(EquationSnapshot {
-        notation: notation.ok_or_else(|| "equation snapshot: missing notation line".to_string())?.with_local_owner(owner.clone()),
-        results: results.ok_or_else(|| "equation snapshot: missing results line".to_string())?.with_local_owner(owner.clone()),
-        computed: computed.ok_or_else(|| "equation snapshot: missing computed line".to_string())?.with_local_owner(owner),
-        equation: equation.ok_or_else(|| "equation snapshot: missing equation line".to_string())?,
-    })
-}
-//#endregion 🔖️TextPrimitives
-
 impl ArtifactDsl for EquationSnapshot {
     const EXTENSION: &'static str = "equation";
     fn envelope_id() -> &'static str {
@@ -262,10 +135,10 @@ impl ArtifactDsl for EquationSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_equation_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        super::binary::parse_pack_record_text(body)
     }
     fn print_dsl(&self) -> String {
-        let body = print_equation_snapshot_body(self);
+        let body = super::binary::print_pack_record_text(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }

@@ -49,7 +49,7 @@ use crate::contract::{
     ActorKey, CommandEnvelope, CommandOutcome, EphemeralFrame, EventRecord, HybridLogicalClock, ModuleManifest, PolicyDecision, PolicyPoint, PolicyTemplate, Principal, QueryEnvelope, QueryResult, Scope, ServerInstanceDefinition,
     TenantId,
 };
-use crate::policy::{AdminGate, Credential, PolicyEngine, PolicyRequest, PrincipalResolver, ResolverChain};
+use crate::policy::{AdminGate, Credential, PolicyEngine, PolicyRequest, PrincipalResolver, Resolved, ResolverChain};
 use crate::storage::{content_hash, AuthorityStore, BlobStore, ProjectionStore, SessionStore, StorageError, StorageProfile};
 
 //#region 🔖️Reexport
@@ -280,9 +280,10 @@ pub trait ServerModule: Send + Sync {
 ///
 /// The server product deliberately depends on no document engine: not on the os product, not on
 /// `db`, not on any concrete CRDT or OT implementation. The gateway can therefore bridge a document
-/// websocket — handshake, submit, relay — while naming nothing but opaque byte frames. Hub supplies
-/// the implementation; another instance may supply a different one, or none at all, in which case
-/// the document route answers [`ServerError::NotFound`].
+/// websocket — handshake, submit, relay — while naming nothing but opaque byte frames. An instance
+/// may supply an implementation, or none at all, in which case the gateway does not mount the
+/// document route and the instance is free to own `/scopes/{scope}/document/ws` itself (hub does,
+/// because its socket carries grant admission, presence leases and live revocation).
 /// **Send futures, declared not inferred.** Every method of this port returns
 /// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
 /// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
@@ -292,32 +293,104 @@ pub trait ServerModule: Send + Sync {
 /// implementations stay ordinary `async fn`, which Rust accepts against this signature, and so does
 /// the delegate `dyn_enum_close!` generates for a set of them: the macro emits `async fn .. -> T`
 /// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
+/// 🤝️ When the gateway runs [`DocumentAuthority::welcome`] relative to the first client frame.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum DocumentHandshake {
+    /// 👋️ Send welcome before reading any client frame.
+    #[default]
+    ServerFirst,
+    /// 👂️ Wait for one client binary frame, then call welcome with that frame as `hello`.
+    ClientFirst,
+}
+
+/// 🎓️ Socket identity derived server-side from the authenticated principal — never from the URL.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DocumentSocketIdentity {
+    /// 🙋️ Hub-issued document actor id envelopes must be authored as.
+    pub actor: String,
+    /// 🎫️ Presence / kick session id for this socket.
+    pub session: String,
+}
+
+/// 🧭️ Bind a document socket to the principal's hub-issued actor. Callers never supply actor ids.
+pub fn document_socket_identity(resolved: &Resolved) -> Result<DocumentSocketIdentity, ServerError> {
+    let actor = match &resolved.actor {
+        Some(actor) if !actor.is_empty() => actor.clone(),
+        _ => match &resolved.principal {
+            Principal::User { id } | Principal::ServiceAccount { id } | Principal::Device { id } if !id.is_empty() => id.clone(),
+            Principal::Anonymous | Principal::User { .. } | Principal::ServiceAccount { .. } | Principal::Device { .. } => {
+                return Err(ServerError::Unauthorized("document socket requires an authenticated principal with an actor grant".into()));
+            }
+        },
+    };
+    let session = resolved.session.as_ref().map(|session| session.0.clone()).filter(|session| !session.is_empty()).unwrap_or_else(|| actor.clone());
+    Ok(DocumentSocketIdentity { actor, session })
+}
+
 #[dyn_enum]
 pub trait DocumentAuthority: Send + Sync {
-    /// 👋️ The handshake frame for a joining actor. `resume` carries whatever resumption token the
-    /// engine minted previously; the gateway never interprets it.
-    fn welcome(&self, scope: &Scope, actor: &str, resume: Option<&str>) -> impl Future<Output = Result<Vec<u8>, ServerError>> + Send;
+    /// 🤝️ Whether this engine greets first or waits for a client hello frame.
+    fn handshake(&self) -> impl Future<Output = DocumentHandshake> + Send;
 
-    /// 📨️ Apply one client frame and return the frames to send back to the submitter and relay to
-    /// the other sessions on the same document.
-    fn submit_frame(&self, scope: &Scope, principal: &Principal, frame: &[u8]) -> impl Future<Output = Result<Vec<Vec<u8>>, ServerError>> + Send;
+    /// 🧭️ Resolve the socket actor for this principal on `scope`, or refuse when the principal holds
+    /// no grant. The default binds from [`Resolved::actor`] / the principal id; hub overrides to
+    /// require a hub-issued actor grant.
+    fn bind_socket(&self, scope: &Scope, resolved: &Resolved) -> impl Future<Output = Result<DocumentSocketIdentity, ServerError>> + Send;
+
+    /// 👋️ The handshake frames for a joining actor. `resume` is the engine's own resumption token;
+    /// `hello` is the first client binary frame when [`DocumentHandshake::ClientFirst`], else `None`.
+    /// Returning several frames lets an engine stream welcome plus bootstrap chunks as distinct WS
+    /// messages — the gateway never concatenates them.
+    fn welcome(&self, scope: &Scope, actor: &str, resume: Option<&str>, hello: Option<&[u8]>) -> impl Future<Output = Result<Vec<Vec<u8>>, ServerError>> + Send;
+
+    /// 📨️ Apply one client frame and return the frames for the submitter and for peer relay.
+    /// `actor` is the socket's server-bound hub actor id (from [`DocumentAuthority::bind_socket`]),
+    /// not a caller-supplied query value — envelopes are authored as that socket actor.
+    fn submit_frame(&self, scope: &Scope, actor: &str, principal: &Principal, frame: &[u8]) -> impl Future<Output = Result<DocumentFrames, ServerError>> + Send;
+}
+
+/// 📤️ Frames produced by one [`DocumentAuthority::submit_frame`] call.
+///
+/// Split on purpose: an ack belongs only to the submitter, while the accepted command batch must
+/// reach every other session on the document. Engines that have nothing to hide from the submitter
+/// put the same bytes in both fields.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct DocumentFrames {
+    /// 🪞 Frames returned only to the socket that submitted.
+    pub echo: Vec<Vec<u8>>,
+    /// 📣 Frames relayed to every other session on the document lane.
+    pub relay: Vec<Vec<u8>>,
+}
+
+impl DocumentFrames {
+    /// 🪞📣 The same frames for the submitter and for every peer.
+    pub fn mirrored(frames: Vec<Vec<u8>>) -> Self {
+        Self { echo: frames.clone(), relay: frames }
+    }
 }
 
 /// 🕳️ The document authority of an instance that hosts none.
 ///
 /// Uninhabited on purpose, and the only honest way to say "no replication engine here": naming it
-/// as [`ServerInstance::Documents`] makes `Option<Arc<Self>>` permanently `None`, so
-/// `/scopes/{scope}/document/ws` answers [`ServerError::NotFound`] by construction. An instance
-/// that *does* have an engine names that engine instead, and the same route starts working —
-/// which is exactly what the previous empty enum in this crate made impossible for everyone.
+/// as [`ServerInstance::Documents`] makes `Option<Arc<Self>>` permanently `None`, so the gateway
+/// never mounts `/scopes/{scope}/document/ws`. An instance that *does* have an engine names that
+/// engine instead and registers it with [`ServerBuilder::document_authority`], which mounts the route.
 pub enum NoDocumentAuthority {}
 
 impl DocumentAuthority for NoDocumentAuthority {
-    async fn welcome(&self, _scope: &Scope, _actor: &str, _resume: Option<&str>) -> Result<Vec<u8>, ServerError> {
+    async fn handshake(&self) -> DocumentHandshake {
         match *self {}
     }
 
-    async fn submit_frame(&self, _scope: &Scope, _principal: &Principal, _frame: &[u8]) -> Result<Vec<Vec<u8>>, ServerError> {
+    async fn bind_socket(&self, _scope: &Scope, _resolved: &Resolved) -> Result<DocumentSocketIdentity, ServerError> {
+        match *self {}
+    }
+
+    async fn welcome(&self, _scope: &Scope, _actor: &str, _resume: Option<&str>, _hello: Option<&[u8]>) -> Result<Vec<Vec<u8>>, ServerError> {
+        match *self {}
+    }
+
+    async fn submit_frame(&self, _scope: &Scope, _actor: &str, _principal: &Principal, _frame: &[u8]) -> Result<DocumentFrames, ServerError> {
         match *self {}
     }
 }
@@ -647,6 +720,10 @@ pub fn apply_cors_headers(headers: &mut HeaderMap, origin: Option<&HeaderValue>)
 /// 🛂️ The header a caller presents a [`CapabilityProof`](crate::contract::CapabilityProof) in.
 pub const CAPABILITY_HEADER: &str = "x-semio-capability";
 
+/// 🛂️ WebSocket subprotocol that carries a session bearer after this marker.
+pub const SESSION_PROTOCOL_V1: &str = "semio.session.v1";
+
+
 /// 🎟️ The bearer token of an `Authorization: Bearer …` header, if there is one.
 pub fn bearer(headers: &HeaderMap) -> Option<String> {
     headers.get(header::AUTHORIZATION).and_then(|value| value.to_str().ok()).and_then(|value| value.strip_prefix("Bearer ")).map(|value| value.to_string())
@@ -654,9 +731,28 @@ pub fn bearer(headers: &HeaderMap) -> Option<String> {
 
 /// 🪪️ Normalize what a caller presented into a transport-free [`Credential`]. `loopback` comes from
 /// the peer address and never from a header — it is a fact only the transport can establish, and a
+/// 🎟️ Session bearer offered as `Sec-WebSocket-Protocol: semio.session.v1, <token>` when the
+/// browser cannot set an `Authorization` header on the upgrade.
+pub fn session_protocol_bearer(headers: &HeaderMap) -> Option<String> {
+    if headers.contains_key(header::AUTHORIZATION) {
+        return None;
+    }
+    let values = headers.get_all(header::SEC_WEBSOCKET_PROTOCOL);
+    if values.iter().count() != 1 {
+        return None;
+    }
+    let offered = values.iter().next().and_then(|value| value.to_str().ok())?;
+    let (protocol, token) = offered.split_once(", ")?;
+    if protocol != SESSION_PROTOCOL_V1 || token.is_empty() || token.contains(',') {
+        return None;
+    }
+    Some(token.to_string())
+}
+
+
 /// header claiming it would be a header granting itself the administration plane.
 pub fn credential(headers: &HeaderMap, peer: Option<SocketAddr>) -> Credential {
-    Credential { bearer: bearer(headers), capability: headers.get(CAPABILITY_HEADER).and_then(|value| value.to_str().ok()).map(|value| crate::contract::CapabilityProof(value.to_string())), loopback: peer.is_some_and(|peer| peer.ip().is_loopback()) }
+    Credential { bearer: bearer(headers).or_else(|| session_protocol_bearer(headers)), capability: headers.get(CAPABILITY_HEADER).and_then(|value| value.to_str().ok()).map(|value| crate::contract::CapabilityProof(value.to_string())), loopback: peer.is_some_and(|peer| peer.ip().is_loopback()) }
 }
 //#endregion 🔖️Credential
 
@@ -1169,13 +1265,10 @@ async fn drain_until_close(receiver: &mut futures::stream::SplitStream<WebSocket
 //#endregion 🔖️EventStream
 
 //#region 🔖️DocumentStream
-/// 📄️ How a session identifies itself when joining a document.
+/// 📄️ Non-identity join hints for a document socket. Actor and session are never query parameters —
+/// the gateway binds them from the authenticated principal.
 #[derive(Clone, Debug, Deserialize)]
 pub struct DocumentStreamQuery {
-    /// 🙋️ The actor joining, as the presence roster will list it.
-    pub actor: String,
-    /// 🎫️ The session id the administration plane may kick.
-    pub session: Option<String>,
     /// 🪟️ Which surface the actor joined from.
     pub surface: Option<String>,
     /// ⏮️ The engine's own resumption token, passed through verbatim.
@@ -1191,13 +1284,12 @@ pub async fn get_document_ws<I: ServerInstance>(
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
     State(state): State<ServerState<I>>,
 ) -> Result<Response, ServerError> {
-    if state.documents.is_none() {
-        return Err(ServerError::NotFound("this instance hosts no document authority".to_string()));
-    }
     let scope = Scope(scope);
     let resolved = state.identify(&headers, Some(peer)).await;
     state.authorize(&PolicyRequest { point: PolicyPoint::Subscription, principal: resolved.principal.clone(), scope: Some(scope.clone()), resource: document_lane(&scope), action: "subscribe".to_string() })?;
-    Ok(ws.on_upgrade(move |socket| handle_document(socket, scope, query, resolved.principal, state)))
+    let documents = state.documents.as_ref().ok_or_else(|| ServerError::NotFound("this instance hosts no document authority".to_string()))?;
+    let identity = documents.bind_socket(&scope, &resolved).await?;
+    Ok(ws.protocols([SESSION_PROTOCOL_V1]).on_upgrade(move |socket| handle_document(socket, scope, query, resolved.principal, identity, state)))
 }
 
 /// 📮️ Wrap a relayed frame with the session that produced it, so a session never receives its own
@@ -1218,24 +1310,51 @@ fn unwrap_relay(bytes: &[u8]) -> Option<(&str, &[u8])> {
     Some((origin, bytes.get(2 + length..)?))
 }
 
-async fn handle_document<I: ServerInstance>(socket: WebSocket, scope: Scope, query: DocumentStreamQuery, principal: Principal, state: ServerState<I>) {
+async fn handle_document<I: ServerInstance>(socket: WebSocket, scope: Scope, query: DocumentStreamQuery, principal: Principal, identity: DocumentSocketIdentity, state: ServerState<I>) {
     let Some(documents) = state.documents.clone() else { return };
     let (mut sender, mut receiver) = socket.split();
-    let session = query.session.clone().unwrap_or_else(|| query.actor.clone());
+    let session = identity.session.clone();
+    let actor = identity.actor.clone();
     let lane = document_lane(&scope);
     let mut live = state.fanout.subscribe(&lane);
-    state.presence.join(&scope.0, &query.actor, query.surface.as_deref().unwrap_or("unknown"));
+    state.presence.join(&scope.0, &actor, query.surface.as_deref().unwrap_or("unknown"));
 
-    match documents.welcome(&scope, &query.actor, query.resume.as_deref()).await {
-        Ok(welcome) => {
-            if sender.send(Message::Binary(welcome.into())).await.is_err() {
-                state.presence.leave(&scope.0, &query.actor);
-                return;
+    let handshake = documents.handshake().await;
+    let hello = match handshake {
+        DocumentHandshake::ServerFirst => None,
+        DocumentHandshake::ClientFirst => {
+            match receiver.next().await {
+                Some(Ok(Message::Binary(payload))) => Some(payload.to_vec()),
+                Some(Ok(Message::Ping(payload))) => {
+                    let _ = sender.send(Message::Pong(payload)).await;
+                    match receiver.next().await {
+                        Some(Ok(Message::Binary(payload))) => Some(payload.to_vec()),
+                        _ => {
+                            state.presence.leave(&scope.0, &actor);
+                            return;
+                        }
+                    }
+                }
+                _ => {
+                    state.presence.leave(&scope.0, &actor);
+                    return;
+                }
+            }
+        }
+    };
+
+    match documents.welcome(&scope, &actor, query.resume.as_deref(), hello.as_deref()).await {
+        Ok(frames) => {
+            for frame in frames {
+                if sender.send(Message::Binary(frame.into())).await.is_err() {
+                    state.presence.leave(&scope.0, &actor);
+                    return;
+                }
             }
         }
         Err(error) => {
             let _ = sender.send(Message::Text(error.to_string().into())).await;
-            state.presence.leave(&scope.0, &query.actor);
+            state.presence.leave(&scope.0, &actor);
             return;
         }
     }
@@ -1245,13 +1364,15 @@ async fn handle_document<I: ServerInstance>(socket: WebSocket, scope: Scope, que
             incoming = receiver.next() => {
                 match incoming {
                     Some(Ok(Message::Binary(payload))) => {
-                        match documents.submit_frame(&scope, &principal, &payload).await {
+                        match documents.submit_frame(&scope, &actor, &principal, &payload).await {
                             Ok(frames) => {
-                                for frame in frames {
+                                for frame in &frames.echo {
                                     if sender.send(Message::Binary(frame.clone().into())).await.is_err() {
                                         break;
                                     }
-                                    state.fanout.publish(&lane, wrap_relay(&session, &frame));
+                                }
+                                for frame in &frames.relay {
+                                    state.fanout.publish(&lane, wrap_relay(&session, frame));
                                 }
                             }
                             Err(error) => {
@@ -1285,9 +1406,10 @@ async fn handle_document<I: ServerInstance>(socket: WebSocket, scope: Scope, que
         }
     }
 
-    state.presence.leave(&scope.0, &query.actor);
+    state.presence.leave(&scope.0, &actor);
     state.kicks.forget(&session);
 }
+
 //#endregion 🔖️DocumentStream
 
 //#region 🔖️AppRoutes
@@ -1392,6 +1514,9 @@ impl<I: ServerInstance> ServerBuilder<I> {
             let manifest = module.manifest().await;
             if let Ok(mut engine) = policy.write() {
                 for template in manifest.policies.iter().cloned().chain(module.templates().await) {
+                    if template.auto_apply {
+                        engine.set_authenticated_template(template.name.clone());
+                    }
                     engine.register_template(template);
                 }
             }
@@ -1449,7 +1574,7 @@ impl<I: ServerInstance> ServerBuilder<I> {
             clock: Arc::new(StdMutex::new(HybridLogicalClock::default())),
         };
 
-        let mut router = base_router(definition.clone());
+        let mut router = base_router(definition.clone(), self.documents.is_some());
         for module in &self.modules {
             router = module.routes(router).await;
         }
@@ -1465,21 +1590,26 @@ fn admission_request(envelope: &CommandEnvelope) -> PolicyRequest {
 
 /// 🛣️ Every route the framework itself owns, before any module adds its own. Each handler is
 /// instantiated at the instance being built, so a route is monomorphic even though the set of
-/// backends behind it is chosen downstream.
-fn base_router<I: ServerInstance>(definition: ServerInstanceDefinition) -> Router<ServerState<I>> {
-    Router::new()
+/// backends behind it is chosen downstream. The document socket is mounted only for an instance
+/// that registered a [`DocumentAuthority`], leaving the path to an instance that owns it itself.
+fn base_router<I: ServerInstance>(definition: ServerInstanceDefinition, hosts_documents: bool) -> Router<ServerState<I>> {
+    let router = Router::new()
         .route("/instance", get(move || instance_body(definition.clone())))
         .route("/commands", post(post_command::<I>))
         .route("/queries", post(post_query::<I>))
         .route("/scopes/{scope}/ephemeral", post(post_ephemeral::<I>))
-        .route("/scopes/{scope}/document/ws", get(get_document_ws::<I>))
         .route("/actors/{tenant}/{kind}/{id}/events", get(get_events::<I>))
         .route("/actors/{tenant}/{kind}/{id}/events/ws", get(get_event_stream_ws::<I>))
         .route("/blobs/{hash}", get(get_blob::<I>).head(head_blob::<I>).put(put_blob::<I>))
         .route("/apps", get(get_apps::<I>))
         .route("/apps/{app}/installs", get(get_app_installs::<I>))
         .route("/apps/{app}", get(get_app_root::<I>))
-        .route("/apps/{app}/{*rest}", get(get_app_asset::<I>))
+        .route("/apps/{app}/{*rest}", get(get_app_asset::<I>));
+    if hosts_documents {
+        router.route("/scopes/{scope}/document/ws", get(get_document_ws::<I>))
+    } else {
+        router
+    }
 }
 
 async fn instance_body(definition: ServerInstanceDefinition) -> Json<ServerInstanceDefinition> {

@@ -39,7 +39,7 @@ Feature: A LaTeX probe document reports its numbers to the harness
   @level-quick
   @mode-differential
   Scenario: A square-root mapping agrees with d3-scale
-    Given the committed probe document local://power-mapping.tex and the inputs
+    Given the committed probe document shared://🔬️probe-protocol/power-mapping.tex and the inputs
       | input |
       | 0     |
       | 0.25  |

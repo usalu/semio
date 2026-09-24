@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertElement {
-    pub(crate) element: SemioModelElement,
+    pub element: SemioModelElement,
 }
 
 impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for InsertElement {

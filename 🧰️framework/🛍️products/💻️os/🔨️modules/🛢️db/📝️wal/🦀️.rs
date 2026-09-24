@@ -465,14 +465,16 @@ pub enum WalRecord {
     Migration(WalBytes),
 }
 
+const WAL_RECORD_BATCH_CAPACITY: usize = 64;
+
 pub struct WalRecordBatch {
-    records: [Option<WalRecord>; 64],
+    records: Box<[Option<WalRecord>]>,
     len: u8,
 }
 
 impl WalRecordBatch {
     pub fn new() -> Self {
-        Self { records: std::array::from_fn(|_| None), len: 0 }
+        Self { records: (0..WAL_RECORD_BATCH_CAPACITY).map(|_| None).collect(), len: 0 }
     }
 
     pub fn push(&mut self, record: WalRecord) -> Result<(), WalRecord> {
@@ -2937,6 +2939,22 @@ impl ArtifactWal {
         Ok(self.active.commit_and_flush(storage, self.writer.as_ref().ok_or(DbError::Closed)?, DurabilityClass::Fsync).await?.is_some())
     }
 
+    /// @emoji ⏸️ True while group-committed records still wait in the open active segment; the
+    /// retained close must drain them through `close_flush` before `close_step` can retire it.
+    pub fn has_pending(&self) -> bool {
+        self.active.pending_records != 0 && self.active.writer.is_some()
+    }
+
+    /// @emoji 🚰️ Clean-shutdown drain of the pending group commit. A failed drain poisons the active
+    /// segment, so `close_step` still reaches terminal and only the never-fsynced suffix is lost.
+    pub async fn close_flush(&mut self, storage: &impl db_storage::WalStorage) -> Result<(), DbError> {
+        let flushed = self.force_flush(storage).await;
+        if flushed.is_err() {
+            self.active.poison();
+        }
+        flushed.map(|_| ())
+    }
+
     /// @emoji 🔄️ Seals the active segment (after a final commit+flush) and begins a fresh one,
     /// carrying the sealed segment's tip `chain_hash` forward as the new segment's
     /// `WAL_SEGMENT_HEADER.prev_chain_hash` — the cross-segment hash-chain link.
@@ -2959,39 +2977,41 @@ impl ArtifactWal {
         Ok(())
     }
 
-    pub fn close_step(&mut self) -> Result<bool, DbError> {
+    /// @emoji 🔕️ Advances one close step. A step that made progress wakes its own waker; a pending
+    /// writer release parks the waker in the release signal, so the backend's terminal
+    /// notification is the only thing that resumes the caller — never a re-poll.
+    pub fn poll_close(&mut self, context: &mut std::task::Context<'_>) -> std::task::Poll<Result<(), DbError>> {
         if self.active.close_step()? {
-            return Ok(true);
+            context.waker().wake_by_ref();
+            return std::task::Poll::Pending;
         }
         if let Some(writer) = self.writer.take() {
             self.release = Some(writer.release());
-            return Ok(true);
+            context.waker().wake_by_ref();
+            return std::task::Poll::Pending;
         }
         if self.release_retry {
             self.release = self.release.take().map(db_storage::WalWriterRelease::retry);
             self.release_retry = false;
         }
-        let Some(release) = self.release.as_mut() else { return Ok(false) };
-        match std::future::Future::poll(std::pin::Pin::new(release), &mut std::task::Context::from_waker(std::task::Waker::noop())) {
-            std::task::Poll::Pending => Ok(true),
+        let Some(release) = self.release.as_mut() else { return std::task::Poll::Ready(Ok(())) };
+        match std::future::Future::poll(std::pin::Pin::new(release), context) {
+            std::task::Poll::Pending => std::task::Poll::Pending,
             std::task::Poll::Ready(Ok(())) => {
                 self.release = None;
-                Ok(true)
+                std::task::Poll::Ready(Ok(()))
             }
             std::task::Poll::Ready(Err(failure)) => {
                 let (error, release) = failure.into_parts();
                 self.release = Some(release);
                 self.release_retry = true;
-                Err(error)
+                std::task::Poll::Ready(Err(error))
             }
         }
     }
 
     pub async fn close(&mut self) -> Result<(), DbError> {
-        while self.close_step()? {
-            semio_framework_async::yield_once().await;
-        }
-        Ok(())
+        std::future::poll_fn(|context| self.poll_close(context)).await
     }
 
     pub fn terminal_is_empty(&self) -> bool {

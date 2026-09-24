@@ -8,9 +8,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetNodeParam {
-    pub(crate) id: String,
-    pub(crate) key: String,
-    pub(crate) value: String,
+    pub id: String,
+    pub key: String,
+    pub value: String,
 }
 
 impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for SetNodeParam {

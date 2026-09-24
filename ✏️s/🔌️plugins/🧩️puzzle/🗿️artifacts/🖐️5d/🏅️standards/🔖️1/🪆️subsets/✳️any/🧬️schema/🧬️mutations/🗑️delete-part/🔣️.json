@@ -7,7 +7,7 @@
   "aggregateVariant": "DeletePart",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "delete-part",
-  "binaryTag": null,
+  "binaryTag": 1,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

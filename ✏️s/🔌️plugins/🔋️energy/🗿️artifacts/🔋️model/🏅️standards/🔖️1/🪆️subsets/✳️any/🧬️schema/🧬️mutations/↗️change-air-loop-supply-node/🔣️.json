@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeAirLoopSupplyNode",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-air-loop-supply-node",
-  "binaryTag": null,
+  "binaryTag": 173,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

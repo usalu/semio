@@ -37,7 +37,7 @@ semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-drawing"] }
 semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
@@ -60,3 +60,6 @@ serde_json = { workspace = true }
 semio-framework-io-base64 = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 # ⚖️ Third-party spatial index oracle for the grip grid radius and nearest queries. Test-only.
 rstar = "0.12"
+# 🔮 Test-only ZIP ORACLE (never a `[dependencies]` entry): the third-party `zip` reader opens the
+# document archive and reads its DSL member back.
+zip = { version = "6", default-features = false, features = ["deflate"] }

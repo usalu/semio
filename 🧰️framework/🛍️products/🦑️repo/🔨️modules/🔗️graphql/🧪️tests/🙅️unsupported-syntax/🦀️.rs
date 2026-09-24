@@ -22,7 +22,7 @@ mod subject {
     }
 
     fn corpus(ctx: &Context) -> Result<Vec<(String, String)>, String> {
-        let bytes = ctx.fixture_bytes("local://🔣️divergences.json")?;
+        let bytes = ctx.fixture_bytes("shared://🙅️unsupported-syntax/🔣️divergences.json")?;
         let text = String::from_utf8(bytes).map_err(|error| error.to_string())?;
         let parsed: SerdeJson = semio_framework_repo_graphql::serde_json::from_str(&text).map_err(|error| error.to_string())?;
         let inputs = parsed.get("inputs").and_then(SerdeJson::as_array).ok_or("corpus has no inputs array")?;

@@ -4,8 +4,8 @@
  * alias-credit behaviour against the live document arena, and this one proves the wgpu frame path
  * actually obeys it — the chrome walk moves the exact owner instead of aliasing, a terminal document
  * cursor releases the chrome step, a superseded frame opportunity is not a recorded renderer fault,
- * the effect-storm budget is charged per round, and both browser drive loops are bounded by a share of
- * the one ratified interactive ceiling.
+ * the effect-storm budget is charged per round, the browser present loop is bounded by a share of the
+ * one ratified interactive ceiling, and the frame build advances one retained Worker turn per callback.
  *
  * Source-scanning is the honest oracle here: every rule lives inside a `wasm32`/GPU-only frame path
  * that no unit harness can construct, and the sources ARE the contract (ticket
@@ -49,10 +49,19 @@ describe("wgpu retained document owner move", () => {
 
   it("releases the chrome step for a terminal document cursor and holds it for every other phase", () => {
     const shell = source("shellSource");
-    const releases = [...shell.matchAll(new RegExp(`${laws.terminalCursorRelease}\\(\\)`, "gu"))];
     const phases = Object.entries(fixture.terminalCursor).filter(([phase]) => !phase.startsWith("$"));
     const holders = phases.filter(([, verdict]) => verdict === "hold").map(([phase]) => phase);
-    expect(releases.length, "both the main window and the panel walk release a terminal cursor").toBe(2);
+    const release = `${laws.terminalCursorRelease}()`;
+    let walkReleases = 0;
+    for (const walk of laws.terminalCursorWalks) {
+      const start = shell.indexOf(`fn ${walk}(`);
+      expect(start, `the ${walk} chrome walk exists`).toBeGreaterThan(0);
+      const end = shell.indexOf("\n    fn ", start + 1);
+      const body = shell.slice(start, end < 0 ? undefined : end);
+      expect(body, `the ${walk} chrome walk releases a terminal cursor`).toContain(release);
+      walkReleases += body.split(release).length - 1;
+    }
+    expect(shell.split(release).length - 1, "every terminal-cursor release sits in a named chrome walk").toBe(walkReleases);
     expect(holders.length).toBe(phases.length - 2);
     const interpreter = source("interpreterSource");
     for (const phase of holders) expect(interpreter, `the cursor must still have a ${phase} phase to hold on`).toContain(`UiDocumentFramePhase::${phase[0]!.toUpperCase()}${phase.slice(1)}`);
@@ -90,10 +99,10 @@ describe("wgpu retained document owner move", () => {
     expect(round - charge).toBeLessThan(200);
   });
 
-  it("bounds both browser drive loops by a share of the one ratified interactive ceiling", () => {
+  it("bounds the browser present loop by a share of the ratified ceiling and the frame build by one Worker turn", () => {
     const frameJob = source("frameJobSource");
-    const winit = source("winitSource");
-    for (const budget of laws.driveBudgets) expect(frameJob + winit, `the drive budget must name ${budget}`).toContain(budget);
-    expect(frameJob).toContain("BROWSER_FRAME_BUILD_DRIVE_US: u64 = semio_framework_job::INTERACTIVE_STEP_CEILING_US / 2");
+    expect(source("winitSource"), `the present deadline must name ${laws.presentDriveBudget}`).toContain(`semio_framework_job::${laws.presentDriveBudget}`);
+    expect(frameJob, "the frame build advances one retained Worker turn per scheduler callback").toContain(laws.frameWorkerTurn);
+    expect(frameJob, "the frame build runs no caller-side drive loop").not.toContain(laws.forbiddenFrameDriveLoop);
   });
 });

@@ -59,7 +59,7 @@
       "id": "xml-1-0-valid",
       "capability": "xml-1-0-valid-mutate",
       "standardDirectoryName": "🔖️1.0",
-      "subsetDirectoryName": "✳️valid",
+      "subsetDirectoryName": "✅️valid",
       "vectors": [],
       "kinds": [
         "set-snapshot",
@@ -88,7 +88,7 @@
       "standard": "1.0",
       "subset": "valid",
       "standardDirectoryName": "🔖️1.0",
-      "subsetDirectoryName": "✳️valid",
+      "subsetDirectoryName": "✅️valid",
       "mutations": [
         {
           "id": "declare-doctype",

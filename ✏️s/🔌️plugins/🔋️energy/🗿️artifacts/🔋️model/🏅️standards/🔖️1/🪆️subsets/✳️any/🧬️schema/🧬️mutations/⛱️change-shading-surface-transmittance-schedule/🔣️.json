@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeShadingSurfaceTransmittanceSchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-shading-surface-transmittance-schedule",
-  "binaryTag": null,
+  "binaryTag": 49,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

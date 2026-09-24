@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeAnnualScheduleDefaultDailySchedule",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-annual-schedule-default-daily-schedule",
-  "binaryTag": null,
+  "binaryTag": 268,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

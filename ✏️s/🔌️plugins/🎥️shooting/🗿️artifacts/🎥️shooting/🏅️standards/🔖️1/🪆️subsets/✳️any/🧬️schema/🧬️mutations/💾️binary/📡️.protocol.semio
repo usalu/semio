@@ -3,14 +3,73 @@ protocol shooting.mutations
 version 1
 schema shooting.shooting.mutations
 start record
-framing magic 0x8953f83f7d340d0a
-header fixed 32
-field format_major u16
-field format_minor u16
-field flags u32
-field domain_tag u32
-field header_crc32 u32
-segment payload varint bytes
-footer fixed 64
-field artifact_mark utf8
-field body_crc32 u32
+framing record
+
+# Real `ShootingMutation` op frame (`dsl::tagged_value_binary`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`, then
+# the variant's `ToValue` tree without its variant name, as one framework wire value (`pack_rt::encode_wire_value`).
+# Each record is one mutation kind at its wire tag; this file is the only source of those tags.
+header fixed 2
+field format u8
+field tag varint
+record create-asset tag=0
+field payload bytes
+record delete-asset tag=1
+field payload bytes
+record rename-asset tag=2
+field payload bytes
+record change-asset-url tag=3
+field payload bytes
+record reorder-assets tag=4
+field payload bytes
+record drag-assets tag=5
+field payload bytes
+record rotate-assets tag=6
+field payload bytes
+record scale-assets tag=7
+field payload bytes
+record create-shot tag=8
+field payload bytes
+record delete-shot tag=9
+field payload bytes
+record rename-shot tag=10
+field payload bytes
+record change-shot-width tag=11
+field payload bytes
+record change-shot-height tag=12
+field payload bytes
+record change-shot-format tag=13
+field payload bytes
+record change-shot-shape tag=14
+field payload bytes
+record reorder-shots tag=15
+field payload bytes
+record replace-shot-camera tag=16
+field payload bytes
+record create-saved-camera tag=17
+field payload bytes
+record delete-saved-camera tag=18
+field payload bytes
+record rename-saved-camera tag=19
+field payload bytes
+record replace-saved-camera-view tag=20
+field payload bytes
+record reorder-saved-cameras tag=21
+field payload bytes
+record set-active-shot tag=22
+field payload bytes
+record set-active-asset tag=23
+field payload bytes
+record change-scene-sun-enabled tag=24
+field payload bytes
+record change-scene-sun-azimuth tag=25
+field payload bytes
+record change-scene-sun-elevation tag=26
+field payload bytes
+record change-scene-sun-intensity tag=27
+field payload bytes
+record change-scene-ambient-intensity tag=28
+field payload bytes
+record change-scene-shadow-enabled tag=29
+field payload bytes
+record change-scene-material-roughness tag=30
+field payload bytes

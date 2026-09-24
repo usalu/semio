@@ -5,8 +5,8 @@ import { createRequire } from "node:module";
 
 /** 🔁️ Compares persistent graph reloads under native Bun and Node after implementation, policy and helper edits. */
 export async function testGraphRevision(workspace: string, output: string): Promise<void> {
-  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-  assert.deepEqual(require("jsonschema").validate(fixture, JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"))).errors, []);
+  const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔁️graph-revision/🔣️.json"), "utf8"));
+  assert.deepEqual(require("jsonschema").validate(fixture, JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔁️graph-revision/📐️schema/🔣️.json"), "utf8"))).errors, []);
   const { runTool } = await import("../../🚀️bootstrap/📦️dependencies/📜️script.ts");
   const root = mkdtempSync(join(output, "graph-revision-")), controller = new AbortController(), stop = (): void => controller.abort();
   process.once("SIGINT", stop); process.once("SIGTERM", stop);

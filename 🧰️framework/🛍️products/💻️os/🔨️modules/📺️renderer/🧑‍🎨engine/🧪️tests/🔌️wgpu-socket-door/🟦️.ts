@@ -2,8 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { WGPU_SOCKET_POLL_MAX_MESSAGES, WGPU_SOCKET_QUEUE_MAX_MESSAGES, WGPU_SOCKET_SEND_MAX_BYTES, createWgpuPageHostIo } from "../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts";
 
 /** @emoji 🔌️ The PAGE half of packet W15e's DUPLEX socket door, tested where it runs. The Rust half's
- * own laws (wire codec, the bounded `SocketLane`) live in
- * `🎯️targets/🧊️wgpu/🔌️socket-door/🧪️tests/🔬️unit/🦀️.rs`; what only this suite can prove is that the
+ * own laws (wire codec, the bounded `SocketLane`) live beside it in this case's `🦀️.rs`; what only this suite can prove is that the
  * servicer really constructs a `WebSocket` with the EXACT ordered subprotocol list, really pages what
  * the peer sent instead of handing over the whole queue, and really REPORTS what its bounded queue
  * dropped instead of losing it silently.

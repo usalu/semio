@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveThermalEnclosureZone",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-thermal-enclosure-zone",
-  "binaryTag": null,
+  "binaryTag": 251,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

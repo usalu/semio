@@ -21,7 +21,7 @@ export default defineConfig({
     root: testRoot,
     name: "os-hub-ts",
     environment: "node",
-    include: [resolve(dir, "../../🧪️tests/🤝️integration/🟦️.ts")],
+    include: [resolve(dir, "../../🧪️tests/🤝️integration/🟦️.ts"), resolve(dir, "../../🧪️tests/🤝️two-client-document/🟦️.ts")],
     passWithNoTests: false,
   },
 });

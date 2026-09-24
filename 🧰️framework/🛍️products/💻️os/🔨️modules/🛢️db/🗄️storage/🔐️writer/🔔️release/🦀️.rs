@@ -1,9 +1,9 @@
 //! 🔔️ Fixed writer release intent and monotonic completion witnesses survive backend-slot reuse.
 use super::super::{db_io_backend_parts, DB_IO_BACKEND_CONTROLS};
-use super::super::{DbIoBackendControl, DbIoCredit, DbIoText, DbIoWriterReleaseStep};
+use super::super::{DbIoBackendControl, DbIoBackendRetirementTurn, DbIoCredit, DbIoText, DbIoWriterReleaseStep};
 use super::{WalWriterKey, WAL_WRITER_CAPACITY};
 use crate::DbError;
-use semio_framework_async::{Lane, WorkerDeferredWakeTicket, WorkerMaintenanceStep, WorkerMaintenanceTicket, WorkerPool};
+use semio_framework_async::{Lane, WorkerDeferredWakeTicket, WorkerMaintenanceRequest, WorkerMaintenanceStep, WorkerMaintenanceTicket, WorkerPool};
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::task::{Context, Poll, Waker};
@@ -23,8 +23,11 @@ impl WalWriterSignalCell {
         Self { active: None, requested: false, terminal_epoch: 0, waiter: None, notification: None, fault: None, deferred_fault_waiter: false }
     }
 
-    fn prepare(&mut self, key: WalWriterKey) -> Result<u64, DbError> {
-        if self.active.is_some() || self.notification.is_some() || self.deferred_fault_waiter {
+    /// 🔁️ A finished predecessor's undelivered terminal notification is handed back to its caller to
+    /// wake: the predecessor's epoch is already published, so the successor never waits on the
+    /// controller's asynchronous `notify_terminal` delivery.
+    fn prepare(&mut self, key: WalWriterKey) -> Result<(u64, Option<Waker>), DbError> {
+        if self.active.is_some() || self.deferred_fault_waiter {
             return Err(DbError::Conflict("WAL writer signal occupied".to_string()));
         }
         let required_epoch = self.terminal_epoch.checked_add(1).ok_or(DbError::LimitExceeded("WAL writer terminal epoch"))?;
@@ -32,7 +35,7 @@ impl WalWriterSignalCell {
         self.requested = false;
         self.fault = None;
         self.deferred_fault_waiter = false;
-        Ok(required_epoch)
+        Ok((required_epoch, self.notification.take()))
     }
 
     fn request(&mut self, key: WalWriterKey) -> bool {
@@ -204,7 +207,10 @@ pub(crate) fn prepare(key: WalWriterKey) -> Result<WalWriterSignalReservation, D
     if usize::from(slot) >= DB_IO_BACKEND_CONTROLS || usize::from(key.slot) >= WAL_WRITER_CAPACITY {
         return Err(DbError::LimitExceeded("WAL writer signal authority"));
     }
-    let required_epoch = cell(key).lock().unwrap_or_else(std::sync::PoisonError::into_inner).prepare(key)?;
+    let (required_epoch, predecessor) = cell(key).lock().unwrap_or_else(std::sync::PoisonError::into_inner).prepare(key)?;
+    if let Some(waiter) = predecessor {
+        waiter.wake();
+    }
     Ok(WalWriterSignalReservation { key, required_epoch, committed: false })
 }
 
@@ -332,12 +338,13 @@ pub(crate) fn request_controller(backend: DbIoBackendControl) {
         let row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(row) = row.as_ref().filter(|row| row.backend == backend) else { return };
         let (Some(ticket), Some(deferred_wake_ticket)) = (row.ticket, row.deferred_wake_ticket) else { return };
-        (row.pool.clone(), ticket, deferred_wake_ticket)
+        if row.pool.request_maintenance(ticket).is_ok() {
+            return;
+        }
+        (row.pool.clone(), deferred_wake_ticket)
     };
-    if controller.0.request_maintenance(controller.1).is_err() {
-        fault_all_requested(backend, &DbError::Unavailable("WAL writer maintenance request refused; exact guard remains retained".to_string()));
-        defer_fault_waiters(backend, &controller.0, controller.2);
-    }
+    fault_all_requested(backend, &DbError::Unavailable("WAL writer maintenance request refused; exact guard remains retained".to_string()));
+    defer_fault_waiters(backend, &controller.0, controller.1);
 }
 
 pub(crate) fn request_any_controller() {
@@ -414,25 +421,41 @@ fn controller_step([slot, generation]: [u64; 2]) -> WorkerMaintenanceStep {
         Err(_) => return WorkerMaintenanceStep::Fault,
         Ok(false) => {}
     }
-    match writer {
-        Some(Ok(DbIoWriterReleaseStep::More | DbIoWriterReleaseStep::Faulted)) => WorkerMaintenanceStep::More,
-        Some(Ok(DbIoWriterReleaseStep::Idle)) | None => WorkerMaintenanceStep::Idle,
-        Some(Err(_)) => WorkerMaintenanceStep::Idle,
+    let tasks = super::super::db_io_task_retirement_batch();
+    let writer_more = matches!(writer, Some(Ok(DbIoWriterReleaseStep::More | DbIoWriterReleaseStep::Faulted)));
+    match super::super::db_io_backend_retirement_turn(backend, &mut Context::from_waker(&waker)) {
+        DbIoBackendRetirementTurn::Retired => WorkerMaintenanceStep::Retire,
+        DbIoBackendRetirementTurn::More => WorkerMaintenanceStep::More,
+        DbIoBackendRetirementTurn::Idle if writer_more || tasks => WorkerMaintenanceStep::More,
+        DbIoBackendRetirementTurn::Idle => WorkerMaintenanceStep::Idle,
     }
 }
 
-pub(crate) fn close_controller(backend: DbIoBackendControl) -> Result<bool, DbError> {
+/// @emoji 📣️ Coalesces one retirement request into the backend's pre-admitted maintenance hook; it
+/// never allocates, never queues a closure, and cannot be lost to lane contention.
+pub(crate) fn request_retirement(backend: DbIoBackendControl) -> Result<bool, DbError> {
+    let (slot, _) = db_io_backend_parts(backend);
+    let row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(row) = row.as_ref().filter(|row| row.backend == backend) else { return Ok(false) };
+    let Some(ticket) = row.ticket else { return Ok(false) };
+    row.pool.request_maintenance(ticket).map(|request| request == WorkerMaintenanceRequest::Requested).map_err(|error| DbError::Unavailable(format!("DB I/O backend retirement request refused: {error:?}")))
+}
+
+/// @emoji 🔔️ The backend hook's own waker, handed to owners whose terminal event must resume retirement.
+pub(crate) fn retirement_waker(backend: DbIoBackendControl) -> Option<Waker> {
+    let (slot, _) = db_io_backend_parts(backend);
+    let row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    row.as_ref().filter(|row| row.backend == backend).map(|row| row.waker.clone())
+}
+
+/// @emoji 🪦️ Runs inside the backend's own hook turn: the hook returns `Retire`, so its slot is released
+/// by the pool without an external removal racing the running invocation.
+pub(crate) fn retire_controller(backend: DbIoBackendControl) -> Result<bool, DbError> {
     let (slot, _) = db_io_backend_parts(backend);
     let mut row = WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let Some(owner) = row.as_mut() else { return Ok(true) };
     if owner.backend != backend {
         return Err(DbError::Fenced { expected: db_io_backend_parts(owner.backend).1, actual: db_io_backend_parts(backend).1 });
-    }
-    if let Some(ticket) = owner.ticket {
-        if !owner.pool.remove_maintenance_hook(ticket).map_err(|error| DbError::Unavailable(format!("WAL writer maintenance retirement: {error:?}")))? {
-            return Ok(false);
-        }
-        owner.ticket = None;
     }
     if let Some(ticket) = owner.deferred_wake_ticket {
         if !owner.pool.remove_deferred_wake_partition(ticket).map_err(|error| DbError::Unavailable(format!("WAL writer deferred-wake retirement: {error:?}")))? {

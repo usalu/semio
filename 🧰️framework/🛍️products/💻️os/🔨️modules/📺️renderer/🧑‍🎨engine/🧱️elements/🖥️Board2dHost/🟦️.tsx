@@ -20,6 +20,7 @@ import {
   pickMostSpecificCanvasTarget,
   CATALOGUE_DRAG_MIME,
   getActiveCatalogueDragPayload,
+  getActiveCataloguePointerDragData,
 } from "@semio-tech/ui-react";
 import { STYLING_METRICS, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import {
@@ -40,6 +41,7 @@ import {
 import { type Board2dWasmSession, type Board2dPeer, type BoardPeerScope, BoardSessionFactoryContext, createBoardPeerScope } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { createCoalescingActionDispatcher } from "../🛠️ShellHelpers/🟦️.tsx";
+import { suggestionPopupOwnsWindow, suggestionRowsWithFocus, suggestionSubmenuTarget, useSuggestionSubmenuSearch, withSuggestionSubmenu } from "../🎣️suggestion-submenu/🟦️.ts";
 import { parseSelectionIds } from "../🖋️InkCanvasHost/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`🟦️Interpreter` already landed in a prior batch.
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
@@ -47,6 +49,8 @@ import { useToolRunTraceCursorEcho } from "../🌐️World3dHost/⏯️tool-run-
 import { ToolRunTrace2dLayer } from "../📐️Canvas2dHost/⏯️tool-run-trace/🟦️.tsx";
 import { board2dToolRunTracePathForShape, board2dToolRunTraceShapes } from "./⏯️tool-run-trace/🟦️.tsx";
 import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
+import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";
+import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../👕️canvas-presence/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Board2dHost
@@ -235,7 +239,16 @@ export function latestBoard2dHoverId(rows: readonly BoardEventRow[]): string | n
 }
 
 /** @emoji 💡️ One placement candidate row of the handle-suggestions popup. */
-export type Board2dSuggestionCandidate = { readonly index: number; readonly nodeLabel: string; readonly handleLabel: string; readonly icon?: string; readonly color?: string };
+export type Board2dSuggestionCandidate = {
+  readonly index: number;
+  /** 🔦️ The candidate's key in the board's `toolRunTrace` lane — hovering its row focuses exactly that placement.
+   * Decimal text when it exceeds 2^53 (a planner twin key sets bit 62). */
+  readonly key?: number | string;
+  readonly nodeLabel: string;
+  readonly handleLabel: string;
+  readonly icon?: string;
+  readonly color?: string;
+};
 
 /** @emoji 💡️ The open handle-suggestions popup the guest published, or `null` when this board has none.
  * `pending` means the slot has not resolved yet; an empty `candidates` on a resolved slot is the polite
@@ -247,6 +260,8 @@ export type Board2dSuggestionMenu = {
   readonly windowId?: string;
   readonly handleId?: string;
   readonly hoveredIndex: number;
+  /** 📂️ The list lives inside the regular context menu as the "suggest" row's submenu instead of floating as its own popup. */
+  readonly submenu: boolean;
   readonly pending: boolean;
   readonly candidates: readonly Board2dSuggestionCandidate[];
 };
@@ -266,6 +281,7 @@ export function parseBoard2dSuggestionMenu(encoded: string | null | undefined): 
       windowId: typeof parsed.windowId === "string" && parsed.windowId.length > 0 ? parsed.windowId : undefined,
       handleId: typeof parsed.handleId === "string" && parsed.handleId.length > 0 ? parsed.handleId : undefined,
       hoveredIndex: typeof parsed.hoveredIndex === "number" ? parsed.hoveredIndex : 0,
+      submenu: parsed.submenu === true,
       pending: parsed.pending === true,
       candidates,
     };
@@ -423,9 +439,53 @@ function puzzle2dEntityFlag(entity: Record<string, unknown> | undefined, key: "h
 //#endregion SelectionMenu
 
 //#region FixtureDrop
-/** @emoji 👻️ Builds a world-space fixture-drop preview so every peer pane shares the same ghost (screen coords would desync under different cameras). */
+const BOARD_CATALOGUE_DROP_FALLBACK_RADIUS = 20;
+const BOARD_CATALOGUE_DROP_FALLBACK_EXTENT = 40;
+
+function finitePositive(value: number | undefined): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+/** @emoji 👻️ Builds a world-space fixture-drop preview so every peer pane shares the same ghost (screen coords would desync under different cameras). A part row that names only its kind still paints: a circle falls back to the 5d default radius and a rectangle to that diameter. */
 export function puzzle2dFixtureDropPreviewJson(payload: Puzzle2dFixtureDropPayload, worldX: number, worldY: number): string {
-  return JSON.stringify({ nodeKind: payload.kindId, x: worldX, y: worldY, shape: payload.shape, radius: payload.radius, width: payload.width, height: payload.height, iconKind: payload.iconKind });
+  const rectangle = payload.shape === "rectangle";
+  return JSON.stringify({
+    nodeKind: payload.kindId,
+    x: worldX,
+    y: worldY,
+    shape: rectangle ? "rectangle" : "circle",
+    radius: finitePositive(payload.radius) ?? BOARD_CATALOGUE_DROP_FALLBACK_RADIUS,
+    width: finitePositive(payload.width) ?? (rectangle ? BOARD_CATALOGUE_DROP_FALLBACK_EXTENT : undefined),
+    height: finitePositive(payload.height) ?? (rectangle ? BOARD_CATALOGUE_DROP_FALLBACK_EXTENT : undefined),
+    iconKind: payload.iconKind,
+  });
+}
+
+export type BoardCatalogueDropRect = { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number };
+
+/** @emoji 🎯️ True when a client point sits inside a board pane's viewport box. */
+export function boardCatalogueDropPointOverRect(clientX: number, clientY: number, rect: BoardCatalogueDropRect): boolean {
+  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+}
+
+const boardCatalogueDropHostHitTests = new Map<string, { readonly controllerId: string; readonly hitTest: (clientX: number, clientY: number) => boolean }>();
+
+/** @emoji 🎯️ Registers a board pane's hit-test so one pane does not clear the shared ghost while the pointer is over a sibling pane of the same controller. */
+export function registerBoardCatalogueDropHost(controllerId: string, hostId: string, hitTest: (clientX: number, clientY: number) => boolean): () => void {
+  const key = `${controllerId}\0${hostId}`;
+  boardCatalogueDropHostHitTests.set(key, { controllerId, hitTest });
+  return () => {
+    boardCatalogueDropHostHitTests.delete(key);
+  };
+}
+
+/** @emoji 🎯️ True when any registered board pane of `controllerId` contains the client point. */
+export function boardCatalogueDropHostContainsPoint(controllerId: string, clientX: number, clientY: number): boolean {
+  for (const entry of boardCatalogueDropHostHitTests.values()) {
+    if (entry.controllerId !== controllerId) continue;
+    if (entry.hitTest(clientX, clientY)) return true;
+  }
+  return false;
 }
 
 /** @emoji 📐️ Inverse of the canonical `screenX = (worldX - camera.x) * zoom + width / 2` transform shared across board renderers. */
@@ -614,7 +674,9 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const [localSelectionJson, setLocalSelectionJson] = useState<string | null>(null);
   const [sessionEpoch, setSessionEpoch] = useState(0);
   const [sessionError, setSessionError] = useState<Error | null>(null);
-  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number; readonly suggestTarget: string | null }) | null>(null);
+  /** 🔦️ The trace record of the suggestion row under the pointer — the board paints only that placement. */
+  const [suggestionFocus, setSuggestionFocus] = useState<bigint | null>(null);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.board");
   const suggestionMenuTitleLabel = useLabel("ui.surfaceContextMenu.placementSuggestions");
   const suggestionCheckingPlacementLabel = useLabel("ui.host.checkingPlacement");
@@ -718,8 +780,20 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   //#region SuggestionMenu
   const suggestionMenu = useMemo(() => parseBoard2dSuggestionMenu(scene?.suggestionMenuJson), [scene?.suggestionMenuJson]);
   const suggestionMenuOwnsThisWindow = board2dSuggestionMenuOwnsWindow(suggestionMenu, windowInstanceId ?? undefined);
+  const suggestionPopupOwnsThisWindow = suggestionPopupOwnsWindow(suggestionMenu, windowInstanceId ?? undefined);
   const suggestionMenuOwnsThisWindowRef = useRef(false);
   suggestionMenuOwnsThisWindowRef.current = suggestionMenuOwnsThisWindow;
+  useSuggestionSubmenuSearch(contextMenu?.suggestTarget ?? null, { x: contextMenu?.x ?? 0, y: contextMenu?.y ?? 0 }, windowInstanceId ?? undefined, dispatch, () => setSuggestionFocus(null));
+  useEffect(() => {
+    if (!suggestionMenuOwnsThisWindow) setSuggestionFocus(null);
+  }, [suggestionMenuOwnsThisWindow]);
+  /** 📂️ The candidate rows one suggestion menu lists — the context menu's "suggest" submenu and the floating
+   * popup share them. A submenu whose search has not echoed back yet lists the pending row. */
+  const suggestionRows = useMemo(() => {
+    const listed = suggestionMenuOwnsThisWindow && suggestionMenu ? suggestionMenu : { open: true, x: 0, y: 0, hoveredIndex: 0, submenu: true, pending: true, candidates: [] };
+    const rows = mapSuggestionMenu(board2dSuggestionMenuItems(listed, { checkingPlacement: suggestionCheckingPlacementLabel, noPlacement: suggestionNoPlacementLabel }));
+    return suggestionRowsWithFocus(rows, listed, setSuggestionFocus);
+  }, [mapSuggestionMenu, suggestionCheckingPlacementLabel, suggestionMenu, suggestionMenuOwnsThisWindow, suggestionNoPlacementLabel]);
   const closeSuggestionMenu = useCallback(() => dispatchSuggestion("closeHandleSuggestions"), [dispatchSuggestion]);
 
   // 💡️ The provisional paint. The popup lists what the GUEST resolved, but the ghost on the canvas is
@@ -729,7 +803,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   useEffect(() => {
     const session = sessionRef.current;
     if (!session) return;
-    if (!suggestionMenuOwnsThisWindow || !suggestionMenu?.handleId) {
+    if (!suggestionPopupOwnsThisWindow || !suggestionMenu?.handleId) {
       applyToSession(session, (s) => s.brushCancelSlot?.());
       return;
     }
@@ -737,7 +811,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       s.brushOpenSlot?.(suggestionMenu.handleId!);
       s.brushSetCandidateIndex?.(suggestionMenu.hoveredIndex);
     });
-  }, [sessionEpoch, suggestionMenu?.handleId, suggestionMenu?.hoveredIndex, suggestionMenuOwnsThisWindow]);
+  }, [sessionEpoch, suggestionMenu?.handleId, suggestionMenu?.hoveredIndex, suggestionPopupOwnsThisWindow]);
 
   // 🪟️ A pane that does NOT render the popup still has to be able to dismiss it, otherwise an open menu
   // owned by a sibling gates this pane's ordinary context menu with no way out — the same hole
@@ -1219,6 +1293,29 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   );
 
   //#region Pointer
+
+  const presencePublishAtRef = useRef(0);
+  const presenceWindowId = windowInstanceId ?? node.surfaceId ?? "board";
+  const localPresenceActor = useLocalPresenceActorIdV1("local");
+  useEffect(() => () => clearLocalPresenceWindowViewV1(presenceWindowId), [presenceWindowId]);
+  const publishBoardPresenceView = useCallback((screenPoint: { readonly x: number; readonly y: number } | null) => {
+    const now = Date.now();
+    if (now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS) return;
+    presencePublishAtRef.current = now;
+    const cameraJson = sceneRef.current?.cameraJson ?? "";
+    const camera = parseBoardCamera(cameraJson) ?? { x: 0, y: 0, zoom: 1 };
+    const size = readContainerSize();
+    const world = screenPoint ? puzzle2dScreenToWorld(cameraJson, size, screenPoint) : null;
+    publishLocalPresenceWindowViewV1("local", presenceWindowId, {
+      windowId: presenceWindowId,
+      space: "canvas",
+      kind: { kind: "canvas", x: camera.x, y: camera.y, zoom: camera.zoom },
+      size: [size.w, size.h],
+      ...(world ? { pointer: [world.x, world.y, 0] as const } : {}),
+    });
+    publishLocalActiveToolV1("local", sceneRef.current?.activeUtility ?? null);
+  }, [presenceWindowId, readContainerSize]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -1264,6 +1361,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       const session = sessionRef.current;
       if (!session) return;
       const point = clientToLocal(event.clientX, event.clientY);
+      publishBoardPresenceView(point);
       gesturePointersRef.current = gesturePointerMove(gesturePointersRef.current, { pointerId: event.pointerId, x: point.x, y: point.y });
       if (gestureIsMultiTouch(gesturePointersRef.current)) {
         const next = pinchFrame(gesturePointersRef.current);
@@ -1375,7 +1473,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       window.removeEventListener("pointercancel", onPointerCancel);
       container.removeEventListener("wheel", onWheel);
     };
-  }, [peerScope, applyPendingFixtureIfReady, applyPendingSelectionIfReady, beginCameraInteraction, dispatch, dispatchBufferedEvents, drainAndMaybeFlush, node.controllerId, node.surfaceId, publishBoardVitals, readContainerSize, scheduleRender, scene?.activeUtility, scene?.interactive, settleGestureEnd]);
+  }, [peerScope, applyPendingFixtureIfReady, applyPendingSelectionIfReady, beginCameraInteraction, dispatch, dispatchBufferedEvents, drainAndMaybeFlush, node.controllerId, node.surfaceId, publishBoardVitals, readContainerSize, scheduleRender, scene?.activeUtility, scene?.interactive, settleGestureEnd, publishBoardPresenceView]);
   //#endregion Pointer
 
   //#region Keyboard
@@ -1470,6 +1568,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
           dispatch("applyBoardEvents", { eventsJson: JSON.stringify([{ name: "select", payload: { ids: selectionIds, exitHighlightIds: [] } }]) });
         }
         const hits = targets.map((target) => ({ domain: target.domain, id: target.id, label: target.label }));
+        const suggest = { target: null as string | null };
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
@@ -1482,10 +1581,13 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
             },
             point: { x: event.clientX, y: event.clientY },
           },
-          mapContextMenu,
+          (specs) => {
+            suggest.target = suggestionSubmenuTarget(specs);
+            return mapContextMenu(specs);
+          },
           shellContextMenuFallback,
         );
-        setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
+        setContextMenu({ x: event.clientX, y: event.clientY, ...menu, suggestTarget: suggest.target });
       })();
     },
     [dispatch, mapContextMenu, node.surfaceId, requestContextMenu, scene?.interactive, scene?.selectionJson, shellContextMenuFallback],
@@ -1493,37 +1595,15 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   //#endregion ContextMenu
 
   //#region FixtureDropHandlers
-  const onDragOver = useCallback(
-    (event: DragEvent<HTMLDivElement>): void => {
-      if (!scene?.interactive || !event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) return;
-      const session = sessionRef.current;
-      if (!session?.setFixtureDropPreviewJson) return;
-      const payload = parsePuzzle2dCatalogueDragPayload(getActiveCatalogueDragPayload());
-      if (!payload) return;
-      const rect = event.currentTarget.getBoundingClientRect();
-      const world = puzzle2dScreenToWorld(session.cameraJson(), readContainerSize(), { x: event.clientX - rect.left, y: event.clientY - rect.top });
-      if (!world) return;
-      event.preventDefault();
-      pushPuzzle2dFixtureDropPreview(peerScope, node.controllerId, puzzle2dFixtureDropPreviewJson(payload, world.x, world.y));
-    },
-    [peerScope, node.controllerId, readContainerSize, scene?.interactive],
-  );
+  const clearCatalogueDropPreview = useCallback(() => {
+    pushPuzzle2dFixtureDropPreview(peerScope, node.controllerId, null);
+  }, [peerScope, node.controllerId]);
 
-  const onDragLeave = useCallback((): void => {
-    /* Keep the shared peer ghost while the pointer moves between panes of the same controller. */
-  }, []);
-
-  const onDrop = useCallback(
-    (event: DragEvent<HTMLDivElement>): void => {
-      if (!scene?.interactive) return;
-      const encoded = event.dataTransfer.getData(CATALOGUE_DRAG_MIME) || getActiveCatalogueDragPayload();
-      const payload = parsePuzzle2dCatalogueDragPayload(encoded);
+  const placeCatalogueDrop = useCallback(
+    (payload: Puzzle2dFixtureDropPayload, clientX: number, clientY: number, rect: BoardCatalogueDropRect) => {
       const session = sessionRef.current;
-      pushPuzzle2dFixtureDropPreview(peerScope, node.controllerId, null);
-      if (!payload || !session) return;
-      event.preventDefault();
-      const rect = event.currentTarget.getBoundingClientRect();
-      const world = puzzle2dScreenToWorld(session.cameraJson(), readContainerSize(), { x: event.clientX - rect.left, y: event.clientY - rect.top });
+      if (!session) return;
+      const world = puzzle2dScreenToWorld(session.cameraJson(), readContainerSize(), { x: clientX - rect.left, y: clientY - rect.top });
       dispatch("addNode", {
         kind: payload.kindId,
         x: world?.x,
@@ -1535,19 +1615,109 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
         iconKind: payload.iconKind,
       });
     },
-    [peerScope, dispatch, node.controllerId, readContainerSize, scene?.interactive],
+    [dispatch, readContainerSize],
+  );
+
+  const previewCatalogueDropAt = useCallback(
+    (clientX: number, clientY: number): boolean => {
+      const host = containerRef.current;
+      const session = sessionRef.current;
+      if (!sceneRef.current?.interactive || !host || !session?.setFixtureDropPreviewJson) return false;
+      const rect = host.getBoundingClientRect();
+      if (!boardCatalogueDropPointOverRect(clientX, clientY, rect)) {
+        if (!boardCatalogueDropHostContainsPoint(node.controllerId, clientX, clientY)) clearCatalogueDropPreview();
+        return false;
+      }
+      const payload = parsePuzzle2dCatalogueDragPayload(getActiveCatalogueDragPayload() ?? getActiveCataloguePointerDragData()?.payload);
+      if (!payload) return false;
+      const world = puzzle2dScreenToWorld(session.cameraJson(), readContainerSize(), { x: clientX - rect.left, y: clientY - rect.top });
+      if (!world) return false;
+      pushPuzzle2dFixtureDropPreview(peerScope, node.controllerId, puzzle2dFixtureDropPreviewJson(payload, world.x, world.y));
+      return true;
+    },
+    [clearCatalogueDropPreview, node.controllerId, peerScope, readContainerSize],
+  );
+
+  const onDragOver = useCallback(
+    (event: DragEvent<HTMLDivElement>): void => {
+      if (!scene?.interactive) return;
+      if (!event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME) && !getActiveCatalogueDragPayload()) return;
+      if (!sessionRef.current?.setFixtureDropPreviewJson) return;
+      if (!parsePuzzle2dCatalogueDragPayload(getActiveCatalogueDragPayload()) && !event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) return;
+      event.preventDefault();
+      previewCatalogueDropAt(event.clientX, event.clientY);
+    },
+    [previewCatalogueDropAt, scene?.interactive],
+  );
+
+  const onDragLeave = useCallback((): void => {}, []);
+
+  const onDrop = useCallback(
+    (event: DragEvent<HTMLDivElement>): void => {
+      if (!scene?.interactive) return;
+      const encoded = event.dataTransfer.getData(CATALOGUE_DRAG_MIME) || getActiveCatalogueDragPayload();
+      const payload = parsePuzzle2dCatalogueDragPayload(encoded);
+      const session = sessionRef.current;
+      const rect = event.currentTarget.getBoundingClientRect();
+      clearCatalogueDropPreview();
+      if (!payload || !session) return;
+      event.preventDefault();
+      placeCatalogueDrop(payload, event.clientX, event.clientY, rect);
+    },
+    [clearCatalogueDropPreview, placeCatalogueDrop, scene?.interactive],
   );
 
   useEffect(() => {
+    const hostId = windowInstanceId ?? node.surfaceId;
+    return registerBoardCatalogueDropHost(node.controllerId, hostId, (clientX, clientY) => {
+      const host = containerRef.current;
+      if (!host) return false;
+      return boardCatalogueDropPointOverRect(clientX, clientY, host.getBoundingClientRect());
+    });
+  }, [node.controllerId, node.surfaceId, windowInstanceId]);
+
+  useEffect(() => {
+    const onPointerMove = (event: PointerEvent) => {
+      if (!getActiveCataloguePointerDragData() && !getActiveCatalogueDragPayload()) return;
+      previewCatalogueDropAt(event.clientX, event.clientY);
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      const data = getActiveCataloguePointerDragData();
+      if (!data) return;
+      const host = containerRef.current;
+      const payload = parsePuzzle2dCatalogueDragPayload(data.payload);
+      if (!host || !payload || !sceneRef.current?.interactive) return;
+      const rect = host.getBoundingClientRect();
+      if (!boardCatalogueDropPointOverRect(event.clientX, event.clientY, rect)) {
+        if (!boardCatalogueDropHostContainsPoint(node.controllerId, event.clientX, event.clientY)) clearCatalogueDropPreview();
+        return;
+      }
+      clearCatalogueDropPreview();
+      placeCatalogueDrop(payload, event.clientX, event.clientY, rect);
+    };
     const onDragEnd = (): void => {
       queueMicrotask(() => {
-        if (!getActiveCatalogueDragPayload()) pushPuzzle2dFixtureDropPreview(peerScope, node.controllerId, null);
+        if (!getActiveCatalogueDragPayload()) clearCatalogueDropPreview();
       });
     };
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp, true);
+    window.addEventListener("pointercancel", clearCatalogueDropPreview, true);
     window.addEventListener("dragend", onDragEnd);
-    return () => window.removeEventListener("dragend", onDragEnd);
-  }, [peerScope, node.controllerId]);
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp, true);
+      window.removeEventListener("pointercancel", clearCatalogueDropPreview, true);
+      window.removeEventListener("dragend", onDragEnd);
+    };
+  }, [clearCatalogueDropPreview, node.controllerId, placeCatalogueDrop, previewCatalogueDropAt]);
   //#endregion FixtureDropHandlers
+
+
+
+  useEffect(() => {
+    publishLocalActiveToolV1("local", scene?.activeUtility ?? null);
+  }, [scene?.activeUtility]);
 
   const toolRunTraceCamera = useMemo(() => parseBoardCamera(scene?.cameraJson ?? "") ?? { x: 0, y: 0, zoom: 1 }, [scene?.cameraJson]);
   const boardVitals = useMemo(() => board2dVitals(scene?.fixtureJson ?? ""), [scene?.fixtureJson]);
@@ -1573,6 +1743,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-board-hovered-id={scene.hoveredId ?? ""}
       data-board-active-utility={scene.activeUtility ?? ""}
       data-board-suggestion-menu-json={scene.suggestionMenuJson ?? ""}
+      data-suggestion-focus={suggestionFocus === null ? undefined : String(suggestionFocus)}
       data-board-status-json={board2dStatusJson(boardStatusRef.current)}
       style={{ touchAction: "none" }}
       onContextMenu={onContextMenu}
@@ -1581,28 +1752,39 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       onDrop={onDrop}
     >
       <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
-      <ToolRunTrace2dLayer lane={scene.toolRunTrace} camera={toolRunTraceCamera} pathForShape={toolRunTracePathForShape} onCursor={onToolRunTraceCursor} />
+      <ToolRunTrace2dLayer lane={scene.toolRunTrace} camera={toolRunTraceCamera} pathForShape={toolRunTracePathForShape} onCursor={onToolRunTraceCursor} focus={suggestionFocus} />
       <ContextMenuController
         title={contextMenuTitleLabel}
-        open={contextMenu != null && !suggestionMenuOwnsThisWindow}
+        open={contextMenu != null && !suggestionPopupOwnsThisWindow}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={contextMenu?.items ?? []}
+        items={contextMenu?.suggestTarget ? withSuggestionSubmenu(contextMenu.items, suggestionRows) : (contextMenu?.items ?? [])}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
       />
-      {suggestionMenuOwnsThisWindow && suggestionMenu ? (
+      {suggestionPopupOwnsThisWindow && suggestionMenu ? (
         <ContextMenuController
           title={suggestionMenuTitleLabel}
           open
           closeOnSelect={false}
           position={{ x: suggestionMenu.x, y: suggestionMenu.y }}
-          items={mapSuggestionMenu(board2dSuggestionMenuItems(suggestionMenu, { checkingPlacement: suggestionCheckingPlacementLabel, noPlacement: suggestionNoPlacementLabel }))}
+          items={suggestionRows}
           onOpenChange={(open) => {
             if (!open) closeSuggestionMenu();
           }}
         />
       ) : null}
+      <CanvasPresenceOverlayV1
+        runtimeKey="local"
+        windowId={presenceWindowId}
+        space="canvas"
+        myActor={localPresenceActor ?? ""}
+        locale={typeof document !== "undefined" ? document.documentElement.lang : undefined}
+        localCanvas={toolRunTraceCamera}
+        localSizePx={[readContainerSize().w, readContainerSize().h]}
+        domain="layer"
+        scenePath={`board/${presenceWindowId}`}
+      />
     </div>
   );
 }
